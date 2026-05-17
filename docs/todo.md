@@ -9,11 +9,6 @@ plugin users; this file tracks release, validation, and setup work.
 
 ### User Decisions Needed
 
-- [ ] Decide repository visibility.
-  - Owner: user decides; Codex can make the change if asked.
-  - When it matters: before people outside the private GitHub access list can
-    install Strike from `emanualjade/strike`.
-  - How: tell Codex "make the repo public" or "keep it private for now."
 - [ ] Decide whether the first public release stays `0.1.0`.
   - Owner: user decides; Codex can update versions and tag the release.
   - When it matters: before the first public release tag.
@@ -98,6 +93,7 @@ plugin users; this file tracks release, validation, and setup work.
 - [x] Pushed `main` to `emanualjade/strike`; GitHub reports `main` as the
   default branch.
 - [x] Confirmed `emanualjade/strike` is currently private.
+- [x] Decided to keep `emanualjade/strike` private for now.
 - [x] Confirmed Codex can add `git@github.com:emanualjade/strike.git` as a
   Git-backed marketplace and run `codex plugin marketplace upgrade strike`.
 - [x] Confirmed Claude Code can add `emanualjade/strike` as a Git-backed
