@@ -41,6 +41,17 @@ Run this terminal command:
 codex plugin marketplace add emanualjade/strike --sparse .agents/plugins --sparse plugins
 ```
 
+What this does:
+
+- `codex plugin marketplace add` tells Codex about a plugin marketplace.
+- `emanualjade/strike` is the GitHub repository that contains the marketplace.
+- `--sparse .agents/plugins --sparse plugins` tells Codex to fetch only the
+  marketplace metadata and the plugin files, instead of cloning unrelated repo
+  files.
+
+This command registers the marketplace. It does not install Strike into the
+current conversation yet.
+
 Open Codex. You can use the Codex app, or run this terminal command:
 
 ```bash
@@ -53,8 +64,8 @@ In the Codex prompt, open the plugin browser:
 /plugins
 ```
 
-Find Strike and install or enable it. If Strike does not appear in the current
-conversation after installing, start a fresh Codex conversation.
+Find Strike and install or enable it. After that, start a fresh Codex
+conversation and run Strike from the root of the project you want it to work on.
 
 ## Install In Claude Code
 
@@ -64,6 +75,13 @@ Run these terminal commands:
 claude plugin marketplace add emanualjade/strike --sparse .claude-plugin plugins
 claude plugin install strike@strike
 ```
+
+What these do:
+
+- The first command registers the Strike marketplace with Claude Code.
+- `--sparse .claude-plugin plugins` tells Claude Code to fetch only the Claude
+  marketplace metadata and the plugin files.
+- The second command installs the `strike` plugin from the `strike` marketplace.
 
 Restart Claude Code after installing. If you are already inside a Claude Code
 session, you can try this app prompt instead of restarting:
