@@ -4,7 +4,8 @@ Strike is a cross-agent skills plugin for a board-and-card workflow that turns r
 
 For AI agents starting in a fresh context, read `AGENTS.md` first. It records the project direction, source-of-truth paths, validation rules, and lessons learned from the initial research pass.
 
-Ongoing release and validation tasks live in `docs/todo.md`.
+Ongoing release and validation tasks live in `docs/todo.md`. Release notes live
+in `CHANGELOG.md`.
 
 ## Structure
 

@@ -8,7 +8,6 @@ Use this as the running checklist for work that is not done yet, especially host
 
 ### Codex Can Still Do In This Repo
 
-- Add a first changelog/release note.
 - Keep improving local validation and smoke checks when new risks show up.
 - Prepare Copilot CLI smoke-test notes once the `copilot` command is available.
 
@@ -20,6 +19,7 @@ Use this as the running checklist for work that is not done yet, especially host
 - Defined the acceptance-fix loop: acceptance can move work back to implementation, phase-fix repairs phase-scoped acceptance findings, and phase-review verifies before acceptance reruns.
 - Extended local validation for skill handoff targets, Codex `agents/openai.yaml` metadata, host-neutral skill docs, and host-neutral stage contracts.
 - Set the package license to MIT and added `LICENSE`.
+- Added the first changelog/release note.
 - Pushed `main` to `emanualjade/strike`; GitHub now reports `main` as the
   default branch. The repository is currently private.
 - Confirmed Codex can add `git@github.com:emanualjade/strike.git` as a
@@ -96,7 +96,7 @@ Use this as the running checklist for work that is not done yet, especially host
 
 ## Nice-To-Have
 
-- [ ] Add a short changelog once the first public release is cut.
+- [x] Add a short changelog for the initial `0.1.0` package.
 - [ ] Add screenshots or examples to the Codex plugin interface only if they help users understand Strike faster.
 - [ ] Evaluate an optional APM manifest only after the native Codex, Claude, and Copilot plugin paths are working.
 - [x] Add scripted validation for skill frontmatter, host invocation references, balanced Markdown fences, and host-neutral Strike handoffs.
