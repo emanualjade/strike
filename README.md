@@ -42,17 +42,27 @@ Choose one Codex install style.
 Use this when one project should offer Strike, and you do not want to add the
 Strike marketplace to your general Codex setup.
 
-From the root of the project where you want to use Strike, add a repo marketplace
-file at `.agents/plugins/marketplace.json`.
+Codex does not currently provide a project-scope `marketplace add` command.
+Project marketplaces are added by creating or editing this file in the project:
+
+```text
+.agents/plugins/marketplace.json
+```
 
 If your project already has this file, add the Strike plugin entry to the
-existing `plugins` list instead of replacing the file.
+existing `plugins` list instead of replacing the file. Do not run a command that
+overwrites this file unless you have checked that it is safe to replace.
 
-For a new marketplace file, run this terminal command:
+For a project that does not already have `.agents/plugins/marketplace.json`,
+create the directory:
 
 ```bash
 mkdir -p .agents/plugins
-cat > .agents/plugins/marketplace.json <<'JSON'
+```
+
+Then create `.agents/plugins/marketplace.json` with this content:
+
+```json
 {
   "name": "strike-project",
   "interface": {
@@ -75,7 +85,6 @@ cat > .agents/plugins/marketplace.json <<'JSON'
     }
   ]
 }
-JSON
 ```
 
 What this does:
