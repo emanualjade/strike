@@ -22,7 +22,7 @@ tell the user to start a fresh session.
 | Host | Render the same handoff as |
 | --- | --- |
 | Claude Code plugin | `/strike:<skill-name> <args>` |
-| Codex | Mention/select the installed Strike skill or ask Codex to use Strike, for example: `Use the Strike <skill-name> skill with <args>.` |
+| Codex | Type `$` and select the installed Strike skill, or use `/skills` to browse. The inserted form is typically `$<skill-name> <args>`. |
 | GitHub Copilot CLI | `/<skill-name> <args>` after confirming the skill is visible with `/skills list` or `/skills info <skill-name>` |
 
 Examples:
@@ -31,7 +31,7 @@ Examples:
 Next Strike skill: brainstorm
 Arguments: checkout-redesign
 Claude Code: /strike:brainstorm checkout-redesign
-Codex: Use the Strike brainstorm skill with checkout-redesign.
+Codex: $brainstorm checkout-redesign
 GitHub Copilot CLI: /brainstorm checkout-redesign
 ```
 
@@ -39,7 +39,7 @@ GitHub Copilot CLI: /brainstorm checkout-redesign
 Next Strike skill: phase-plan
 Arguments: checkout-redesign phase:api-contract
 Claude Code: /strike:phase-plan checkout-redesign phase:api-contract
-Codex: Use the Strike phase-plan skill with checkout-redesign phase:api-contract.
+Codex: $phase-plan checkout-redesign phase:api-contract
 GitHub Copilot CLI: /phase-plan checkout-redesign phase:api-contract
 ```
 

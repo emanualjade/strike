@@ -11,7 +11,7 @@ Strike skills are portable; each host renders the same skill differently.
 | Host | Invocation form |
 | --- | --- |
 | Claude Code plugin | `/strike:<skill> <args>` |
-| Codex | Select or mention the installed Strike plugin/skill, or ask Codex to use the Strike `<skill>` skill with the same args. |
+| Codex | Type `$` and select the installed Strike skill, or use `/skills` to browse; the inserted form is typically `$<skill> <args>`. |
 | GitHub Copilot CLI | `/<skill> <args>` after confirming the installed skills with `/skills list` or `/skills info`. |
 
 Canonical skill names:

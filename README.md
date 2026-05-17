@@ -115,11 +115,15 @@ In Claude Code, use the Strike command form:
 /strike:start "Add CSV export" --slug csv-export --description "Let users export a CSV report."
 ```
 
-In Codex, ask for the installed Strike skill by name:
+In Codex, use the skill shortcut. Type `$`, choose the Strike `start` skill,
+then add the arguments:
 
 ```text
-Use the Strike start skill for "Add CSV export" with slug csv-export and description "Let users export a CSV report."
+$start "Add CSV export" --slug csv-export --description "Let users export a CSV report."
 ```
+
+You can also type `/skills` to browse available skills. If more than one
+`start` skill appears, choose the one from Strike.
 
 After the card is created, ask Strike what to do next.
 
@@ -132,7 +136,7 @@ Claude Code:
 Codex:
 
 ```text
-Use the Strike go skill for csv-export.
+$go csv-export
 ```
 
 Strike will tell you the next skill to run and the arguments to use.
@@ -169,11 +173,11 @@ Then run the next Strike command:
 
 Do not run `/clear` in your terminal. It is a Claude Code app prompt.
 
-In Codex, start a fresh conversation from the same project root, then ask for
-the next Strike skill:
+In Codex, start a fresh conversation from the same project root, then use the
+next Strike skill shortcut:
 
 ```text
-Use the Strike spec skill for csv-export.
+$spec csv-export
 ```
 
 In GitHub Copilot CLI, start a fresh Copilot CLI session if there is no visible
@@ -231,15 +235,14 @@ This is the happy path. Strike may send you backward when it finds missing
 decisions, research gaps, review findings, or acceptance failures. In that case,
 follow the `Next Strike skill` handoff it gives you.
 
-In Codex, use the same skill names and arguments, but ask for them as prompts
-instead of Claude commands:
+In Codex, use the same skill names and arguments with `$` skill shortcuts:
 
 ```text
-Use the Strike spec skill for csv-export.
-Use the Strike phase-build skill for csv-export phase:export-query.
+$spec csv-export
+$phase-build csv-export phase:export-query
 ```
 
-## Common Skills
+## All Skills
 
 - `start`: create a new feature card.
 - `go`: inspect the board and recommend the next step.

@@ -93,6 +93,8 @@ plugin users; this file tracks release, validation, and setup work.
 - [x] Documented the context-reset flow, including Claude Code `/clear` as an
   app prompt and fresh-session guidance for other hosts.
 - [x] Added a README example showing a feature run from `start` through `retro`.
+- [x] Updated Codex README examples to use `$` skill shortcuts and renamed
+  `Common Skills` to `All Skills`.
 - [x] Pushed `main` to `emanualjade/strike`; GitHub reports `main` as the
   default branch.
 - [x] Confirmed `emanualjade/strike` is currently private.
