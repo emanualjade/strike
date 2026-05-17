@@ -29,6 +29,24 @@ function exists(relativePath) {
   return fs.existsSync(path.join(root, relativePath));
 }
 
+function walkFiles(relativeDir) {
+  const absoluteDir = path.join(root, relativeDir);
+  if (!fs.existsSync(absoluteDir)) {
+    return [];
+  }
+
+  const files = [];
+  for (const entry of fs.readdirSync(absoluteDir, { withFileTypes: true })) {
+    const relativePath = path.join(relativeDir, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...walkFiles(relativePath));
+    } else if (entry.isFile()) {
+      files.push(relativePath);
+    }
+  }
+  return files;
+}
+
 function readJson(relativePath) {
   const filePath = path.join(root, relativePath);
   try {
@@ -527,6 +545,21 @@ function validateSkillHandoffs() {
   }
 }
 
+function validateCodexShortcutHandoffs() {
+  for (const relativePath of walkFiles("plugins/strike")) {
+    if (!/\.(md|sh|txt|yaml|yml|json)$/.test(relativePath)) {
+      continue;
+    }
+    const text = fs.readFileSync(path.join(root, relativePath), "utf8");
+    if (/Use the Strike [a-z0-9-]+ skill/.test(text)) {
+      fail(`${relativePath}: Codex handoffs should use $ skill shortcuts, not long-form "Use the Strike ..." prompts`);
+    }
+    if (/next_codex=Use the Strike/.test(text)) {
+      fail(`${relativePath}: generated Codex handoff should use $<skill> syntax`);
+    }
+  }
+}
+
 validateCodexMarketplace();
 validateClaudeMarketplace();
 validateGitHubMarketplace();
@@ -534,6 +567,7 @@ validatePlugins();
 validateVersionAlignment();
 validateSharedReferences();
 validateSkillHandoffs();
+validateCodexShortcutHandoffs();
 validateLicense();
 
 for (const warning of warnings) {

@@ -95,6 +95,7 @@ plugin users; this file tracks release, validation, and setup work.
 - [x] Added a README example showing a feature run from `start` through `retro`.
 - [x] Updated Codex README examples to use `$` skill shortcuts and renamed
   `Common Skills` to `All Skills`.
+- [x] Updated generated start-card Codex handoffs to use `$` skill shortcuts.
 - [x] Pushed `main` to `emanualjade/strike`; GitHub reports `main` as the
   default branch.
 - [x] Confirmed `emanualjade/strike` is currently private.
