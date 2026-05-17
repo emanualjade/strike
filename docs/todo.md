@@ -2,101 +2,123 @@
 
 Last updated: 2026-05-17.
 
-Use this as the running checklist for work that is not done yet, especially host validation that depends on tools or accounts outside this repo.
+This is the maintainer checklist for Strike. The public `README.md` is for
+plugin users; this file tracks release, validation, and setup work.
 
-## Current Split
+## Remaining Work
 
-### Codex Can Still Do In This Repo
+### User Decisions Needed
 
-- Keep improving local validation and smoke checks when new risks show up.
-- Prepare Copilot CLI smoke-test notes once the `copilot` command is available.
+- [ ] Decide repository visibility.
+  - Owner: user decides; Codex can make the change if asked.
+  - When it matters: before people outside the private GitHub access list can
+    install Strike from `emanualjade/strike`.
+  - How: tell Codex "make the repo public" or "keep it private for now."
+- [ ] Decide whether the first public release stays `0.1.0`.
+  - Owner: user decides; Codex can update versions and tag the release.
+  - When it matters: before the first public release tag.
+  - Suggested default: keep `0.1.0` for the first public testing release.
 
-### Completed Locally
+### User Tool Or UI Access Needed, Then Codex Can Continue
 
-- Reviewed every imported skill as executable agent behavior before public release.
-- Fixed host-neutral handoff drift in shared stage contracts.
-- Fixed cross-lane routing so skills that recommend lane-bound upstream work also move the board pointer first.
-- Defined the acceptance-fix loop: acceptance can move work back to implementation, phase-fix repairs phase-scoped acceptance findings, and phase-review verifies before acceptance reruns.
-- Extended local validation for skill handoff targets, Codex `agents/openai.yaml` metadata, host-neutral skill docs, and host-neutral stage contracts.
-- Set the package license to MIT and added `LICENSE`.
-- Added the first changelog/release note.
-- Pushed `main` to `emanualjade/strike`; GitHub now reports `main` as the
-  default branch. The repository is currently private.
-- Confirmed Codex can add `git@github.com:emanualjade/strike.git` as a
+- [ ] Confirm Strike in the Codex `/plugins` UI.
+  - Owner: user, unless the user asks Codex to drive the app UI with Computer
+    Use.
+  - When it matters: before we claim Codex install and skill visibility are
+    fully smoke-tested.
+  - How: open Codex, type `/plugins`, find Strike, install or enable it, then
+    start a fresh conversation and confirm Strike skills are visible.
+- [ ] Run Agent Skills reference validation with `skills-ref`.
+  - Owner: user makes the `skills-ref` command available; Codex runs the check.
+  - When it matters: before claiming reference-validator coverage.
+  - How once available:
+    ```bash
+    skills-ref validate plugins/strike/skills/start
+    skills-ref validate plugins/strike/skills/go
+    skills-ref validate plugins/strike/skills/spec
+    ```
+- [ ] Run GitHub Copilot CLI smoke tests.
+  - Owner: user installs/authenticates the `copilot` command; Codex runs the
+    checks.
+  - When it matters: before claiming Copilot CLI support is fully verified.
+  - How once available:
+    ```bash
+    copilot plugin marketplace add emanualjade/strike
+    copilot plugin install strike@strike
+    copilot plugin list
+    ```
+    Then in Copilot CLI, confirm `/skills list` and a low-risk Strike skill.
+
+### Codex Can Do Later
+
+- [ ] After the next versioned Strike release, rerun host update checks.
+  - Owner: Codex.
+  - When it matters: after a behavior change, skill change, or version bump is
+    committed and pushed.
+  - How:
+    ```bash
+    codex plugin marketplace upgrade strike
+    claude plugin marketplace update strike
+    claude plugin update strike@strike
+    ```
+- [ ] Update `README.md` with any exact invocation details learned from the
+  Codex UI check or Copilot CLI smoke test.
+  - Owner: Codex.
+  - When it matters: after those checks are completed.
+- [ ] Keep improving local validation when new release risks show up.
+  - Owner: Codex.
+  - When it matters: whenever we change plugin structure, skill metadata,
+    invocation language, or host manifests.
+
+## Completed
+
+- [x] Moved the production Strike plugin into `plugins/strike`.
+- [x] Made `strike` the installable plugin identity.
+- [x] Added Codex, Claude Code, and GitHub Copilot CLI manifests and marketplace
+  entries.
+- [x] Preserved production skills and Codex `skills/*/agents/openai.yaml`
+  metadata.
+- [x] Added `plugins/strike/references/invocation.md` for host-neutral Strike
+  handoffs.
+- [x] Reworked portable skill docs so shared instructions do not assume
+  Claude-only `/strike:*` syntax.
+- [x] Reviewed imported skills as executable workflow behavior.
+- [x] Fixed host-neutral handoff drift in shared stage contracts.
+- [x] Fixed cross-lane routing so lane-bound upstream work moves the board
+  pointer first.
+- [x] Defined the acceptance-fix loop: acceptance can move work back to
+  implementation, `phase-fix` repairs phase-scoped acceptance findings, and
+  `phase-review` verifies before acceptance reruns.
+- [x] Extended local validation for skill handoff targets, Codex
+  `agents/openai.yaml` metadata, host-neutral skill docs, host-neutral stage
+  contracts, version alignment, MIT licensing, and balanced Markdown fences.
+- [x] Set the package license to MIT and added `LICENSE`.
+- [x] Added the initial `0.1.0` changelog.
+- [x] Rewrote `README.md` as a user-only install and usage guide.
+- [x] Pushed `main` to `emanualjade/strike`; GitHub reports `main` as the
+  default branch.
+- [x] Confirmed `emanualjade/strike` is currently private.
+- [x] Confirmed Codex can add `git@github.com:emanualjade/strike.git` as a
   Git-backed marketplace and run `codex plugin marketplace upgrade strike`.
-- Confirmed Claude Code can add `emanualjade/strike` as a Git-backed
+- [x] Confirmed Claude Code can add `emanualjade/strike` as a Git-backed
   marketplace, install `strike@strike`, update it, and invoke `/strike:go`.
+- [x] Confirmed Claude Code local plugin smoke test with `/strike:go`.
+- [x] Confirmed `npm run validate` and `npm run validate:publish` pass.
+- [x] Confirmed both Claude validators pass.
+- [x] Confirmed `claude plugin tag --dry-run --force ./plugins/strike` passes.
+- [x] Smoke-checked the `start` script.
 
-### User Action Needed
+## Release Checklist
 
-- Decide whether `emanualjade/strike` should stay private for initial testing
-  or become public for release.
-- Install or expose unavailable external tools if we want those checks:
-  - `skills-ref`
-  - GitHub Copilot CLI / `copilot`
-- Open Codex's `/plugins` browser when we need to confirm the Codex UI install and skill visibility, unless Codex exposes a noninteractive install command later.
+Run these before the first public release and before later releases:
 
-### Externally Gated
+```bash
+npm run validate
+npm run validate:publish
+claude plugin validate ./plugins/strike
+claude plugin validate ./.claude-plugin/marketplace.json
+claude plugin tag --dry-run --force ./plugins/strike
+```
 
-- Copilot CLI testing requires the `copilot` command.
-- Agent Skills reference validation requires the `skills-ref` command.
-
-## Tooling Gaps
-
-- [ ] Install or locate the Agent Skills reference validator, then run `skills-ref validate` against representative production skills.
-- [ ] Install or enable GitHub Copilot CLI, then run the local plugin smoke test:
-  - `copilot plugin install ./plugins/strike`
-  - `copilot plugin update strike`
-- [x] Confirm whether the final GitHub repo slug is `emanualjade/strike`; update README and marketplace metadata if the published repo uses a different slug.
-
-## Invocation Portability
-
-- [x] Add `plugins/strike/references/invocation.md` to define the canonical Strike skill flow separately from host-specific command syntax.
-- [x] Update `plugins/strike/README.md` with a host invocation matrix:
-  - Claude Code: `/strike:<skill> <args>`.
-  - Codex: use the installed Strike plugin/skill mention or natural-language skill selection; do not document `/strike:*` as a Codex command.
-  - GitHub Copilot CLI: use the skill-name command form after confirming it with `/skills list` and `/skills info`.
-- [x] Update `plugins/strike/skills/start/scripts/start-card.sh` so generated handoffs include host-neutral fields such as `next_skill=brainstorm` and `next_args=<feature-slug>` instead of only a Claude-specific next action.
-- [x] Review imported skill `Next:` and handoff sections so `/strike:*` is either clearly labeled as Claude Code syntax or replaced with host-neutral "next Strike skill" language.
-- [x] Extend `scripts/validate.mjs` to catch concrete `/strike:<skill>` and `/clear` instructions inside portable `SKILL.md` files and shared stage contracts.
-- [x] Smoke-check docs and skills for stale universal invocation claims, old package paths, and old command prefixes.
-
-## Host Smoke Tests
-
-- [x] Codex: add this repo as a local marketplace with `codex plugin marketplace add ./`.
-- [ ] Codex: open `/plugins`, install Strike from the local marketplace, confirm Strike skills are visible, and record the exact invocation form Codex exposes.
-- [x] Codex: add `git@github.com:emanualjade/strike.git` as a Git-backed marketplace and run `codex plugin marketplace upgrade strike`.
-- [ ] Codex: after the next versioned change, rerun `codex plugin marketplace upgrade strike` to confirm it pulls a newer revision.
-- [x] Claude Code: run `claude --plugin-dir ./plugins/strike` and invoke a low-risk skill such as `/strike:go`; it returned the expected no-board result plus a canonical next-skill handoff.
-- [x] Claude Code: rerun `/strike:go smoke-test` after the release-readiness skill audit; expected no-board behavior still works.
-- [x] Claude Code: add this repo as a local marketplace, install `strike@strike`, run `claude plugin update strike@strike --scope local`, and invoke `/strike:go` from the installed plugin.
-- [x] Claude Code: add the Git-backed marketplace from `emanualjade/strike`, install `strike@strike`, run `claude plugin update strike@strike --scope local`, and invoke `/strike:go` from the installed plugin.
-- [ ] Claude Code: after the next versioned change, rerun `claude plugin update strike@strike --scope local` to confirm it pulls a newer revision.
-- [ ] GitHub Copilot CLI: install from the local path, run `/skills list` and `/skills info`, invoke a low-risk Strike skill, and confirm whether plugin skills use plain `/skill-name` commands.
-- [ ] GitHub Copilot CLI: after publication, install from the marketplace entry and run `copilot plugin update strike`.
-
-## Release Readiness
-
-- [x] Review every imported skill as executable agent behavior before public release.
-- [x] Use MIT for the public package and keep manifests/docs consistent.
-- [ ] Before the first published release, decide whether the initial public
-  version stays `0.1.0`; after publication, bump all host manifest and
-  marketplace versions whenever shipped behavior changes.
-- [ ] Run before release:
-  - `npm run validate`
-  - `npm run validate:publish`
-  - `claude plugin validate ./plugins/strike`
-  - `claude plugin validate ./.claude-plugin/marketplace.json`
-  - `claude plugin tag --dry-run --force ./plugins/strike`
-  - `skills-ref validate` when available
-- [x] Current release-readiness pass on 2026-05-17 ran the available checks:
-  `npm run validate`, `npm run validate:publish`, both Claude validators,
-  `claude plugin tag --dry-run --force ./plugins/strike`, start-script smoke,
-  and Claude `/strike:go smoke-test`.
-
-## Nice-To-Have
-
-- [x] Add a short changelog for the initial `0.1.0` package.
-- [ ] Add screenshots or examples to the Codex plugin interface only if they help users understand Strike faster.
-- [ ] Evaluate an optional APM manifest only after the native Codex, Claude, and Copilot plugin paths are working.
-- [x] Add scripted validation for skill frontmatter, host invocation references, balanced Markdown fences, and host-neutral Strike handoffs.
+Also run `skills-ref validate` and Copilot CLI smoke tests when those tools are
+available.

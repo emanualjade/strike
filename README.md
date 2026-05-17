@@ -1,134 +1,186 @@
 # Strike
 
-Strike is a cross-agent skills plugin for a board-and-card workflow that turns rough feature ideas into scoped implementation, review, acceptance, and retro artifacts. The repo is shaped so one portable set of `SKILL.md` folders can be installed through Codex, Claude Code, GitHub Copilot CLI, and other Agent Skills-compatible hosts without maintaining separate copies.
+Strike is a skills plugin that helps an AI coding agent move feature work from
+a rough idea to a planned, built, reviewed, accepted, and remembered change.
 
-For AI agents starting in a fresh context, read `AGENTS.md` first. It records the project direction, source-of-truth paths, validation rules, and lessons learned from the initial research pass.
+It gives your agent a repeatable workflow. You start a feature card, ask Strike
+what should happen next, and then move through planning, research, specification,
+implementation, review, acceptance, and retro steps.
 
-Ongoing release and validation tasks live in `docs/todo.md`. Release notes live
-in `CHANGELOG.md`.
-
-## Structure
-
-```text
-.agents/plugins/marketplace.json      # Codex marketplace entry
-.claude-plugin/marketplace.json       # Claude Code marketplace entry
-.github/plugin/marketplace.json       # GitHub Copilot CLI marketplace entry
-plugins/strike/
-  plugin.json                         # GitHub Copilot CLI plugin manifest
-  .codex-plugin/plugin.json           # Codex plugin manifest
-  .claude-plugin/plugin.json          # Claude Code plugin manifest
-  skills/                             # Production portable Strike skills
-  references/                         # Shared Strike board/workflow references
-templates/                            # Starter files, not installed as components
-```
-
-## Install During Development
-
-For Claude Code local testing:
-
-```bash
-claude --plugin-dir ./plugins/strike
-```
-
-For Codex local testing, add this repo as a marketplace, then install from the Codex plugin browser:
-
-```bash
-codex plugin marketplace add ./
-codex
-# then open /plugins and install Strike
-```
-
-Codex local path marketplaces are for development install testing. The
-`codex plugin marketplace upgrade` command expects a Git-backed marketplace, so
-test the update path after installing from the GitHub marketplace.
-
-For GitHub Copilot CLI local testing:
-
-```bash
-copilot plugin install ./plugins/strike
-```
-
-## Install From GitHub
-
-After the repo is pushed to GitHub, Claude Code users can add the marketplace and install the plugin:
-
-```bash
-claude plugin marketplace add emanualjade/strike
-claude plugin install strike@strike
-```
-
-Codex users can add the marketplace from GitHub and include both the marketplace file and plugin directory:
-
-```bash
-codex plugin marketplace add emanualjade/strike --sparse .agents/plugins --sparse plugins
-codex
-# then open /plugins and install Strike
-```
-
-GitHub Copilot CLI users can add the marketplace and install the plugin:
-
-```bash
-copilot plugin marketplace add emanualjade/strike
-copilot plugin install strike@strike
-```
-
-## Invocation
-
-Strike skill names are portable, but command syntax is host-specific:
-
-- Claude Code plugin: `/strike:<skill> <args>`
-- Codex: select or mention the installed Strike plugin/skill, or ask Codex to
-  use the Strike `<skill>` skill with the same args
-- GitHub Copilot CLI: `/<skill> <args>` after confirming the skill is visible
-  with `/skills list` or `/skills info`
-
-See `plugins/strike/references/invocation.md` for the shared handoff format.
-
-## Updates
-
-The supported hosts use the GitHub marketplace as the update source once installed from the repo. Bump version fields where the host schema defines them before publishing a release.
-
-```bash
-claude plugin marketplace update strike
-claude plugin update strike@strike
-```
-
-```bash
-codex plugin marketplace upgrade strike
-# then open /plugins if Codex shows an available plugin update
-```
-
-```bash
-copilot plugin update strike
-```
-
-## Development
-
-Production skills live in `plugins/strike/skills/`. By repo policy, each production skill should include a `SKILL.md` with `name` and `description` frontmatter, even when a host allows looser metadata. Shared Strike workflow references live in `plugins/strike/references/`; skill-specific supporting files should stay inside the relevant skill directory.
-
-Strike writes runtime state to the consuming repository, not the plugin package:
+Strike stores its working notes in the project where you use it:
 
 ```text
 docs/strike/board/
 docs/strike/cards/
 ```
 
-Validate the repo before publishing. The local validator is intentionally stricter than some host schemas where that helps cross-host release hygiene, including skill frontmatter, Codex skill metadata, version alignment, balanced Markdown fences, known next-skill handoff targets, and host-neutral Strike handoffs:
+Run Strike from the root of the project you want the agent to work on.
+
+## Before You Install
+
+You need one of these AI coding tools:
+
+- Codex
+- Claude Code
+- GitHub Copilot CLI
+
+You also need access to this GitHub repository. If the repository is private,
+installing works only for people who have been granted access and whose tool can
+clone the repository from GitHub.
+
+In the instructions below:
+
+- Terminal commands go in your macOS Terminal or another shell.
+- App prompts go inside the AI coding tool's chat or command prompt.
+
+## Install In Codex
+
+Run this terminal command:
 
 ```bash
-npm run validate
+codex plugin marketplace add emanualjade/strike --sparse .agents/plugins --sparse plugins
 ```
 
-Before release, require real skills and run host-native checks where the host CLI is available:
+Open Codex. You can use the Codex app, or run this terminal command:
 
 ```bash
-npm run validate:publish
-claude plugin validate ./plugins/strike
-claude plugin validate ./.claude-plugin/marketplace.json
-claude plugin tag --dry-run --force ./plugins/strike
+codex
 ```
 
-When the Agent Skills reference validator is installed, also run `skills-ref validate` against each production skill directory.
+In the Codex prompt, open the plugin browser:
+
+```text
+/plugins
+```
+
+Find Strike and install or enable it. If Strike does not appear in the current
+conversation after installing, start a fresh Codex conversation.
+
+## Install In Claude Code
+
+Run these terminal commands:
+
+```bash
+claude plugin marketplace add emanualjade/strike --sparse .claude-plugin plugins
+claude plugin install strike@strike
+```
+
+Restart Claude Code after installing. If you are already inside a Claude Code
+session, you can try this app prompt instead of restarting:
+
+```text
+/reload-plugins
+```
+
+## Install In GitHub Copilot CLI
+
+Copilot CLI support is packaged, but the live Copilot smoke test has not been
+completed yet. If you want to try it, run these terminal commands:
+
+```bash
+copilot plugin marketplace add emanualjade/strike
+copilot plugin install strike@strike
+copilot plugin list
+```
+
+Before using a Strike skill in Copilot CLI, confirm the visible skill names:
+
+```text
+/skills list
+```
+
+## Start A Feature
+
+In Claude Code, use the Strike command form:
+
+```text
+/strike:start "Add CSV export" --slug csv-export --description "Let users export a CSV report."
+```
+
+In Codex, ask for the installed Strike skill by name:
+
+```text
+Use the Strike start skill for "Add CSV export" with slug csv-export and description "Let users export a CSV report."
+```
+
+After the card is created, ask Strike what to do next.
+
+Claude Code:
+
+```text
+/strike:go csv-export
+```
+
+Codex:
+
+```text
+Use the Strike go skill for csv-export.
+```
+
+Strike will tell you the next skill to run and the arguments to use.
+
+## Common Skills
+
+- `start`: create a new feature card.
+- `go`: inspect the board and recommend the next step.
+- `brainstorm`, `grill`, `research`: shape and pressure-test the idea.
+- `spec`, `spec-review`: write and review the feature specification.
+- `slice`, `slice-review`: split the feature into buildable phases.
+- `phase-research`, `phase-plan`, `phase-build`, `phase-review`, `phase-fix`:
+  work through one implementation phase at a time.
+- `accept`: check the assembled feature against the spec.
+- `retro`: record what happened and move accepted work to done.
+- `language`: keep project terminology consistent.
+- `demo`: create a small planning demo for a card.
+
+## Update Strike
+
+For Codex, run this terminal command:
+
+```bash
+codex plugin marketplace upgrade strike
+```
+
+Then open Codex and check `/plugins` if Codex shows an available plugin update.
+
+For Claude Code, run these terminal commands:
+
+```bash
+claude plugin marketplace update strike
+claude plugin update strike@strike
+```
+
+Restart Claude Code after updating, or run this app prompt:
+
+```text
+/reload-plugins
+```
+
+For GitHub Copilot CLI, run this terminal command:
+
+```bash
+copilot plugin update strike
+```
+
+## Troubleshooting
+
+If GitHub says the repository cannot be found, you probably do not have access
+to the repository yet, or your tool is not authenticated with GitHub.
+
+If Strike is installed but the skills are not available, restart the host tool.
+For Codex, also check `/plugins` to make sure Strike is enabled. For Claude Code,
+you can run this terminal command:
+
+```bash
+claude plugin list
+```
+
+If Strike says there is no board or card, run `start` first from the root of the
+project where you want Strike to create `docs/strike/`.
+
+If an update does not seem to change anything, make sure a newer Strike release
+has actually been published. Some hosts only treat a plugin as updated after its
+version changes.
 
 ## License
 
