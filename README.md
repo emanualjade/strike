@@ -180,6 +180,65 @@ In GitHub Copilot CLI, start a fresh Copilot CLI session if there is no visible
 context-reset command, then run the next Strike skill from the same project
 root.
 
+## Example Feature Run
+
+Here is what a small Claude Code run might look like from start to finish.
+Assume the feature slug is `csv-export`.
+
+```text
+/strike:start "Add CSV export" --slug csv-export --description "Let users export a CSV report."
+/clear
+/strike:brainstorm csv-export
+/clear
+/strike:grill csv-export
+/clear
+/strike:research csv-export
+/clear
+/strike:spec csv-export
+/clear
+/strike:spec-review csv-export
+/clear
+/strike:slice csv-export
+/clear
+/strike:slice-review csv-export
+```
+
+After slicing, Strike usually works phase by phase. The exact phase slug comes
+from the phase files Strike creates.
+
+```text
+/clear
+/strike:phase-research csv-export phase:export-query
+/clear
+/strike:phase-plan csv-export phase:export-query
+/clear
+/strike:phase-build csv-export phase:export-query
+/clear
+/strike:phase-review csv-export phase:export-query
+```
+
+Repeat the phase commands for each remaining phase. When all phases are built
+and reviewed, finish the feature:
+
+```text
+/clear
+/strike:accept csv-export
+/clear
+/strike:retro csv-export
+```
+
+This is the happy path. Strike may send you backward when it finds missing
+decisions, research gaps, review findings, or acceptance failures. In that case,
+follow the `Next Strike skill` handoff it gives you.
+
+In Codex, use the same skill names and arguments, but ask for them as prompts
+instead of Claude commands:
+
+```text
+Use the Strike spec skill for csv-export.
+Use the Strike phase-build skill for csv-export phase:export-query.
+```
+
 ## Common Skills
 
 - `start`: create a new feature card.

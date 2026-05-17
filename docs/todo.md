@@ -92,6 +92,7 @@ plugin users; this file tracks release, validation, and setup work.
 - [x] Rewrote `README.md` as a user-only install and usage guide.
 - [x] Documented the context-reset flow, including Claude Code `/clear` as an
   app prompt and fresh-session guidance for other hosts.
+- [x] Added a README example showing a feature run from `start` through `retro`.
 - [x] Pushed `main` to `emanualjade/strike`; GitHub reports `main` as the
   default branch.
 - [x] Confirmed `emanualjade/strike` is currently private.
