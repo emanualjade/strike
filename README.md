@@ -137,6 +137,49 @@ Use the Strike go skill for csv-export.
 
 Strike will tell you the next skill to run and the arguments to use.
 
+## Between Strike Steps
+
+Strike is designed to reset context between most workflow steps.
+
+That matters because each skill should start with the saved card files, not a
+long chat history from earlier planning. This keeps the context window smaller
+and helps review, build, and acceptance steps stay independent.
+
+When Strike shows this:
+
+```text
+Reset context first: yes
+Next Strike skill: spec
+Arguments: csv-export
+```
+
+reset the host conversation before running the next skill.
+
+In Claude Code, type this app prompt:
+
+```text
+/clear
+```
+
+Then run the next Strike command:
+
+```text
+/strike:spec csv-export
+```
+
+Do not run `/clear` in your terminal. It is a Claude Code app prompt.
+
+In Codex, start a fresh conversation from the same project root, then ask for
+the next Strike skill:
+
+```text
+Use the Strike spec skill for csv-export.
+```
+
+In GitHub Copilot CLI, start a fresh Copilot CLI session if there is no visible
+context-reset command, then run the next Strike skill from the same project
+root.
+
 ## Common Skills
 
 - `start`: create a new feature card.
