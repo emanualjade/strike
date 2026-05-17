@@ -17,6 +17,12 @@ conversation feels easy to follow. Keep the conversation centered on the work
 in progress; avoid explaining Strike mechanics unless that context helps the
 user decide what to do next.
 
+Keep progress updates quiet. It is fine to say what you are about to do when it
+affects the user's project, but do not narrate internal mechanics such as
+reading this skill, checking bundled script syntax, or inspecting invocation
+rules. If the current directory is not a Git repo, mention the fallback once:
+"This is not a Git repo, so I will create Strike files in `<path>`."
+
 ## Purpose
 
 Create the smallest useful Strike feature card: a stable card folder plus a
@@ -39,9 +45,10 @@ the host is unknown, show the canonical handoff first.
    consuming repository root with `--repo-root <path>`. Do not `cd` into the
    skill directory before running it, do not hand-create the files, and do not
    look for a consuming-repo script with that name.
-4. Report the card path, board pointer, and next brainstorm handoff. Use the
-   host rendering rules in the plugin package's `references/invocation.md`;
-   `/strike:*` is Claude Code syntax, not portable syntax.
+4. Report only the user-facing result: the card path, the board pointer, and
+   the next prompt to run. Use the host rendering rules in the plugin package's
+   `references/invocation.md`; `/strike:*` is Claude Code syntax, not portable
+   syntax.
 
 ## State Model
 
@@ -50,19 +57,27 @@ The board pointer location is the workflow state. Do not add a status field to
 
 ## Output
 
-Use a short plain-English response:
+Use a short plain-English response that helps the user take the next step. Do
+not expose internal handoff fields such as `Reset context first`, `Next Strike
+skill`, or `Arguments`. Do not show the starter checklist in the chat response;
+it is saved in the card file for Strike to use later.
 
-- created or reused card folder
-- board lane
-- starter checklist
-- next handoff:
-  ```txt
-  Reset context first: yes
-  Next Strike skill: brainstorm
-  Arguments: <feature-slug>
-  ```
-- if showing the current host's rendered command, label it `Next prompt:`
-  rather than `Codex form` or another host-specific label
+Preferred shape:
+
+```txt
+Created the Strike card for `<feature-slug>`.
+
+Card: docs/strike/cards/<feature-slug>/card.md
+Board: docs/strike/board/01-brainstorm/<feature-slug>.md
+
+Next: start a fresh conversation from `<project-root>`, then run:
+
+<rendered next prompt>
+```
+
+When showing the current host's rendered command, label it `Next prompt:` only
+if the label is needed. Do not label it `Codex form`, `Claude form`, or another
+host-specific label.
 
 ## Gates
 

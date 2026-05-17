@@ -19,6 +19,11 @@ tell the user to start a fresh session.
 
 ## Host Rendering
 
+The canonical handoff fields are routing data for Strike. In a user-facing
+response, translate them into one clear next action instead of dumping the raw
+fields. Usually that means one short sentence about starting fresh, followed by
+the rendered next prompt.
+
 When the handoff says `Reset context first: yes`, render the reset before the
 next command:
 
@@ -35,6 +40,9 @@ When showing the current host's rendered command to the user, label it `Next
 prompt:`. Do not label it `Codex form`, `Claude form`, or similar host-specific
 wording. The host name belongs in docs and examples, not in the short handoff a
 user sees while working.
+
+Do not include `Reset context first`, `Next Strike skill`, or `Arguments` in the
+final user response unless the user asks for the raw Strike handoff.
 
 Examples:
 

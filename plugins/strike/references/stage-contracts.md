@@ -14,9 +14,10 @@ explicitly says otherwise.
 - Stage outputs are human-readable Markdown.
 - IDs, YAML blocks, and join tables are not default tools.
 - Validation should improve the artifact or checklist before it adds machinery.
-- Final responses should use the canonical handoff from `references/invocation.md`:
-  `Reset context first: yes`, `Next Strike skill`, and `Arguments`. Render it
-  for the active host instead of hard-coding one host's command syntax.
+- Final responses should derive the next action from the canonical handoff in
+  `references/invocation.md`, then show the active host's next prompt in plain
+  user-facing language. Do not dump raw handoff fields unless the user asks for
+  them.
 - When moving a board pointer, use a normal filesystem move, not `git mv`, then
   verify exactly one pointer exists for the feature slug.
 - Utilities with no board lane normally leave board pointers alone. A utility

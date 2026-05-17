@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "A GitHub Copilot CLI marketplace for the Strike board-and-card workflow plugin.",
-    "version": "0.1.0"
+    "version": "0.1.1"
   },
   "plugins": [
     {
       "name": "strike",
       "source": "./plugins/strike",
       "description": "Board-and-card workflow skills for turning rough feature ideas into scoped implementation, review, acceptance, and retro artifacts.",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "author": {
         "name": "Standard News"
       },

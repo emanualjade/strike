@@ -2,6 +2,13 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.1.1 - 2026-05-17
+
+- Tightened the `start` skill's user-facing output so it shows the created
+  card, board pointer, and next prompt without exposing internal handoff fields.
+- Updated shared invocation guidance so Strike skills translate canonical
+  handoffs into concise host-specific next actions.
+
 ## 0.1.0 - 2026-05-17
 
 - Imported the production Strike skill set into `plugins/strike`.
