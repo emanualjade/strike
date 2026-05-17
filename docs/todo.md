@@ -96,6 +96,8 @@ plugin users; this file tracks release, validation, and setup work.
 - [x] Updated Codex README examples to use `$` skill shortcuts and renamed
   `Common Skills` to `All Skills`.
 - [x] Updated generated start-card Codex handoffs to use `$` skill shortcuts.
+- [x] Restored `/clear` in the Claude-specific handoff rendering while keeping
+  portable skill docs host-neutral.
 - [x] Pushed `main` to `emanualjade/strike`; GitHub reports `main` as the
   default branch.
 - [x] Confirmed `emanualjade/strike` is currently private.

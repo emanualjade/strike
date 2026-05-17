@@ -19,26 +19,38 @@ tell the user to start a fresh session.
 
 ## Host Rendering
 
+When the handoff says `Reset context first: yes`, render the reset before the
+next command:
+
 | Host | Render the same handoff as |
 | --- | --- |
-| Claude Code plugin | `/strike:<skill-name> <args>` |
-| Codex | Type `$` and select the installed Strike skill, or use `/skills` to browse. The inserted form is typically `$<skill-name> <args>`. |
-| GitHub Copilot CLI | `/<skill-name> <args>` after confirming the skill is visible with `/skills list` or `/skills info <skill-name>` |
+| Claude Code plugin | `/clear`, then `/strike:<skill-name> <args>` |
+| Codex | Start a fresh conversation from the same project root, then type `$` and select the installed Strike skill, or use `/skills` to browse. The inserted form is typically `$<skill-name> <args>`. |
+| GitHub Copilot CLI | Start a fresh session if no reset command is visible, then `/<skill-name> <args>` after confirming the skill is visible with `/skills list` or `/skills info <skill-name>`. |
+
+When the handoff does not ask for a reset, run only the skill command for the
+current host.
 
 Examples:
 
 ```txt
+Reset context first: yes
 Next Strike skill: brainstorm
 Arguments: checkout-redesign
-Claude Code: /strike:brainstorm checkout-redesign
+Claude Code:
+/clear
+/strike:brainstorm checkout-redesign
 Codex: $brainstorm checkout-redesign
 GitHub Copilot CLI: /brainstorm checkout-redesign
 ```
 
 ```txt
+Reset context first: yes
 Next Strike skill: phase-plan
 Arguments: checkout-redesign phase:api-contract
-Claude Code: /strike:phase-plan checkout-redesign phase:api-contract
+Claude Code:
+/clear
+/strike:phase-plan checkout-redesign phase:api-contract
 Codex: $phase-plan checkout-redesign phase:api-contract
 GitHub Copilot CLI: /phase-plan checkout-redesign phase:api-contract
 ```

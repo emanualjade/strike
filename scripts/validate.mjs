@@ -363,7 +363,7 @@ function validateSkill(skillPath) {
     );
   }
   if (/(^|\n)\s*\/clear(\s|$)/.test(skillText) || skillText.includes("`/clear`")) {
-    fail(`${rel(skillFile)}: /clear is host-specific; use Reset context first: yes`);
+    fail(`${rel(skillFile)}: /clear is host-specific; use Reset context first: yes plus references/invocation.md rendering`);
   }
 
   const openaiMetadataPath = path.join(skillPath, "agents/openai.yaml");
@@ -504,7 +504,7 @@ function validateSharedReferences() {
     );
   }
   if (/(^|\n)\s*\/clear(\s|$)/.test(stageContracts) || stageContracts.includes("`/clear`")) {
-    fail(`${stageContractsPath}: /clear is host-specific; use Reset context first: yes`);
+    fail(`${stageContractsPath}: /clear is host-specific; use Reset context first: yes plus references/invocation.md rendering`);
   }
 }
 
