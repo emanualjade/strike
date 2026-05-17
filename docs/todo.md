@@ -9,10 +9,7 @@ plugin users; this file tracks release, validation, and setup work.
 
 ### User Decisions Needed
 
-- [ ] Decide whether the first public release stays `0.1.0`.
-  - Owner: user decides; Codex can update versions and tag the release.
-  - When it matters: before the first public release tag.
-  - Suggested default: keep `0.1.0` for the first public testing release.
+- None right now.
 
 ### User Tool Or UI Access Needed, Then Codex Can Continue
 
@@ -82,6 +79,7 @@ plugin users; this file tracks release, validation, and setup work.
   contracts, version alignment, MIT licensing, and balanced Markdown fences.
 - [x] Set the package license to MIT and added `LICENSE`.
 - [x] Added the initial `0.1.0` changelog.
+- [x] Decided to keep `0.1.0` as the first private testing release version.
 - [x] Rewrote `README.md` as a user-only install and usage guide.
 - [x] Documented the context-reset flow, including Claude Code `/clear` as an
   app prompt and fresh-session guidance for other hosts.
