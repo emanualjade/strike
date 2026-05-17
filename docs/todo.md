@@ -101,6 +101,8 @@ plugin users; this file tracks release, validation, and setup work.
 - [x] Decided to keep `emanualjade/strike` private for now.
 - [x] Confirmed Codex can add `git@github.com:emanualjade/strike.git` as a
   Git-backed marketplace and run `codex plugin marketplace upgrade strike`.
+- [x] Added user-facing Codex project/global install and uninstall sections to
+  `README.md`.
 - [x] Confirmed Claude Code can add `emanualjade/strike` as a Git-backed
   marketplace, install `strike@strike`, update it, and invoke `/strike:go`.
 - [x] Confirmed Claude Code local plugin smoke test with `/strike:go`.

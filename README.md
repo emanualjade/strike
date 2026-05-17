@@ -35,6 +35,92 @@ In the instructions below:
 
 ## Install In Codex
 
+Choose one Codex install style.
+
+### Codex Project Install And Uninstall
+
+Use this when one project should offer Strike, and you do not want to add the
+Strike marketplace to your general Codex setup.
+
+From the root of the project where you want to use Strike, add a repo marketplace
+file at `.agents/plugins/marketplace.json`.
+
+If your project already has this file, add the Strike plugin entry to the
+existing `plugins` list instead of replacing the file.
+
+For a new marketplace file, run this terminal command:
+
+```bash
+mkdir -p .agents/plugins
+cat > .agents/plugins/marketplace.json <<'JSON'
+{
+  "name": "strike-project",
+  "interface": {
+    "displayName": "Strike"
+  },
+  "plugins": [
+    {
+      "name": "strike",
+      "source": {
+        "source": "git-subdir",
+        "url": "git@github.com:emanualjade/strike.git",
+        "path": "./plugins/strike",
+        "ref": "main"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Coding"
+    }
+  ]
+}
+JSON
+```
+
+What this does:
+
+- `.agents/plugins/marketplace.json` tells Codex that this project has a plugin
+  marketplace.
+- `git@github.com:emanualjade/strike.git` is the Git repository Codex should
+  fetch Strike from.
+- `path: "./plugins/strike"` tells Codex where the Strike plugin lives inside
+  that repository.
+
+Open Codex from this same project root. You can use the Codex app, or run this
+terminal command from the project root:
+
+```bash
+codex
+```
+
+In the Codex prompt, open the plugin browser:
+
+```text
+/plugins
+```
+
+Find Strike in the project marketplace and install or enable it. After that,
+start a fresh Codex conversation from the same project root.
+
+To uninstall Strike from the project, first remove the installed plugin:
+
+```text
+/plugins
+```
+
+Select Strike, then choose **Uninstall plugin**.
+
+Then remove the project marketplace entry. If `.agents/plugins/marketplace.json`
+only exists for Strike, delete that file. If it lists other plugins too, remove
+only the Strike entry from the `plugins` list.
+
+Restart Codex from the project root after changing the project marketplace file.
+
+### Codex Global Install And Uninstall
+
+Use this when you want Strike available across your Codex setup.
+
 Run this terminal command:
 
 ```bash
@@ -66,6 +152,24 @@ In the Codex prompt, open the plugin browser:
 
 Find Strike and install or enable it. After that, start a fresh Codex
 conversation and run Strike from the root of the project you want it to work on.
+
+To uninstall Strike globally, first remove the installed plugin from the Codex
+plugin browser:
+
+```text
+/plugins
+```
+
+Select Strike, then choose **Uninstall plugin**.
+
+Then remove the global Strike marketplace with this terminal command:
+
+```bash
+codex plugin marketplace remove strike
+```
+
+Use the global uninstall when you no longer want Strike available across Codex,
+or when you want to switch from a global install to a project install.
 
 ## Install In Claude Code
 
