@@ -10,7 +10,7 @@ Use this as the running checklist for work that is not done yet, especially host
 
 - Add a first changelog/release note.
 - Keep improving local validation and smoke checks when new risks show up.
-- Prepare the exact Git-backed install/update test script for Codex, Claude Code, and Copilot CLI once the repo is pushed and accessible.
+- Prepare Copilot CLI smoke-test notes once the `copilot` command is available.
 
 ### Completed Locally
 
@@ -20,12 +20,15 @@ Use this as the running checklist for work that is not done yet, especially host
 - Defined the acceptance-fix loop: acceptance can move work back to implementation, phase-fix repairs phase-scoped acceptance findings, and phase-review verifies before acceptance reruns.
 - Extended local validation for skill handoff targets, Codex `agents/openai.yaml` metadata, host-neutral skill docs, and host-neutral stage contracts.
 - Set the package license to MIT and added `LICENSE`.
-- Verified with GitHub CLI that `emanualjade/strike` exists. It is currently
-  private and has no default branch yet.
+- Pushed `main` to `emanualjade/strike`; GitHub now reports `main` as the
+  default branch. The repository is currently private.
+- Confirmed Codex can add `git@github.com:emanualjade/strike.git` as a
+  Git-backed marketplace and run `codex plugin marketplace upgrade strike`.
+- Confirmed Claude Code can add `emanualjade/strike` as a Git-backed
+  marketplace, install `strike@strike`, update it, and invoke `/strike:go`.
 
 ### User Action Needed
 
-- Push `main` to `emanualjade/strike` so the repo has a default branch.
 - Decide whether `emanualjade/strike` should stay private for initial testing
   or become public for release.
 - Install or expose unavailable external tools if we want those checks:
@@ -35,8 +38,6 @@ Use this as the running checklist for work that is not done yet, especially host
 
 ### Externally Gated
 
-- Codex Git-backed update testing requires a Git-backed marketplace install.
-- Claude published-source update testing requires the GitHub marketplace source to be available.
 - Copilot CLI testing requires the `copilot` command.
 - Agent Skills reference validation requires the `skills-ref` command.
 
@@ -64,11 +65,13 @@ Use this as the running checklist for work that is not done yet, especially host
 
 - [x] Codex: add this repo as a local marketplace with `codex plugin marketplace add ./`.
 - [ ] Codex: open `/plugins`, install Strike from the local marketplace, confirm Strike skills are visible, and record the exact invocation form Codex exposes.
-- [ ] Codex: after a Git-backed marketplace install and a small versioned change, confirm the host-native plugin update flow. Local path marketplaces are not covered by `codex plugin marketplace upgrade`; the command reports that the marketplace is not configured as Git-backed.
+- [x] Codex: add `git@github.com:emanualjade/strike.git` as a Git-backed marketplace and run `codex plugin marketplace upgrade strike`.
+- [ ] Codex: after the next versioned change, rerun `codex plugin marketplace upgrade strike` to confirm it pulls a newer revision.
 - [x] Claude Code: run `claude --plugin-dir ./plugins/strike` and invoke a low-risk skill such as `/strike:go`; it returned the expected no-board result plus a canonical next-skill handoff.
 - [x] Claude Code: rerun `/strike:go smoke-test` after the release-readiness skill audit; expected no-board behavior still works.
 - [x] Claude Code: add this repo as a local marketplace, install `strike@strike`, run `claude plugin update strike@strike --scope local`, and invoke `/strike:go` from the installed plugin.
-- [ ] Claude Code: after publication, add the Git-backed marketplace and confirm `claude plugin update strike@strike` from the published source.
+- [x] Claude Code: add the Git-backed marketplace from `emanualjade/strike`, install `strike@strike`, run `claude plugin update strike@strike --scope local`, and invoke `/strike:go` from the installed plugin.
+- [ ] Claude Code: after the next versioned change, rerun `claude plugin update strike@strike --scope local` to confirm it pulls a newer revision.
 - [ ] GitHub Copilot CLI: install from the local path, run `/skills list` and `/skills info`, invoke a low-risk Strike skill, and confirm whether plugin skills use plain `/skill-name` commands.
 - [ ] GitHub Copilot CLI: after publication, install from the marketplace entry and run `copilot plugin update strike`.
 
