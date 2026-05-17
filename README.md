@@ -115,14 +115,19 @@ In Claude Code, use the Strike command form:
 /strike:start "Add CSV export" --slug csv-export --description "Let users export a CSV report."
 ```
 
-In Codex, use the skill shortcut. Type `$`, choose the Strike `start` skill,
-then add the arguments:
+In Codex, use the skill shortcut. The short form is:
 
 ```text
 $start "Add CSV export" --slug csv-export --description "Let users export a CSV report."
 ```
 
-You can also type `/skills` to browse available skills. If more than one
+The namespaced form also works if Codex shows or inserts it:
+
+```text
+$strike:start "Add CSV export" --slug csv-export --description "Let users export a CSV report."
+```
+
+You can type `$` or `/skills` to browse available skills. If more than one
 `start` skill appears, choose the one from Strike.
 
 After the card is created, ask Strike what to do next.
@@ -235,11 +240,19 @@ This is the happy path. Strike may send you backward when it finds missing
 decisions, research gaps, review findings, or acceptance failures. In that case,
 follow the `Next Strike skill` handoff it gives you.
 
-In Codex, use the same skill names and arguments with `$` skill shortcuts:
+In Codex, use the same skill names and arguments with `$` skill shortcuts. The
+short form is usually enough:
 
 ```text
 $spec csv-export
 $phase-build csv-export phase:export-query
+```
+
+If Codex shows namespaced Strike skills, the namespaced form also works:
+
+```text
+$strike:spec csv-export
+$strike:phase-build csv-export phase:export-query
 ```
 
 ## All Skills

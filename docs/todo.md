@@ -16,13 +16,6 @@ plugin users; this file tracks release, validation, and setup work.
 
 ### User Tool Or UI Access Needed, Then Codex Can Continue
 
-- [ ] Confirm Strike in the Codex `/plugins` UI.
-  - Owner: user, unless the user asks Codex to drive the app UI with Computer
-    Use.
-  - When it matters: before we claim Codex install and skill visibility are
-    fully smoke-tested.
-  - How: open Codex, type `/plugins`, find Strike, install or enable it, then
-    start a fresh conversation and confirm Strike skills are visible.
 - [ ] Run Agent Skills reference validation with `skills-ref`.
   - Owner: user makes the `skills-ref` command available; Codex runs the check.
   - When it matters: before claiming reference-validator coverage.
@@ -98,6 +91,10 @@ plugin users; this file tracks release, validation, and setup work.
 - [x] Updated generated start-card Codex handoffs to use `$` skill shortcuts.
 - [x] Restored `/clear` in the Claude-specific handoff rendering while keeping
   portable skill docs host-neutral.
+- [x] Confirmed Codex `/plugins` UI shows Strike, installs it, lists all Strike
+  skills, and can run the installed start skill in a separate consuming repo.
+- [x] Confirmed Codex accepts `$strike:start` and generated follow-up handoffs
+  use short `$brainstorm` form.
 - [x] Pushed `main` to `emanualjade/strike`; GitHub reports `main` as the
   default branch.
 - [x] Confirmed `emanualjade/strike` is currently private.

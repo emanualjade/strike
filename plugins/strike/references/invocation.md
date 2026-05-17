@@ -25,7 +25,7 @@ next command:
 | Host | Render the same handoff as |
 | --- | --- |
 | Claude Code plugin | `/clear`, then `/strike:<skill-name> <args>` |
-| Codex | Start a fresh conversation from the same project root, then type `$` and select the installed Strike skill, or use `/skills` to browse. The inserted form is typically `$<skill-name> <args>`. |
+| Codex | Start a fresh conversation from the same project root, then type `$` and select the installed Strike skill, or use `/skills` to browse. The short form is `$<skill-name> <args>`; namespaced `$strike:<skill-name> <args>` also works. |
 | GitHub Copilot CLI | Start a fresh session if no reset command is visible, then `/<skill-name> <args>` after confirming the skill is visible with `/skills list` or `/skills info <skill-name>`. |
 
 When the handoff does not ask for a reset, run only the skill command for the
@@ -41,6 +41,7 @@ Claude Code:
 /clear
 /strike:brainstorm checkout-redesign
 Codex: $brainstorm checkout-redesign
+Codex namespaced: $strike:brainstorm checkout-redesign
 GitHub Copilot CLI: /brainstorm checkout-redesign
 ```
 
@@ -52,6 +53,7 @@ Claude Code:
 /clear
 /strike:phase-plan checkout-redesign phase:api-contract
 Codex: $phase-plan checkout-redesign phase:api-contract
+Codex namespaced: $strike:phase-plan checkout-redesign phase:api-contract
 GitHub Copilot CLI: /phase-plan checkout-redesign phase:api-contract
 ```
 
