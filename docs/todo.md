@@ -95,6 +95,8 @@ plugin users; this file tracks release, validation, and setup work.
   skills, and can run the installed start skill in a separate consuming repo.
 - [x] Confirmed Codex accepts `$strike:start` and generated follow-up handoffs
   use short `$brainstorm` form.
+- [x] Updated handoff guidance so rendered host commands are labeled
+  `Next prompt`, not `Codex form`.
 - [x] Pushed `main` to `emanualjade/strike`; GitHub reports `main` as the
   default branch.
 - [x] Confirmed `emanualjade/strike` is currently private.

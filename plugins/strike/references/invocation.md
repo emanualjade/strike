@@ -31,6 +31,11 @@ next command:
 When the handoff does not ask for a reset, run only the skill command for the
 current host.
 
+When showing the current host's rendered command to the user, label it `Next
+prompt:`. Do not label it `Codex form`, `Claude form`, or similar host-specific
+wording. The host name belongs in docs and examples, not in the short handoff a
+user sees while working.
+
 Examples:
 
 ```txt

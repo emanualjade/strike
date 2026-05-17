@@ -61,6 +61,8 @@ Use a short plain-English response:
   Next Strike skill: brainstorm
   Arguments: <feature-slug>
   ```
+- if showing the current host's rendered command, label it `Next prompt:`
+  rather than `Codex form` or another host-specific label
 
 ## Gates
 

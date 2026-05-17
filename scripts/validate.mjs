@@ -557,6 +557,9 @@ function validateCodexShortcutHandoffs() {
     if (/next_codex=Use the Strike/.test(text)) {
       fail(`${relativePath}: generated Codex handoff should use $<skill> syntax`);
     }
+    if (/\bCodex form\s*:/.test(text)) {
+      fail(`${relativePath}: label rendered commands as "Next prompt", not "Codex form"`);
+    }
   }
 }
 
