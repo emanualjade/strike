@@ -1,0 +1,20 @@
+{
+  "name": "strike",
+  "interface": {
+    "displayName": "Strike"
+  },
+  "plugins": [
+    {
+      "name": "strike",
+      "source": {
+        "source": "local",
+        "path": "./plugins/strike"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Coding"
+    }
+  ]
+}

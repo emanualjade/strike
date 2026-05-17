@@ -1,0 +1,14 @@
+{
+  "name": "strike",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cross-agent skills plugin and marketplace for the Strike workflow.",
+  "license": "MIT",
+  "scripts": {
+    "validate": "node scripts/validate.mjs",
+    "validate:publish": "node scripts/validate.mjs --publish"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

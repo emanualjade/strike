@@ -1,0 +1,36 @@
+{
+  "name": "strike",
+  "version": "0.1.0",
+  "description": "Board-and-card workflow skills for turning rough feature ideas into scoped implementation, review, acceptance, and retro artifacts.",
+  "author": {
+    "name": "Standard News"
+  },
+  "license": "MIT",
+  "keywords": [
+    "strike",
+    "workflow",
+    "planning",
+    "specs",
+    "implementation"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Strike",
+    "shortDescription": "Feature workflow skills for durable planning, implementation, review, and acceptance",
+    "longDescription": "Strike packages a board-and-card workflow for agent-assisted feature delivery. Use it to start feature cards, sharpen rough ideas, make decisions, research only where useful, write specs, slice implementation phases, build, review, accept, and capture retros while keeping runtime state in the consuming repository.",
+    "developerName": "Standard News",
+    "category": "Coding",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Start a Strike card for this feature idea.",
+      "Show the next Strike step for this card.",
+      "Use Strike to plan and implement this feature."
+    ],
+    "brandColor": "#DC2626",
+    "screenshots": []
+  }
+}
