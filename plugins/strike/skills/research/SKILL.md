@@ -43,7 +43,8 @@ spec.md = source of truth that absorbs both
 When showing follow-up Strike skills, use the plugin package's
 `references/invocation.md` to render the current host's syntax. Do not copy
 `/strike:*` examples unchanged unless the current host is Claude Code. When
-the host is unknown, show the canonical handoff first.
+the host is unknown, show the skill name and arguments as a plain next action
+without raw field labels.
 
 ## Minimal Mechanics
 
@@ -300,31 +301,19 @@ moving.
 
 ## Output
 
-Final response should be short:
+Final response should be short and user-facing:
 
 - research path written
 - whether the card moved to `04-spec`, moved back to `02-grill`, or stayed in
   `03-research`
 - key findings or missing research/user-decision gaps
-- next action:
-  - if moved to or stayed in `04-spec`:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: spec
-    Arguments: <feature-slug>
-    ```
-  - if moved back to `02-grill`:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: grill
-    Arguments: <feature-slug>
-    ```
-  - if still in `03-research`, show the focused rerun handoff:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: research
-    Arguments: <feature-slug>
-    ```
+- next prompt, rendered for the current host with `references/invocation.md`:
+  `spec <feature-slug>` when ready for spec, `grill <feature-slug>` when
+  routed back for decisions, or `research <feature-slug>` when research should
+  continue
+
+Do not show raw handoff fields such as `Reset context first`, `Next Strike
+skill`, or `Arguments`.
 
 ## Gates
 

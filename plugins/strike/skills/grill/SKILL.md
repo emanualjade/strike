@@ -32,7 +32,8 @@ transcript.
 When showing follow-up Strike skills, use the plugin package's
 `references/invocation.md` to render the current host's syntax. Do not copy
 `/strike:*` examples unchanged unless the current host is Claude Code. When
-the host is unknown, show the canonical handoff first.
+the host is unknown, show the skill name and arguments as a plain next action
+without raw field labels.
 
 ## Minimal Mechanics
 
@@ -285,44 +286,21 @@ If any decision would need to be rediscovered, update `grill.md` before moving.
 
 ## Output
 
-Final response should be short:
+Final response should be short and user-facing:
 
 - grill path written
 - whether the card moved to `03-research`, moved to `04-spec`, or stayed in
   `02-grill`
 - key decisions captured or missing decision gaps
-- next action:
-  - if moved to `03-research`, show the recommended research handoff plus the
-    skip path:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: research
-    Arguments: <feature-slug>
-    ```
-    Or skip research and go straight to creating the spec:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: research
-    Arguments: <feature-slug> skip
-    ```
-  - if moved to `04-spec`, show the spec handoff and optional research:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: spec
-    Arguments: <feature-slug>
-    ```
-    Optional before spec:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: research
-    Arguments: <feature-slug>
-    ```
-  - if still in `02-grill`, show the focused rerun handoff:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: grill
-    Arguments: <feature-slug>
-    ```
+- next prompt, rendered for the current host with `references/invocation.md`:
+  - moved to `03-research`: recommend `research <feature-slug>` and also show
+    the skip path `research <feature-slug> skip`
+  - moved to `04-spec`: recommend `spec <feature-slug>` and mention optional
+    research first with `research <feature-slug>`
+  - stayed in `02-grill`: show `grill <feature-slug>`
+
+Do not show raw handoff fields such as `Reset context first`, `Next Strike
+skill`, or `Arguments`.
 
 ## Gates
 

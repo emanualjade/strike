@@ -95,6 +95,9 @@ plugin users; this file tracks release, validation, and setup work.
   use short `$brainstorm` form.
 - [x] Improved the `start` skill's user-facing output and bumped the plugin to
   `0.1.1`.
+- [x] Cleaned up package-wide skill output guidance so user-facing responses
+  show next prompts instead of internal handoff fields, and bumped the plugin to
+  `0.1.2`.
 - [x] Updated handoff guidance so rendered host commands are labeled
   `Next prompt`, not `Codex form`.
 - [x] Pushed `main` to `emanualjade/strike`; GitHub reports `main` as the

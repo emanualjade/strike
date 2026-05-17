@@ -39,7 +39,8 @@ A good phase plan:
 When showing follow-up Strike skills, use the plugin package's
 `references/invocation.md` to render the current host's syntax. Do not copy
 `/strike:*` examples unchanged unless the current host is Claude Code. When
-the host is unknown, show the canonical handoff first.
+the host is unknown, show the skill name and arguments as a plain next action
+without raw field labels.
 
 ## Minimal Mechanics
 
@@ -259,26 +260,20 @@ brief before updating the card.
 
 ## Output
 
-Final response should be short:
+Final response should be short and user-facing:
 
 - build brief path written, or why it was blocked
 - key research/precedent findings
 - card/board update
-- next action:
-  - if the brief was written:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: phase-build
-    Arguments: <feature-slug> phase:<phase-slug>
-    ```
-  - if blocked by missing evidence, show:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: phase-research
-    Arguments: <feature-slug> phase:<phase-slug>
-    ```
-  - if blocked by upstream feature decisions, show the relevant `grill`,
-    `research`, or `slice` handoff.
+- next prompt, rendered for the current host with `references/invocation.md`:
+  - brief written: `phase-build <feature-slug> phase:<phase-slug>`
+  - blocked by missing evidence:
+    `phase-research <feature-slug> phase:<phase-slug>`
+  - blocked by upstream feature decisions: the relevant `grill`, `research`, or
+    `slice` prompt
+
+Do not show raw handoff fields such as `Reset context first`, `Next Strike
+skill`, or `Arguments`.
 
 ## Gates
 

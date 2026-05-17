@@ -33,7 +33,8 @@ YAML blocks, hidden routing metadata, or sidecar checker files.
 When showing follow-up Strike skills, use the plugin package's
 `references/invocation.md` to render the current host's syntax. Do not copy
 `/strike:*` examples unchanged unless the current host is Claude Code. When
-the host is unknown, show the canonical handoff first.
+the host is unknown, show the skill name and arguments as a plain next action
+without raw field labels.
 
 ## Minimal Mechanics
 
@@ -211,59 +212,26 @@ ready when:
 
 ## Output
 
-Final response should be short:
+Final response should be short and user-facing:
 
 - review path written
 - verdict
 - blocking fixes, if any
 - whether the card moved to `07-acceptance` or stayed in `06-implementation`
-- next action:
-  - if review needs fixes:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: phase-fix
-    Arguments: <feature-slug> phase:<phase-slug>
-    ```
-  - if this phase passed and more phases remain, show optional phase research
-    and direct phase-plan for the next phase:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: phase-research
-    Arguments: <feature-slug> phase:<next-phase-slug>
-    ```
-    Or create the build brief:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: phase-plan
-    Arguments: <feature-slug> phase:<next-phase-slug>
-    ```
-  - if all phases passed and the card moved to `07-acceptance`, show exactly
-    one acceptance handoff. If run kind is Dogfood:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: accept
-    Arguments: <feature-slug> dogfood
-    ```
-    Otherwise:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: accept
-    Arguments: <feature-slug>
-    ```
-  - if run kind is undecided, show both acceptance choices briefly:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: accept
-    Arguments: <feature-slug> dogfood
-    ```
-    or:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: accept
-    Arguments: <feature-slug>
-    ```
-  - if blocked by missing evidence, show the handoff that supplies that evidence
-    when obvious; otherwise show a `go` handoff as a state check.
+- next prompt, rendered for the current host with `references/invocation.md`:
+  - needs fixes: `phase-fix <feature-slug> phase:<phase-slug>`
+  - phase passed and more phases remain: optional
+    `phase-research <feature-slug> phase:<next-phase-slug>` and direct
+    `phase-plan <feature-slug> phase:<next-phase-slug>`
+  - all phases passed: exactly one acceptance prompt, using
+    `accept <feature-slug> dogfood` for Dogfood runs or `accept <feature-slug>`
+    otherwise
+  - run kind undecided: show both acceptance choices briefly
+  - blocked by missing evidence: show the prompt that supplies that evidence
+    when obvious; otherwise show `go <feature-slug>` as a state check
+
+Do not show raw handoff fields such as `Reset context first`, `Next Strike
+skill`, or `Arguments`.
 
 ## Gates
 

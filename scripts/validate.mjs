@@ -347,6 +347,23 @@ function validateSkill(skillPath) {
     fail(`${rel(skillFile)}: Markdown code fences must be balanced`);
   }
 
+  const outputHeading = skillText.match(/^## Output\s*$/m);
+  if (outputHeading) {
+    const outputStart = outputHeading.index + outputHeading[0].length;
+    const outputRest = skillText.slice(outputStart);
+    const nextHeading = outputRest.search(/^##\s+/m);
+    const outputText = nextHeading === -1 ? outputRest : outputRest.slice(0, nextHeading);
+    if (
+      /Reset context first:\s*yes/.test(outputText) ||
+      /Next Strike skill:/.test(outputText) ||
+      /(^|\n)\s*Arguments:\s*/.test(outputText)
+    ) {
+      fail(
+        `${rel(skillFile)}: Output section must render user-facing next prompts instead of raw handoff fields`,
+      );
+    }
+  }
+
   if (!skillText.includes("## Host Invocation")) {
     fail(`${rel(skillFile)}: missing Host Invocation section`);
   }

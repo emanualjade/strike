@@ -31,7 +31,8 @@ brief.
 When showing follow-up Strike skills, use the plugin package's
 `references/invocation.md` to render the current host's syntax. Do not copy
 `/strike:*` examples unchanged unless the current host is Claude Code. When
-the host is unknown, show the canonical handoff first.
+the host is unknown, show the skill name and arguments as a plain next action
+without raw field labels.
 
 ## Minimal Mechanics
 
@@ -226,38 +227,21 @@ phase, improve the phase plans before moving.
 
 ## Output
 
-Final response should be short:
+Final response should be short and user-facing:
 
 - phase folders written
 - whether the card moved to `06-implementation` for phase planning, moved back
   to `04-spec`, or stayed in `05-slice`
 - the recommended first phase
-- next action:
-  - if moved to `06-implementation`, show optional phase research and direct
-    phase-plan for the first phase:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: phase-research
-    Arguments: <feature-slug> phase:<first-phase-slug>
-    ```
-    Or create the build brief:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: phase-plan
-    Arguments: <feature-slug> phase:<first-phase-slug>
-    ```
-  - if moved back to `04-spec`:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: spec
-    Arguments: <feature-slug>
-    ```
-  - if still in `05-slice`, show the focused rerun handoff:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: slice
-    Arguments: <feature-slug>
-    ```
+- next prompt, rendered for the current host with `references/invocation.md`:
+  - moved to `06-implementation`: show optional
+    `phase-research <feature-slug> phase:<first-phase-slug>` and direct
+    `phase-plan <feature-slug> phase:<first-phase-slug>`
+  - moved back to `04-spec`: show `spec <feature-slug>`
+  - stayed in `05-slice`: show `slice <feature-slug>`
+
+Do not show raw handoff fields such as `Reset context first`, `Next Strike
+skill`, or `Arguments`.
 
 ## Gates
 

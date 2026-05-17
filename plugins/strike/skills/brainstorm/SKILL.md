@@ -31,7 +31,8 @@ not rush the idea into implementation language.
 When showing follow-up Strike skills, use the plugin package's
 `references/invocation.md` to render the current host's syntax. Do not copy
 `/strike:*` examples unchanged unless the current host is Claude Code. When
-the host is unknown, show the canonical handoff first.
+the host is unknown, show the skill name and arguments as a plain next action
+without raw field labels.
 
 ## Philosophy
 
@@ -289,24 +290,17 @@ When the brainstorm is not ready:
 
 ## Output
 
-Final response should be short:
+Final response should be short and user-facing:
 
 - brainstorm path written
 - whether the card moved to `02-grill` or stayed in `01-brainstorm`
 - questions for grill or open brainstorm gaps
-- next action:
-  - if moved to `02-grill`:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: grill
-    Arguments: <feature-slug>
-    ```
-  - if still in `01-brainstorm`, show the focused rerun handoff:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: brainstorm
-    Arguments: <feature-slug>
-    ```
+- next prompt, rendered for the current host with `references/invocation.md`:
+  `grill <feature-slug>` if moved to `02-grill`, or
+  `brainstorm <feature-slug>` if still in `01-brainstorm`
+
+Do not show raw handoff fields such as `Reset context first`, `Next Strike
+skill`, or `Arguments`.
 
 ## Gates
 

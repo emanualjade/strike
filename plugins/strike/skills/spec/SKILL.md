@@ -32,7 +32,8 @@ implementation plan.
 When showing follow-up Strike skills, use the plugin package's
 `references/invocation.md` to render the current host's syntax. Do not copy
 `/strike:*` examples unchanged unless the current host is Claude Code. When
-the host is unknown, show the canonical handoff first.
+the host is unknown, show the skill name and arguments as a plain next action
+without raw field labels.
 
 ## Minimal Mechanics
 
@@ -437,43 +438,21 @@ before moving.
 
 ## Output
 
-Final response should be short:
+Final response should be short and user-facing:
 
 - spec path written
 - whether the card moved to `05-slice`, moved back to `02-grill`, moved back to
   `03-research`, or stayed in `04-spec`
 - key spec decisions captured or missing gaps
-- next action:
-  - if moved to `05-slice`, show optional spec review and direct slice:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: spec-review
-    Arguments: <feature-slug>
-    ```
-    Or skip spec review and create vertical phases:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: slice
-    Arguments: <feature-slug>
-    ```
-  - if moved back to `02-grill`:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: grill
-    Arguments: <feature-slug>
-    ```
-  - if moved back to `03-research`:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: research
-    Arguments: <feature-slug>
-    ```
-  - if still in `04-spec`, show the focused rerun handoff:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: spec
-    Arguments: <feature-slug>
-    ```
+- next prompt, rendered for the current host with `references/invocation.md`:
+  - moved to `05-slice`: show optional `spec-review <feature-slug>` and direct
+    `slice <feature-slug>`
+  - moved back to `02-grill`: show `grill <feature-slug>`
+  - moved back to `03-research`: show `research <feature-slug>`
+  - stayed in `04-spec`: show `spec <feature-slug>`
+
+Do not show raw handoff fields such as `Reset context first`, `Next Strike
+skill`, or `Arguments`.
 
 ## Gates
 

@@ -32,7 +32,8 @@ actually resolved.
 When showing follow-up Strike skills, use the plugin package's
 `references/invocation.md` to render the current host's syntax. Do not copy
 `/strike:*` examples unchanged unless the current host is Claude Code. When
-the host is unknown, show the canonical handoff first.
+the host is unknown, show the skill name and arguments as a plain next action
+without raw field labels.
 
 ## Source Of Truth
 
@@ -223,7 +224,7 @@ Do not add:
 
 ## Output
 
-Keep responses compact:
+Keep responses compact and user-facing:
 
 - what you checked
 - what language issue you found, if any

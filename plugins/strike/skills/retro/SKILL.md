@@ -31,7 +31,8 @@ YAML blocks, status fields, or routing metadata.
 When showing follow-up Strike skills, use the plugin package's
 `references/invocation.md` to render the current host's syntax. Do not copy
 `/strike:*` examples unchanged unless the current host is Claude Code. When
-the host is unknown, show the canonical handoff first.
+the host is unknown, show the skill name and arguments as a plain next action
+without raw field labels.
 
 ## State Model
 
@@ -133,7 +134,7 @@ feature slug under `docs/strike/board/*/`.
 
 ## Output
 
-Final response should be short:
+Final response should be short and user-facing:
 
 - retro path written
 - top two or three lessons

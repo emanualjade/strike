@@ -37,7 +37,8 @@ state.
 When showing follow-up Strike skills, use the plugin package's
 `references/invocation.md` to render the current host's syntax. Do not copy
 `/strike:*` examples unchanged unless the current host is Claude Code. When
-the host is unknown, show the canonical handoff first.
+the host is unknown, show the skill name and arguments as a plain next action
+without raw field labels.
 
 ## Reads
 
@@ -175,40 +176,20 @@ conversation, move the pointer to `02-grill` and recommend the `grill` skill.
 
 ## Output
 
-Final response should be short:
+Final response should be short and user-facing:
 
 - `Slice reviewed.`
 - `Fixed:` list only meaningful fixes, or `None.`
 - `Questions:` list any user decisions still needed, or `None.`
-- `Next:` usually:
-  ```txt
-  Reset context first: yes
-  Next Strike skill: phase-plan
-  Arguments: <feature-slug> phase:<first-phase-slug>
-  ```
-  If the phase list still needs broad evidence, a real upstream decision, or
-  re-slicing, move the pointer to the owning lane first, then show the relevant
-  full handoff:
-  ```txt
-  Reset context first: yes
-  Next Strike skill: phase-research
-  Arguments: <feature-slug> phase:<phase-slug>
-  ```
-  ```txt
-  Reset context first: yes
-  Next Strike skill: research
-  Arguments: <feature-slug>
-  ```
-  ```txt
-  Reset context first: yes
-  Next Strike skill: grill
-  Arguments: <feature-slug>
-  ```
-  ```txt
-  Reset context first: yes
-  Next Strike skill: slice
-  Arguments: <feature-slug>
-  ```
+- `Next:` usually render
+  `phase-plan <feature-slug> phase:<first-phase-slug>` for the current host
+  with `references/invocation.md`. If the phase list still needs broad
+  evidence, a real upstream decision, or re-slicing, move the pointer to the
+  owning lane first and render the relevant `phase-research`, `research`,
+  `grill`, or `slice` prompt.
+
+Do not show raw handoff fields such as `Reset context first`, `Next Strike
+skill`, or `Arguments`.
 
 ## Gates
 

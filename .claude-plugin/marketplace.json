@@ -4,13 +4,13 @@
     "name": "Standard News"
   },
   "description": "A Claude Code marketplace for the Strike board-and-card workflow plugin.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "plugins": [
     {
       "name": "strike",
       "source": "./plugins/strike",
       "description": "Board-and-card workflow skills for turning rough feature ideas into scoped implementation, review, acceptance, and retro artifacts.",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "author": {
         "name": "Standard News"
       },

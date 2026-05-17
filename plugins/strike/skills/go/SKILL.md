@@ -27,7 +27,8 @@ action. This is intentionally read-only.
 Use the plugin package's `references/invocation.md` when showing next actions.
 The routing examples below use Strike's canonical handoff form. Render them for
 the current host instead of assuming `/strike:*` is always valid. When the host
-is unknown, show the canonical handoff first.
+is unknown, show the skill name and arguments as a plain next action without raw
+field labels.
 
 ## Read Order
 
@@ -216,7 +217,7 @@ status field inside `card.md`.
 
 ## Output
 
-Keep the response short:
+Keep the response short and user-facing:
 
 - resolved card and lane
 - visible unchecked checklist items

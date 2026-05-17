@@ -39,7 +39,8 @@ A good phase build:
 When showing follow-up Strike skills, use the plugin package's
 `references/invocation.md` to render the current host's syntax. Do not copy
 `/strike:*` examples unchanged unless the current host is Claude Code. When
-the host is unknown, show the canonical handoff first.
+the host is unknown, show the skill name and arguments as a plain next action
+without raw field labels.
 
 ## Minimal Mechanics
 
@@ -275,50 +276,24 @@ If review would have to reconstruct the build from git diff alone, improve
 
 ## Output
 
-Final response should be short:
+Final response should be short and user-facing:
 
 - build path written, or why build was blocked
 - app/test/docs files changed
 - checks run
 - rollback note
 - card/board update
-- next action:
-  - if built:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: phase-review
-    Arguments: <feature-slug> phase:<phase-slug>
-    ```
-  - if blocked by missing brief:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: phase-plan
-    Arguments: <feature-slug> phase:<phase-slug>
-    ```
-  - if blocked by missing phase evidence:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: phase-research
-    Arguments: <feature-slug> phase:<phase-slug>
-    ```
-  - if blocked by an upstream feature decision, feature-level evidence gap, or
-    wrong phase split, move the pointer to the owning lane and show the relevant
-    full handoff:
-    ```txt
-    Reset context first: yes
-    Next Strike skill: grill
-    Arguments: <feature-slug>
-    ```
-    ```txt
-    Reset context first: yes
-    Next Strike skill: research
-    Arguments: <feature-slug>
-    ```
-    ```txt
-    Reset context first: yes
-    Next Strike skill: slice
-    Arguments: <feature-slug>
-    ```
+- next prompt, rendered for the current host with `references/invocation.md`:
+  - built: `phase-review <feature-slug> phase:<phase-slug>`
+  - blocked by missing brief: `phase-plan <feature-slug> phase:<phase-slug>`
+  - blocked by missing phase evidence:
+    `phase-research <feature-slug> phase:<phase-slug>`
+  - blocked by an upstream feature decision, feature-level evidence gap, or
+    wrong phase split: move the pointer to the owning lane and render the
+    relevant `grill`, `research`, or `slice` prompt
+
+Do not show raw handoff fields such as `Reset context first`, `Next Strike
+skill`, or `Arguments`.
 
 ## Gates
 

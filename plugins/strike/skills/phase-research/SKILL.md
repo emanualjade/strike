@@ -33,7 +33,8 @@ the `phase-plan` skill.
 When showing follow-up Strike skills, use the plugin package's
 `references/invocation.md` to render the current host's syntax. Do not copy
 `/strike:*` examples unchanged unless the current host is Claude Code. When
-the host is unknown, show the canonical handoff first.
+the host is unknown, show the skill name and arguments as a plain next action
+without raw field labels.
 
 ## Minimal Mechanics
 
@@ -181,24 +182,18 @@ ready when:
 
 ## Output
 
-Final response should be short:
+Final response should be short and user-facing:
 
 - phase research path written, or why it was blocked
 - key findings or blockers
 - whether board state changed; normally no, except wrong phase splits route
   back to `05-slice`
-- next action:
-  ```txt
-  Reset context first: yes
-  Next Strike skill: phase-plan
-  Arguments: <feature-slug> phase:<phase-slug>
-  ```
-  If the phase split was wrong:
-  ```txt
-  Reset context first: yes
-  Next Strike skill: slice
-  Arguments: <feature-slug>
-  ```
+- next prompt, rendered for the current host with `references/invocation.md`:
+  `phase-plan <feature-slug> phase:<phase-slug>`, or `slice <feature-slug>` if
+  the phase split was wrong
+
+Do not show raw handoff fields such as `Reset context first`, `Next Strike
+skill`, or `Arguments`.
 
 ## Gates
 

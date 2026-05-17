@@ -34,7 +34,8 @@ This is not a rebuild, redesign, or cleanup pass.
 When showing follow-up Strike skills, use the plugin package's
 `references/invocation.md` to render the current host's syntax. Do not copy
 `/strike:*` examples unchanged unless the current host is Claude Code. When
-the host is unknown, show the canonical handoff first.
+the host is unknown, show the skill name and arguments as a plain next action
+without raw field labels.
 
 ## Minimal Mechanics
 
@@ -219,18 +220,17 @@ ready when:
 
 ## Output
 
-Final response should be short:
+Final response should be short and user-facing:
 
 - fix path written, or why fix was blocked
 - blocking items addressed
 - files changed
 - checks run
-- next action:
-  ```txt
-  Reset context first: yes
-  Next Strike skill: phase-review
-  Arguments: <feature-slug> phase:<phase-slug>
-  ```
+- next prompt, rendered for the current host with `references/invocation.md`:
+  `phase-review <feature-slug> phase:<phase-slug>`
+
+Do not show raw handoff fields such as `Reset context first`, `Next Strike
+skill`, or `Arguments`.
 
 ## Gates
 

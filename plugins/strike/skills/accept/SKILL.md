@@ -32,7 +32,8 @@ that live human/demo checks were intentionally not run.
 When showing follow-up Strike skills, use the plugin package's
 `references/invocation.md` to render the current host's syntax. Do not copy
 `/strike:*` examples unchanged unless the current host is Claude Code. When
-the host is unknown, show the canonical handoff first.
+the host is unknown, show the skill name and arguments as a plain next action
+without raw field labels.
 
 ## State Model
 
@@ -167,7 +168,7 @@ required before retro, not imply retro can run immediately.
 
 ## Output
 
-Final response should be short:
+Final response should be short and user-facing:
 
 - acceptance path written
 - verdict
@@ -175,20 +176,16 @@ Final response should be short:
 - whether the card moved to `08-retro`
 - dogfood rollback commands when in dogfood mode, labeled as required before
   retro
-- in normal mode, when accepted:
-  ```txt
-  Reset context first: yes
-  Next Strike skill: retro
-  Arguments: <feature-slug>
-  ```
-- in dogfood mode, say to run the exact rollback commands before retro, then:
-  ```txt
-  Reset context first: yes
-  Next Strike skill: retro
-  Arguments: <feature-slug>
-  ```
-- when acceptance needs fixes, show the specific `phase-fix` handoff when an
-  affected phase is clear; otherwise show a `go` handoff as a state check.
+- next prompt, rendered for the current host with `references/invocation.md`:
+  - normal accepted: `retro <feature-slug>`
+  - dogfood accepted: first tell the user to run the exact rollback commands,
+    then show `retro <feature-slug>`
+  - needs fixes: show the specific
+    `phase-fix <feature-slug> phase:<phase-slug>` prompt when an affected phase
+    is clear; otherwise show `go <feature-slug>` as a state check
+
+Do not show raw handoff fields such as `Reset context first`, `Next Strike
+skill`, or `Arguments`.
 
 ## Gates
 

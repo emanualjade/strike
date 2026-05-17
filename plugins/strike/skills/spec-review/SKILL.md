@@ -36,7 +36,8 @@ state.
 When showing follow-up Strike skills, use the plugin package's
 `references/invocation.md` to render the current host's syntax. Do not copy
 `/strike:*` examples unchanged unless the current host is Claude Code. When
-the host is unknown, show the canonical handoff first.
+the host is unknown, show the skill name and arguments as a plain next action
+without raw field labels.
 
 ## Reads
 
@@ -178,19 +179,19 @@ the pointer back to `02-grill` and recommend the `grill` skill.
 
 ## Output
 
-Final response should be short:
+Final response should be short and user-facing:
 
 - `Spec reviewed.`
 - `Fixed:` list only meaningful fixes, or `None.`
 - `Questions:` list any user decisions still needed, or `None.`
-- `Next:` usually:
-  ```txt
-  Reset context first: yes
-  Next Strike skill: slice
-  Arguments: <feature-slug>
-  ```
-  If review found an upstream decision or evidence problem, move the pointer to
-  the owning lane first, then show the relevant `grill` or `research` handoff.
+- `Next:` render `slice <feature-slug>` for the current host with
+  `references/invocation.md`, unless review found an upstream decision or
+  evidence problem; in that case, move the pointer to the owning lane first and
+  render the relevant `grill <feature-slug>` or `research <feature-slug>`
+  prompt.
+
+Do not show raw handoff fields such as `Reset context first`, `Next Strike
+skill`, or `Arguments`.
 
 ## Gates
 

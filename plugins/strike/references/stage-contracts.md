@@ -48,7 +48,7 @@ Primary job:
 - inspect board pointers and resolve the requested feature
 - report the current lane, visible checklist items, and one recommended next
   action
-- show the canonical host-neutral handoff for any recommended next Strike skill
+- render the current host's next prompt for any recommended Strike skill
 
 Reads:
 
