@@ -12,6 +12,10 @@ node <plugin-root>/references/scripts/slugify.mjs demo --text "Mobile flow optio
 Do not inline host-specific `!` commands, hand-roll slug rules, or create
 different per-skill filename conventions.
 
+The helper flags are for bundled Strike scripts and skill instructions, not for
+normal user-facing Strike prompts. User-facing skill flags should be documented
+in that skill's `SKILL.md` and README examples.
+
 ## Shared Rules
 
 - Slugs are lowercase ASCII with numbers and hyphens only.

@@ -17,7 +17,7 @@ Strike skills are portable; each host renders the same skill differently.
 Canonical skill names:
 
 ```txt
-start <feature name words>
+start <feature name words> [--slug <slug>] [--description <description words>]
 go <feature-slug>
 brainstorm <feature-slug>
 grill <feature-slug>
@@ -36,6 +36,10 @@ retro <feature-slug>
 demo <feature-slug> "<what the demo should explore>"
 language <term|feature-slug|path>
 ```
+
+`start` is the only normal user-facing Strike skill with double-dash options.
+Other skills use positional arguments, plain optional words such as `skip` or
+`dogfood`, or the `phase:<phase-slug>` token for phase-scoped work.
 
 Claude Code examples:
 

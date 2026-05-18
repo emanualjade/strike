@@ -250,6 +250,13 @@ You can type `$` or `/skills` to browse available skills. If more than one
 dropped, so `Add CSV export` becomes `csv-export`. You can still pass
 `--slug <slug>` when you want to choose the slug yourself.
 
+Supported `start` options:
+
+| Option | Meaning |
+| --- | --- |
+| `--description <text>` | Saves a short description in the card. If omitted, Strike writes a placeholder. |
+| `--slug <slug>` | Chooses the card slug yourself. Strike still sanitizes, shortens, and deduplicates it. |
+
 After the card is created, ask Strike what to do next.
 
 Claude Code:
@@ -376,6 +383,22 @@ $strike:phase-build csv-export phase:export-query
 ```
 
 ## All Skills
+
+Strike prompts mostly use plain positional arguments. `start` is the only
+normal user-facing skill with double-dash options today:
+
+```text
+start <feature name words> [--slug <slug>] [--description <description words>]
+```
+
+Phase skills use a named token instead of a dash flag:
+
+```text
+phase-build <feature-slug> phase:<phase-slug>
+```
+
+Some skills accept one optional plain word, such as `research <feature-slug>
+skip`, `accept <feature-slug> dogfood`, or `go <feature-slug> verbose`.
 
 - `start`: create a new feature card.
 - `go`: inspect the board and recommend the next step.

@@ -34,6 +34,11 @@ The bundled start script uses `references/scripts/slugify.mjs` and the shared
 verbs from generated feature names, cap feature slugs at 48 characters, and
 deduplicate collisions with numeric suffixes.
 
+User-facing `start` options are only `--slug <slug>` and
+`--description <text>`. Flag-like words after the feature name has started are
+plain feature text, not options. For example, `Add --dry-run flag` describes a
+feature about a `--dry-run` flag; it does not enable a Strike dry-run mode.
+
 ## Host Invocation
 
 When showing follow-up Strike skills, use the plugin package's

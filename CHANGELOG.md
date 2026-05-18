@@ -2,6 +2,11 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.1.6 - 2026-05-17
+
+- Clarified the user-facing `start` options and kept edge-case parsing guidance
+  in the skill instructions instead of the README.
+
 ## 0.1.5 - 2026-05-17
 
 - Quieted `brainstorm` progress guidance so routine board/card/context reads
