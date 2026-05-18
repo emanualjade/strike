@@ -6,11 +6,14 @@ usage() {
   printf 'Set STRIKE_REPO_ROOT as an alternative to --repo-root.\n' >&2
 }
 
-max_slug_length=48
 feature_name_parts=()
 slug_override=""
 description=""
 repo_root="${STRIKE_REPO_ROOT:-}"
+node_bin="${STRIKE_NODE:-node}"
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+plugin_root="$(cd "$script_dir/../../.." && pwd)"
+slug_helper="$plugin_root/references/scripts/slugify.mjs"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -83,115 +86,49 @@ fi
 repo_root="$(cd "$repo_root" && pwd)"
 strike_root="$repo_root/docs/strike"
 
+if ! command -v "$node_bin" >/dev/null 2>&1; then
+  printf 'Node.js 18+ is required to run Strike slug helpers. Install Node.js or set STRIKE_NODE to its path.\n' >&2
+  exit 2
+fi
+
+if ! "$node_bin" -e 'const major = Number(process.versions.node.split(".")[0]); process.exit(major >= 18 ? 0 : 1);'; then
+  printf 'Node.js 18+ is required to run Strike slug helpers. Current version: %s\n' "$("$node_bin" --version 2>/dev/null || printf 'unknown')" >&2
+  exit 2
+fi
+
 normalize_text() {
   printf '%s' "$1" \
     | tr '\r\n\t' '   ' \
     | sed -E 's/[[:cntrl:]]+/ /g; s/[[:space:]]+/ /g; s/^ //; s/ $//'
 }
 
-slugify() {
-  normalize_text "$1" \
-    | tr '[:upper:]' '[:lower:]' \
-    | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//; s/-+/-/g'
-}
-
-shorten_slug() {
-  local value="$1"
-  local shortened
-  local boundary
-
-  if (( ${#value} <= max_slug_length )); then
-    printf '%s' "$value"
-    return
-  fi
-
-  shortened="${value:0:max_slug_length}"
-  if [[ "$shortened" == *-* ]]; then
-    boundary="${shortened%-*}"
-    if (( ${#boundary} >= max_slug_length / 2 )); then
-      shortened="$boundary"
-    fi
-  fi
-  shortened="${shortened%-}"
-  printf '%s' "$shortened"
-}
-
-drop_leading_task_verb() {
-  local value="$1"
-  local first
-  local rest
-  local dropped_task_verb="no"
-  local -a parts
-
-  IFS='-' read -r -a parts <<< "$value"
-  if (( ${#parts[@]} < 2 )); then
-    printf '%s' "$value"
-    return
-  fi
-
-  first="${parts[0]}"
-  rest="${value#*-}"
-  case "$first" in
-    add|allow|build|create|enable|fix|implement|improve|make|remove|support|update)
-      value="$rest"
-      dropped_task_verb="yes"
-      ;;
-    *)
-      ;;
-  esac
-
-  if [[ "$dropped_task_verb" == "yes" ]]; then
-    IFS='-' read -r -a parts <<< "$value"
-    if (( ${#parts[@]} >= 2 )); then
-      first="${parts[0]}"
-      rest="${value#*-}"
-      case "$first" in
-        a|an|the)
-          value="$rest"
-          ;;
-      esac
-    fi
-  fi
-
-  printf '%s' "$value"
-}
-
-slug_with_suffix() {
-  local base="$1"
-  local suffix="$2"
-  local max_base_length=$((max_slug_length - ${#suffix}))
-  local stem
-
-  if (( max_base_length < 1 )); then
-    max_base_length=1
-  fi
-  stem="${base:0:max_base_length}"
-  stem="${stem%-}"
-  if [[ -z "$stem" ]]; then
-    stem="${base:0:1}"
-  fi
-
-  printf '%s%s' "$stem" "$suffix"
-}
-
-board_pointer_exists() {
-  local value="$1"
-
-  find "$strike_root/board" -mindepth 2 -maxdepth 2 -type f -name "$value.md" -print -quit 2>/dev/null \
-    | grep -q .
-}
-
-if [[ -n "$slug_override" ]]; then
-  slug="$(slugify "$slug_override")"
-else
-  slug="$(slugify "$feature_name")"
-  slug="$(drop_leading_task_verb "$slug")"
+taken_args=()
+if [[ -d "$strike_root/cards" ]]; then
+  while IFS= read -r existing_card_slug; do
+    [[ -n "$existing_card_slug" ]] && taken_args+=(--taken "$existing_card_slug")
+  done < <(find "$strike_root/cards" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort)
+fi
+if [[ -d "$strike_root/board" ]]; then
+  while IFS= read -r existing_pointer_path; do
+    existing_pointer_slug="$(basename "$existing_pointer_path" .md)"
+    [[ -n "$existing_pointer_slug" ]] && taken_args+=(--taken "$existing_pointer_slug")
+  done < <(find "$strike_root/board" -mindepth 2 -maxdepth 2 -type f -name '*.md' -print | sort)
 fi
 
-slug="$(shorten_slug "$slug")"
+slug_text="$feature_name"
+slug_command=("$node_bin" "$slug_helper" feature --text "$slug_text")
+if [[ -n "$slug_override" ]]; then
+  slug_text="$slug_override"
+  slug_command=("$node_bin" "$slug_helper" feature --text "$slug_text" --keep-leading-words)
+fi
+if (( ${#taken_args[@]} > 0 )); then
+  slug_command+=("${taken_args[@]}")
+fi
 
+slug_output="$("${slug_command[@]}")"
+slug="$(printf '%s\n' "$slug_output" | awk -F= '$1 == "slug" { print substr($0, 6); exit }')"
 if [[ -z "$slug" ]]; then
-  printf 'Could not derive a valid slug. Use a feature name or --slug with at least one ASCII letter or number.\n' >&2
+  printf 'Could not parse slug helper output.\n' >&2
   exit 2
 fi
 
@@ -220,14 +157,6 @@ touch \
   "$strike_root/board/09-done/.gitkeep" \
   "$strike_root/board/blocked/.gitkeep" \
   "$strike_root/cards/.gitkeep"
-
-base_slug="$slug"
-counter=2
-while [[ -d "$strike_root/cards/$slug" ]] || board_pointer_exists "$slug"; do
-  suffix="-$counter"
-  slug="$(slug_with_suffix "$base_slug" "$suffix")"
-  counter=$((counter + 1))
-done
 
 card_dir="$strike_root/cards/$slug"
 card_path="$card_dir/card.md"

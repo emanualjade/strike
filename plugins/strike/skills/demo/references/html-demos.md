@@ -40,6 +40,10 @@ Use numbered semantic filenames:
 03-dashboard-states.html
 ```
 
+Generate demo filenames with the plugin's shared slug helper and
+`references/slug-policy.md`. Pass existing demo filenames as `--taken` values
+and use the returned `filename=` value.
+
 ## Rules
 
 - Planning artifact only; never production implementation.

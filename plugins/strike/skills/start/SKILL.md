@@ -29,9 +29,10 @@ Create the smallest useful Strike feature card: a stable card folder plus a
 tiny board pointer in `docs/strike/board/01-brainstorm/`.
 
 Generated slugs should stay short enough to repeat in later Strike commands.
-The bundled script sanitizes slugs, drops common leading task verbs from
-generated slugs, caps them at 48 characters, and deduplicates collisions with
-numeric suffixes.
+The bundled start script uses `references/scripts/slugify.mjs` and the shared
+`references/slug-policy.md` rules to sanitize slugs, drop common leading task
+verbs from generated feature names, cap feature slugs at 48 characters, and
+deduplicate collisions with numeric suffixes.
 
 ## Host Invocation
 

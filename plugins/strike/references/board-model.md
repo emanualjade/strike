@@ -8,6 +8,10 @@ The source of truth for a feature's workflow state is structural:
 docs/strike/board/<lane>/<feature-slug>.md
 ```
 
+Feature, phase, and demo names that become file or folder paths must follow
+`references/slug-policy.md` and use the bundled slug helper rather than
+hand-rolled naming rules.
+
 There should be exactly one board pointer file for an active feature. The card
 itself should not store a second status field.
 

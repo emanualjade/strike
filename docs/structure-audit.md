@@ -37,6 +37,11 @@ The Agent Skills spec and Codex docs name these optional directories. Claude Cod
 
 The Strike plugin uses root `references/` for shared board and stage contracts cited by multiple skills. Hosts should not be expected to discover this directory automatically; skills and README files should point to specific files when they matter.
 
+2026-05-17 update: `plugins/strike/references/scripts/` is allowed for shared
+deterministic package helpers that multiple skills call by explicit absolute
+path. These scripts are not a host-discovered component type and should not
+replace skill-local `scripts/` for behavior that belongs to exactly one skill.
+
 ### `plugins/strike/references/invocation.md`
 
 - Grounded in research: Yes.

@@ -57,6 +57,16 @@ interactive choices.
 - optional `docs/strike/cards/<feature-slug>/demos/README.md`
 
 Create the `demos/` folder if it does not exist.
+Before creating a demo file, run the bundled slug helper by absolute path from
+the plugin package:
+
+```bash
+node <plugin-root>/references/scripts/slugify.mjs demo --text "<demo topic>" --index <n> --taken <existing-demo-file>
+```
+
+Pass every existing demo filename under `cards/<feature-slug>/demos/` as a
+separate `--taken` value. Use the returned `filename=` value as the demo file
+name. Follow `references/slug-policy.md`; do not hand-roll demo filename rules.
 
 ## Boundaries
 

@@ -110,6 +110,16 @@ test_explicit_slug_dedupes() {
   assert_file "$repo/docs/strike/cards/user-profile-page-2/card.md"
 }
 
+test_explicit_slug_preserves_leading_words() {
+  local repo output slug
+
+  repo="$(mktemp -d)"
+  output="$(run_start "$repo" Auth --slug add-auth)"
+  slug="$(printf '%s\n' "$output" | field next_args)"
+
+  assert_eq "$slug" "add-auth" "explicit slug leading words"
+}
+
 test_board_pointer_collision_dedupes() {
   local repo output slug pointer
 
@@ -210,6 +220,7 @@ test_long_slug_is_capped
 test_article_after_task_verb_is_dropped
 test_short_task_verb_is_dropped
 test_explicit_slug_dedupes
+test_explicit_slug_preserves_leading_words
 test_board_pointer_collision_dedupes
 test_suffix_stays_within_cap
 test_special_characters_are_sanitized

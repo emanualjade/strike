@@ -2,6 +2,17 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.1.4 - 2026-05-17
+
+- Added a shared deterministic slug helper for feature slugs, phase folders,
+  and demo filenames.
+- Refactored `start` to use the shared helper while preserving card and board
+  pointer behavior.
+- Documented the shared slug policy and updated slice/demo guidance to call the
+  helper instead of hand-rolling filename rules.
+- Added focused tests for the shared slug helper and kept start-card integration
+  coverage.
+
 ## 0.1.3 - 2026-05-17
 
 - Made `start` generate shorter command-friendly slugs by dropping common

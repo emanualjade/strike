@@ -146,6 +146,17 @@ phases/01-first-useful-outcome/
 phases/02-second-useful-outcome/
 ```
 
+Before creating each phase folder, run the bundled slug helper by absolute path
+from the plugin package:
+
+```bash
+node <plugin-root>/references/scripts/slugify.mjs phase --text "<phase name>" --index <n> --taken <existing-phase-folder>
+```
+
+Pass every existing phase folder under `cards/<feature-slug>/phases/` as a
+separate `--taken` value. Use the returned `slug=` value as the folder name.
+Follow `references/slug-policy.md`; do not hand-roll phase slug rules.
+
 The number is for human ordering only, not a durable ID.
 
 Write each `plan.md` with a shape like this. Omit sections that do not help the

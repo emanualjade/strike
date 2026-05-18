@@ -24,6 +24,9 @@ You need one of these AI coding tools:
 - Claude Code
 - GitHub Copilot CLI
 
+You also need Node.js 18 or newer available as `node`. Strike uses bundled
+deterministic Node scripts for card and filename setup.
+
 You also need access to this GitHub repository. If the repository is private,
 installing works only for people who have been granted access and whose tool can
 clone the repository from GitHub.
