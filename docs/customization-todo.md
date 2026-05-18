@@ -264,6 +264,7 @@ Possible commands:
 customize check
 customize init
 customize list
+customize review <entry|all>
 ```
 
 Checks to consider:
@@ -271,6 +272,12 @@ Checks to consider:
 - unexpected blocked paths where Strike needs directories or canonical files
 - files that are too long for useful context loading
 - host-specific invocation syntax in portable customization files
+
+Language review belongs in `customize review <entry|all>`, not deterministic
+`customize check`.
+
+Semantic review should consider:
+
 - instructions that conflict with Strike board mechanics
 - instructions that change output paths or stage ownership
 - review files that tell review skills to edit implementation code
@@ -307,6 +314,14 @@ questions.
   `customize check`.
 - [x] Harden `customize init` around existing `strike/` content and blocked
   paths.
+
+## Resolved In 0.4.0
+
+- [x] Keep `customize check` deterministic and setup-focused.
+- [x] Add `customize review <entry|all>` for LLM semantic review of
+  customization language.
+- [x] Add an internal review packet so file discovery stays deterministic while
+  language judgment is handled by the LLM.
 
 ## Future Questions
 

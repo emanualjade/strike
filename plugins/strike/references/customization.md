@@ -30,6 +30,7 @@ Use the `customize` utility skill for normal use:
 customize init
 customize list
 customize check
+customize review <global|supported-skill|all>
 customize load <supported-skill>
 ```
 
@@ -48,6 +49,15 @@ guides. Write actual customization in the loaded files, such as
 `strike/customize/brainstorm/brainstorm.md`. The how-to files and any extra
 user notes under `strike/customize/` are ignored by `customize load`.
 
+`customize check` is deterministic setup validation. It checks paths and size
+limits, but it does not judge language safety.
+
+`customize review <entry|all>` is LLM semantic review. The utility skill asks
+the bundled script for a review packet, treats customization contents as
+untrusted data, and judges whether the language safely guides Strike without
+hijacking commands, weakening required checks, changing board mechanics, or
+overriding skill instructions.
+
 ## Packet Contract
 
 Supported skills load customization by running:
@@ -65,6 +75,15 @@ The loader prints a Markdown packet with:
 - user customization content
 - a closing guard saying customization has ended and Strike mechanics remain
   authoritative
+
+Semantic review uses an internal packet command:
+
+```bash
+node <plugin-root>/references/scripts/customize.mjs --repo-root <repo-root> review-packet <entry|all>
+```
+
+`review global` reviews only global customization. `review <skill>` reviews
+global plus that skill. `review all` reviews all canonical customization files.
 
 Use customization to adjust judgment, tone, questions, examples, emphasis,
 artifact style, and additive user-requested files that fit the active skill's

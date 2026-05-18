@@ -2,6 +2,14 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.4.0 - 2026-05-18
+
+- Added `customize review <entry|all>` for LLM semantic review of repo-local
+  customization language.
+- Added an internal `review-packet` mode so customization file discovery stays
+  deterministic while language safety is judged by the active agent.
+- Reframed `customize check` as setup-only validation for paths and size limits.
+
 ## 0.3.0 - 2026-05-18
 
 - Moved repo-local customization from `docs/strike/customize/` to

@@ -16,8 +16,8 @@ prints a framed customization packet.
 
 ## Key Changes
 
-- Add a public `customize` utility skill with `init`, `list`, `check`, and
-  diagnostic `load <skill>` modes.
+- Add a public `customize` utility skill with `init`, `list`, `check`,
+  `review <entry|all>`, and diagnostic `load <skill>` modes.
 - Add `plugins/strike/references/scripts/customize.mjs`; it supports selected
   single-file skills and intentionally skips review/multi-file entries.
 - `customize init` creates the supported tree without overwriting user edits:
@@ -66,8 +66,11 @@ strike/customize/language/how-to-customize-language.md
 - `list`: reports supported entry points and file state as missing,
   blank, or has user content.
 - `check`: exits nonzero only for structural or size errors in canonical loaded
-  files. Extra user notes under `strike/customize/` are allowed. Heuristic
-  mechanic-conflict phrases produce warnings, not failures.
+  files. Extra user notes under `strike/customize/` are allowed. It does not
+  judge customization language.
+- `review-packet <entry|all>`: internal script support for LLM semantic review.
+  It frames customization content as untrusted data and includes review
+  criteria for detecting language that would hijack Strike mechanics.
 - `load <skill>`: reads `global/global.md` then the skill file, skips missing
   and blank files, enforces 16KB per file and 64KB total, and prints a
   Markdown packet.
@@ -91,8 +94,10 @@ strike/customize/language/how-to-customize-language.md
   closing guard, unsupported skills, missing customization root, and size
   limits.
 - Test `check` passes an absent or clean scaffold with an explanatory message,
-  allows extra user notes, fails oversized canonical files, and emits warnings
-  for suspicious mechanic-changing phrases.
+  allows extra user notes, warns on missing canonical files, and fails
+  oversized canonical files.
+- Test `review-packet` for global, skill-specific, all-target, untrusted-data
+  framing, extra-file exclusion, and unsupported review targets.
 - Run:
 
 ```bash
@@ -111,7 +116,8 @@ npm run validate:publish
 - Portable Strike skills use the loader directive. Claude `!` injection is
   reconsidered only if Strike later generates host-specific skill builds.
 - Versioned surfaces for the initial rollout were bumped to `0.2.0`; the
-  blank-file and `strike/customize/` path cleanup is released as `0.3.0`: root
-  `package.json`, all three plugin manifests, `.claude-plugin/marketplace.json`,
-  and `.github/plugin/marketplace.json`. The Codex marketplace does not define
-  a plugin version field.
+  blank-file and `strike/customize/` path cleanup was released as `0.3.0`; the
+  `customize review` semantic review command is released as `0.4.0`. Versioned
+  surfaces are root `package.json`, all three plugin manifests,
+  `.claude-plugin/marketplace.json`, and `.github/plugin/marketplace.json`. The
+  Codex marketplace does not define a plugin version field.

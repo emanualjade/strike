@@ -22,7 +22,7 @@ Strike skills are portable; each host renders the same skill differently.
 Canonical skill names:
 
 ```txt
-customize init|list|check|load <supported-skill>
+customize init|list|check|review <entry|all>|load <supported-skill>
 start <project name words> [--slug <slug>] [--description <description words>]
 go <project-slug>
 brainstorm <project-slug>
@@ -49,15 +49,16 @@ the `phase:<phase-slug>` token for phase-scoped work.
 
 `customize` is a utility for repo-local customization of supported single-file
 skills. Run `customize init` to create blank loaded files under
-`strike/customize/` plus sidecar `how-to-customize-*.md` guides. Use it for
-repo-specific research standards, spec style, slicing preferences, demo tone,
-or language guidance; supported skills load only the matching blank-start
-customization files after you edit them.
+`strike/customize/` plus sidecar `how-to-customize-*.md` guides. Run
+`customize check` for setup validation and `customize review <entry|all>` for
+LLM review of customization language. Supported skills load only the matching
+blank-start customization files after you edit them.
 
 Claude Code examples:
 
 ```txt
 /strike:customize init
+/strike:customize review brainstorm
 /strike:start Add user profile page
 /strike:go <project-slug>
 /strike:brainstorm <project-slug>

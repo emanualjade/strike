@@ -556,7 +556,7 @@ Strike prompts mostly use plain positional arguments. `start` is the only
 normal user-facing skill with double-dash options today:
 
 ```text
-customize init|list|check|load <supported-skill>
+customize init|list|check|review <entry|all>|load <supported-skill>
 start <project name words> [--slug <slug>] [--description <description words>]
 ```
 
@@ -569,8 +569,8 @@ phase-build <project-slug> phase:<phase-slug>
 Some skills accept one optional plain word, such as `research <project-slug>
 skip` or `go <project-slug> verbose`.
 
-- `customize`: initialize, list, check, or inspect repo-local customization for
-  supported single-file skills.
+- `customize`: initialize, list, check, review, or inspect repo-local
+  customization for supported single-file skills.
 - `start`: create a new project card.
 - `go`: inspect the board and recommend the next step.
 - `brainstorm`, `grill`, `research`: shape and pressure-test the idea.
@@ -611,6 +611,14 @@ Check the files before relying on them:
 
 ```text
 customize check
+```
+
+`check` only verifies setup and size limits. To ask Strike to review whether
+customization language could hijack or break the workflow, run:
+
+```text
+customize review brainstorm
+customize review all
 ```
 
 Supported skills load the matching customization automatically. Customization
