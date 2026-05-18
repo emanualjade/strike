@@ -233,9 +233,9 @@ Before using a Strike skill in Copilot CLI, confirm the visible skill names:
 ## Uninstall Strike
 
 <details>
-<summary>Uninstall global Codex</summary>
+<summary>Uninstall Codex</summary>
 
-First remove the installed plugin from the Codex plugin browser:
+Open the Codex plugin browser:
 
 ```text
 /plugins
@@ -243,30 +243,20 @@ First remove the installed plugin from the Codex plugin browser:
 
 Select Strike, then choose **Uninstall plugin**.
 
-Then remove the global Strike marketplace with this terminal command:
+If you added the global Strike marketplace, remove it:
 
 ```bash
 codex plugin marketplace remove strike
 ```
 
-</details>
-
-<details>
-<summary>Uninstall from one Codex repository</summary>
-
-First remove the installed plugin from the Codex plugin browser:
+If you installed Strike from a repository marketplace, edit or delete:
 
 ```text
-/plugins
+.agents/plugins/marketplace.json
 ```
 
-Select Strike, then choose **Uninstall plugin**.
-
-Then remove the repository marketplace entry. If `.agents/plugins/marketplace.json`
-only exists for Strike, delete that file. If it lists other plugins too, remove
-only the Strike entry from the `plugins` list.
-
-Restart Codex from the repo root after changing the repository marketplace file.
+Delete the file if it only lists Strike. If it lists other plugins, remove only
+the Strike entry from `plugins`.
 
 </details>
 
