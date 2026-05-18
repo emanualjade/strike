@@ -35,9 +35,13 @@ Choose the install path that matches the host and scope you want.
 | --- | --- | --- |
 | Codex | Global | You want Strike available across your Codex setup. |
 | Codex | One project | You want Strike available only from one repository. |
-| Claude Code | Global user | You want Strike available across your Claude Code setup. |
-| Claude Code | One project | You want the project to declare Strike for collaborators. |
+| Claude Code | User | You want Strike available for yourself across all projects. |
+| Claude Code | Project | You want the project to declare Strike for collaborators. |
+| Claude Code | Local | You want Strike only for yourself in one project. |
 | GitHub Copilot CLI | CLI user | You want to try the packaged Copilot CLI plugin. |
+
+Claude Code also has a managed scope for administrator-controlled plugins. It
+is not a normal user install path, so this README does not list commands for it.
 
 <details>
 <summary>Install globally in Codex</summary>
@@ -137,14 +141,16 @@ start a fresh Codex conversation from the same project root.
 </details>
 
 <details>
-<summary>Install globally in Claude Code</summary>
+<summary>Install for your Claude Code user</summary>
 
 Run these terminal commands:
 
 ```bash
-claude plugin marketplace add emanualjade/strike --sparse .claude-plugin plugins
-claude plugin install strike@strike
+claude plugin marketplace add emanualjade/strike --sparse .claude-plugin plugins --scope user
+claude plugin install strike@strike --scope user
 ```
+
+Claude Code user scope makes Strike available for you across all projects.
 
 Restart Claude Code after installing. If you are already inside a Claude Code
 session, you can try this app prompt instead of restarting:
@@ -156,7 +162,7 @@ session, you can try this app prompt instead of restarting:
 </details>
 
 <details>
-<summary>Install in one Claude Code project</summary>
+<summary>Install in one Claude Code project for the team</summary>
 
 Run these terminal commands from the project root:
 
@@ -165,8 +171,31 @@ claude plugin marketplace add emanualjade/strike --sparse .claude-plugin plugins
 claude plugin install strike@strike --scope project
 ```
 
-Claude Code project scope writes shared plugin settings under the project. Commit
-those settings only when you want collaborators to get the same Strike setup.
+Claude Code project scope writes shared plugin settings to
+`.claude/settings.json`. Commit those settings only when you want collaborators
+to get the same Strike setup.
+
+Restart Claude Code after installing. If you are already inside a Claude Code
+session, you can try this app prompt instead of restarting:
+
+```text
+/reload-plugins
+```
+
+</details>
+
+<details>
+<summary>Install locally in one Claude Code project</summary>
+
+Run these terminal commands from the project root:
+
+```bash
+claude plugin marketplace add emanualjade/strike --sparse .claude-plugin plugins --scope local
+claude plugin install strike@strike --scope local
+```
+
+Claude Code local scope writes personal project settings to
+`.claude/settings.local.json`, which should stay out of source control.
 
 Restart Claude Code after installing. If you are already inside a Claude Code
 session, you can try this app prompt instead of restarting:
@@ -238,13 +267,12 @@ Restart Codex from the project root after changing the project marketplace file.
 </details>
 
 <details>
-<summary>Uninstall global Claude Code</summary>
+<summary>Uninstall Claude Code user scope</summary>
 
-Run these terminal commands:
+Run this terminal command:
 
 ```bash
-claude plugin uninstall strike@strike
-claude plugin marketplace remove strike
+claude plugin uninstall strike@strike --scope user
 ```
 
 Restart Claude Code, or run this app prompt:
@@ -256,19 +284,50 @@ Restart Claude Code, or run this app prompt:
 </details>
 
 <details>
-<summary>Uninstall from one Claude Code project</summary>
+<summary>Uninstall Claude Code project scope</summary>
 
-Run these terminal commands from the project root:
+Run this terminal command from the project root:
 
 ```bash
 claude plugin uninstall strike@strike --scope project
-claude plugin marketplace remove strike
 ```
 
 Restart Claude Code, or run this app prompt:
 
 ```text
 /reload-plugins
+```
+
+</details>
+
+<details>
+<summary>Uninstall Claude Code local scope</summary>
+
+Run this terminal command from the project root:
+
+```bash
+claude plugin uninstall strike@strike --scope local
+```
+
+Restart Claude Code, or run this app prompt:
+
+```text
+/reload-plugins
+```
+
+</details>
+
+<details>
+<summary>Remove the Claude Code marketplace catalog</summary>
+
+Only do this when you no longer need the Strike marketplace in Claude Code.
+Marketplace removal is not scoped, and Claude Code also removes plugins
+installed from that marketplace.
+
+Run this terminal command:
+
+```bash
+claude plugin marketplace remove strike
 ```
 
 </details>
@@ -495,18 +554,25 @@ For a project Codex marketplace, open Codex from that project root and check
 <details>
 <summary>Update Claude Code</summary>
 
-For a global user install, run these terminal commands:
+For a user-scope install, run these terminal commands:
 
 ```bash
 claude plugin marketplace update strike
-claude plugin update strike@strike
+claude plugin update strike@strike --scope user
 ```
 
-For a project install, run these terminal commands from the project root:
+For a project-scope install, run these terminal commands from the project root:
 
 ```bash
 claude plugin marketplace update strike
 claude plugin update strike@strike --scope project
+```
+
+For a local-scope install, run these terminal commands from the project root:
+
+```bash
+claude plugin marketplace update strike
+claude plugin update strike@strike --scope local
 ```
 
 Restart Claude Code after updating, or run this app prompt:

@@ -18,6 +18,20 @@ Claude Code supports local development with `--plugin-dir` and marketplace insta
 
 Claude Code's skill frontmatter fields are optional, with `description` recommended and `name` inferred from the directory when omitted. Claude supports scripts and arbitrary supporting files; `references/` and `assets/` are portable Agent Skills conventions rather than Claude-specific discovery paths.
 
+2026-05-18 update: Claude Code plugin install scope should be documented with
+Claude's own scope names: `user`, `project`, `local`, and administrator-managed
+`managed`. The [Claude Code plugin reference](https://code.claude.com/docs/en/plugins-reference)
+maps `user` to `~/.claude/settings.json`, `project` to
+`.claude/settings.json`, `local` to `.claude/settings.local.json`, and
+`managed` to read-only managed settings. Marketplace add accepts
+`--scope user|project|local`, plugin install/uninstall accept
+`--scope user|project|local`, and plugin update also accepts `managed`.
+The [marketplace docs](https://code.claude.com/docs/en/plugin-marketplaces)
+document marketplace remove as name-based rather than scoped, and say removing a
+marketplace also uninstalls plugins installed from it. Strike therefore keeps
+per-scope uninstall instructions focused on `claude plugin uninstall ... --scope`
+and documents marketplace removal separately as an all-catalog cleanup step.
+
 ## Codex
 
 OpenAI documents `AGENTS.md` as the project-level instruction file for Codex in the [Codex AGENTS.md guide](https://developers.openai.com/codex/guides/agents-md). The local Codex plugin creator guidance in this environment defines a `.codex-plugin/plugin.json` manifest and a repo marketplace at `.agents/plugins/marketplace.json`, with entries pointing to `./plugins/<plugin-name>`.
