@@ -2,6 +2,17 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.2.0 - 2026-05-18
+
+- Added the `customize` utility skill for initializing, listing, checking, and
+  inspecting repo-local customization files.
+- Added a deterministic customization loader for selected single-file skills.
+- Wired `brainstorm`, `grill`, `research`, `spec`, `slice`,
+  `phase-research`, `phase-plan`, `retro`, `demo`, and `language` to load
+  framed repo-local customization packets before material work.
+- Documented the customization rollout and updated tests, manifests, and
+  marketplaces for the `0.2.0` release.
+
 ## 0.1.16 - 2026-05-18
 
 - Normalized shipped skill `allowed-tools` frontmatter to the portable

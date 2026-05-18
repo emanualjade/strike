@@ -13,6 +13,18 @@ The Strike plugin also keeps shared board/workflow references under
 skills to cite explicitly; they are not treated as a host-discovered component
 directory.
 
+## Customization Imports
+
+2026-05-18 customization audit: do not treat `!docs/strike/customize/...` as a
+portable `SKILL.md` import. Codex Agent Skills, GitHub Copilot agent skills,
+and the Agent Skills specification document `SKILL.md` plus referenced
+supporting files; they do not define a shared `!` file-include syntax. Claude
+Code skills document `!` as dynamic shell context injection, not a plain file
+include, and that behavior is host-specific. Strike therefore uses a bundled
+deterministic loader script for repo-local customization in portable skills.
+Host-specific generated skill builds may reconsider Claude-only `!` injection
+later, but it is not the shared source of truth.
+
 ## Claude Code
 
 [Claude Code plugin docs](https://code.claude.com/docs/en/plugins) describe plugins as GitHub or local packages with a `.claude-plugin/plugin.json` manifest. The [plugin reference](https://code.claude.com/docs/en/plugins-reference) lists supported plugin components such as skills and agents. The [marketplace docs](https://code.claude.com/docs/en/plugin-marketplaces) describe `.claude-plugin/marketplace.json` for plugin marketplaces.

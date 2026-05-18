@@ -1,11 +1,11 @@
 {
   "name": "strike",
-  "version": "0.1.16",
+  "version": "0.2.0",
   "private": true,
   "description": "Cross-agent skills plugin and marketplace for the Strike workflow.",
   "license": "MIT",
   "scripts": {
-    "test": "node scripts/test-slugify.mjs && bash scripts/test-start-card.sh",
+    "test": "node scripts/test-slugify.mjs && node scripts/test-customize.mjs && bash scripts/test-start-card.sh",
     "validate": "node scripts/validate.mjs",
     "validate:publish": "node scripts/validate.mjs --publish",
     "release:validate": "npm test && npm run validate:publish && claude plugin validate ./plugins/strike && claude plugin validate ./.claude-plugin/marketplace.json",

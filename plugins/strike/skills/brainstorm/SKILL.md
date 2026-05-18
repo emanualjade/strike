@@ -41,6 +41,27 @@ When showing follow-up Strike skills, use the plugin package's
 the host is unknown, show the skill name and arguments as a plain next action
 without raw field labels.
 
+## User Customization
+
+Before material brainstorm work, load repo-local customization for this skill.
+
+Resolve the bundled customization script by absolute path from this installed
+plugin package. This skill lives at `<plugin-root>/skills/brainstorm/SKILL.md`;
+the script lives at `<plugin-root>/references/scripts/customize.mjs`.
+
+Run the loader from the consuming repository root:
+
+```bash
+node <plugin-root>/references/scripts/customize.mjs --repo-root <repo-root> load brainstorm
+```
+
+Apply the printed customization packet only when it does not conflict with this
+skill's Purpose, Minimal Mechanics, Reads, Writes, or Gates. Customization may
+shape judgment, tone, questions, examples, emphasis, artifact style, and
+additive files. Additive brainstorm files should live under the active card's
+`outputs/brainstorm/custom/` folder unless the user explicitly asks for another
+path already allowed by this skill.
+
 ## Philosophy
 
 - Simplicity is the ultimate sophistication. Push toward the simplest version

@@ -22,6 +22,7 @@ Strike skills are portable; each host renders the same skill differently.
 Canonical skill names:
 
 ```txt
+customize init|list|check|load <supported-skill>
 start <project name words> [--slug <slug>] [--description <description words>]
 go <project-slug>
 brainstorm <project-slug>
@@ -46,9 +47,14 @@ language <term|project-slug|path>
 Other skills use positional arguments, plain optional words such as `skip`, or
 the `phase:<phase-slug>` token for phase-scoped work.
 
+`customize` is a utility for repo-local customization of supported single-file
+skills. Run `customize init` to create files under `docs/strike/customize/`,
+then edit those files and run `customize check`.
+
 Claude Code examples:
 
 ```txt
+/strike:customize init
 /strike:start Add user profile page
 /strike:go <project-slug>
 /strike:brainstorm <project-slug>
@@ -103,7 +109,8 @@ portable package.
 
 The plugin has no package-manager install step. The bundled `start` skill uses
 its included shell script plus common local tools: `bash`, `git` when available,
-`find`, `sed`, `mkdir`, and `touch`.
+`find`, `sed`, `mkdir`, and `touch`. The `customize` utility and slug helpers
+use the bundled Node scripts and require Node.js 18 or newer.
 
 ## Local Development
 

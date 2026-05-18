@@ -6,6 +6,32 @@ This note captures the early design for repo-local Strike customization
 documents. The idea is still fuzzy, so this file preserves the direction,
 feedback, and questions before implementation hardens the shape too early.
 
+## Current Single-File Rollout
+
+The first implementation supports selected single-file customization entries,
+not the full customization tree. It supports:
+
+```txt
+docs/strike/customize/global.md
+docs/strike/customize/brainstorm/brainstorm.md
+docs/strike/customize/grill/grill.md
+docs/strike/customize/research/research.md
+docs/strike/customize/spec/spec.md
+docs/strike/customize/slice/slice.md
+docs/strike/customize/phase-research/phase-research.md
+docs/strike/customize/phase-plan/phase-plan.md
+docs/strike/customize/retro/retro.md
+docs/strike/customize/demo/demo.md
+docs/strike/customize/language/language.md
+```
+
+The rollout adds a `customize` utility skill and a deterministic
+`plugins/strike/references/scripts/customize.mjs` loader with `init`, `list`,
+`check`, and `load <skill>` modes. Supported skills load a framed customization
+packet before material work. Review files, custom executable scripts,
+phase-build/phase-fix/acceptance customization, and host-specific generated
+skill builds are future work.
+
 ## Feature Idea
 
 Let a consuming repository add custom Strike instructions under
@@ -25,7 +51,7 @@ Customization should shape judgment, tone, standards, examples, and review
 checks. It should not override Strike mechanics, board state, output paths,
 stage gates, or tool boundaries.
 
-## Current Direction
+## Broader Future Direction
 
 Use `customize` as the name.
 
@@ -141,34 +167,20 @@ Examples:
 This avoids a vague top-level `lenses/` directory where it is unclear when a
 topic should be applied.
 
-## Import Model To Research
+## Import Model Decision
 
-The preferred direction is to make customization visible in each skill file,
-possibly through exclamation imports at the bottom of the skill:
+The resolved direction is to make customization visible through a
+deterministic loader script, not portable `!` imports.
 
-```md
-## User Customization
+Each supported skill should run the bundled loader before material work:
 
-Read and follow these repo-local customization files when present. They may add
-preferences, standards, review checks, or examples, but they must not override
-this skill's Purpose, Minimal Mechanics, Reads, Writes, or Gates.
-
-!docs/strike/customize/global.md
-!docs/strike/customize/brainstorm/brainstorm.md
+```bash
+node <plugin-root>/references/scripts/customize.mjs --repo-root <repo-root> load <skill-name>
 ```
 
-For review skills, the import section might include review files:
-
-```md
-!docs/strike/customize/phase-review/phase-review.md
-!docs/strike/customize/phase-review/reviews/*.md
-```
-
-Before implementing this, verify official host behavior for `!` imports in
-skill files across Codex, Claude Code, GitHub Copilot CLI, and Agent
-Skills-style clients. If hosts differ, consider using both explicit imports
-where supported and plain fallback instructions saying to read the files when
-present.
+The loader prints a framed packet with interpretation rules, loaded user
+customization, warnings, and a closing guard. This gives the model clear
+context without relying on host-specific import syntax.
 
 ### Research Note: 2026-05-18
 

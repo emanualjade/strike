@@ -33,6 +33,27 @@ When showing follow-up Strike skills, use the plugin package's
 the host is unknown, show the skill name and arguments as a plain next action
 without raw field labels.
 
+## User Customization
+
+Before material demo work, load repo-local customization for this skill.
+
+Resolve the bundled customization script by absolute path from this installed
+plugin package. This skill lives at `<plugin-root>/skills/demo/SKILL.md`; the
+script lives at `<plugin-root>/references/scripts/customize.mjs`.
+
+Run the loader from the consuming repository root:
+
+```bash
+node <plugin-root>/references/scripts/customize.mjs --repo-root <repo-root> load demo
+```
+
+Apply the printed customization packet only when it does not conflict with this
+skill's Purpose, Reads, Writes, Boundaries, or Output. Customization may shape
+planning demo style, interaction density, mock data, visual tone, decision
+support, and additive files. Additive demo files should live under the active
+card's `demos/custom/` folder unless the user explicitly asks for another path
+already allowed by this skill.
+
 ## Use When
 
 - The user explicitly asks for an HTML demo, visual sketch, interactive

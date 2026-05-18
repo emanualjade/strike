@@ -35,6 +35,27 @@ When showing follow-up Strike skills, use the plugin package's
 the host is unknown, show the skill name and arguments as a plain next action
 without raw field labels.
 
+## User Customization
+
+Before material language work, load repo-local customization for this skill.
+
+Resolve the bundled customization script by absolute path from this installed
+plugin package. This skill lives at `<plugin-root>/skills/language/SKILL.md`;
+the script lives at `<plugin-root>/references/scripts/customize.mjs`.
+
+Run the loader from the consuming repository root:
+
+```bash
+node <plugin-root>/references/scripts/customize.mjs --repo-root <repo-root> load language
+```
+
+Apply the printed customization packet only when it does not conflict with this
+skill's Purpose, Source Of Truth, Usage Modes, Output, or Gates. Customization
+may shape terminology review, glossary style, naming pressure, domain-language
+discussion, and additive files. If additive language files are useful, use a
+user-approved docs path; otherwise prefer the normal `UBIQUITOUS_LANGUAGE.md`
+flow when a glossary edit is approved.
+
 ## Source Of Truth
 
 Use the repo root file:

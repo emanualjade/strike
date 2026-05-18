@@ -556,6 +556,7 @@ Strike prompts mostly use plain positional arguments. `start` is the only
 normal user-facing skill with double-dash options today:
 
 ```text
+customize init|list|check|load <supported-skill>
 start <project name words> [--slug <slug>] [--description <description words>]
 ```
 
@@ -568,6 +569,8 @@ phase-build <project-slug> phase:<phase-slug>
 Some skills accept one optional plain word, such as `research <project-slug>
 skip` or `go <project-slug> verbose`.
 
+- `customize`: initialize, list, check, or inspect repo-local customization for
+  supported single-file skills.
 - `start`: create a new project card.
 - `go`: inspect the board and recommend the next step.
 - `brainstorm`, `grill`, `research`: shape and pressure-test the idea.
@@ -579,6 +582,43 @@ skip` or `go <project-slug> verbose`.
 - `retro`: record what happened and move accepted work to done.
 - `language`: keep repo terminology consistent.
 - `demo`: create a small planning demo for a card.
+
+## Customize Strike Skills
+
+The customization rollout lets a repository add local Markdown preferences for
+selected single-file Strike skills without forking Strike.
+
+Run:
+
+```text
+customize init
+```
+
+Then edit:
+
+```text
+docs/strike/customize/global.md
+docs/strike/customize/brainstorm/brainstorm.md
+docs/strike/customize/grill/grill.md
+docs/strike/customize/research/research.md
+docs/strike/customize/spec/spec.md
+docs/strike/customize/slice/slice.md
+docs/strike/customize/phase-research/phase-research.md
+docs/strike/customize/phase-plan/phase-plan.md
+docs/strike/customize/retro/retro.md
+docs/strike/customize/demo/demo.md
+docs/strike/customize/language/language.md
+```
+
+Check the files with:
+
+```text
+customize check
+```
+
+Customization can shape judgment, tone, questions, examples, emphasis, artifact
+style, and additive files. It cannot override Strike board mechanics, required
+outputs, stage gates, or tool boundaries.
 
 ## Troubleshooting
 
