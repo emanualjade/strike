@@ -270,9 +270,16 @@ Restart Codex from the repo root after changing the repository marketplace file.
 
 </details>
 
-Claude Code note: uninstalling from the last installed scope also deletes
-Claude-managed plugin data unless you add `--keep-data`. Strike cards and board
-files live in your repository under `docs/strike/`.
+Claude Code has two separate pieces to remove: the installed plugin setting and
+the marketplace catalog. Use the scope-specific uninstall commands below when
+you want to remove Strike from one scope but keep the marketplace available for
+later. Remove the marketplace catalog when you want to fully remove Strike from
+Claude Code.
+
+Claude Code note: uninstalling from the last installed scope may delete
+Claude-managed plugin data unless you add `--keep-data`. Removing Strike from
+Claude Code does not delete Strike's project files in your repository. Cards and
+board files remain under `docs/strike/` until you remove them yourself.
 
 <details>
 <summary>Uninstall Claude Code user scope</summary>
@@ -328,15 +335,26 @@ After uninstalling, run this app prompt inside Claude Code to refresh active plu
 <details>
 <summary>Remove the Claude Code marketplace catalog</summary>
 
-Only do this when you no longer need the Strike marketplace in Claude Code.
-Marketplace removal is not scoped, and Claude Code also removes plugins
-installed from that marketplace.
+Use this for a full Claude Code removal when you no longer need the Strike
+marketplace. Claude Code removes marketplaces by marketplace name, not by the
+GitHub repo URL you used to add it. Because the Strike marketplace only contains
+the Strike plugin, this can be your full Claude Code uninstall command after you
+confirm the marketplace name:
 
-Run this terminal command:
+```bash
+claude plugin marketplace list
+```
+
+Then remove the Strike marketplace:
 
 ```bash
 claude plugin marketplace remove strike
 ```
+
+Removing a marketplace also uninstalls any plugins installed from that
+marketplace. If you installed Strike at project or local scope, run this from the
+repository root and review the resulting `.claude/settings.json` or
+`.claude/settings.local.json` change before committing or discarding it.
 
 </details>
 

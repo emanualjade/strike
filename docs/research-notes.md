@@ -35,6 +35,20 @@ marketplace also uninstalls plugins installed from it. Strike therefore keeps
 per-scope uninstall instructions focused on `claude plugin uninstall ... --scope`
 and documents marketplace removal separately as an all-catalog cleanup step.
 
+2026-05-18 uninstall audit: Claude's [discover plugins docs](https://code.claude.com/docs/en/discover-plugins)
+describe marketplace use as a two-step process: add the marketplace, then install
+individual plugins. The [plugin reference](https://code.claude.com/docs/en/plugins-reference)
+documents `claude plugin uninstall <plugin> --scope user|project|local` and says
+`--keep-data` preserves the plugin's persistent data directory. The
+[marketplace docs](https://code.claude.com/docs/en/plugin-marketplaces) document
+`claude plugin marketplace remove <name>` and say the name is the marketplace
+name from `marketplace.json`, not the source passed to `add`; removing a
+marketplace also uninstalls plugins installed from it. A disposable CLI smoke
+test with a temporary home and repository confirmed that project-scope
+marketplace add writes `extraKnownMarketplaces`, project-scope plugin install
+writes `enabledPlugins`, plugin uninstall removes only `enabledPlugins`, and
+marketplace remove clears `extraKnownMarketplaces`.
+
 ## Codex
 
 OpenAI documents `AGENTS.md` as the repository-level instruction file for Codex in the [Codex AGENTS.md guide](https://developers.openai.com/codex/guides/agents-md). The local Codex plugin creator guidance in this environment defines a `.codex-plugin/plugin.json` manifest and a repo marketplace at `.agents/plugins/marketplace.json`, with entries pointing to `./plugins/<plugin-name>`.
