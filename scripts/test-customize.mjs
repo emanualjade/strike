@@ -76,6 +76,10 @@ function testInitCreatesBlankCanonicalFilesAndHowToDocs() {
 
   assert.match(result.stdout, /Root: strike\/customize/);
   assert.match(result.stdout, /## Created/);
+  assert.match(result.stdout, /Run `customize check` to make sure the setup is healthy/);
+  assert.match(result.stdout, /Run `customize review <entry>` to ask Strike whether your instructions are safe/);
+  assert.doesNotMatch(result.stdout, /lint/i);
+  assert.doesNotMatch(result.stdout, /layout/i);
 }
 
 function testInitPreservesExistingFilesAndStrikeContent() {

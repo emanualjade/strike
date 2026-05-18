@@ -4,13 +4,13 @@
     "name": "Emanual Jade"
   },
   "description": "A Claude Code marketplace for the Strike board-and-card workflow plugin.",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "plugins": [
     {
       "name": "strike",
       "source": "./plugins/strike",
       "description": "Board-and-card workflow skills for turning rough project ideas into scoped implementation, review, acceptance, and retro artifacts.",
-      "version": "0.4.1",
+      "version": "0.4.2",
       "author": {
         "name": "Emanual Jade"
       },

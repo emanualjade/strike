@@ -2,6 +2,13 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.4.2 - 2026-05-18
+
+- Clarified `customize init` next steps so `check` is described as setup health
+  validation and `review` is described as workflow safety review.
+- Added skill guidance to avoid calling customization review "linting" or
+  customization check "layout" validation.
+
 ## 0.4.1 - 2026-05-18
 
 - Hardened `customize review` packets by emitting customization content as JSON

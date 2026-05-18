@@ -154,6 +154,10 @@ Keep the final response short and user-facing:
 - next useful prompt, when obvious, such as editing the created Markdown files
   or running `customize check`
 
+When summarizing next steps, describe `check` as setup health validation and
+`review` as semantic safety review. Do not describe `review` as linting and do
+not describe `check` as layout validation.
+
 Do not expose script-only flags as normal user-facing skill options.
 
 ## Gates

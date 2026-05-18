@@ -368,6 +368,12 @@ function init(repoRoot) {
       console.log(`- ${file}`);
     }
   }
+  console.log("");
+  console.log("## Next Steps");
+  console.log("- Edit a customization file such as `strike/customize/global/global.md` or `strike/customize/brainstorm/brainstorm.md`.");
+  console.log("- Use the matching `how-to-customize-<entry>.md` file for ideas about what to write.");
+  console.log("- Run `customize check` to make sure the setup is healthy.");
+  console.log("- Run `customize review <entry>` to ask Strike whether your instructions are safe for the workflow.");
 }
 
 function list(repoRoot) {
