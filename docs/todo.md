@@ -1,6 +1,6 @@
 # Strike Todo
 
-Last updated: 2026-05-17.
+Last updated: 2026-05-18.
 
 This is the maintainer checklist for Strike. The public `README.md` is for
 plugin users; this file tracks release, validation, and setup work.
@@ -110,6 +110,9 @@ plugin users; this file tracks release, validation, and setup work.
   `README.md`.
 - [x] Confirmed Claude Code can add `emanualjade/strike` as a Git-backed
   marketplace, install `strike@strike`, update it, and invoke `/strike:go`.
+- [x] Confirmed Claude Code user, project, and local scoped marketplace install,
+  plugin install, plugin uninstall, and marketplace removal in throwaway
+  settings.
 - [x] Confirmed Claude Code local plugin smoke test with `/strike:go`.
 - [x] Confirmed `npm run validate` and `npm run validate:publish` pass.
 - [x] Confirmed both Claude validators pass.

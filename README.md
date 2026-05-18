@@ -35,9 +35,9 @@ Choose the install path that matches the host and scope you want.
 | --- | --- | --- |
 | Codex | Global | You want Strike available across your Codex setup. |
 | Codex | One project | You want Strike available only from one repository. |
-| Claude Code | User | You want Strike available for yourself across all projects. |
-| Claude Code | Project | You want the project to declare Strike for collaborators. |
-| Claude Code | Local | You want Strike only for yourself in one project. |
+| Claude Code | User | Personal install across all projects. |
+| Claude Code | Project shared | Shared install for everyone using one repository. |
+| Claude Code | Project private | Personal install in one repository only. |
 | GitHub Copilot CLI | CLI user | You want to try the packaged Copilot CLI plugin. |
 
 Claude Code also has a managed scope for administrator-controlled plugins. It
@@ -141,7 +141,7 @@ start a fresh Codex conversation from the same project root.
 </details>
 
 <details>
-<summary>Install for your Claude Code user</summary>
+<summary>Install Claude Code user scope</summary>
 
 Run these terminal commands:
 
@@ -161,7 +161,7 @@ After installing, run this app prompt inside Claude Code to activate Strike:
 </details>
 
 <details>
-<summary>Install in one Claude Code project for the team</summary>
+<summary>Install Claude Code project scope, shared</summary>
 
 Run these terminal commands from the project root:
 
@@ -183,7 +183,7 @@ After installing, run this app prompt inside Claude Code to activate Strike:
 </details>
 
 <details>
-<summary>Install locally in one Claude Code project</summary>
+<summary>Install Claude Code local scope, private</summary>
 
 Run these terminal commands from the project root:
 
@@ -285,7 +285,7 @@ After uninstalling, run this app prompt inside Claude Code to refresh active plu
 </details>
 
 <details>
-<summary>Uninstall Claude Code project scope</summary>
+<summary>Uninstall Claude Code project scope, shared</summary>
 
 Run this terminal command from the project root:
 
@@ -302,7 +302,7 @@ After uninstalling, run this app prompt inside Claude Code to refresh active plu
 </details>
 
 <details>
-<summary>Uninstall Claude Code local scope</summary>
+<summary>Uninstall Claude Code local scope, private</summary>
 
 Run this terminal command from the project root:
 
