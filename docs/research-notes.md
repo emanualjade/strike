@@ -49,6 +49,19 @@ marketplace add writes `extraKnownMarketplaces`, project-scope plugin install
 writes `enabledPlugins`, plugin uninstall removes only `enabledPlugins`, and
 marketplace remove clears `extraKnownMarketplaces`.
 
+2026-05-18 update/cache audit: Claude's [marketplace docs](https://code.claude.com/docs/en/plugin-marketplaces)
+say users refresh a marketplace with `claude plugin marketplace update`, and the
+[plugin reference](https://code.claude.com/docs/en/plugins-reference) says
+marketplace plugins are copied into `~/.claude/plugins/cache`, each installed
+version is stored in a separate directory, and previous version directories are
+marked orphaned and removed automatically later. The docs also say Claude uses
+the resolved plugin version as the cache key and skips updates when the resolved
+version matches the installed one. A disposable fresh install of Strike from the
+public GitHub marketplace resolved `strike@strike` to `0.1.16`, while an older
+local marketplace cache in this machine still contained `0.1.0`; therefore
+Strike docs should direct Claude users to run marketplace update before plugin
+update when checking for a new release.
+
 ## Codex
 
 OpenAI documents `AGENTS.md` as the repository-level instruction file for Codex in the [Codex AGENTS.md guide](https://developers.openai.com/codex/guides/agents-md). The local Codex plugin creator guidance in this environment defines a `.codex-plugin/plugin.json` manifest and a repo marketplace at `.agents/plugins/marketplace.json`, with entries pointing to `./plugins/<plugin-name>`.

@@ -576,6 +576,10 @@ For a repository Codex marketplace, open Codex from that repo root and check
 <details>
 <summary>Update Claude Code</summary>
 
+Claude Code keeps a local marketplace clone and a versioned plugin cache under
+`~/.claude/plugins/`. Refresh the marketplace first so Claude can see the latest
+Strike version, then update the installed plugin for the scope where you use it.
+
 For a user-scope install, run these terminal commands:
 
 ```bash
@@ -602,6 +606,16 @@ After updating, run this app prompt inside Claude Code to activate the update:
 ```text
 /reload-plugins
 ```
+
+To confirm the active installed version, run:
+
+```bash
+claude plugin list --json
+```
+
+Old version directories may remain in `~/.claude/plugins/cache/` for a while.
+That does not matter unless `claude plugin list --json` still shows Strike
+using the old version.
 
 </details>
 
@@ -635,6 +649,17 @@ where you want Strike to create `docs/strike/`.
 If an update does not seem to change anything, make sure a newer Strike release
 has actually been published. Some hosts only treat a plugin as updated after its
 version changes.
+
+For Claude Code, uninstalling and reinstalling a plugin does not necessarily
+refresh a stale marketplace cache. If `claude plugin list --json` shows an old
+Strike version, run:
+
+```bash
+claude plugin marketplace update strike
+claude plugin update strike@strike --scope project
+```
+
+Replace `project` with `user` or `local` if that is where Strike is installed.
 
 ## License
 
