@@ -1,3 +1,3 @@
-# Claude Project Context
+# Claude Repository Context
 
-Follow the canonical project guidance in @AGENTS.md.
+Follow the canonical repository guidance in @AGENTS.md.

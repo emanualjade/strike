@@ -1,7 +1,7 @@
 ---
 name: accept
-description: Validate the assembled feature against the Strike spec and run kind.
-argument-hint: "[feature-slug] [dogfood]"
+description: Validate the assembled project against the Strike spec.
+argument-hint: "[project-slug]"
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob
 ---
@@ -19,13 +19,9 @@ user decide what to do next.
 
 ## Purpose
 
-Validate the assembled feature after implementation review. Acceptance checks
+Validate the assembled project after implementation review. Acceptance checks
 whether the reviewed work satisfies the spec's success checks closely
 enough to move to retro, or whether fixes/signoff remain.
-
-Use `dogfood` mode for temporary system-test implementations that should not
-remain in the app. Dogfood mode may accept the workflow evidence while recording
-that live human/demo checks were intentionally not run.
 
 ## Host Invocation
 
@@ -40,7 +36,7 @@ without raw field labels.
 Board location is state. This skill may work only when the card pointer is in:
 
 ```txt
-docs/strike/board/07-acceptance/<feature-slug>.md
+docs/strike/board/07-acceptance/<project-slug>.md
 ```
 
 If the pointer is in another lane, stop and recommend:
@@ -48,45 +44,42 @@ If the pointer is in another lane, stop and recommend:
 ```txt
 Reset context first: yes
 Next Strike skill: go
-Arguments: <feature-slug>
+Arguments: <project-slug>
 ```
 
-Keep acceptance scoped to this feature's Strike card artifacts and the
-app/test diffs named by the build, fix, and review evidence.
+If any argument beyond the project slug is passed, stop and show the valid
+form:
 
-## Modes
+```txt
+Next Strike skill: accept
+Arguments: <project-slug>
+```
 
-- normal: validate the feature as if it might ship.
-- `dogfood`: validate the workflow/test implementation, record any human
-  success checks as intentionally not run, and include exact app-code rollback
-  commands from `build.md` and `fix.md` when present.
-
-If an unknown mode is passed, stop and explain the valid modes.
+Keep acceptance scoped to this project's Strike card artifacts and the
+implementation/test diffs named by the build, fix, and review evidence.
 
 ## Reads
 
 - board pointer
-- `cards/<feature-slug>/card.md`
+- `cards/<project-slug>/card.md`
 - `outputs/spec/spec.md`
 - every phase `plan.md`, `build-brief.md` when present, `build.md`, `fix.md`
   when present, and `review.md`
 - current `git status --short`
-- current app diff for files listed in phase `build.md` and `fix.md` when
-  present
+- current diff for files listed in phase `build.md` and `fix.md` when present
 
 ## Writes
 
 - `outputs/acceptance/acceptance.md`
 - `card.md`
 - board pointer moved from `07-acceptance` to `08-retro` only when acceptance
-  passes or dogfood mode accepts the workflow evidence
+  passes
 - board pointer moved from `07-acceptance` back to `06-implementation` when
   fixable acceptance work remains
 
-Write `acceptance.md` as plain Markdown with verdict, run kind, what was
-accepted, code-verifiable checks, live/human checks, evidence, acceptance fixes,
-and dogfood cleanup when relevant. Do not use IDs, YAML blocks, status fields,
-or routing metadata.
+Write `acceptance.md` as plain Markdown with verdict, what was accepted,
+repo-verifiable checks, live/human checks, evidence, and acceptance fixes. Do
+not use IDs, YAML blocks, status fields, or routing metadata.
 
 ## Acceptance Lenses
 
@@ -94,43 +87,40 @@ Check:
 
 - every planned phase has `build.md` and `review.md`
 - every review verdict is `Pass`
-- the assembled feature appears built in full and accurately against
+- the assembled project appears built in full and accurately against
   `outputs/spec/spec.md`
-- code-verifiable success checks from spec are satisfied or have
+- repo-verifiable success checks from spec are satisfied or have
   acceptance-fix checklist items
-- important feature behavior has tests/checks, or the absence of tests is
+- important project behavior has tests/checks, or the absence of tests is
   recorded as an acceptance gap
-- live/human success checks from spec are satisfied in normal mode, or
-  explicitly carried forward as not run in dogfood mode
+- live/human success checks from spec are satisfied, or acceptance waits for
+  human signoff
 - build/fix/review evidence includes checks and rollback notes
 - fix evidence, when present, is consistent with the passing review
-- app-code diff still matches the accepted build evidence
+- implementation diff still matches the accepted build evidence
 - acceptance fixes, if any, are plain unchecked checklist items
 
-Do not edit app code. Do not run rollback.
+Do not edit implementation files.
 
 ## Verdict
 
 Use one of these plain verdicts in `acceptance.md`:
 
-- `Pass` — shippable success checks passed; move to retro.
-- `Dogfood accepted` — technical/workflow acceptance passed, human/live checks
-  were intentionally not run, and app-code rollback should happen before retro.
-- `Needs fixes` — fixable app issues remain; move or leave in implementation.
-- `Awaiting human check` — app evidence is clean, but real user/demo signoff is
-  required before calling the feature accepted.
+- `Pass` — success checks passed; move to retro.
+- `Needs fixes` — fixable implementation issues remain; move or leave in
+  implementation.
+- `Awaiting human check` — implementation evidence is clean, but real user,
+  stakeholder, or live-environment signoff is required before calling the
+  project accepted.
 - `Blocked` — acceptance cannot reach a verdict because evidence is missing.
 
 ## Card Update
 
-When verdict is `Pass` or `Dogfood accepted`:
+When verdict is `Pass`:
 
 - mark the acceptance checklist item complete
 - add a retro checklist item if missing:
   `- [ ] Retro: capture workflow lessons.`
-- update the card's visible run kind line to `Dogfood` or `Shippable` when it
-  is present
-- summarize pending human/live checks or dogfood rollback notes under Notes
 - move the board pointer to `08-retro`
 
 When verdict is `Needs fixes`:
@@ -149,22 +139,8 @@ When verdict is `Awaiting human check` or `Blocked`:
 ## Moving The Board
 
 Use a normal filesystem move, not `git mv`; board pointers may be untracked
-during dogfooding. After the move, verify exactly one pointer exists for the
-feature slug under `docs/strike/board/*/`.
-
-## Dogfood Rollback
-
-Dogfood mode should copy exact rollback commands from reviewed `build.md` and
-`fix.md` when present into the `Dogfood Cleanup Before Retro` section of
-`acceptance.md`, the card notes, the board pointer intent, and the final
-response.
-
-For this mode, the next action after acceptance is app-code rollback, before
-retro. Use exact file commands only. Never run rollback inside acceptance. Never
-recommend `git checkout --`, `git clean`, or repo-wide reset/restore commands.
-
-If rollback is pending, the `08-retro` board pointer should say cleanup is
-required before retro, not imply retro can run immediately.
+while the workflow is in progress. After the move, verify exactly one pointer
+exists for the project slug under `docs/strike/board/*/`.
 
 ## Output
 
@@ -174,25 +150,19 @@ Final response should be short and user-facing:
 - verdict
 - acceptance fixes or human checks, if any
 - whether the card moved to `08-retro`
-- dogfood rollback commands when in dogfood mode, labeled as required before
-  retro
 - next prompt, rendered for the current host with `references/invocation.md`:
-  - normal accepted: `retro <feature-slug>`
-  - dogfood accepted: first tell the user to run the exact rollback commands,
-    then show `retro <feature-slug>`
+  - accepted: `retro <project-slug>`
   - needs fixes: show the specific
-    `phase-fix <feature-slug> phase:<phase-slug>` prompt when an affected phase
-    is clear; otherwise show `go <feature-slug>` as a state check
+    `phase-fix <project-slug> phase:<phase-slug>` prompt when an affected phase
+    is clear; otherwise show `go <project-slug>` as a state check
 
 Do not show raw handoff fields such as `Reset context first`, `Next Strike
 skill`, or `Arguments`.
 
 ## Gates
 
-- Do not edit app code.
-- Do not run rollback.
+- Do not edit implementation files.
 - Do not create retro files.
 - Do not create durable IDs or hidden state fields.
-- Do not move to retro when normal-mode acceptance has unresolved fixes or
-  human checks.
+- Do not move to retro when acceptance has unresolved fixes or human checks.
 - Do not commit.

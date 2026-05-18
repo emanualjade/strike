@@ -1,7 +1,7 @@
 ---
 name: spec-review
 description: Review and safely repair a Strike spec before slicing.
-argument-hint: "[feature-slug]"
+argument-hint: "[project-slug]"
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, WebFetch, WebSearch
 ---
@@ -41,7 +41,7 @@ without raw field labels.
 
 ## Reads
 
-- `docs/strike/cards/<feature-slug>/card.md`
+- `docs/strike/cards/<project-slug>/card.md`
 - `outputs/brainstorm/brainstorm.md`
 - `outputs/grill/grill.md`
 - `outputs/research/research.md` if present
@@ -50,13 +50,13 @@ without raw field labels.
 - focused repo/docs context when a spec claim needs checking
 - focused online/current-doc sources when a narrow spec claim needs checking
 
-Resolve the feature by slug, card folder, or active board pointer. If no
+Resolve the project by slug, card folder, or active board pointer. If no
 `outputs/spec/spec.md` exists, stop and recommend:
 
 ```txt
 Reset context first: yes
 Next Strike skill: go
-Arguments: <feature-slug>
+Arguments: <project-slug>
 ```
 
 ## Writes
@@ -66,18 +66,18 @@ Default write target:
 - `outputs/spec/spec.md`
 
 Only edit `card.md` when needed to add or update a real unresolved user question
-under Open Questions. Do not edit checklist, stage outputs, status, run kind, or
+under Open Questions. Do not edit checklist, stage outputs, status, or
 constraints from spec review.
 
 Normally leave board pointers unchanged. If review finds an unresolved upstream
-issue that blocks slicing, move the pointer back to `02-grill` for product or
-decision-tree work, or `03-research` for broad evidence work, then show the
-matching handoff.
+issue that blocks slicing, move the pointer back to `02-grill` for product,
+technical, workflow, or decision-tree work, or `03-research` for broad evidence
+work, then show the matching handoff.
 
 ## Review Lenses
 
 Review for accuracy, completeness, and usefulness. The core question is:
-does `outputs/spec/spec.md` accurately and completely represent the feature as
+does `outputs/spec/spec.md` accurately and completely represent the project as
 described by brainstorm, current grill decisions, optional research, and the
 card?
 
@@ -87,21 +87,21 @@ card?
 - Does it use research findings properly if research exists?
 - Is scope clear?
 - Are non-goals clear?
-- Are product rules concrete?
-- Are user flows present when sequence or interaction matters?
+- Are product, technical, or workflow rules concrete?
+- Are user/operator/system flows present when sequence or interaction matters?
 - Are UX expectations present when visual states, accessibility, responsive
   behavior, tone, or interaction quality matter?
-- Are state, lifecycle, and invariants present when the feature has states,
+- Are state, lifecycle, and invariants present when the project has states,
   transitions, or truths that must always hold?
-- Are security, privacy, permissions, and data integrity covered when auth
-  scope, tenant scope, sensitive data, destructive actions, or consistency
+- Are security, privacy, permissions, and data integrity covered when access
+  scope, boundary rules, sensitive data, destructive actions, or consistency
   matter?
 - Are engineering pressure points named when business rules, state transitions,
   permissions, integrations, data consistency, orchestration, or focused tests
   are likely?
-- Are success checks useful and split into code-verifiable vs live/human?
+- Are success checks useful and split into repo-verifiable vs live/human?
 - Are open questions honest and categorized well?
-- Is language/domain wording consistent with project and feature language?
+- Is language/domain wording consistent with the Project and repo language?
 - Are assumptions and risks visible without being overblown?
 - Is anything contradicted by focused code/docs evidence?
 
@@ -149,7 +149,7 @@ answers, apply the resulting spec fix. If the answer changes a decision in
 ```txt
 Reset context first: yes
 Next Strike skill: grill
-Arguments: <feature-slug>
+Arguments: <project-slug>
 ```
 
 Do not rewrite `grill.md` from spec review.
@@ -170,7 +170,7 @@ Not allowed:
 
 - broad research passes
 - architecture exploration
-- new product discovery
+- new product, technical, or workflow discovery
 - implementation planning
 
 If the issue needs broad evidence, move the pointer back to `03-research` and
@@ -184,10 +184,10 @@ Final response should be short and user-facing:
 - `Spec reviewed.`
 - `Fixed:` list only meaningful fixes, or `None.`
 - `Questions:` list any user decisions still needed, or `None.`
-- `Next:` render `slice <feature-slug>` for the current host with
+- `Next:` render `slice <project-slug>` for the current host with
   `references/invocation.md`, unless review found an upstream decision or
   evidence problem; in that case, move the pointer to the owning lane first and
-  render the relevant `grill <feature-slug>` or `research <feature-slug>`
+  render the relevant `grill <project-slug>` or `research <project-slug>`
   prompt.
 
 Do not show raw handoff fields such as `Reset context first`, `Next Strike
@@ -199,11 +199,11 @@ skill`, or `Arguments`.
 - Do not move board pointers for safe in-place fixes.
 - Do not mark the spec approved or complete, and do not advance workflow state.
 - Do not write drafts, sidecars, review reports, slices, implementation plans,
-  review artifacts, acceptance, retro, or app code.
+  review artifacts, acceptance, retro, or implementation files.
 - Do not edit `UBIQUITOUS_LANGUAGE.md`.
 - Do not create durable IDs or hidden state fields.
-- Do not use the spec review to relitigate product scope unless the spec is
-  clearly inconsistent with upstream decisions.
+- Do not use the spec review to relitigate product or workflow scope unless the
+  spec is clearly inconsistent with upstream decisions.
 
-Use `Bash` only for read-only inspection. Do not mutate app code, board state,
-repo metadata, or unrelated files.
+Use `Bash` only for read-only inspection. Do not mutate implementation files,
+board state, repo metadata, or unrelated files.

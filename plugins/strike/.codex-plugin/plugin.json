@@ -1,9 +1,9 @@
 {
   "name": "strike",
-  "version": "0.1.6",
-  "description": "Board-and-card workflow skills for turning rough feature ideas into scoped implementation, review, acceptance, and retro artifacts.",
+  "version": "0.1.15",
+  "description": "Board-and-card workflow skills for turning rough project ideas into scoped implementation, review, acceptance, and retro artifacts.",
   "author": {
-    "name": "Standard News"
+    "name": "Emanual Jade"
   },
   "license": "MIT",
   "keywords": [
@@ -16,9 +16,9 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Strike",
-    "shortDescription": "Feature workflow skills for durable planning, implementation, review, and acceptance",
-    "longDescription": "Strike packages a board-and-card workflow for agent-assisted feature delivery. Use it to start feature cards, sharpen rough ideas, make decisions, research only where useful, write specs, slice implementation phases, build, review, accept, and capture retros while keeping runtime state in the consuming repository.",
-    "developerName": "Standard News",
+    "shortDescription": "Project workflow skills for durable planning, implementation, review, and acceptance",
+    "longDescription": "Strike packages a board-and-card workflow for agent-assisted project delivery. Use it to start project cards, sharpen rough ideas, make decisions, research only where useful, write specs, slice implementation phases, build, review, accept, and capture retros while keeping runtime state in the consuming repository.",
+    "developerName": "Emanual Jade",
     "category": "Coding",
     "capabilities": [
       "Interactive",
@@ -26,9 +26,9 @@
       "Write"
     ],
     "defaultPrompt": [
-      "Start a Strike card for this feature idea.",
+      "Start a Strike card for this project idea.",
       "Show the next Strike step for this card.",
-      "Use Strike to plan and implement this feature."
+      "Use Strike to plan and implement this project."
     ],
     "brandColor": "#DC2626",
     "screenshots": []

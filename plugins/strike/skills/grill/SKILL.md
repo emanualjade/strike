@@ -1,7 +1,7 @@
 ---
 name: grill
-description: Drive focused product and engineering decisions before spec writing.
-argument-hint: "[feature-slug]"
+description: Drive focused product, technical, and workflow decisions before spec writing.
+argument-hint: "[project-slug]"
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob
 ---
@@ -19,8 +19,9 @@ user decide what to do next.
 
 ## Purpose
 
-Pressure-test a brainstormed feature until the important product, domain,
-language, and model-shape decisions are clear enough for spec.
+Pressure-test a brainstormed project until the important product, technical,
+workflow, domain, language, and model-shape decisions are clear enough for
+spec.
 
 Grill thinks through the work like a decision tree, but it records the pruned
 tree: current decisions, rejected paths, assumptions, candidate language, and
@@ -40,7 +41,7 @@ without raw field labels.
 Board location is state. This skill may work only when the card pointer is in:
 
 ```txt
-docs/strike/board/02-grill/<feature-slug>.md
+docs/strike/board/02-grill/<project-slug>.md
 ```
 
 If the pointer is in another lane, stop and recommend:
@@ -48,36 +49,37 @@ If the pointer is in another lane, stop and recommend:
 ```txt
 Reset context first: yes
 Next Strike skill: go
-Arguments: <feature-slug>
+Arguments: <project-slug>
 ```
 
-Do not write spec, slices, implementation, acceptance, retro, app code, project
-glossary edits, durable IDs, YAML blocks, or machine-readable routing metadata.
+Do not write spec, slices, implementation, acceptance, retro, implementation
+files, repo glossary edits, durable IDs, YAML blocks, or machine-readable
+routing metadata.
 
 ## Reads
 
 - board pointer
-- `cards/<feature-slug>/card.md`
-- `cards/<feature-slug>/outputs/brainstorm/brainstorm.md`
-- existing `cards/<feature-slug>/outputs/grill/grill.md` if present
+- `cards/<project-slug>/card.md`
+- `cards/<project-slug>/outputs/brainstorm/brainstorm.md`
+- existing `cards/<project-slug>/outputs/grill/grill.md` if present
 - `UBIQUITOUS_LANGUAGE.md` if present
 - focused repo/docs context when facts affect the question
 
 If a question can be answered from code or docs, inspect instead of asking the
-user. Ask only for product intent, preferences, or decisions the repo cannot
+user. Ask only for intent, preferences, tradeoffs, or decisions the repo cannot
 know.
 
 ## Writes
 
-- `cards/<feature-slug>/outputs/grill/grill.md`
-- `cards/<feature-slug>/card.md`
+- `cards/<project-slug>/outputs/grill/grill.md`
+- `cards/<project-slug>/card.md`
 - board pointer moved from `02-grill` to `03-research` when evidence or
   guidance is needed before spec
 - board pointer moved from `02-grill` to `04-spec` when research is unnecessary
   and spec can continue after a context reset
 
 Use a normal filesystem move, not `git mv`, and verify exactly one pointer file
-exists for the feature slug after moving.
+exists for the project slug after moving.
 
 ## Conversation
 
@@ -89,20 +91,22 @@ Ask one consequential question at a time. For each question:
 - use concrete scenarios for abstract decisions
 - wait for the user's answer before moving to the next branch
 
-Good grill questions resolve product, domain, or build-shaping uncertainty.
-Avoid asking every possible question. Use these areas as a menu, not a checklist:
+Good grill questions resolve product, technical, workflow, domain, or
+build-shaping uncertainty. Avoid asking every possible question. Use these
+areas as a menu, not a checklist:
 
-- user and success
+- affected user, system, or workflow and success
 - scope and non-goals
 - domain language
 - core noun and schema/model shape
-- user flow
+- user, operator, command, integration, or system flow
 - state and lifecycle
 - ownership and permissions
 - data relationships
 - business rules
 - failure cases
 - UI states when relevant
+- CLI/API/docs/tooling behavior when relevant
 - integrations when relevant
 - validation and success evidence
 
@@ -110,20 +114,21 @@ Avoid asking every possible question. Use these areas as a menu, not a checklist
 
 Do not turn editorial details into broad homework for the user.
 
-If a branch needs examples, feature candidates, content topics, or copy
-directions, first inspect the available product context and recommend a tiny
-candidate set. Ask the user to approve, prune, or replace it.
+If a branch needs examples, project candidates, content topics, or copy
+directions, first inspect the available product, technical, workflow, or repo
+context and recommend a tiny candidate set. Ask the user to approve, prune, or
+replace it.
 
 Grill keeps asking until spec has the decisions it needs. If a choice affects
-what the feature is, who it serves, what it promises, what is in or out, how
-success is judged, or what the first build means, resolve it in grill and write
-the current decision to `grill.md`.
+what the project is, who or what it serves, what it promises, what is in or
+out, how success is judged, or what the first build means, resolve it in grill
+and write the current decision to `grill.md`.
 
 Once the underlying decision is made, spec can handle drafting details inside
 the recorded constraints. Record the constraints in `grill.md` (tone, length,
 terms to use or avoid, promise boundaries, or examples) and let spec draft
 within those boundaries without re-interviewing the user. If a "wording" choice
-would change the feature, resolve it in grill.
+would change the project, resolve it in grill.
 
 ## Language And Modeling
 
@@ -132,14 +137,14 @@ model-shape decisions. If it is absent, continue without glossary context.
 Challenge vague, overloaded, or conflicting terms in the moment:
 
 ```txt
-You said "account"; the glossary uses "User" for auth identity and
-"Organization" for tenant. Which one do you mean here?
+You said "job"; the glossary uses "Task" for planned work and "Run" for one
+execution attempt. Which one do you mean here?
 ```
 
 Use the Core Noun Before Qualifiers lens when naming things, defining domain
 language, or sketching schema concepts. If the language starts creating
-adjective-noun siblings such as `FixedAdSlot` / `FlexibleAdSlot` or
-`PublisherImage` / `AdvertiserImage`, pause and ask whether the qualifiers are
+adjective-noun siblings such as `ManualReport` / `ScheduledReport` or
+`PublicAsset` / `PrivateAsset`, pause and ask whether the qualifiers are
 better represented as fields, tags, enums, booleans, numeric dials,
 constraints, configuration, relationships, permissions, state, placement,
 ownership, or usage context.
@@ -148,9 +153,9 @@ This is not a rule against separate models. It is a reflection step. If the
 single-core-noun version seems plausible, discuss it with the user before
 committing to separate entities or canonical terms.
 
-Do not edit `UBIQUITOUS_LANGUAGE.md`. Record feature-local terms and candidate
-project language in `grill.md`. Recommend the `language` skill when the user
-wants to promote, revise, trace, or assess project-wide language.
+Do not edit `UBIQUITOUS_LANGUAGE.md`. Record Project-local terms and candidate
+repo language in `grill.md`. Recommend the `language` skill when the user
+wants to promote, revise, trace, or assess repo-wide language.
 
 ## Optional Demo Support
 
@@ -173,8 +178,7 @@ Good reasons to route to research:
 - UX/comparable-product research would sharpen the spec
 - tool, library, vendor, or service choice is genuinely open
 
-Do not route to research just to confirm decisions that already stand. Do not
-make small dogfood features perform fake research.
+Do not route to research just to confirm decisions that already stand.
 
 If research is needed, record the focused research questions in `grill.md` and
 move the card to `03-research`. If research is unnecessary, say so briefly in
@@ -217,14 +221,14 @@ Use this shape as a loose guide. Omit empty sections.
 Decision: [What we chose.]
 Why: [Why this is the current best answer.]
 Rejected: [Main alternatives and why.]
-Impacts: [Spec/scope/schema/language/UI implications.]
+Impacts: [Spec/scope/schema/language/UI/API/CLI/workflow implications.]
 Confidence: [High / Medium / Low.]
 Revisit if: [What would make this decision worth reopening.]
 
 ## Candidate Language
 
 - [Term]: [meaning].
-- [Term]: [note if feature-local or candidate project language.]
+- [Term]: [note if Project-local or candidate repo language.]
 
 ## Assumptions
 
@@ -252,7 +256,7 @@ When grill is ready for spec:
 - if research is needed, add a research checklist item if missing:
   `- [ ] Research: gather evidence and guidance for spec.`
 - if research is unnecessary, add a spec checklist item if missing:
-  `- [ ] Spec: write the durable feature source of truth.`
+  `- [ ] Spec: write the durable Project source of truth.`
 - summarize key decisions under `Constraints And Decisions`
 - move resolved questions out of `Open Questions`
 - leave only real open questions visible
@@ -274,11 +278,11 @@ Move only when:
 - every real decision made in the session is captured
 - stale or reversed decisions are removed or rewritten
 - remaining questions are either blocking in grill, research-needed, or safe
-  spec-owned details that do not change feature meaning
-- candidate project language is recorded without mutating `UBIQUITOUS_LANGUAGE.md`
-- the next step can continue after a context reset without re-interviewing the user on
-  product intent, audience, scope, boundaries, model shape, success, or first
-  build meaning
+  spec-owned details that do not change project meaning
+- candidate repo language is recorded without mutating `UBIQUITOUS_LANGUAGE.md`
+- the next step can continue after a context reset without re-interviewing the
+  user on product, technical, or workflow intent, affected audience or system,
+  scope, boundaries, model shape, success, or first build meaning
 - any needed pre-spec research questions are focused enough for
   the `research` skill
 
@@ -293,11 +297,11 @@ Final response should be short and user-facing:
   `02-grill`
 - key decisions captured or missing decision gaps
 - next prompt, rendered for the current host with `references/invocation.md`:
-  - moved to `03-research`: recommend `research <feature-slug>` and also show
-    the skip path `research <feature-slug> skip`
-  - moved to `04-spec`: recommend `spec <feature-slug>` and mention optional
-    research first with `research <feature-slug>`
-  - stayed in `02-grill`: show `grill <feature-slug>`
+  - moved to `03-research`: recommend `research <project-slug>` and also show
+    the skip path `research <project-slug> skip`
+  - moved to `04-spec`: recommend `spec <project-slug>` and mention optional
+    research first with `research <project-slug>`
+  - stayed in `02-grill`: show `grill <project-slug>`
 
 Do not show raw handoff fields such as `Reset context first`, `Next Strike
 skill`, or `Arguments`.
@@ -305,7 +309,7 @@ skill`, or `Arguments`.
 ## Gates
 
 - Do not write spec, slice, implementation, review, acceptance, or retro files.
-- Do not write app code.
+- Do not write implementation files.
 - Do not edit `UBIQUITOUS_LANGUAGE.md`.
 - Do not create durable IDs or hidden state fields.
 - Do not move to spec if `grill.md` loses decisions made in the conversation.

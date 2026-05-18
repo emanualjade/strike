@@ -2,11 +2,11 @@
 set -euo pipefail
 
 usage() {
-  printf 'Usage: %s [--repo-root <path>] <feature name words> [--slug <slug>] [--description <short description words>]\n' "$0" >&2
+  printf 'Usage: %s [--repo-root <path>] <project name words> [--slug <slug>] [--description <short description words>]\n' "$0" >&2
   printf 'Set STRIKE_REPO_ROOT as an alternative to --repo-root.\n' >&2
 }
 
-feature_name_parts=()
+project_name_parts=()
 slug_override=""
 description=""
 repo_root="${STRIKE_REPO_ROOT:-}"
@@ -47,32 +47,32 @@ while [[ $# -gt 0 ]]; do
     --)
       shift
       while [[ $# -gt 0 ]]; do
-        feature_name_parts+=("$1")
+        project_name_parts+=("$1")
         shift
       done
       ;;
     -*)
-      if [[ ${#feature_name_parts[@]} -eq 0 ]]; then
+      if [[ ${#project_name_parts[@]} -eq 0 ]]; then
         printf 'Unknown flag: %s\n' "$1" >&2
         usage
         exit 2
       fi
-      feature_name_parts+=("$1")
+      project_name_parts+=("$1")
       shift
       ;;
     *)
-      feature_name_parts+=("$1")
+      project_name_parts+=("$1")
       shift
       ;;
   esac
 done
 
-feature_name="${feature_name_parts[*]}"
-
-if [[ -z "$feature_name" ]]; then
+if [[ ${#project_name_parts[@]} -eq 0 ]]; then
   usage
   exit 2
 fi
+
+project_name="${project_name_parts[*]}"
 
 if [[ -z "$repo_root" ]]; then
   repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
@@ -115,11 +115,11 @@ if [[ -d "$strike_root/board" ]]; then
   done < <(find "$strike_root/board" -mindepth 2 -maxdepth 2 -type f -name '*.md' -print | sort)
 fi
 
-slug_text="$feature_name"
-slug_command=("$node_bin" "$slug_helper" feature --text "$slug_text")
+slug_text="$project_name"
+slug_command=("$node_bin" "$slug_helper" project --text "$slug_text")
 if [[ -n "$slug_override" ]]; then
   slug_text="$slug_override"
-  slug_command=("$node_bin" "$slug_helper" feature --text "$slug_text" --keep-leading-words)
+  slug_command=("$node_bin" "$slug_helper" project --text "$slug_text" --keep-leading-words)
 fi
 if (( ${#taken_args[@]} > 0 )); then
   slug_command+=("${taken_args[@]}")
@@ -161,7 +161,7 @@ touch \
 card_dir="$strike_root/cards/$slug"
 card_path="$card_dir/card.md"
 pointer_path="$strike_root/board/01-brainstorm/$slug.md"
-display_feature_name="$(normalize_text "$feature_name")"
+display_project_name="$(normalize_text "$project_name")"
 
 existing_pointer="$(find "$strike_root/board" -mindepth 2 -maxdepth 2 -type f -name "$slug.md" -print -quit 2>/dev/null || true)"
 
@@ -188,21 +188,18 @@ if [[ ! -d "$card_dir" ]]; then
 
   short_description="$(normalize_text "$description")"
   if [[ -z "$short_description" ]]; then
-    short_description="_Add the rough idea or user-facing outcome here._"
+    short_description="_Add the rough idea or intended outcome here._"
   fi
 
   cat > "$card_path" <<EOF
-# $display_feature_name
+# $display_project_name
 
 Short description:
 $short_description
 
-Run kind:
-_Undecided - choose dogfood or shippable by spec/acceptance._
-
 ## Working Checklist
 
-- [ ] Brainstorm: sharpen fuzzy idea into a product direction.
+- [ ] Brainstorm: sharpen fuzzy idea into a clear project direction.
 
 ## Open Questions
 
@@ -234,11 +231,11 @@ fi
 
 if [[ -z "$existing_pointer" ]]; then
   cat > "$pointer_path" <<EOF
-# $display_feature_name
+# $display_project_name
 
 Card: ../../cards/$slug/card.md
 
-Current intent: Sharpen the fuzzy idea enough for decision-tree grilling.
+Current intent: Sharpen the project direction enough for decision-tree grilling.
 EOF
   existing_pointer="$pointer_path"
 fi

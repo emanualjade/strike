@@ -1,18 +1,18 @@
 {
   "name": "strike",
   "owner": {
-    "name": "Standard News"
+    "name": "Emanual Jade"
   },
   "description": "A Claude Code marketplace for the Strike board-and-card workflow plugin.",
-  "version": "0.1.6",
+  "version": "0.1.15",
   "plugins": [
     {
       "name": "strike",
       "source": "./plugins/strike",
-      "description": "Board-and-card workflow skills for turning rough feature ideas into scoped implementation, review, acceptance, and retro artifacts.",
-      "version": "0.1.6",
+      "description": "Board-and-card workflow skills for turning rough project ideas into scoped implementation, review, acceptance, and retro artifacts.",
+      "version": "0.1.15",
       "author": {
-        "name": "Standard News"
+        "name": "Emanual Jade"
       },
       "homepage": "https://github.com/emanualjade/strike",
       "repository": "https://github.com/emanualjade/strike"

@@ -1,7 +1,7 @@
 ---
 name: phase-review
 description: Review one built phase and route clean or blocking findings.
-argument-hint: "[feature-slug] phase:<phase-slug>"
+argument-hint: "[project-slug] phase:<phase-slug>"
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob
 ---
@@ -23,7 +23,7 @@ Review one built phase from fresh context.
 
 The job is to catch scope drift, regressions, missing checks, and quality
 problems while the phase diff is still small. Review writes the fix list when
-fixes are needed; code/test repairs belong to the `phase-fix` skill.
+fixes are needed; implementation/test repairs belong to the `phase-fix` skill.
 
 Keep review plain: prose, checkboxes, and evidence. Do not create finding IDs,
 YAML blocks, hidden routing metadata, or sidecar checker files.
@@ -41,14 +41,14 @@ without raw field labels.
 Board location is state. This skill may work only when the card pointer is in:
 
 ```txt
-docs/strike/board/06-implementation/<feature-slug>.md
+docs/strike/board/06-implementation/<project-slug>.md
 ```
 
 Require an explicit phase argument:
 
 ```txt
 Next Strike skill: phase-review
-Arguments: <feature-slug> phase:<phase-slug>
+Arguments: <project-slug> phase:<phase-slug>
 ```
 
 If the pointer is in another lane, or the phase cannot be resolved, stop and
@@ -57,7 +57,7 @@ recommend:
 ```txt
 Reset context first: yes
 Next Strike skill: go
-Arguments: <feature-slug>
+Arguments: <project-slug>
 ```
 
 If `build.md` is missing, stop and recommend:
@@ -65,15 +65,16 @@ If `build.md` is missing, stop and recommend:
 ```txt
 Reset context first: yes
 Next Strike skill: phase-build
-Arguments: <feature-slug> phase:<phase-slug>
+Arguments: <project-slug> phase:<phase-slug>
 ```
 
-Do not edit app code or tests. Do not create fix, acceptance, or retro files.
+Do not edit implementation or test files. Do not create fix, acceptance, or
+retro files.
 
 ## Reads
 
 - board pointer
-- `cards/<feature-slug>/card.md`
+- `cards/<project-slug>/card.md`
 - `outputs/spec/spec.md`
 - selected phase `plan.md`
 - selected phase `build-brief.md` when present
@@ -81,21 +82,21 @@ Do not edit app code or tests. Do not create fix, acceptance, or retro files.
 - existing selected phase `review.md` if present
 - current `git status --short`
 - current diff for files listed in `build.md`
-- focused source/test files only as needed to verify the diff
+- focused implementation/test files only as needed to verify the diff
 
 Treat `build.md` and the current diff as the main review target. Use
 `spec.md`, `plan.md`, and `build-brief.md` to check intent and scope.
 
 ## Writes
 
-- `cards/<feature-slug>/phases/<phase-slug>/review.md`
-- `cards/<feature-slug>/card.md`
+- `cards/<project-slug>/phases/<phase-slug>/review.md`
+- `cards/<project-slug>/card.md`
 - board pointer moved from `06-implementation` to `07-acceptance` only when
   every listed phase has a clean review and no implementation checklist items
   remain open
 
 Use normal filesystem moves, not `git mv`, and verify exactly one pointer file
-exists for the feature slug after moving.
+exists for the project slug after moving.
 
 ## Review Lenses
 
@@ -105,17 +106,18 @@ diff:
 - scope: changes stay inside the selected phase
 - behavior: the phase outcome appears implemented
 - quality: implementation is readable and fits local patterns
-- product/UX intent: output matches the spec and phase promise
+- intent: output matches the spec and phase promise
 - verification: checks in `build.md` are enough, and skipped/failed checks are
   honest
 - tests: added/updated checks cover the important behavior, or absence is
   explained
-- rollback: changed app/test files and exact rollback notes are present
+- rollback: changed implementation/test files and exact rollback notes are
+  present
 - risk: any security, auth, data integrity, accessibility, or integration issue
   introduced by the phase is visible
 
 Do not redo the build. You may run cheap read-only commands or focused checks
-to verify evidence, but do not mutate app/test code.
+to verify evidence, but do not mutate implementation/test files.
 
 ## Verdict
 
@@ -180,7 +182,7 @@ When review passes:
 - update the phase line in `## Phases` to mention `review.md`
 - if all listed phases are reviewed and no implementation or acceptance-fix
   checklist items remain open, add an acceptance checklist item if missing:
-  `- [ ] Acceptance: validate the assembled feature.`
+  `- [ ] Acceptance: validate the assembled project.`
 - move the board pointer to `07-acceptance` only when all listed phases are
   reviewed cleanly
 
@@ -219,23 +221,20 @@ Final response should be short and user-facing:
 - blocking fixes, if any
 - whether the card moved to `07-acceptance` or stayed in `06-implementation`
 - next prompt, rendered for the current host with `references/invocation.md`:
-  - needs fixes: `phase-fix <feature-slug> phase:<phase-slug>`
+  - needs fixes: `phase-fix <project-slug> phase:<phase-slug>`
   - phase passed and more phases remain: optional
-    `phase-research <feature-slug> phase:<next-phase-slug>` and direct
-    `phase-plan <feature-slug> phase:<next-phase-slug>`
-  - all phases passed: exactly one acceptance prompt, using
-    `accept <feature-slug> dogfood` for Dogfood runs or `accept <feature-slug>`
-    otherwise
-  - run kind undecided: show both acceptance choices briefly
+    `phase-research <project-slug> phase:<next-phase-slug>` and direct
+    `phase-plan <project-slug> phase:<next-phase-slug>`
+  - all phases passed: `accept <project-slug>`
   - blocked by missing evidence: show the prompt that supplies that evidence
-    when obvious; otherwise show `go <feature-slug>` as a state check
+    when obvious; otherwise show `go <project-slug>` as a state check
 
 Do not show raw handoff fields such as `Reset context first`, `Next Strike
 skill`, or `Arguments`.
 
 ## Gates
 
-- Do not edit app code or tests.
+- Do not edit implementation or test files.
 - Do not create fix, acceptance, or retro files.
 - Do not create durable IDs or hidden state fields.
 - Do not move the card to acceptance if blocking fixes or missing evidence remain.

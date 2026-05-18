@@ -4,7 +4,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
-export const FEATURE_BODY_MAX = 48;
+export const PROJECT_BODY_MAX = 48;
 export const ARTIFACT_BODY_MAX = 40;
 
 const TASK_VERBS = new Set([
@@ -40,7 +40,7 @@ export function slugifyText(value) {
     .replace(/-+/g, "-");
 }
 
-export function dropLeadingFeatureWords(slug) {
+export function dropLeadingProjectWords(slug) {
   const parts = slug.split("-");
   if (parts.length < 2 || !TASK_VERBS.has(parts[0])) {
     return slug;
@@ -113,17 +113,17 @@ function normalizeExtension(ext) {
   return normalized;
 }
 
-export function createFeatureSlug(text, options = {}) {
+export function createProjectSlug(text, options = {}) {
   const taken = new Set(options.taken ?? []);
   const dropLeadingWords = options.dropLeadingWords ?? true;
   let body = slugifyText(text);
 
   if (dropLeadingWords) {
-    body = dropLeadingFeatureWords(body);
+    body = dropLeadingProjectWords(body);
   }
-  body = shortenSlug(body, FEATURE_BODY_MAX);
-  requireSlug(body, "feature");
-  body = dedupeBody(body, FEATURE_BODY_MAX, taken, (candidate) => candidate);
+  body = shortenSlug(body, PROJECT_BODY_MAX);
+  requireSlug(body, "project");
+  body = dedupeBody(body, PROJECT_BODY_MAX, taken, (candidate) => candidate);
 
   return { slug: body };
 }
@@ -165,8 +165,8 @@ function parseCliArgs(argv) {
     taken: [],
   };
 
-  if (!["feature", "phase", "demo"].includes(mode)) {
-    throw new Error("Usage: slugify.mjs <feature|phase|demo> --text <text> [--index <n>] [--taken <value>]...");
+  if (!["project", "phase", "demo"].includes(mode)) {
+    throw new Error("Usage: slugify.mjs <project|phase|demo> --text <text> [--index <n>] [--taken <value>]...");
   }
 
   for (let index = 1; index < argv.length; index += 1) {
@@ -215,8 +215,8 @@ function printKeyValues(result) {
 
 export function runCli(argv = process.argv.slice(2)) {
   const { mode, options } = parseCliArgs(argv);
-  if (mode === "feature") {
-    printKeyValues(createFeatureSlug(options.text, options));
+  if (mode === "project") {
+    printKeyValues(createProjectSlug(options.text, options));
   } else if (mode === "phase") {
     printKeyValues(createPhaseSlug(options.text, options));
   } else {

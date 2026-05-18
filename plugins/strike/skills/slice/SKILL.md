@@ -1,7 +1,7 @@
 ---
 name: slice
 description: Split a completed Strike spec into vertical implementation phases.
-argument-hint: "[feature-slug]"
+argument-hint: "[project-slug]"
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob
 ---
@@ -21,7 +21,7 @@ user decide what to do next.
 
 Turn a complete spec into a small, ordered set of vertical phases.
 
-This skill decides how to cut the work so the feature can be built accurately
+This skill decides how to cut the work so the project can be built accurately
 and completely. A good slice lets the `phase-plan` skill start after a context reset
 with enough context to do narrow phase research and later write the first build
 brief.
@@ -39,7 +39,7 @@ without raw field labels.
 Board location is state. This skill may work only when the card pointer is in:
 
 ```txt
-docs/strike/board/05-slice/<feature-slug>.md
+docs/strike/board/05-slice/<project-slug>.md
 ```
 
 If the pointer is in another lane, stop and recommend:
@@ -47,23 +47,23 @@ If the pointer is in another lane, stop and recommend:
 ```txt
 Reset context first: yes
 Next Strike skill: go
-Arguments: <feature-slug>
+Arguments: <project-slug>
 ```
 
 Keep the output focused on phase plans, card updates, and the board pointer.
 This is planning, not implementation. Light code references are welcome when
-they make a phase concrete, but do not edit app code here.
+they make a phase concrete, but do not edit implementation files here.
 
 ## Reads
 
 - board pointer
-- `cards/<feature-slug>/card.md`
-- `cards/<feature-slug>/outputs/spec/spec.md`
-- `cards/<feature-slug>/outputs/research/research.md` if present and relevant
-- `cards/<feature-slug>/outputs/grill/grill.md` only when the spec needs a
+- `cards/<project-slug>/card.md`
+- `cards/<project-slug>/outputs/spec/spec.md`
+- `cards/<project-slug>/outputs/research/research.md` if present and relevant
+- `cards/<project-slug>/outputs/grill/grill.md` only when the spec needs a
   decision cross-check
-- `cards/<feature-slug>/outputs/brainstorm/brainstorm.md` only when the spec
-  seems to have lost the original user/problem framing
+- `cards/<project-slug>/outputs/brainstorm/brainstorm.md` only when the spec
+  seems to have lost the initial user/problem framing
 - focused repo/docs context only when needed to avoid slicing against a fake
   surface or nonexistent pattern
 
@@ -72,15 +72,15 @@ grill, or research inside slice.
 
 ## Writes
 
-- `cards/<feature-slug>/phases/<phase-slug>/plan.md`
-- `cards/<feature-slug>/card.md`
+- `cards/<project-slug>/phases/<phase-slug>/plan.md`
+- `cards/<project-slug>/card.md`
 - board pointer moved from `05-slice` to `06-implementation` only when the
   first phase can be phase-planned after a context reset
 - board pointer moved back from `05-slice` to `04-spec` when the spec is too
   thin or contradictory to slice safely
 
 Use a normal filesystem move, not `git mv`, and verify exactly one pointer file
-exists for the feature slug after moving.
+exists for the project slug after moving.
 
 ## Slicing Principles
 
@@ -113,7 +113,7 @@ unlocks the next useful behavior.
 ## Phase Shape
 
 Each phase plan should let the `phase-plan` skill continue after a context reset
-without rediscovering the feature.
+without rediscovering the project.
 
 Name the outcome, order/dependency, verifiable result, likely surfaces, and
 concrete watchouts. Mention phase-plan focus only when there is something the
@@ -121,7 +121,7 @@ next step should check before code, such as local precedents, current docs,
 test conventions, or a phase-specific pitfall.
 
 Keep phase plans compact. Do not restate the whole spec, list every rejected
-option, or create build/review checklists. Use project language consistently;
+option, or create build/review checklists. Use repo language consistently;
 if a phase name introduces a new term, define it briefly.
 
 ## Conversation
@@ -132,7 +132,7 @@ Use judgment for normal slicing choices: phase names, order, split/merge
 boundaries, likely surfaces, verification shape, and phase-plan focus items.
 Capture assumptions or watchouts in the phase plan.
 
-Ask only when the spec cannot be sliced without a new feature decision or a
+Ask only when the spec cannot be sliced without a new project decision or a
 change to the spec. When asking, explain the tradeoff plainly and recommend an
 answer.
 
@@ -150,10 +150,13 @@ Before creating each phase folder, run the bundled slug helper by absolute path
 from the plugin package:
 
 ```bash
-node <plugin-root>/references/scripts/slugify.mjs phase --text "<phase name>" --index <n> --taken <existing-phase-folder>
+node <plugin-root>/references/scripts/slugify.mjs phase \
+  --text "<phase name>" \
+  --index <n> \
+  --taken <existing-phase-folder>
 ```
 
-Pass every existing phase folder under `cards/<feature-slug>/phases/` as a
+Pass every existing phase folder under `cards/<project-slug>/phases/` as a
 separate `--taken` value. Use the returned `slug=` value as the folder name.
 Follow `references/slug-policy.md`; do not hand-roll phase slug rules.
 
@@ -196,7 +199,8 @@ actually matters.]
 
 ## Phase-Plan Focus
 
-- [Question for optional phase-research or phase-plan to investigate before code is written, or "None obvious."]
+- [Question for optional phase-research or phase-plan to investigate before
+  code is written, or "None obvious."]
 
 ## Watchouts
 
@@ -233,7 +237,7 @@ transcript is gone. Move forward when:
 - the `phase-plan` skill can continue
   after a context reset without broad rediscovery
 
-If a phase planner would have to rediscover the feature or guess the first
+If a phase planner would have to rediscover the project or guess the first
 phase, improve the phase plans before moving.
 
 ## Output
@@ -246,17 +250,17 @@ Final response should be short and user-facing:
 - the recommended first phase
 - next prompt, rendered for the current host with `references/invocation.md`:
   - moved to `06-implementation`: show optional
-    `phase-research <feature-slug> phase:<first-phase-slug>` and direct
-    `phase-plan <feature-slug> phase:<first-phase-slug>`
-  - moved back to `04-spec`: show `spec <feature-slug>`
-  - stayed in `05-slice`: show `slice <feature-slug>`
+    `phase-research <project-slug> phase:<first-phase-slug>` and direct
+    `phase-plan <project-slug> phase:<first-phase-slug>`
+  - moved back to `04-spec`: show `spec <project-slug>`
+  - stayed in `05-slice`: show `slice <project-slug>`
 
 Do not show raw handoff fields such as `Reset context first`, `Next Strike
 skill`, or `Arguments`.
 
 ## Gates
 
-- Do not edit app code or tests.
+- Do not edit implementation or test files.
 - Do not write build briefs, build evidence, review, acceptance, or retro
   artifacts.
 - Do not create durable IDs, hidden state fields, or routing metadata.

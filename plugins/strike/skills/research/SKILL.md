@@ -1,7 +1,7 @@
 ---
 name: research
-description: Gather lean pre-spec evidence when it can change feature decisions.
-argument-hint: "[feature-slug] [optional focus|skip]"
+description: Gather lean pre-spec evidence when it can change project decisions.
+argument-hint: "[project-slug] [optional focus|skip]"
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, WebFetch, WebSearch, Agent
 ---
@@ -51,8 +51,8 @@ without raw field labels.
 Board location is state. This skill may work when the card pointer is in:
 
 ```txt
-docs/strike/board/03-research/<feature-slug>.md
-docs/strike/board/04-spec/<feature-slug>.md
+docs/strike/board/03-research/<project-slug>.md
+docs/strike/board/04-spec/<project-slug>.md
 ```
 
 Use `03-research` when a prior stage routed the card to research. Use
@@ -63,20 +63,20 @@ If the pointer is in another lane, stop and recommend:
 ```txt
 Reset context first: yes
 Next Strike skill: go
-Arguments: <feature-slug>
+Arguments: <project-slug>
 ```
 
-Do not write spec, slices, implementation, review, acceptance, retro, app code,
-project glossary edits, durable IDs, YAML blocks, or machine-readable routing
-metadata.
+Do not write spec, slices, implementation, review, acceptance, retro,
+implementation files, repo glossary edits, durable IDs, YAML blocks, or
+machine-readable routing metadata.
 
 ## Reads
 
 - board pointer
-- `cards/<feature-slug>/card.md`
-- `cards/<feature-slug>/outputs/brainstorm/brainstorm.md`
-- `cards/<feature-slug>/outputs/grill/grill.md`
-- existing `cards/<feature-slug>/outputs/research/research.md` if present
+- `cards/<project-slug>/card.md`
+- `cards/<project-slug>/outputs/brainstorm/brainstorm.md`
+- `cards/<project-slug>/outputs/grill/grill.md`
+- existing `cards/<project-slug>/outputs/research/research.md` if present
 - `UBIQUITOUS_LANGUAGE.md` if present and naming or modeling is relevant
 - focused repo/docs context
 - online sources when current or external evidence matters
@@ -86,21 +86,22 @@ or a later spec gap that routed the card back to research.
 
 ## Writes
 
-- `cards/<feature-slug>/outputs/research/research.md`
-- `cards/<feature-slug>/outputs/grill/grill.md` only when research changes a
+- `cards/<project-slug>/outputs/research/research.md`
+- `cards/<project-slug>/outputs/grill/grill.md` only when research changes a
   decision and the user resolves it
-- `cards/<feature-slug>/card.md`
+- `cards/<project-slug>/card.md`
 - skip mode: no `research.md`; update `card.md` and move from `03-research` to
   `04-spec`
 - board pointer moved back from `03-research` to `02-grill` only when research
-  reveals a product/domain decision that needs a real decision-tree session
+  reveals a product, technical, workflow, or domain decision that needs a real
+  decision-tree session
 - board pointer moved from `03-research` to `04-spec` only when spec can
   continue after a context reset
 - board pointer left in `04-spec` when research was run as an optional pre-spec
   pass from `04-spec`
 
 Use a normal filesystem move, not `git mv`, and verify exactly one pointer file
-exists for the feature slug after moving.
+exists for the project slug after moving.
 
 ## Skip Mode
 
@@ -108,7 +109,7 @@ When the user runs:
 
 ```txt
 Next Strike skill: research
-Arguments: <feature-slug> skip
+Arguments: <project-slug> skip
 ```
 
 from `03-research`:
@@ -117,7 +118,7 @@ from `03-research`:
 - do not write `research.md`
 - mark or rewrite the research checklist item as skipped
 - add a spec checklist item if missing:
-  `- [ ] Spec: write the durable feature source of truth.`
+  `- [ ] Spec: write the durable Project source of truth.`
 - add a short note to `card.md` that optional research was skipped by user
   choice
 - move the board pointer to `04-spec`
@@ -128,21 +129,24 @@ show a `spec` handoff.
 ## Research Lanes
 
 Use these as a menu, not a checklist. Pick only what can affect decisions, spec
-scope, product rules, domain language, model shape, UX expectations,
-implementation constraints, success checks, or risk mitigation.
+scope, product, technical, or workflow rules, domain language, model shape, UX
+expectations, implementation constraints, success checks, repo workflows, or
+risk mitigation.
 
 - `codebase-precedents`: existing repo patterns, reusable helpers,
-  route/component/data shape, auth scope, tests, and conventions.
+  surfaces, commands, APIs, config, data shape, access scope, tests, and
+  conventions.
 - `stack-technology-contracts`: official docs, pinned-version behavior,
-  idiomatic usage, current gotchas, SSR/a11y/framework constraints, vendor SDK
-  or API requirements.
+  idiomatic usage, current gotchas, CLI/library/framework constraints,
+  SSR/a11y behavior, vendor SDKs, APIs, or package/tooling requirements.
 - `architecture-options`: broad technical shapes, tradeoffs, reversibility,
-  complexity, and fit with this app.
-- `domain-modeling-pitfalls`: permissions, tenant scope, privacy, schema/model
-  traps, race conditions, data integrity, time zones, payments, uploads, or
-  lifecycle risk.
+  complexity, and fit with this project.
+- `domain-modeling-pitfalls`: permissions, access boundaries, privacy,
+  schema/model traps, race conditions, data integrity, time zones, external
+  side effects, uploads, or lifecycle risk.
 - `ux-comparable-patterns`: interaction guidance, accessibility expectations,
-  comparable product patterns, visual/product examples.
+  comparable product patterns, visual/product examples, operator workflows, or
+  developer experience examples.
 - `stack-options`: tool, library, vendor, or service choices only when the
   choice is genuinely open.
 
@@ -161,27 +165,28 @@ Research does not confirm decisions for audit.
 
 - If research simply supports something already decided, no special action is
   needed.
-- If research answers an open research question without changing product or
-  architecture decisions, record the useful finding in `research.md`.
+- If research answers an open research question without changing product,
+  technical, workflow, or architecture decisions, record the useful finding in
+  `research.md`.
 - If research reveals that a grill decision is wrong, risky, ambiguous, or
   incomplete, ask the user one focused question.
 - After the user decides, update `outputs/grill/grill.md` so it reflects the
   current truth.
-- Do not intentionally pass a new product, scope, surface, naming, model-shape,
-  or sequencing decision forward as "for spec." Resolve small decision-changing
-  findings here when possible, or route back to grill when the feature needs a
-  real decision-tree conversation again. Spec may still ask a focused question
-  if it later discovers a missing decision; research just should not knowingly
-  hand it one.
+- Do not intentionally pass a new product, technical, workflow, scope, surface,
+  naming, model-shape, or sequencing decision forward as "for spec." Resolve
+  small decision-changing findings here when possible, or route back to grill
+  when the project needs a real decision-tree conversation again. Spec may
+  still ask a focused question if it later discovers a missing decision;
+  research just should not knowingly hand it one.
 - Do not keep contradiction history in `grill.md`.
 - Do not add a bookkeeping note to `research.md` just to say `grill.md` was
   updated. Keep `research.md` focused on the finding, evidence, and spec
   implication.
 
-If the decision-changing finding needs product judgment and the user is not
-ready to decide, leave the pointer in `03-research` or move it back to
-`02-grill` only when the feature needs a real decision-tree conversation again.
-Keep the blocking question visible on `card.md`.
+If the decision-changing finding needs product, technical, or workflow judgment
+and the user is not ready to decide, leave the pointer in `03-research` or move
+it back to `02-grill` only when the project needs a real decision-tree
+conversation again. Keep the blocking question visible on `card.md`.
 
 ## Using Subagents
 
@@ -263,7 +268,7 @@ When research is ready for spec:
 
 - mark the research checklist item complete if it exists
 - add a spec checklist item if missing:
-  `- [ ] Spec: write the durable feature source of truth.`
+  `- [ ] Spec: write the durable Project source of truth.`
 - summarize only newly useful research implications under `Constraints And
   Decisions`
 - move resolved research questions out of `Open Questions`
@@ -292,8 +297,8 @@ transcript is gone. Move only when:
 - `grill.md` reflects current decisions
 - `research.md` contains only spec-useful findings, options, pitfalls, sources,
   and weak evidence
-- no known product/scope/surface/naming/model-shape decision is being
-  intentionally handed to spec as unresolved feature intent
+- no known product, technical, workflow, scope, surface, naming, or model-shape
+  decision is being intentionally handed to spec as unresolved project intent
 - spec can continue after a context reset without rerunning research
 
 If spec would have to rediscover the evidence, update `research.md` before
@@ -308,8 +313,8 @@ Final response should be short and user-facing:
   `03-research`
 - key findings or missing research/user-decision gaps
 - next prompt, rendered for the current host with `references/invocation.md`:
-  `spec <feature-slug>` when ready for spec, `grill <feature-slug>` when
-  routed back for decisions, or `research <feature-slug>` when research should
+  `spec <project-slug>` when ready for spec, `grill <project-slug>` when
+  routed back for decisions, or `research <project-slug>` when research should
   continue
 
 Do not show raw handoff fields such as `Reset context first`, `Next Strike
@@ -318,7 +323,7 @@ skill`, or `Arguments`.
 ## Gates
 
 - Do not write spec, slice, implementation, review, acceptance, or retro files.
-- Do not write app code.
+- Do not write implementation files.
 - Do not edit `UBIQUITOUS_LANGUAGE.md`.
 - Do not research every possible thing.
 - Do not create durable IDs or hidden state fields.

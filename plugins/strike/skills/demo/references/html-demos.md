@@ -13,11 +13,14 @@ Use a demo for:
 - UI direction choices
 - layout or information architecture options
 - dashboard or tool concepts
+- command output or CLI flow comparisons
+- API, config, or data-shape explainers
 - multi-step flow comparisons
 - before/after experiences
 - decision maps or tradeoff comparisons
 - user journey maps
 - data/state explainers
+- workflow, lifecycle, or dependency maps
 - lightweight interactive choices
 - visual hierarchy, density, tone, or state comparisons
 
@@ -26,10 +29,10 @@ decisions unless a simple diagram would materially help.
 
 ## Where Demos Live
 
-Save demos under the feature card:
+Save demos under the project card:
 
 ```txt
-docs/strike/cards/<feature-slug>/demos/
+docs/strike/cards/<project-slug>/demos/
 ```
 
 Use numbered semantic filenames:
@@ -47,7 +50,7 @@ and use the returned `filename=` value.
 ## Rules
 
 - Planning artifact only; never production implementation.
-- Do not modify app/source files.
+- Do not modify repo source files.
 - Do not install packages.
 - Do not use build tools.
 - Do not use external CDNs, fonts, scripts, or image URLs.
@@ -61,8 +64,8 @@ and use the returned `filename=` value.
 ## Suggested Structure
 
 - Top banner: what the demo explores.
-- One to three concept screens, cards, or states.
-- Short labels for the intended user moment.
+- One to three concept screens, cards, diagrams, command outputs, or states.
+- Short labels for the intended user, maintainer, operator, or system moment.
 - Optional buttons/tabs to switch options or states.
 - Final questions to answer.
 
@@ -78,7 +81,7 @@ Keep it simple and good:
 - restrained color palette with one accent
 - no lorem ipsum
 - no blurry atmospheric hero images
-- no production-brand claims unless the feature card already establishes them
+- no production-brand claims unless the project card already establishes them
 
 The demo should feel like a useful product thinking artifact, not a throwaway
 wireframe and not a polished production promise.

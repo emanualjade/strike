@@ -8,7 +8,10 @@ The [Agent Skills specification](https://agentskills.io/specification) defines s
 
 The repo follows that model by keeping production skills under `plugins/strike/skills/<skill-name>/SKILL.md` and keeping templates outside `skills/`. It also requires explicit `name` and `description` frontmatter as portable repo policy, even where a host can infer or omit some metadata.
 
-The imported Strike plugin also keeps shared board/workflow references under `plugins/strike/references/`. Those files are package support material for skills to cite explicitly; they are not treated as a host-discovered component directory.
+The Strike plugin also keeps shared board/workflow references under
+`plugins/strike/references/`. Those files are package support material for
+skills to cite explicitly; they are not treated as a host-discovered component
+directory.
 
 ## Claude Code
 
@@ -34,13 +37,13 @@ and documents marketplace removal separately as an all-catalog cleanup step.
 
 ## Codex
 
-OpenAI documents `AGENTS.md` as the project-level instruction file for Codex in the [Codex AGENTS.md guide](https://developers.openai.com/codex/guides/agents-md). The local Codex plugin creator guidance in this environment defines a `.codex-plugin/plugin.json` manifest and a repo marketplace at `.agents/plugins/marketplace.json`, with entries pointing to `./plugins/<plugin-name>`.
+OpenAI documents `AGENTS.md` as the repository-level instruction file for Codex in the [Codex AGENTS.md guide](https://developers.openai.com/codex/guides/agents-md). The local Codex plugin creator guidance in this environment defines a `.codex-plugin/plugin.json` manifest and a repo marketplace at `.agents/plugins/marketplace.json`, with entries pointing to `./plugins/<plugin-name>`.
 
 The repo keeps `AGENTS.md` as the canonical agent guidance file and adds `CLAUDE.md` plus `.github/copilot-instructions.md` as thin pointers. Current Codex CLI commands manage marketplaces; plugin install and enable flows happen through the Codex plugin browser.
 
 ## GitHub Copilot CLI
 
-[GitHub Copilot agent skills docs](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills) describe skills as folders of instructions, scripts, and resources using the Agent Skills specification. Copilot supports project skills under `.github/skills`, `.claude/skills`, or `.agents/skills`, but for installable bundles the [Copilot CLI plugin reference](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference) defines plugins with a root `plugin.json`, default `skills/` and `agents/` directories, and marketplaces at `.github/plugin/marketplace.json`. Copilot CLI also looks in `.claude-plugin/marketplace.json`, but this repo includes the GitHub-native path too.
+[GitHub Copilot agent skills docs](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills) describe skills as folders of instructions, scripts, and resources using the Agent Skills specification. Copilot supports repository-local skills under `.github/skills`, `.claude/skills`, or `.agents/skills`, but for installable bundles the [Copilot CLI plugin reference](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference) defines plugins with a root `plugin.json`, default `skills/` and `agents/` directories, and marketplaces at `.github/plugin/marketplace.json`. Copilot CLI also looks in `.claude-plugin/marketplace.json`, but this repo includes the GitHub-native path too.
 
 ## Invocation Syntax
 

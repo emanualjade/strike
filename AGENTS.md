@@ -4,11 +4,13 @@
 
 This repository publishes Strike as a cross-agent plugin and skills marketplace. Keep the portable skill instructions reusable across Codex, Claude Code, GitHub Copilot CLI, and other clients that understand Agent Skills-style `SKILL.md` folders.
 
-## Project Snapshot
+## Repository Snapshot
 
 - We are building an installable and updateable Strike workflow plugin package for multiple AI agents, starting with Codex, Claude Code, and GitHub Copilot CLI.
-- The repo contains researched manifests, marketplaces, validation tooling, templates, documentation, and the production Strike skills copied from the original webapp plugin.
-- The next milestone is to validate and dogfood install/update flows in each supported host.
+- The repo contains researched manifests, marketplaces, validation tooling,
+  templates, documentation, and the production Strike skill package.
+- The next milestone is to validate install/update flows in each supported host
+  by using the normal Strike workflow.
 - The core design is one shared Agent Skills content tree plus thin host-specific packaging. Cross-agent support does not mean forcing every host into one invented schema.
 
 ## Source Of Truth

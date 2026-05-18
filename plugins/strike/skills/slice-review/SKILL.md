@@ -1,7 +1,7 @@
 ---
 name: slice-review
 description: Review and safely repair Strike phase plans before implementation.
-argument-hint: "[feature-slug]"
+argument-hint: "[project-slug]"
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob
 ---
@@ -42,22 +42,22 @@ without raw field labels.
 
 ## Reads
 
-- `docs/strike/cards/<feature-slug>/card.md`
+- `docs/strike/cards/<project-slug>/card.md`
 - `outputs/spec/spec.md`
 - `outputs/research/research.md` if present
 - `outputs/grill/grill.md` when decisions or rejected options matter
-- `outputs/brainstorm/brainstorm.md` only when user/problem framing seems lost
+- `outputs/brainstorm/brainstorm.md` only when initial problem framing seems lost
 - every `phases/<phase-slug>/plan.md`
 - focused repo/docs context only when a phase plan names a surface that needs
   basic existence or shape checking
 
-Resolve the feature by slug, card folder, or active board pointer. If no phase
+Resolve the project by slug, card folder, or active board pointer. If no phase
 plans exist, stop and recommend:
 
 ```txt
 Reset context first: yes
 Next Strike skill: go
-Arguments: <feature-slug>
+Arguments: <project-slug>
 ```
 
 ## Writes
@@ -67,7 +67,7 @@ Default write targets:
 - `phases/<phase-slug>/plan.md`
 
 Only edit `card.md` when needed to add or update a real unresolved user question
-under Open Questions. Do not edit checklist, stage outputs, status, run kind, or
+under Open Questions. Do not edit checklist, stage outputs, status, or
 constraints from slice review.
 
 Normally leave board pointers unchanged. If review finds a blocking issue that
@@ -79,7 +79,7 @@ owning lane first: `05-slice` for phase split repair, `04-spec` for spec repair,
 
 Review for phase quality, ordering, and faithfulness. The core question is:
 can the `phase-plan` skill start on the first phase after a context reset without
-having to re-slice the feature?
+having to re-slice the project?
 
 - Does the phase list preserve the spec's scope, non-goals, success checks, and
   boundaries?
@@ -97,7 +97,7 @@ having to re-slice the feature?
   test conventions, or slice-specific pitfalls matter?
 - Are module-boundary or complexity watchouts present without inventing
   architecture?
-- Is language consistent with the spec and project language?
+- Is language consistent with the spec and repo language?
 - Are dependencies and ordering honest?
 
 ## Fix
@@ -130,7 +130,8 @@ Ask when:
 - a phase boundary changes scope
 - the first phase is genuinely ambiguous
 - a foundation phase may or may not be justified
-- a phase split depends on a product, UX, data, permission, or modeling choice
+- a phase split depends on a product, workflow, UX, data, permission, or
+  modeling choice
 - the phase list conflicts with the spec and the right source of truth is not
   obvious
 
@@ -143,7 +144,7 @@ guessing. For decision-tree work:
 ```txt
 Reset context first: yes
 Next Strike skill: grill
-Arguments: <feature-slug>
+Arguments: <project-slug>
 ```
 
 Do not rewrite `outputs/spec/spec.md`, `outputs/grill/grill.md`, or
@@ -182,7 +183,7 @@ Final response should be short and user-facing:
 - `Fixed:` list only meaningful fixes, or `None.`
 - `Questions:` list any user decisions still needed, or `None.`
 - `Next:` usually render
-  `phase-plan <feature-slug> phase:<first-phase-slug>` for the current host
+  `phase-plan <project-slug> phase:<first-phase-slug>` for the current host
   with `references/invocation.md`. If the phase list still needs broad
   evidence, a real upstream decision, or re-slicing, move the pointer to the
   owning lane first and render the relevant `phase-research`, `research`,
@@ -197,13 +198,13 @@ skill`, or `Arguments`.
 - Do not move board pointers for safe in-place fixes.
 - Do not mark the slice approved or complete, and do not advance workflow state.
 - Do not write drafts, sidecars, review reports, build briefs, implementation,
-  review, acceptance, retro, or app code.
+  review, acceptance, retro, or implementation files.
 - Do not edit `outputs/spec/spec.md`, `outputs/grill/grill.md`, or
   `UBIQUITOUS_LANGUAGE.md`.
 - Do not create durable IDs, coverage matrices, lifecycle tables, or hidden
   state fields.
-- Do not use slice review to relitigate product scope unless the phase list is
-  clearly inconsistent with upstream decisions.
+- Do not use slice review to relitigate product or workflow scope unless the
+  phase list is clearly inconsistent with upstream decisions.
 
-Use `Bash` only for read-only inspection. Do not mutate app code, board state,
-repo metadata, or unrelated files.
+Use `Bash` only for read-only inspection. Do not mutate implementation files,
+board state, repo metadata, or unrelated files.

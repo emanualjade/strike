@@ -1,8 +1,13 @@
 # Strike Plugin
 
-Strike is a board-and-card workflow for agent-assisted feature delivery. It
+Strike is a board-and-card workflow for agent-assisted project delivery. It
 keeps durable state in the consuming repository under `docs/strike/`, while the
 workflow skills and bundled references live in this plugin package.
+
+In Strike, a Project is the unit of work moving through the board. It can be a
+small change like `CSV Export`, a docs pass like `Docs Refresh`, or a larger
+effort like `Payments` with smaller capabilities inside the spec. It lives
+inside an existing repository; it is not a new repo.
 
 ## Skills
 
@@ -17,51 +22,51 @@ Strike skills are portable; each host renders the same skill differently.
 Canonical skill names:
 
 ```txt
-start <feature name words> [--slug <slug>] [--description <description words>]
-go <feature-slug>
-brainstorm <feature-slug>
-grill <feature-slug>
-research <feature-slug>
-spec <feature-slug>
-spec-review <feature-slug>
-slice <feature-slug>
-slice-review <feature-slug>
-phase-research <feature-slug> phase:<phase-slug>
-phase-plan <feature-slug> phase:<phase-slug>
-phase-build <feature-slug> phase:<phase-slug>
-phase-review <feature-slug> phase:<phase-slug>
-phase-fix <feature-slug> phase:<phase-slug>
-accept <feature-slug>
-retro <feature-slug>
-demo <feature-slug> "<what the demo should explore>"
-language <term|feature-slug|path>
+start <project name words> [--slug <slug>] [--description <description words>]
+go <project-slug>
+brainstorm <project-slug>
+grill <project-slug>
+research <project-slug>
+spec <project-slug>
+spec-review <project-slug>
+slice <project-slug>
+slice-review <project-slug>
+phase-research <project-slug> phase:<phase-slug>
+phase-plan <project-slug> phase:<phase-slug>
+phase-build <project-slug> phase:<phase-slug>
+phase-review <project-slug> phase:<phase-slug>
+phase-fix <project-slug> phase:<phase-slug>
+accept <project-slug>
+retro <project-slug>
+demo <project-slug> "<what the demo should explore>"
+language <term|project-slug|path>
 ```
 
 `start` is the only normal user-facing Strike skill with double-dash options.
-Other skills use positional arguments, plain optional words such as `skip` or
-`dogfood`, or the `phase:<phase-slug>` token for phase-scoped work.
+Other skills use positional arguments, plain optional words such as `skip`, or
+the `phase:<phase-slug>` token for phase-scoped work.
 
 Claude Code examples:
 
 ```txt
 /strike:start Add user profile page
-/strike:go <feature-slug>
-/strike:brainstorm <feature-slug>
-/strike:grill <feature-slug>
-/strike:research <feature-slug>
-/strike:spec <feature-slug>
-/strike:spec-review <feature-slug>
-/strike:slice <feature-slug>
-/strike:slice-review <feature-slug>
-/strike:phase-research <feature-slug> phase:<phase-slug>
-/strike:phase-plan <feature-slug> phase:<phase-slug>
-/strike:phase-build <feature-slug> phase:<phase-slug>
-/strike:phase-review <feature-slug> phase:<phase-slug>
-/strike:phase-fix <feature-slug> phase:<phase-slug>
-/strike:accept <feature-slug>
-/strike:retro <feature-slug>
-/strike:demo <feature-slug> "<what the demo should explore>"
-/strike:language <term|feature-slug|path>
+/strike:go <project-slug>
+/strike:brainstorm <project-slug>
+/strike:grill <project-slug>
+/strike:research <project-slug>
+/strike:spec <project-slug>
+/strike:spec-review <project-slug>
+/strike:slice <project-slug>
+/strike:slice-review <project-slug>
+/strike:phase-research <project-slug> phase:<phase-slug>
+/strike:phase-plan <project-slug> phase:<phase-slug>
+/strike:phase-build <project-slug> phase:<phase-slug>
+/strike:phase-review <project-slug> phase:<phase-slug>
+/strike:phase-fix <project-slug> phase:<phase-slug>
+/strike:accept <project-slug>
+/strike:retro <project-slug>
+/strike:demo <project-slug> "<what the demo should explore>"
+/strike:language <term|project-slug|path>
 ```
 
 See `references/invocation.md` for the shared handoff format and host-specific
@@ -76,8 +81,8 @@ docs/strike/board/
 docs/strike/cards/
 ```
 
-The plugin does not ship active board cards, and consuming repositories do not
-need Strike's private development notes.
+The plugin does not ship active board cards. Consuming repositories only need
+the packaged workflow files listed below.
 
 ## Portability
 
@@ -93,8 +98,8 @@ README.md
 ```
 
 It can be moved into its own repository as-is. Runtime board/card files,
-repo-local marketplace files, and old standalone Claude skill folders are not
-part of the portable package.
+repo-local marketplace files, and repo-local skill folders are not part of the
+portable package.
 
 The plugin has no package-manager install step. The bundled `start` skill uses
 its included shell script plus common local tools: `bash`, `git` when available,

@@ -19,7 +19,7 @@ explicitly says otherwise.
   user-facing language. Do not dump raw handoff fields unless the user asks for
   them.
 - When moving a board pointer, use a normal filesystem move, not `git mv`, then
-  verify exactly one pointer exists for the feature slug.
+  verify exactly one pointer exists for the project slug.
 - Utilities with no board lane normally leave board pointers alone. A utility
   may move a pointer only when its contract explicitly says it can route a
   blocking issue back to the lane that owns the repair.
@@ -30,8 +30,8 @@ Allowed lane: none.
 
 Writes:
 
-- `cards/<feature-slug>/card.md`
-- `board/01-brainstorm/<feature-slug>.md`
+- `cards/<project-slug>/card.md`
+- `board/01-brainstorm/<project-slug>.md`
 
 Validation:
 
@@ -45,7 +45,7 @@ No board lane.
 
 Primary job:
 
-- inspect board pointers and resolve the requested feature
+- inspect board pointers and resolve the requested project
 - report the current lane, visible checklist items, and one recommended next
   action
 - render the current host's next prompt for any recommended Strike skill
@@ -53,7 +53,7 @@ Primary job:
 Reads:
 
 - `docs/strike/board/*/*.md`
-- the resolved `cards/<feature-slug>/card.md`
+- the resolved `cards/<project-slug>/card.md`
 - only the current lane's likely output folder or phase artifacts when needed
   to recommend the next action
 
@@ -70,8 +70,9 @@ Allowed lane: `01-brainstorm`.
 
 Primary job:
 
-- turn a fuzzy idea into a clearer product direction
-- identify target user, painful moment, current workaround, and success shape
+- turn a fuzzy idea into a clearer product, technical, or workflow direction
+- identify the affected user, system, or workflow, painful moment or workflow
+  friction, current workaround or failure mode, and success shape
 - explore a few plausible directions before converging
 - record first-version non-goals, assumptions, and questions for grill
 - create optional static HTML demos when visual choice would help
@@ -97,8 +98,8 @@ Primary job:
 - create one small static HTML planning demo when seeing the idea would help the
   user think, compare, or decide
 - support UI options, flow comparisons, before/after states, decision maps,
-  state explainers, product concept sketches, and lightweight interactive
-  choices
+  state explainers, command output comparisons, API/config/data-shape sketches,
+  product concept sketches, and lightweight interactive choices
 - keep demos self-contained, mock-data-only, and clearly planning artifacts
 
 Writes:
@@ -106,7 +107,7 @@ Writes:
 - `demos/<nn-topic>.html`
 - optional `demos/README.md`
 
-This utility does not edit app/source files, install packages, use external
+This utility does not edit repo source files, install packages, use external
 CDNs/assets, move board pointers, or make demos required for any stage.
 
 ## Grill
@@ -144,8 +145,9 @@ to spec.
 
 Move to `04-spec` when:
 
-- spec can be written without re-interviewing the user on product intent,
-  audience, scope, boundaries, model shape, success, or first build meaning
+- spec can be written without re-interviewing the user on product, technical,
+  or workflow intent, affected audience or system, scope, boundaries, model
+  shape, success, or first build meaning
 - research is unnecessary or not needed before spec
 - spec has the decisions it needs; any remaining items are safe spec-owned
   details, research follow-ups, or visible blockers
@@ -160,9 +162,9 @@ Allowed lanes:
 Primary job:
 
 - gather lean evidence and guidance before spec
-- research only questions that can affect decisions, scope, product rules,
-  domain language, model shape, UX expectations, implementation constraints,
-  success checks, or risk mitigation
+- research only questions that can affect decisions, scope, product, technical,
+  or workflow rules, domain language, model shape, UX expectations,
+  implementation constraints, success checks, or risk mitigation
 - include online/current-doc/architecture/domain/UX research when useful, not
   only current-code inspection
 - update `grill.md` only when research changes a decision and the user resolves
@@ -190,8 +192,8 @@ Move to `04-spec` when:
 
 Move back to `02-grill` when:
 
-- research reveals a product/domain decision that needs a real decision-tree
-  conversation before spec
+- research reveals a product, technical, workflow, or domain decision that
+  needs a real decision-tree conversation before spec
 
 ## Spec
 
@@ -199,11 +201,10 @@ Allowed lane: `04-spec`.
 
 Primary job:
 
-- write the durable product/technical spec
-- name whether this run is dogfood, shippable, or still undecided
-- split success checks into code-verifiable checks and live/human checks
-- capture product rules, domain vocabulary, boundaries, risks, and verification
-  expectations
+- write the durable product, technical, or workflow spec
+- split success checks into repo-verifiable checks and live/human checks
+- capture product, technical, or workflow rules, domain vocabulary, boundaries,
+  risks, and verification expectations
 - stop before slicing
 
 Writes:
@@ -213,7 +214,7 @@ Writes:
 Move to `05-slice` when:
 
 - the spec is concrete enough to slice
-- code-verifiable success checks are concrete enough to review and accept, or
+- repo-verifiable success checks are concrete enough to review and accept, or
   the card clearly says acceptance depends on live/human signoff
 - live/human checks, if any, are separated from checks acceptance can grade from
   repo evidence
@@ -226,8 +227,9 @@ Move back to `03-research` when:
 
 Move back to `02-grill` when:
 
-- missing feature intent, audience, scope, boundaries, model shape, success, or
-  first-build meaning needs a real decision-tree conversation
+- missing project intent, affected audience or system, scope, boundaries, model
+  shape, success, or first-build meaning needs a real decision-tree
+  conversation
 
 Spec may ask a focused question for a small missing decision and then update
 the relevant card/grill/spec artifacts so a context reset preserves the current
@@ -256,7 +258,7 @@ Writes:
 
 This utility does not write a review report, create approval state, move board
 pointers for safe in-place fixes, write slice/implementation artifacts, edit
-app code, or edit `UBIQUITOUS_LANGUAGE.md`.
+implementation files, or edit `UBIQUITOUS_LANGUAGE.md`.
 
 The user can skip this utility and go straight to the `slice` skill.
 
@@ -269,7 +271,7 @@ Primary job:
 - turn the spec into a small phase list of vertical implementation phases
 - create one folder per phase with a compact phase plan
 - use engineering judgment to split, merge, order, and name phases so the full
-  feature can be built accurately without extra ceremony
+  project can be built accurately without extra ceremony
 - mention likely code surfaces when they clarify a phase, without turning slice
   into implementation or a build brief
 
@@ -292,7 +294,8 @@ Primary job:
 
 - optionally review generated phase plans before phase planning starts
 - fix obvious phase-plan issues in place
-- ask only when the phase split needs a real user/product/engineering decision
+- ask only when the phase split needs a real product, technical, workflow, or
+  engineering decision
 - leave board state unchanged unless review finds a blocking issue owned by an
   earlier lane
 
@@ -305,8 +308,8 @@ Writes:
   `02-grill` when review finds a blocking issue owned by that lane
 
 This utility does not write a review report, create approval state, move board
-pointers for safe in-place fixes, write build briefs, or touch app code. The
-user can skip it and go straight to the `phase-plan` skill.
+pointers for safe in-place fixes, write build briefs, or touch implementation
+files. The user can skip it and go straight to the `phase-plan` skill.
 
 ## Phase Research Utility
 
@@ -342,7 +345,7 @@ Primary job:
 - read `phases/<phase-slug>/research.md` if present
 - do additional tactical research when useful
 - write one compact build brief
-- touch no app code
+- touch no implementation files
 
 Phase-plan tactical research should stay practical and phase-shaped:
 
@@ -361,8 +364,9 @@ Writes:
 phases/<phase-slug>/build-brief.md
 ```
 
-May move the board pointer back to `02-grill` when a missing product decision
-blocks the brief, or to `05-slice` when the phase split itself is wrong.
+May move the board pointer back to `02-grill` when a missing product,
+technical, or workflow decision blocks the brief, or to `05-slice` when the
+phase split itself is wrong.
 
 Validation:
 
@@ -370,7 +374,7 @@ Validation:
 - behavior, likely files/surfaces, verification, and concrete watchouts are
   clear enough for phase-build
 - phase research used by the brief is cited briefly when it exists
-- broad feature research was not repeated as ritual
+- broad project research was not repeated as ritual
 
 The board pointer normally stays in `06-implementation`; this lane owns
 phase-plan, phase-build, phase-review, and phase-fix unless work is routed back
@@ -403,7 +407,8 @@ Allowed lane: `06-implementation`.
 Primary job:
 
 - implement exactly one phase from its phase plan and build brief
-- edit only the app/test/docs files needed for that phase
+- edit only the implementation, test, or documentation files needed for that
+  phase
 - run focused verification
 - keep changes small and reviewable
 - use the simplest code that satisfies the current phase
@@ -426,7 +431,7 @@ Updates:
 Validation:
 
 - build output matches the phase plan
-- every changed app-code file is listed with rollback notes
+- every changed implementation file is listed with rollback notes
 - tests or checks added/updated are listed, or absence is explained
 - verification that matters for the phase has run or is visible as an unchecked
   user action
@@ -445,7 +450,7 @@ Primary job:
 
 - review a built phase from fresh context
 - write plain-language blocking fixes or a pass verdict
-- leave code/test repairs to phase-fix when fixes are needed
+- leave implementation/test repairs to phase-fix when fixes are needed
 - move to acceptance only when all phases are cleanly reviewed
 
 Writes:
@@ -495,16 +500,14 @@ Allowed lane: `07-acceptance`.
 
 Primary job:
 
-- validate the assembled feature against the spec's success checks
-- verify that the feature has been built in full and accurately, not merely
+- validate the assembled project against the spec's success checks
+- verify that the project has been built in full and accurately, not merely
   that phase files exist
-- verify that important feature tests/checks exist, or that missing tests are
+- verify that important project tests/checks exist, or that missing tests are
   explicitly called out as acceptance gaps
-- record whether acceptance is `dogfood` or `shippable`
-- run broad enough tests/manual/browser checks for confidence
+- run broad enough tests, command/API checks, manual checks, or browser checks
+  for confidence
 - route failures back as plain-language checklist items
-- for temporary dogfood implementations, record acceptance evidence and exact
-  rollback commands before retro
 - read phase `fix.md` when present as part of the reviewed phase evidence
 
 Writes:
@@ -516,15 +519,13 @@ Writes:
 
 Move to `08-retro` when:
 
-- shippable mode: success checks pass, including required live/human checks
-- code-verifiable spec checks have evidence from tests, commands, browser
-  walkthroughs, or code/repo inspection as appropriate
-- important feature behavior has tests/checks, or the absence of tests is
+- success checks pass, including required live/human checks
+- repo-verifiable spec checks have evidence from tests, commands, API checks,
+  generated artifacts, browser walkthroughs, or code/repo inspection as
+  appropriate
+- important project behavior has tests/checks, or the absence of tests is
   intentionally accepted and visible
 - no acceptance fix checklist items remain open
-- dogfood mode: code-verifiable/workflow evidence passes, live/human checks are
-  explicitly carried forward as not run, and rollback commands from `build.md`
-  plus `fix.md` when present are recorded
 
 Move back to `06-implementation` when:
 
@@ -532,13 +533,6 @@ Move back to `06-implementation` when:
 - acceptance fixes are assigned to the affected phase when possible, so
   phase-fix can repair them and phase-review can verify them before acceptance
   runs again
-
-Dogfood rollback timing:
-
-- Keep temporary app-code changes through acceptance.
-- After acceptance writes `acceptance.md`, roll back exact app-code files named
-  by the acceptance/build/fix artifacts.
-- Run retro after rollback so the repo is back to system-prototype-only changes.
 
 ## Retro
 
@@ -548,23 +542,15 @@ Primary job:
 
 - capture what helped or hurt
 - record improvements to Strike itself
-- call out follow-up product or engineering work
+- call out follow-up product, workflow, or engineering work
 
 Writes:
 
 - `outputs/retro/retro.md`
 
-Dogfood gate:
-
-- If acceptance recorded app-code rollback commands, verify those exact app-code
-  changes are already gone before writing retro.
-- If rollback is still pending, stop and show the exact rollback commands. Do
-  not run rollback inside retro.
-
 Move to `09-done` when:
 
 - retro notes are saved
-- dogfood app-code rollback, when applicable, is already complete
 - no user-facing signoff remains open
 
 ## Language Utility
@@ -573,10 +559,10 @@ No board lane.
 
 Primary job:
 
-- assess, trace, explain, propose, or apply project language changes when
+- assess, trace, explain, propose, or apply repo language changes when
   wording affects planning, UI, code, docs, or domain modeling
-- compare Strike feature artifacts against project language when called with
-  a feature slug
+- compare Strike Project artifacts against repo language when called with
+  a project slug
 - keep shared language in `UBIQUITOUS_LANGUAGE.md`
 
 Writes:
@@ -584,7 +570,7 @@ Writes:
 - `UBIQUITOUS_LANGUAGE.md` only when the user approves a concrete glossary
   change or provides exact text to apply
 
-This utility does not move board pointers, create stage outputs, edit app code
-unless explicitly asked, or apply uncertain glossary changes without user
-approval. Feature-local terms can stay in card/grill/spec artifacts until they
-are stable enough to promote.
+This utility does not move board pointers, create stage outputs, edit
+implementation files unless explicitly asked, or apply uncertain glossary
+changes without user approval. Project-local terms can stay in card/grill/spec
+artifacts until they are stable enough to promote.

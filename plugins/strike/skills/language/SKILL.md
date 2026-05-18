@@ -1,7 +1,7 @@
 ---
 name: language
-description: Assess and update project language discovered during Strike work.
-argument-hint: "[term|feature-slug|path] [assess|trace|add|update|remove|clarify|apply]"
+description: Assess and update repo language discovered during Strike work.
+argument-hint: "[term|project-slug|path] [assess|trace|add|update|remove|clarify|apply]"
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob
 ---
@@ -19,9 +19,9 @@ user decide what to do next.
 
 ## Purpose
 
-Keep product, code, UI, and planning language precise. This is a standalone
-Strike utility, and it is also a soft helper that other Strike skills may
-use when language affects feature planning.
+Keep product, code, workflow, UI, docs, and planning language precise. This is
+a standalone Strike utility, and it is also a soft helper that other Strike
+skills may use when language affects Project planning.
 
 Language work should feel natural: challenge confusing words when they matter,
 sharpen names before they spread, and update the glossary only when a term is
@@ -37,7 +37,7 @@ without raw field labels.
 
 ## Source Of Truth
 
-Use the project root file:
+Use the repo root file:
 
 ```txt
 UBIQUITOUS_LANGUAGE.md
@@ -57,14 +57,14 @@ Keep `UBIQUITOUS_LANGUAGE.md` simple and conversational.
 Context sections group related terms:
 
 ```md
-## Workspace / Tenancy
+## Work Execution
 
-### Organization
-Meaning: A tenant account that owns workspace data, members, and billing.
-Use in: code, database, server functions.
-User-facing: Workspace.
-Avoid: Company, account, team.
-Notes: Organization and Workspace are a deliberate code/UI context mapping.
+### Task
+Meaning: A unit of work the system creates, schedules, or tracks to completion.
+Use in: code, docs, planning.
+User-facing: Task.
+Avoid: Job, run, process unless the system defines those separately.
+Notes: Use Run only for a single execution attempt when that distinction matters.
 ```
 
 Use optional fields only when useful:
@@ -101,7 +101,7 @@ Read the glossary and answer with:
 
 ### Assess
 
-Use when the user asks to check a feature card, planning artifact, source path,
+Use when the user asks to check a Strike Project card, planning artifact, source path,
 diff, branch, spec, slice, or PR for language issues.
 
 Read the glossary and the target artifact. Search code only as needed. Report:
@@ -159,20 +159,20 @@ terms changed and any follow-up language risks.
 This is a utility, not a workflow stage. Do not move board pointers or create
 stage outputs.
 
-When called with a Strike feature slug:
+When called with a Strike project slug:
 
 - read the board pointer if present
-- read `docs/strike/cards/<feature-slug>/card.md`
+- read `docs/strike/cards/<project-slug>/card.md`
 - read relevant planning outputs that exist, especially brainstorm, grill, spec,
   and slice files
-- compare important feature language against `UBIQUITOUS_LANGUAGE.md`
+- compare important repo language against `UBIQUITOUS_LANGUAGE.md`
 
 When another Strike skill is working and a language issue appears, the skill
 should handle the light version inline:
 
 ```txt
-You said "account"; the glossary uses "User" for auth identity and
-"Organization" for tenant. Which one do you mean here?
+You said "job"; the glossary uses "Task" for planned work and "Run" for one
+execution attempt. Which one do you mean here?
 ```
 
 Use the `language` skill for deeper work: term tracing, glossary updates,
@@ -197,7 +197,7 @@ Use this as a reflection lens when naming things, defining domain language, or
 sketching schema concepts.
 
 Pause if the language starts creating adjective-noun siblings such as
-`FixedAdSlot` / `FlexibleAdSlot` or `PublisherImage` / `AdvertiserImage`.
+`ManualReport` / `ScheduledReport` or `PublicAsset` / `PrivateAsset`.
 First remove the adjectives and find the core noun. Then ask whether the
 qualifiers are better represented as fields, tags, enums, booleans, numeric
 dials, constraints, configuration, relationships, permissions, state,
@@ -209,17 +209,17 @@ committing to separate entities or canonical terms.
 
 Use these higher-power checks when they are genuinely useful:
 
-- focused scans of a feature, path, diff, or branch
+- focused scans of a repo, path, diff, or branch
 - term tracing through code, UI, and docs
-- code/UI context mappings such as Organization vs Workspace
-- proposal-before-apply for project-wide language changes
+- context mappings such as Task vs Run or config key vs display label
+- proposal-before-apply for repo-wide language changes
 - bounded-context ambiguity handling
 
 Do not add:
 
 - generic programming concepts
 - implementation details that belong in code or specs
-- transient feature-local wording that is not ready to become project language
+- transient Project-local wording that is not ready to become repo language
 - speculative terms the user has not accepted
 
 ## Output
@@ -237,6 +237,6 @@ Keep responses compact and user-facing:
 - Do not move Strike board pointers.
 - Do not write brainstorm, grill, spec, slice, implementation, review,
   acceptance, or retro outputs.
-- Do not edit app code unless the user explicitly asks for code renames and
-  confirms the scope.
+- Do not edit implementation files unless the user explicitly asks for code
+  renames and confirms the scope.
 - Do not apply uncertain glossary changes without user approval.

@@ -1,7 +1,7 @@
 ---
 name: phase-fix
 description: Fix phase-scoped review or acceptance findings and route back to review.
-argument-hint: "[feature-slug] phase:<phase-slug>"
+argument-hint: "[project-slug] phase:<phase-slug>"
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, WebFetch, WebSearch
 ---
@@ -42,14 +42,14 @@ without raw field labels.
 Board location is state. This skill may work only when the card pointer is in:
 
 ```txt
-docs/strike/board/06-implementation/<feature-slug>.md
+docs/strike/board/06-implementation/<project-slug>.md
 ```
 
 Require an explicit phase argument:
 
 ```txt
 Next Strike skill: phase-fix
-Arguments: <feature-slug> phase:<phase-slug>
+Arguments: <project-slug> phase:<phase-slug>
 ```
 
 If the pointer is in another lane, or the phase cannot be resolved, stop and
@@ -58,7 +58,7 @@ recommend:
 ```txt
 Reset context first: yes
 Next Strike skill: go
-Arguments: <feature-slug>
+Arguments: <project-slug>
 ```
 
 If `review.md` is missing, stop and recommend:
@@ -66,7 +66,7 @@ If `review.md` is missing, stop and recommend:
 ```txt
 Reset context first: yes
 Next Strike skill: phase-review
-Arguments: <feature-slug> phase:<phase-slug>
+Arguments: <project-slug> phase:<phase-slug>
 ```
 
 If `review.md` contains no blocking fixes and there are no phase-scoped
@@ -75,16 +75,16 @@ acceptance fixes for this phase, stop and recommend:
 ```txt
 Reset context first: yes
 Next Strike skill: go
-Arguments: <feature-slug>
+Arguments: <project-slug>
 ```
 
 Do not create review, acceptance, retro, durable IDs, YAML blocks, hidden
-routing metadata, or project glossary edits.
+routing metadata, or repo glossary edits.
 
 ## Reads
 
 - board pointer
-- `cards/<feature-slug>/card.md`
+- `cards/<project-slug>/card.md`
 - `outputs/spec/spec.md`
 - selected phase `plan.md`
 - selected phase `build-brief.md` when present
@@ -94,7 +94,8 @@ routing metadata, or project glossary edits.
 - `outputs/acceptance/acceptance.md` if acceptance moved the card back to
   implementation
 - current `git status --short`
-- current source/test files named by the blocking fixes and build evidence
+- current implementation/test files named by the blocking fixes and build
+  evidence
 
 Use `review.md` to decide what to fix when review has blocking fixes. If the
 card was sent back from acceptance, use only acceptance fixes explicitly
@@ -103,16 +104,16 @@ preserve the intended phase shape.
 
 ## Writes
 
-- app/test/docs files needed to close the blocking review or acceptance
-  findings
-- `cards/<feature-slug>/phases/<phase-slug>/fix.md`
-- `cards/<feature-slug>/card.md`
+- implementation, test, or documentation files needed to close the blocking
+  review or acceptance findings
+- `cards/<project-slug>/phases/<phase-slug>/fix.md`
+- `cards/<project-slug>/card.md`
 - board pointer text in `06-implementation`
 
 The board pointer stays in `06-implementation`. Phase review is the next step.
 
 Do not move the board pointer out of `06-implementation`. After updating
-pointer text, verify exactly one pointer file exists for the feature slug.
+pointer text, verify exactly one pointer file exists for the project slug.
 
 ## Fix Discipline
 
@@ -124,9 +125,9 @@ For each blocking item:
 - rerun relevant checks
 - leave unrelated issues alone
 
-If a review or acceptance item is wrong, ambiguous, or would require a
-product/scope/design decision, stop and explain. Do not silently reinterpret
-the finding.
+If a review or acceptance item is wrong, ambiguous, or would require a product,
+technical, workflow, scope, or design decision, stop and explain. Do not
+silently reinterpret the finding.
 
 If a fix requires touching broad shared code or another phase's surface, stop
 and ask instead of expanding the repair.
@@ -134,7 +135,7 @@ and ask instead of expanding the repair.
 ## Verification
 
 Run the relevant checks from the build/review evidence. For a contained fix,
-targeted checks plus the project check are usually enough.
+targeted checks plus the repo check are usually enough.
 
 Fix failures caused by this repair. If a failure appears unrelated or repeats
 after a reasonable fix, record it as an open concern instead of broadening the
@@ -143,7 +144,7 @@ phase.
 Do not rerun the same successful command unless code or relevant configuration
 changed.
 
-Do not end your turn with a dev server or other task-owned process still
+Do not end your turn with a local server or other task-owned process still
 running.
 
 ## Fix Artifact Shape
@@ -183,7 +184,7 @@ Source: [Phase review or acceptance.]
 
 Reset context first: yes
 Next Strike skill: phase-review
-Arguments: <feature-slug> phase:<phase-slug>
+Arguments: <project-slug> phase:<phase-slug>
 ```
 
 ## Card And Board Update
@@ -215,7 +216,7 @@ ready when:
 - each blocking review or acceptance item is addressed or the blocker is explicit
 - changed files are listed
 - verification results are recorded honestly
-- rollback notes exist for changed app/test files
+- rollback notes exist for changed implementation/test files
 - card/board state routes back to phase-review after a context reset
 
 ## Output
@@ -227,7 +228,7 @@ Final response should be short and user-facing:
 - files changed
 - checks run
 - next prompt, rendered for the current host with `references/invocation.md`:
-  `phase-review <feature-slug> phase:<phase-slug>`
+  `phase-review <project-slug> phase:<phase-slug>`
 
 Do not show raw handoff fields such as `Reset context first`, `Next Strike
 skill`, or `Arguments`.

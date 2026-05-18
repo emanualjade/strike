@@ -1,20 +1,25 @@
 # Strike
 
-Strike is a skills plugin that helps an AI coding agent move feature work from
+Strike is a skills plugin that helps an AI coding agent move Project work from
 a rough idea to a planned, built, reviewed, accepted, and remembered change.
 
-It gives your agent a repeatable workflow. You start a feature card, ask Strike
+It gives your agent a repeatable workflow. You start a project card, ask Strike
 what should happen next, and then move through planning, research, specification,
 implementation, review, acceptance, and retro steps.
 
-Strike stores its working notes in the project where you use it:
+A Project is one unit of work Strike plans inside your existing repository. It
+can be tiny, like `Docs Refresh`, or broad, like `Payments`; it is not a new
+repo. A larger Project spec can include multiple smaller capabilities or product
+features.
+
+Strike stores its working notes in the repository where you use it:
 
 ```text
 docs/strike/board/
 docs/strike/cards/
 ```
 
-Run Strike from the root of the project you want the agent to work on.
+Run Strike from the repo root you want the agent to work on.
 
 ## Before You Install
 
@@ -34,10 +39,10 @@ Choose the install path that matches the host and scope you want.
 | Host | Scope | Use When |
 | --- | --- | --- |
 | Codex | Global | You want Strike available across your Codex setup. |
-| Codex | One project | You want Strike available only from one repository. |
-| Claude Code | User | Personal install across all projects. |
-| Claude Code | Project shared | Shared install for everyone using one repository. |
-| Claude Code | Project private | Personal install in one repository only. |
+| Codex | One repository | You want Strike available only from one repository. |
+| Claude Code | User | Personal install across all repositories. |
+| Claude Code | Repository shared | Shared install for everyone using one repository. |
+| Claude Code | Repository private | Personal install in one repository only. |
 | GitHub Copilot CLI | CLI user | You want to try the packaged Copilot CLI plugin. |
 
 Claude Code also has a managed scope for administrator-controlled plugins. It
@@ -68,27 +73,27 @@ In the Codex prompt, open the plugin browser:
 ```
 
 Find Strike and install or enable it. After that, start a fresh Codex
-conversation and run Strike from the root of the project you want it to work on.
+conversation and run Strike from the repo root you want it to work on.
 
 </details>
 
 <details>
-<summary>Install in one Codex project</summary>
+<summary>Install in one Codex repository</summary>
 
-Use this when one project should offer Strike, and you do not want to add the
+Use this when one repository should offer Strike, and you do not want to add the
 Strike marketplace to your general Codex setup.
 
-Codex project marketplaces are added by creating or editing this file in the
-project:
+Codex repository marketplaces are added by creating or editing this file in the
+repo root:
 
 ```text
 .agents/plugins/marketplace.json
 ```
 
-If your project already has this file, add the Strike plugin entry to the
+If your repository already has this file, add the Strike plugin entry to the
 existing `plugins` list instead of replacing the file.
 
-For a project that does not already have `.agents/plugins/marketplace.json`,
+For a repository that does not already have `.agents/plugins/marketplace.json`,
 create the directory:
 
 ```bash
@@ -99,7 +104,7 @@ Then create `.agents/plugins/marketplace.json` with this content:
 
 ```json
 {
-  "name": "strike-project",
+  "name": "strike-repo",
   "interface": {
     "displayName": "Strike"
   },
@@ -122,8 +127,8 @@ Then create `.agents/plugins/marketplace.json` with this content:
 }
 ```
 
-Open Codex from this same project root. You can use the Codex app, or run this
-terminal command from the project root:
+Open Codex from this same repo root. You can use the Codex app, or run this
+terminal command from the repo root:
 
 ```bash
 codex
@@ -135,8 +140,8 @@ In the Codex prompt, open the plugin browser:
 /plugins
 ```
 
-Find Strike in the project marketplace and install or enable it. After that,
-start a fresh Codex conversation from the same project root.
+Find Strike in the repository marketplace and install or enable it. After that,
+start a fresh Codex conversation from the same repo root.
 
 </details>
 
@@ -150,7 +155,7 @@ claude plugin marketplace add emanualjade/strike --sparse .claude-plugin plugins
 claude plugin install strike@strike --scope user
 ```
 
-Claude Code user scope makes Strike available for you across all projects.
+Claude Code user scope makes Strike available for you across all repositories.
 
 After installing, run this app prompt inside Claude Code to activate Strike:
 
@@ -161,16 +166,16 @@ After installing, run this app prompt inside Claude Code to activate Strike:
 </details>
 
 <details>
-<summary>Install Claude Code project scope, shared</summary>
+<summary>Install Claude Code repository scope, shared</summary>
 
-Run these terminal commands from the project root:
+Run these terminal commands from the repo root:
 
 ```bash
 claude plugin marketplace add emanualjade/strike --sparse .claude-plugin plugins --scope project
 claude plugin install strike@strike --scope project
 ```
 
-Claude Code project scope writes shared plugin settings to
+Claude Code `project` scope writes shared plugin settings to
 `.claude/settings.json`. Commit those settings only when you want collaborators
 to get the same Strike setup.
 
@@ -185,14 +190,14 @@ After installing, run this app prompt inside Claude Code to activate Strike:
 <details>
 <summary>Install Claude Code local scope, private</summary>
 
-Run these terminal commands from the project root:
+Run these terminal commands from the repo root:
 
 ```bash
 claude plugin marketplace add emanualjade/strike --sparse .claude-plugin plugins --scope local
 claude plugin install strike@strike --scope local
 ```
 
-Claude Code local scope writes personal project settings to
+Claude Code local scope writes personal repository settings to
 `.claude/settings.local.json`, which should stay out of source control.
 
 After installing, run this app prompt inside Claude Code to activate Strike:
@@ -245,7 +250,7 @@ codex plugin marketplace remove strike
 </details>
 
 <details>
-<summary>Uninstall from one Codex project</summary>
+<summary>Uninstall from one Codex repository</summary>
 
 First remove the installed plugin from the Codex plugin browser:
 
@@ -255,17 +260,17 @@ First remove the installed plugin from the Codex plugin browser:
 
 Select Strike, then choose **Uninstall plugin**.
 
-Then remove the project marketplace entry. If `.agents/plugins/marketplace.json`
+Then remove the repository marketplace entry. If `.agents/plugins/marketplace.json`
 only exists for Strike, delete that file. If it lists other plugins too, remove
 only the Strike entry from the `plugins` list.
 
-Restart Codex from the project root after changing the project marketplace file.
+Restart Codex from the repo root after changing the repository marketplace file.
 
 </details>
 
 Claude Code note: uninstalling from the last installed scope also deletes
 Claude-managed plugin data unless you add `--keep-data`. Strike cards and board
-files live in your project under `docs/strike/`.
+files live in your repository under `docs/strike/`.
 
 <details>
 <summary>Uninstall Claude Code user scope</summary>
@@ -285,9 +290,9 @@ After uninstalling, run this app prompt inside Claude Code to refresh active plu
 </details>
 
 <details>
-<summary>Uninstall Claude Code project scope, shared</summary>
+<summary>Uninstall Claude Code repository scope, shared</summary>
 
-Run this terminal command from the project root:
+Run this terminal command from the repo root:
 
 ```bash
 claude plugin uninstall strike@strike --scope project
@@ -304,7 +309,7 @@ After uninstalling, run this app prompt inside Claude Code to refresh active plu
 <details>
 <summary>Uninstall Claude Code local scope, private</summary>
 
-Run this terminal command from the project root:
+Run this terminal command from the repo root:
 
 ```bash
 claude plugin uninstall strike@strike --scope local
@@ -345,7 +350,7 @@ copilot plugin marketplace remove strike
 
 </details>
 
-## Start A Feature
+## Start A Project
 
 In Claude Code, use the Strike command form:
 
@@ -424,7 +429,7 @@ Then run the next Strike command:
 
 Do not run `/clear` in your terminal. It is a Claude Code app prompt.
 
-In Codex, start a fresh conversation from the same project root, then use the
+In Codex, start a fresh conversation from the same repo root, then use the
 next Strike skill shortcut:
 
 ```text
@@ -432,13 +437,12 @@ $spec csv-export
 ```
 
 In GitHub Copilot CLI, start a fresh Copilot CLI session if there is no visible
-context-reset command, then run the next Strike skill from the same project
-root.
+context-reset command, then run the next Strike skill from the same repo root.
 
-## Example Feature Run
+## Example Project Run
 
 Here is what a small Claude Code run might look like from start to finish.
-Assume the feature slug is `csv-export`.
+Assume the project slug is `csv-export`.
 
 ```text
 /strike:start Add CSV export --description Let users export a CSV report.
@@ -473,7 +477,7 @@ from the phase files Strike creates.
 ```
 
 Repeat the phase commands for each remaining phase. When all phases are built
-and reviewed, finish the feature:
+and reviewed, finish the project:
 
 ```text
 /clear
@@ -507,28 +511,28 @@ Strike prompts mostly use plain positional arguments. `start` is the only
 normal user-facing skill with double-dash options today:
 
 ```text
-start <feature name words> [--slug <slug>] [--description <description words>]
+start <project name words> [--slug <slug>] [--description <description words>]
 ```
 
 Phase skills use a named token instead of a dash flag:
 
 ```text
-phase-build <feature-slug> phase:<phase-slug>
+phase-build <project-slug> phase:<phase-slug>
 ```
 
-Some skills accept one optional plain word, such as `research <feature-slug>
-skip`, `accept <feature-slug> dogfood`, or `go <feature-slug> verbose`.
+Some skills accept one optional plain word, such as `research <project-slug>
+skip` or `go <project-slug> verbose`.
 
-- `start`: create a new feature card.
+- `start`: create a new project card.
 - `go`: inspect the board and recommend the next step.
 - `brainstorm`, `grill`, `research`: shape and pressure-test the idea.
-- `spec`, `spec-review`: write and review the feature specification.
-- `slice`, `slice-review`: split the feature into buildable phases.
+- `spec`, `spec-review`: write and review the project specification.
+- `slice`, `slice-review`: split the project into buildable phases.
 - `phase-research`, `phase-plan`, `phase-build`, `phase-review`, `phase-fix`:
   work through one implementation phase at a time.
-- `accept`: check the assembled feature against the spec.
+- `accept`: check the assembled project against the spec.
 - `retro`: record what happened and move accepted work to done.
-- `language`: keep project terminology consistent.
+- `language`: keep repo terminology consistent.
 - `demo`: create a small planning demo for a card.
 
 ## Update Strike
@@ -544,7 +548,7 @@ codex plugin marketplace upgrade strike
 
 Then open Codex and check `/plugins` if Codex shows an available plugin update.
 
-For a project Codex marketplace, open Codex from that project root and check
+For a repository Codex marketplace, open Codex from that repo root and check
 `/plugins`.
 
 </details>
@@ -559,14 +563,14 @@ claude plugin marketplace update strike
 claude plugin update strike@strike --scope user
 ```
 
-For a project-scope install, run these terminal commands from the project root:
+For a Claude Code `project`-scope install, run these terminal commands from the repo root:
 
 ```bash
 claude plugin marketplace update strike
 claude plugin update strike@strike --scope project
 ```
 
-For a local-scope install, run these terminal commands from the project root:
+For a local-scope install, run these terminal commands from the repo root:
 
 ```bash
 claude plugin marketplace update strike
@@ -605,8 +609,8 @@ you can run this terminal command:
 claude plugin list
 ```
 
-If Strike says there is no board or card, run `start` first from the root of the
-project where you want Strike to create `docs/strike/`.
+If Strike says there is no board or card, run `start` first from the repo root
+where you want Strike to create `docs/strike/`.
 
 If an update does not seem to change anything, make sure a newer Strike release
 has actually been published. Some hosts only treat a plugin as updated after its

@@ -30,7 +30,7 @@ next command:
 | Host | Render the same handoff as |
 | --- | --- |
 | Claude Code plugin | `/clear`, then `/strike:<skill-name> <args>` |
-| Codex | Start a fresh conversation from the same project root, then type `$` and select the installed Strike skill, or use `/skills` to browse. The short form is `$<skill-name> <args>`; namespaced `$strike:<skill-name> <args>` also works. |
+| Codex | Start a fresh conversation from the same repo root, then type `$` and select the installed Strike skill, or use `/skills` to browse. The short form is `$<skill-name> <args>`; namespaced `$strike:<skill-name> <args>` also works. |
 | GitHub Copilot CLI | Start a fresh session if no reset command is visible, then `/<skill-name> <args>` after confirming the skill is visible with `/skills list` or `/skills info <skill-name>`. |
 
 When the handoff does not ask for a reset, run only the skill command for the

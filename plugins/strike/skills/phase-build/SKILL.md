@@ -1,7 +1,7 @@
 ---
 name: phase-build
 description: Implement exactly one planned phase and record build evidence.
-argument-hint: "[feature-slug] phase:<phase-slug>"
+argument-hint: "[project-slug] phase:<phase-slug>"
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, WebFetch, WebSearch
 ---
@@ -47,14 +47,14 @@ without raw field labels.
 Board location is state. This skill may work only when the card pointer is in:
 
 ```txt
-docs/strike/board/06-implementation/<feature-slug>.md
+docs/strike/board/06-implementation/<project-slug>.md
 ```
 
 Require an explicit phase argument:
 
 ```txt
 Next Strike skill: phase-build
-Arguments: <feature-slug> phase:<phase-slug>
+Arguments: <project-slug> phase:<phase-slug>
 ```
 
 If the pointer is in another lane, or the phase cannot be resolved, stop and
@@ -63,7 +63,7 @@ recommend:
 ```txt
 Reset context first: yes
 Next Strike skill: go
-Arguments: <feature-slug>
+Arguments: <project-slug>
 ```
 
 If `build-brief.md` is missing, stop and recommend:
@@ -71,16 +71,16 @@ If `build-brief.md` is missing, stop and recommend:
 ```txt
 Reset context first: yes
 Next Strike skill: phase-plan
-Arguments: <feature-slug> phase:<phase-slug>
+Arguments: <project-slug> phase:<phase-slug>
 ```
 
 Do not create review, fix, acceptance, retro, durable IDs, YAML blocks, hidden
-routing metadata, or project glossary edits.
+routing metadata, or repo glossary edits.
 
 ## Reads
 
 - board pointer
-- `cards/<feature-slug>/card.md`
+- `cards/<project-slug>/card.md`
 - `outputs/spec/spec.md`
 - `phases/<phase-slug>/plan.md`
 - `phases/<phase-slug>/build-brief.md`
@@ -94,9 +94,9 @@ catch scope drift, not to re-plan the phase from scratch.
 
 ## Writes
 
-- app, test, or documentation files needed for the selected phase
-- `cards/<feature-slug>/phases/<phase-slug>/build.md`
-- `cards/<feature-slug>/card.md`
+- implementation, test, or documentation files needed for the selected phase
+- `cards/<project-slug>/phases/<phase-slug>/build.md`
+- `cards/<project-slug>/card.md`
 - board pointer text in `06-implementation`
 - board pointer moved back from `06-implementation` to `02-grill`,
   `03-research`, or `05-slice` only when build discovers an upstream blocker
@@ -107,23 +107,24 @@ review is the next step when the build is complete.
 
 For normal phase work, do not move the board pointer out of
 `06-implementation`. After updating pointer text or routing to an upstream
-lane, verify exactly one pointer file exists for the feature slug.
+lane, verify exactly one pointer file exists for the project slug.
 
 ## Preflight
 
-Before editing app or test files:
+Before editing implementation or test files:
 
 1. Read the build brief and likely touched files.
 2. Run `git status --short`.
-3. Identify expected app/test/docs files for this phase.
+3. Identify expected implementation, test, or documentation files for this
+   phase.
 4. If an expected file already has unrelated user changes that make the phase
    unsafe to edit, stop and explain the conflict.
 5. If the file is dirty but the changes are clearly part of the selected phase
    or can be worked with safely, continue carefully.
 6. Tell the user which files or surfaces are about to change.
 
-Untracked or modified Strike docs are normal during dogfooding and are not a
-reason to stop.
+Untracked or modified Strike docs are normal while a card is in progress and
+are not a reason to stop.
 
 Never revert user changes. Never use repo-wide reset, `git checkout --`, or
 `git clean`.
@@ -131,7 +132,7 @@ Never revert user changes. Never use repo-wide reset, `git checkout --`, or
 ## Build Behavior
 
 Build exactly the selected phase. Use engineering judgment for small details
-the brief leaves open, but do not expand feature scope.
+the brief leaves open, but do not expand the Project scope.
 
 Before editing, quickly sanity-check the build brief against the current repo.
 If it is still coherent, build the smallest complete behavior first.
@@ -146,15 +147,15 @@ continue only inside this phase.
 
 Do not fold in nearby cleanup, speculative abstractions, or future phase work.
 
-If implementation exposes a missing product, UX, language, data, permission, or
-model-shape decision that should not be guessed, stop, update `card.md` with the
-blocking question, move the pointer back to `02-grill`, and recommend the
-right earlier handoff:
+If implementation exposes a missing product, technical, workflow, UX, language,
+data, permission, or model-shape decision that should not be guessed, stop,
+update `card.md` with the blocking question, move the pointer back to
+`02-grill`, and recommend the right earlier handoff:
 
 ```txt
 Reset context first: yes
 Next Strike skill: grill
-Arguments: <feature-slug>
+Arguments: <project-slug>
 ```
 
 If implementation exposes missing evidence or stack knowledge that cannot be
@@ -164,10 +165,10 @@ recommend phase research when the evidence is phase-scoped:
 ```txt
 Reset context first: yes
 Next Strike skill: phase-research
-Arguments: <feature-slug> phase:<phase-slug>
+Arguments: <project-slug> phase:<phase-slug>
 ```
 
-If the missing evidence is feature-level research rather than phase-scoped
+If the missing evidence is Project-level research rather than phase-scoped
 implementation knowledge, move the pointer back to `03-research` and recommend
 the `research` skill.
 
@@ -191,10 +192,10 @@ Record skipped checks honestly. A skipped check is acceptable only when the
 reason and replacement evidence are clear.
 
 For frontend/UI phases, run an appropriate local visual or browser check when
-the app can be started reasonably. If a dev server cannot start, record the
-blocker instead of pretending visual verification happened.
+the relevant UI can be run locally. If the local preview cannot start, record
+the blocker instead of pretending visual verification happened.
 
-Do not end your turn with a dev server or other task-owned process still
+Do not end your turn with a local server or other task-owned process still
 running.
 
 ## Build Artifact Shape
@@ -253,9 +254,9 @@ When the phase is blocked:
 - add the blocker or missing evidence to `card.md`
 - leave the board pointer in `06-implementation` for phase-scoped missing
   evidence
-- move the board pointer to `02-grill` for missing upstream product decisions,
-  `03-research` for feature-level evidence, or `05-slice` for a wrong phase
-  split
+- move the board pointer to `02-grill` for missing upstream decisions about
+  product, technical, or workflow direction, `03-research` for Project-level
+  evidence, or `05-slice` for a wrong phase split
 
 ## Exit Test
 
@@ -263,11 +264,11 @@ Before finishing, reread `build.md` as if the chat transcript is gone. It is
 ready when:
 
 - the selected phase outcome is built or the blocker is explicit
-- changed app/test/docs files are listed
+- changed implementation, test, or documentation files are listed
 - tests or checks added/updated are listed, or absence is explained
 - verification commands and results are recorded
 - skipped or failed checks are honest
-- exact rollback notes exist for every changed app/test file
+- exact rollback notes exist for every changed implementation/test file
 - open concerns are visible as checkboxes when they matter
 - phase-review can start after a context reset without rediscovering what changed
 
@@ -279,16 +280,16 @@ If review would have to reconstruct the build from git diff alone, improve
 Final response should be short and user-facing:
 
 - build path written, or why build was blocked
-- app/test/docs files changed
+- implementation/test/docs files changed
 - checks run
 - rollback note
 - card/board update
 - next prompt, rendered for the current host with `references/invocation.md`:
-  - built: `phase-review <feature-slug> phase:<phase-slug>`
-  - blocked by missing brief: `phase-plan <feature-slug> phase:<phase-slug>`
+  - built: `phase-review <project-slug> phase:<phase-slug>`
+  - blocked by missing brief: `phase-plan <project-slug> phase:<phase-slug>`
   - blocked by missing phase evidence:
-    `phase-research <feature-slug> phase:<phase-slug>`
-  - blocked by an upstream feature decision, feature-level evidence gap, or
+    `phase-research <project-slug> phase:<phase-slug>`
+  - blocked by an upstream Project decision, Project-level evidence gap, or
     wrong phase split: move the pointer to the owning lane and render the
     relevant `grill`, `research`, or `slice` prompt
 

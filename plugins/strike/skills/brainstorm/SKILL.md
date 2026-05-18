@@ -1,7 +1,7 @@
 ---
 name: brainstorm
-description: Shape a rough feature idea into enough context for decision-tree grilling.
-argument-hint: "[feature-slug] [\"rough idea or notes\"]"
+description: Shape a rough project idea into enough context for decision-tree grilling.
+argument-hint: "[project-slug] [\"rough idea or notes\"]"
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob
 ---
@@ -21,12 +21,13 @@ Keep progress updates quiet. Do not narrate routine mechanics such as reading
 the board pointer, reading `card.md`, checking `references/invocation.md`, or
 lightly listing repo files. Speak up only when it helps the user answer the
 brainstorm question or understand a meaningful constraint, such as "There does
-not seem to be app code here, so let's treat this as a greenfield idea."
+not seem to be existing implementation here, so let's treat this as a
+greenfield idea."
 
 ## Purpose
 
-Help the user turn a fuzzy idea into a useful product direction before grill,
-spec, slice, or code.
+Help the user turn a fuzzy idea into a useful product, technical, or workflow
+direction before grill, spec, slice, or code.
 
 This is an expansive conversation skill. It should feel like a sharp friend:
 friendly, creative, business-aware, technically aware, and kindly direct. Do
@@ -44,7 +45,8 @@ without raw field labels.
 
 - Simplicity is the ultimate sophistication. Push toward the simplest version
   that still solves the real problem.
-- Start with the user experience, work backwards to technology.
+- Start with the user, maintainer, operator, or system experience, then work
+  backwards to technology.
 - Say no to 1,000 things. Focus beats breadth.
 - Challenge every assumption. "How it's usually done" is not a reason.
 - Show people the future; don't just give them better horses.
@@ -55,7 +57,7 @@ without raw field labels.
 Board location is state. This skill may work only when the card pointer is in:
 
 ```txt
-docs/strike/board/01-brainstorm/<feature-slug>.md
+docs/strike/board/01-brainstorm/<project-slug>.md
 ```
 
 If the pointer is in another lane, stop and recommend:
@@ -63,7 +65,7 @@ If the pointer is in another lane, stop and recommend:
 ```txt
 Reset context first: yes
 Next Strike skill: go
-Arguments: <feature-slug>
+Arguments: <project-slug>
 ```
 
 Do not read or write outside `docs/strike/` except for light repo context
@@ -72,17 +74,18 @@ inspection. Keep mechanics boring; the value is the conversation.
 ## Reads
 
 - board pointer
-- `cards/<feature-slug>/card.md`
+- `cards/<project-slug>/card.md`
 - existing `outputs/brainstorm/brainstorm.md` if present
 - optional rough notes from the command
 
-Lightly skim repo context only when it materially sharpens the product
-conversation. This is not research, grill, spec, or implementation.
+Lightly skim repo context only when it materially sharpens the product,
+technical, or workflow conversation. This is not research, grill, spec, or
+implementation.
 
 ## Writes
 
-- `cards/<feature-slug>/outputs/brainstorm/brainstorm.md`
-- `cards/<feature-slug>/card.md`
+- `cards/<project-slug>/outputs/brainstorm/brainstorm.md`
+- `cards/<project-slug>/card.md`
 - board pointer moved from `01-brainstorm` to `02-grill` when the brainstorm
   is ready for decision-tree grilling
 
@@ -104,8 +107,10 @@ we’ll narrow to the version worth grilling.
 
 Good brainstorming does four things:
 
-- starts with the user experience and works backward to technology
-- narrows broad appeal into a specific user in a specific moment
+- starts with the user, maintainer, operator, or system experience and works
+  backward to technology
+- narrows broad appeal into a specific user, maintainer, operator, integrator,
+  contributor, or downstream system in a specific moment
 - explores a few real directions before converging
 - preserves uncertainty honestly instead of laundering it into fake confidence
 - says no to attractive but distracting ideas before they become scope
@@ -115,13 +120,13 @@ the user through it with light transitions rather than formal phase labels:
 
 1. Understand and expand.
    - Restate the raw idea as a crisp problem or opportunity.
-   - Ask only the few sharpening questions needed to understand user, pain,
-     success, constraints, and why now.
+   - Ask only the few sharpening questions needed to understand who or what is
+     affected, the pain or risk, success, constraints, and why now.
    - Open up better possibilities before committing to the first solution.
 2. Evaluate and converge.
    - Cluster what resonates into one recommendation or 2-3 meaningfully
      different candidates.
-   - Stress-test each serious direction for user value, feasibility, and
+   - Stress-test each serious direction for value, feasibility, and
      differentiation.
    - Name hidden assumptions, likely killers, and attractive ideas to say no
      to for now.
@@ -138,9 +143,10 @@ Useful transitions:
 
 Find just enough shape before expanding:
 
-- Who is this for, specifically?
-- What painful moment are they in?
-- What are they doing today instead?
+- Who or what is this for: end user, maintainer, operator, integrator,
+  contributor, or downstream system?
+- What painful moment, risk, or friction are they in?
+- What are they doing today instead, or what fails today?
 - What would make this obviously successful?
 - What constraints matter?
 - What is explicitly not part of the first version?
@@ -148,7 +154,8 @@ Find just enough shape before expanding:
 Restate promising ideas as:
 
 ```txt
-How might we [desired outcome] for [specific user] without [important constraint]?
+How might we [desired outcome] for [specific user, system, or workflow]
+without [important constraint]?
 ```
 
 Explore when exploration would help. Generate 3-6 considered directions, not a
@@ -160,7 +167,8 @@ Use a few of these lenses directly:
 - Inversion: What if we did the opposite?
 - Constraint removal: What if budget, time, or tech were not the limiting
   factor?
-- Audience shift: What if this were for a different user?
+- Audience shift: What if this were for a different user, maintainer,
+  operator, integrator, or system?
 - Combination: What if we merged this with an adjacent workflow?
 - Simplification: What is the version that is 10x simpler?
 - 10x version: What would this look like at much larger scale?
@@ -173,7 +181,7 @@ problem.
 When the user reacts, cluster the strongest ideas into one recommended
 direction or 2-3 meaningfully different candidates. Stress-test them with:
 
-- User value: is this a painkiller or a vitamin?
+- Value: is this solving a real pain, risk, or workflow drag?
 - Feasibility: what is the hardest or riskiest part?
 - Differentiation: why is this meaningfully better than the workaround?
 
@@ -191,7 +199,7 @@ into glossary maintenance.
 Be honest, not merely supportive. A good brainstorm partner is not a
 yes-machine. If an idea is weak, say why with kindness. Push back on unnecessary
 complexity, vague value, broad audiences, and solution shapes that do not match
-the user's pain. Offer a stronger angle when you can.
+the real pain, risk, or workflow. Offer a stronger angle when you can.
 
 If a choice would clearly be easier to understand visually, you may create a
 small planning demo using the shared demo guidance. Treat it as an optional
@@ -201,22 +209,24 @@ thinking aid, not a required brainstorm output.
 
 - Do not generate a huge idea list. A few considered directions beat many
   shallow ones.
-- Do not skip "who is this for"; every useful feature starts with a person and
-  their problem.
+- Do not skip "who or what is this for"; every useful change starts with an
+  affected person, system, or workflow and a real problem.
 - Do not save a direction without surfacing assumptions.
 - Do not over-engineer the brainstorm process. Use the three-part thinking
   sequence and resist adding steps.
 - Do not just list ideas; each direction should tell a small story about why it
   exists.
-- Do not ignore obvious codebase or product constraints when they matter.
+- Do not ignore obvious codebase, product, or workflow constraints when they
+  matter.
 
 ## Save
 
 Before saving, read the sharpened idea back to the user:
 
 ```txt
-Here's what I'm hearing: [target user] in [painful moment] are currently
-[workaround]. We're considering [recommended direction, or candidates A/B].
+Here's what I'm hearing: [target user, system, or workflow] in [painful moment,
+risk, or workflow friction] is currently [workaround or failure mode]. We're
+considering [recommended direction, or candidates A/B].
 We're explicitly not doing [thing] yet because [reason]. Does this match before
 I save it down?
 ```
@@ -231,7 +241,7 @@ The saved artifact only needs enough shape for grill:
 - problem statement or How Might We framing
 - recommended direction, or candidates if genuinely unresolved
 - key assumptions with possible validation paths
-- MVP scope with in and out
+- first useful scope with in and out
 - not doing and why
 - open questions for grill
 
@@ -253,7 +263,7 @@ genuinely unresolved.]
 
 - [ ] [Assumption — possible validation path.]
 
-## MVP Scope
+## First Useful Scope
 
 In:
 - [Smallest useful scope.]
@@ -302,8 +312,8 @@ Final response should be short and user-facing:
 - whether the card moved to `02-grill` or stayed in `01-brainstorm`
 - questions for grill or open brainstorm gaps
 - next prompt, rendered for the current host with `references/invocation.md`:
-  `grill <feature-slug>` if moved to `02-grill`, or
-  `brainstorm <feature-slug>` if still in `01-brainstorm`
+  `grill <project-slug>` if moved to `02-grill`, or
+  `brainstorm <project-slug>` if still in `01-brainstorm`
 
 Do not show raw handoff fields such as `Reset context first`, `Next Strike
 skill`, or `Arguments`.
@@ -311,7 +321,7 @@ skill`, or `Arguments`.
 ## Gates
 
 - Do not write grill/spec/slice/implementation/review/acceptance/retro outputs.
-- Do not write production code.
+- Do not write implementation code.
 - Do not create durable IDs or hidden state fields.
 - Do not move the card if grill would have to rerun brainstorm.
 - Do not route directly to spec or implementation.

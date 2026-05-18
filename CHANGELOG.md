@@ -2,6 +2,67 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.1.15 - 2026-05-18
+
+- Renamed Strike's top-level work unit to Project across shipped
+  skills, docs, prompts, manifests, and generated starter card text.
+- Updated the shared slug helper and tests to use project slug wording.
+- Reworded repo-root guidance so Projects are not confused with repositories.
+
+## 0.1.14 - 2026-05-18
+
+- Updated plugin, marketplace, and license owner metadata to Emanual Jade.
+
+## 0.1.13 - 2026-05-18
+
+- Completed a shipped-skill-by-shipped-skill portability pass.
+- Broadened remaining product-only planning, research, review, fix, and retro
+  wording to include technical, workflow, and domain decisions where relevant.
+- Renamed the remaining spec template success-check heading from
+  code-verifiable to repo-verifiable.
+
+## 0.1.12 - 2026-05-18
+
+- Simplified maintainer docs and package guidance around the current portable
+  package.
+- Updated generated starter cards to describe product, technical, or workflow
+  direction.
+
+## 0.1.11 - 2026-05-17
+
+- Broadened brainstorm, grill, spec, and stage-contract guidance so early
+  planning can frame product, technical, workflow, maintainer/operator, and
+  downstream-system work.
+- Kept product and UI examples where useful while adding repo/workflow-oriented
+  prompts and template language.
+
+## 0.1.10 - 2026-05-17
+
+- Broadened research, spec, demo, and acceptance examples to include CLI, API,
+  config, generated artifact, docs, data, and tooling evidence alongside UI/web
+  examples.
+- Renamed success-check guidance from code-verifiable to repo-verifiable.
+
+## 0.1.9 - 2026-05-17
+
+- Replaced product-specific language and modeling examples with neutral repo
+  examples.
+- Generalized access-boundary wording in research and spec guidance.
+
+## 0.1.8 - 2026-05-17
+
+- Generalized skill and stage wording from app-specific surfaces to
+  implementation, source, test, and documentation files.
+- Updated local run guidance so UI checks do not imply every repository is a web
+  app.
+
+## 0.1.7 - 2026-05-17
+
+- Simplified acceptance, routing, board, and stage guidance around one workflow
+  path from implementation through retro.
+- Added a neutral acceptance argument gate so invalid extra arguments stop
+  before writing acceptance evidence.
+
 ## 0.1.6 - 2026-05-17
 
 - Clarified the user-facing `start` options and kept edge-case parsing guidance
@@ -14,7 +75,7 @@ All notable changes to Strike will be recorded here.
 
 ## 0.1.4 - 2026-05-17
 
-- Added a shared deterministic slug helper for feature slugs, phase folders,
+- Added a shared deterministic slug helper for project slugs, phase folders,
   and demo filenames.
 - Refactored `start` to use the shared helper while preserving card and board
   pointer behavior.
@@ -27,11 +88,11 @@ All notable changes to Strike will be recorded here.
 
 - Made `start` generate shorter command-friendly slugs by dropping common
   leading task verbs and capping generated paths at 48 characters.
-- Allowed unquoted multi-word feature names and descriptions in the start
+- Allowed unquoted multi-word project names and descriptions in the start
   helper script.
 - Deduplicated explicit `--slug` values the same way generated slugs are
   deduplicated.
-- Treated flag-like words such as `--dry-run` as feature/description text when
+- Treated flag-like words such as `--dry-run` as project/description text when
   they appear inside the natural-language start input.
 - Included existing board pointers in start-card slug collision checks.
 - Added focused tests for start-card slugging, dedupe, and text normalization.

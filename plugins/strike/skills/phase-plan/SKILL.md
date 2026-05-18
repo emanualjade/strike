@@ -1,7 +1,7 @@
 ---
 name: phase-plan
 description: Write the build brief for exactly one implementation phase.
-argument-hint: "[feature-slug] phase:<phase-slug>"
+argument-hint: "[project-slug] phase:<phase-slug>"
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, WebFetch, WebSearch, Agent
 ---
@@ -32,7 +32,7 @@ A good phase plan:
 - names the verification strategy
 - calls out concrete watchouts that could cause scope drift or a bad build
 - points build toward the simplest safe approach for this phase
-- avoids broad feature research and implementation edits
+- avoids broad project research and implementation edits
 
 ## Host Invocation
 
@@ -47,14 +47,14 @@ without raw field labels.
 Board location is state. This skill may work only when the card pointer is in:
 
 ```txt
-docs/strike/board/06-implementation/<feature-slug>.md
+docs/strike/board/06-implementation/<project-slug>.md
 ```
 
 Require an explicit phase argument:
 
 ```txt
 Next Strike skill: phase-plan
-Arguments: <feature-slug> phase:<phase-slug>
+Arguments: <project-slug> phase:<phase-slug>
 ```
 
 If the pointer is in another lane, or the phase cannot be resolved, stop and
@@ -63,16 +63,17 @@ recommend:
 ```txt
 Reset context first: yes
 Next Strike skill: go
-Arguments: <feature-slug>
+Arguments: <project-slug>
 ```
 
-Do not write app code, tests, build evidence, review, acceptance, retro, project
-glossary edits, durable IDs, YAML blocks, or hidden routing metadata.
+Do not write implementation files, tests, build evidence, review, acceptance,
+retro, repo glossary edits, durable IDs, YAML blocks, or hidden routing
+metadata.
 
 ## Reads
 
 - board pointer
-- `cards/<feature-slug>/card.md`
+- `cards/<project-slug>/card.md`
 - `outputs/spec/spec.md`
 - `phases/<phase-slug>/plan.md`
 - existing `phases/<phase-slug>/research.md` if present
@@ -88,11 +89,12 @@ brainstorm, grill, research, or slice.
 
 ## Writes
 
-- `cards/<feature-slug>/phases/<phase-slug>/build-brief.md`
-- `cards/<feature-slug>/card.md`
+- `cards/<project-slug>/phases/<phase-slug>/build-brief.md`
+- `cards/<project-slug>/card.md`
 - board pointer text in `06-implementation`
 - board pointer moved back from `06-implementation` to `02-grill` when a
-  missing product/scope/surface/naming/model-shape decision blocks the brief
+  missing product, technical, workflow, scope, surface, naming, or model-shape
+  decision blocks the brief
 - board pointer moved back from `06-implementation` to `05-slice` when the
   phase split itself is wrong
 
@@ -102,7 +104,7 @@ blocked by an upstream lane's work.
 
 For the normal brief-writing path, do not move the board pointer out of
 `06-implementation`. After updating pointer text or routing to an upstream
-lane, verify exactly one pointer file exists for the feature slug.
+lane, verify exactly one pointer file exists for the project slug.
 
 ## Research During Phase Plan
 
@@ -112,7 +114,7 @@ repo context.
 
 Even when optional phase research was skipped, phase-plan may do tactical
 research needed to make the build brief safe and specific. This is not a second
-feature research pass.
+project research pass.
 
 Useful checks:
 
@@ -132,7 +134,7 @@ enough. For broad or source-heavy questions, recommend the optional utility:
 ```txt
 Reset context first: yes
 Next Strike skill: phase-research
-Arguments: <feature-slug> phase:<phase-slug>
+Arguments: <project-slug> phase:<phase-slug>
 ```
 
 Use host-supported delegation only when the active host and user/project policy
@@ -147,18 +149,18 @@ Default to writing the brief from the spec and phase plan.
 Ask the user only when build would likely go wrong without a real decision.
 Recommend a concrete answer when asking.
 
-If phase planning discovers a small missing detail that does not change feature
+If phase planning discovers a small missing detail that does not change project
 intent, choose with engineering judgment and record the assumption in the brief.
 
-If it discovers a product/scope/surface/naming/model-shape decision that should
-not be guessed, update `card.md` with the blocking question and stop without
-writing a misleading brief. Move the pointer back to `02-grill` and recommend
-the right prior handoff:
+If it discovers a product, technical, workflow, scope, surface, naming, or
+model-shape decision that should not be guessed, update `card.md` with the
+blocking question and stop without writing a misleading brief. Move the pointer
+back to `02-grill` and recommend the right prior handoff:
 
 ```txt
 Reset context first: yes
 Next Strike skill: grill
-Arguments: <feature-slug>
+Arguments: <project-slug>
 ```
 
 If it discovers broad missing evidence, recommend:
@@ -166,7 +168,7 @@ If it discovers broad missing evidence, recommend:
 ```txt
 Reset context first: yes
 Next Strike skill: phase-research
-Arguments: <feature-slug> phase:<phase-slug>
+Arguments: <project-slug> phase:<phase-slug>
 ```
 
 Do not write a weak `build-brief.md` with "TODO research" placeholders. Keep
@@ -179,7 +181,7 @@ recommend:
 ```txt
 Reset context first: yes
 Next Strike skill: slice
-Arguments: <feature-slug>
+Arguments: <project-slug>
 ```
 
 ## Build Brief Shape
@@ -200,7 +202,8 @@ sections that do not help this phase.
 
 ## Implementation Notes
 
-- [Pattern, simplest safe approach, file/surface boundary, data/auth rule, UX/motion/a11y note, etc.]
+- [Pattern, simplest safe approach, file/surface boundary, data/auth rule,
+  UX/motion/a11y note, etc.]
 
 ## Verification
 
@@ -220,7 +223,8 @@ sections that do not help this phase.
 ```
 
 The brief should be specific enough to build, but not a step-by-step coding
-script. Prefer stable repo paths and commands over copied upstream narrative.
+script. Prefer stable repo paths, commands, constraints, and current evidence
+over restating earlier artifacts wholesale.
 
 ## Card And Board Update
 
@@ -237,7 +241,8 @@ When the brief is not ready:
 - keep the phase-plan checklist item unchecked
 - add the blocking question or missing evidence to `card.md`
 - leave the board pointer in `06-implementation` for missing phase evidence
-- move the board pointer to `02-grill` for missing upstream product decisions
+- move the board pointer to `02-grill` for missing upstream decisions about
+  product, technical, or workflow direction
 - move the board pointer to `05-slice` for a wrong phase split
 
 ## Exit Test
@@ -266,10 +271,10 @@ Final response should be short and user-facing:
 - key research/precedent findings
 - card/board update
 - next prompt, rendered for the current host with `references/invocation.md`:
-  - brief written: `phase-build <feature-slug> phase:<phase-slug>`
+  - brief written: `phase-build <project-slug> phase:<phase-slug>`
   - blocked by missing evidence:
-    `phase-research <feature-slug> phase:<phase-slug>`
-  - blocked by upstream feature decisions: the relevant `grill`, `research`, or
+    `phase-research <project-slug> phase:<phase-slug>`
+  - blocked by upstream project decisions: the relevant `grill`, `research`, or
     `slice` prompt
 
 Do not show raw handoff fields such as `Reset context first`, `Next Strike
@@ -277,7 +282,7 @@ skill`, or `Arguments`.
 
 ## Gates
 
-- Do not edit app code.
+- Do not edit implementation files.
 - Do not create tests.
 - Do not move out of `06-implementation` except when routing to `02-grill` for
   a missing upstream decision or `05-slice` for a wrong phase split.

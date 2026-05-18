@@ -1,7 +1,7 @@
 ---
 name: go
 description: Inspect Strike board state and recommend the next explicit workflow step.
-argument-hint: "[feature-slug] [verbose]"
+argument-hint: "[project-slug] [verbose]"
 disable-model-invocation: true
 allowed-tools: Read, Bash, Grep, Glob
 ---
@@ -19,7 +19,7 @@ user decide what to do next.
 
 ## Purpose
 
-Show where a Strike feature card is on the board and recommend one next
+Show where a Strike project card is on the board and recommend one next
 action. This is intentionally read-only.
 
 ## Host Invocation
@@ -33,10 +33,10 @@ field labels.
 ## Read Order
 
 1. List `docs/strike/board/*/*.md`.
-2. Resolve the requested feature by pointer filename, card folder name, or card
+2. Resolve the requested project by pointer filename, card folder name, or card
    title. If no argument is given and more than one active card exists, ask the
    user to choose.
-3. Read the pointer and linked `cards/<feature-slug>/card.md`.
+3. Read the pointer and linked `cards/<project-slug>/card.md`.
 4. Read only the current lane's likely output folder if it exists.
 
 ## Routing
@@ -47,13 +47,13 @@ Use the board lane as workflow state:
   ```txt
   Reset context first: yes
   Next Strike skill: brainstorm
-  Arguments: <feature-slug>
+  Arguments: <project-slug>
   ```
 - `02-grill` -> show:
   ```txt
   Reset context first: yes
   Next Strike skill: grill
-  Arguments: <feature-slug>
+  Arguments: <project-slug>
   ```
 - `03-research` -> show:
   Research is optional before spec, even when recommended. If the card is in
@@ -63,13 +63,13 @@ Use the board lane as workflow state:
   ```txt
   Reset context first: yes
   Next Strike skill: research
-  Arguments: <feature-slug>
+  Arguments: <project-slug>
   ```
   Or skip research and go straight to creating the spec:
   ```txt
   Reset context first: yes
   Next Strike skill: research
-  Arguments: <feature-slug> skip
+  Arguments: <project-slug> skip
   ```
 - `04-spec` -> show:
   Spec is the recommended next action. Also show research as an optional
@@ -78,13 +78,13 @@ Use the board lane as workflow state:
   ```txt
   Reset context first: yes
   Next Strike skill: spec
-  Arguments: <feature-slug>
+  Arguments: <project-slug>
   ```
   Optional before spec:
   ```txt
   Reset context first: yes
   Next Strike skill: research
-  Arguments: <feature-slug>
+  Arguments: <project-slug>
   ```
 - `05-slice` -> show:
   Spec review is optional before slicing. Show both the optional quality pass
@@ -93,13 +93,13 @@ Use the board lane as workflow state:
   ```txt
   Reset context first: yes
   Next Strike skill: spec-review
-  Arguments: <feature-slug>
+  Arguments: <project-slug>
   ```
   Or skip spec review and create vertical phases:
   ```txt
   Reset context first: yes
   Next Strike skill: slice
-  Arguments: <feature-slug>
+  Arguments: <project-slug>
   ```
 - `06-implementation` -> inspect the card and phase folders:
   - card has unchecked acceptance-fix items assigned to a phase -> show the
@@ -107,7 +107,7 @@ Use the board lane as workflow state:
     ```txt
     Reset context first: yes
     Next Strike skill: phase-fix
-    Arguments: <feature-slug> phase:<phase-slug>
+    Arguments: <project-slug> phase:<phase-slug>
     ```
   - card has unchecked acceptance-fix items that are not assigned to a phase ->
     report that the fixes need a phase assignment before repair and ask which
@@ -118,13 +118,13 @@ Use the board lane as workflow state:
     ```txt
     Reset context first: yes
     Next Strike skill: phase-plan
-    Arguments: <feature-slug> phase:<phase-slug>
+    Arguments: <project-slug> phase:<phase-slug>
     ```
     Optional rerun phase research:
     ```txt
     Reset context first: yes
     Next Strike skill: phase-research
-    Arguments: <feature-slug> phase:<phase-slug>
+    Arguments: <project-slug> phase:<phase-slug>
     ```
   - phase has `plan.md` and no `research.md` or `build-brief.md` -> show
     optional phase research and the direct phase-plan path:
@@ -132,82 +132,57 @@ Use the board lane as workflow state:
     ```txt
     Reset context first: yes
     Next Strike skill: phase-research
-    Arguments: <feature-slug> phase:<phase-slug>
+    Arguments: <project-slug> phase:<phase-slug>
     ```
     Or create the build brief:
     ```txt
     Reset context first: yes
     Next Strike skill: phase-plan
-    Arguments: <feature-slug> phase:<phase-slug>
+    Arguments: <project-slug> phase:<phase-slug>
     ```
   - phase has `build-brief.md` and no `build.md` -> show:
     ```txt
     Reset context first: yes
     Next Strike skill: phase-build
-    Arguments: <feature-slug> phase:<phase-slug>
+    Arguments: <project-slug> phase:<phase-slug>
     ```
   - phase has `build.md` and no `review.md` -> show:
     ```txt
     Reset context first: yes
     Next Strike skill: phase-review
-    Arguments: <feature-slug> phase:<phase-slug>
+    Arguments: <project-slug> phase:<phase-slug>
     ```
   - phase has `review.md` with blocking fix checkboxes and no `fix.md` -> show
     the review's next action in plain language, normally:
     ```txt
     Reset context first: yes
     Next Strike skill: phase-fix
-    Arguments: <feature-slug> phase:<phase-slug>
+    Arguments: <project-slug> phase:<phase-slug>
     ```
   - phase has `review.md` with blocking fix checkboxes and `fix.md` -> show:
     ```txt
     Reset context first: yes
     Next Strike skill: phase-review
-    Arguments: <feature-slug> phase:<phase-slug>
+    Arguments: <project-slug> phase:<phase-slug>
     ```
   - every listed phase has a clean review but the pointer is still here ->
     report the inconsistency and recommend rerunning:
     ```txt
     Reset context first: yes
     Next Strike skill: phase-review
-    Arguments: <feature-slug> phase:<last-phase-slug>
+    Arguments: <project-slug> phase:<last-phase-slug>
     ```
-- `07-acceptance` -> acceptance validation.
-  If the card or spec clearly says this is a dogfood run, show only:
+- `07-acceptance` -> acceptance validation:
   ```txt
   Reset context first: yes
   Next Strike skill: accept
-  Arguments: <feature-slug> dogfood
+  Arguments: <project-slug>
   ```
-  If it clearly says shippable, show only:
-  ```txt
-  Reset context first: yes
-  Next Strike skill: accept
-  Arguments: <feature-slug>
-  ```
-  If run kind is undecided, show both choices briefly and explain the tradeoff:
-  ```txt
-  Reset context first: yes
-  Next Strike skill: accept
-  Arguments: <feature-slug> dogfood
-  ```
-  or:
-  ```txt
-  Reset context first: yes
-  Next Strike skill: accept
-  Arguments: <feature-slug>
-  ```
-  The dogfood handoff validates a temporary system-test implementation; normal
-  acceptance validates work that might remain in app code.
 - `08-retro` -> retro.
-  If `acceptance.md` records dogfood rollback commands, first verify the named
-  app-code changes are already gone from `git status --short` and the named new
-  files no longer exist. If cleanup is still pending, show the exact rollback
-  commands before any next Strike handoff. When cleanup is clear, show:
   ```txt
   Reset context first: yes
   Next Strike skill: retro
-  Arguments: <feature-slug>
+  Arguments: <project-slug>
   ```
 - `09-done` -> no next handoff.
 - `blocked` -> print the unchecked blocker items from `card.md`.

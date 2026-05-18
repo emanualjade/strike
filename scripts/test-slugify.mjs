@@ -6,10 +6,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   ARTIFACT_BODY_MAX,
-  FEATURE_BODY_MAX,
+  PROJECT_BODY_MAX,
   createDemoSlug,
-  createFeatureSlug,
   createPhaseSlug,
+  createProjectSlug,
 } from "../plugins/strike/references/scripts/slugify.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -26,30 +26,30 @@ function cli(args) {
   }).trim();
 }
 
-assert.equal(createFeatureSlug("Add user profile page").slug, "user-profile-page");
-assert.equal(createFeatureSlug("Add --dry-run flag").slug, "dry-run-flag");
-assert.equal(createFeatureSlug("Add auth").slug, "auth");
+assert.equal(createProjectSlug("Add user profile page").slug, "user-profile-page");
+assert.equal(createProjectSlug("Add --dry-run flag").slug, "dry-run-flag");
+assert.equal(createProjectSlug("Add auth").slug, "auth");
 assert.equal(
-  createFeatureSlug("Add user profile page!!! @#$ 100% / edit & view").slug,
+  createProjectSlug("Add user profile page!!! @#$ 100% / edit & view").slug,
   "user-profile-page-100-edit-view",
 );
 assert.equal(
-  createFeatureSlug("Add user profile page", { dropLeadingWords: false }).slug,
+  createProjectSlug("Add user profile page", { dropLeadingWords: false }).slug,
   "add-user-profile-page",
 );
-assertThrowsMessage(() => createFeatureSlug("!!! @#$"), /feature slug/);
+assertThrowsMessage(() => createProjectSlug("!!! @#$"), /project slug/);
 
-const longFeature = createFeatureSlug(
+const longProject = createProjectSlug(
   "Add user profile page with a much longer name that should be pleasant to use repeatedly in commands",
 ).slug;
-assert.ok(longFeature.length <= FEATURE_BODY_MAX);
-assert.ok(!longFeature.endsWith("-"));
+assert.ok(longProject.length <= PROJECT_BODY_MAX);
+assert.ok(!longProject.endsWith("-"));
 
-const takenLongFeature = createFeatureSlug("A very long generated slug name that should stay inside the cap", {
-  taken: [createFeatureSlug("A very long generated slug name that should stay inside the cap").slug],
+const takenLongProject = createProjectSlug("A very long generated slug name that should stay inside the cap", {
+  taken: [createProjectSlug("A very long generated slug name that should stay inside the cap").slug],
 }).slug;
-assert.ok(takenLongFeature.length <= FEATURE_BODY_MAX);
-assert.ok(takenLongFeature.endsWith("-2"));
+assert.ok(takenLongProject.length <= PROJECT_BODY_MAX);
+assert.ok(takenLongProject.endsWith("-2"));
 
 assert.deepEqual(createPhaseSlug("Profile form foundation", { index: 1 }), {
   body: "profile-form-foundation",
@@ -88,7 +88,7 @@ assert.equal(createDemoSlug("Dashboard states", { ext: ".HTML", index: 3 }).file
 assertThrowsMessage(() => createDemoSlug("🫠", { index: 1 }), /demo slug/);
 assertThrowsMessage(() => createDemoSlug("Mobile flow options", { index: 0 }), /1 to 99/);
 
-assert.equal(cli(["feature", "--text", "Add user profile page"]), "slug=user-profile-page");
+assert.equal(cli(["project", "--text", "Add user profile page"]), "slug=user-profile-page");
 assert.equal(
   cli(["phase", "--text", "Profile form foundation", "--index", "09"]),
   "slug=09-profile-form-foundation\nbody=profile-form-foundation",

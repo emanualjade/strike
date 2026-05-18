@@ -4,7 +4,7 @@ Use the bundled helper for Strike file and folder names that come from user or
 model text:
 
 ```bash
-node <plugin-root>/references/scripts/slugify.mjs feature --text "Add user profile page"
+node <plugin-root>/references/scripts/slugify.mjs project --text "Add user profile page"
 node <plugin-root>/references/scripts/slugify.mjs phase --text "Profile form foundation" --index 1
 node <plugin-root>/references/scripts/slugify.mjs demo --text "Mobile flow options" --index 2
 ```
@@ -27,13 +27,13 @@ in that skill's `SKILL.md` and README examples.
 
 ## Shapes
 
-Feature slugs are stable workflow identifiers:
+Project slugs are stable workflow identifiers:
 
 ```txt
 user-profile-page
 ```
 
-Feature body max length is 48 characters. Generated feature slugs drop common
+Project body max length is 48 characters. Generated project slugs drop common
 leading task verbs and articles, so `Add a user profile page` becomes
 `user-profile-page`. Explicit `--slug` values are still sanitized, shortened,
 and deduplicated, but the caller can preserve leading words.
@@ -60,7 +60,7 @@ extension is `.html`, and the demo body max length is 40 characters.
 
 Pass existing names as `--taken` values:
 
-- feature: existing card folder names and board pointer basenames
+- project: existing card folder names and board pointer basenames
 - phase: existing phase folder names such as `01-profile-form`
 - demo: existing demo filenames such as `02-mobile-flow-options.html`
 

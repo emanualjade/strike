@@ -1,7 +1,7 @@
 ---
 name: demo
 description: Create a small self-contained HTML planning demo for a Strike card.
-argument-hint: "[feature-slug] \"<what the demo should explore>\""
+argument-hint: "[project-slug] \"<what the demo should explore>\""
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob
 ---
@@ -41,36 +41,40 @@ without raw field labels.
   is handling poorly.
 
 Good demo topics include UI options, flow comparisons, before/after states,
-decision maps, state explainers, product concept sketches, and lightweight
+decision maps, state explainers, command output comparisons, API contract
+sketches, data lifecycle diagrams, product concept sketches, and lightweight
 interactive choices.
 
 ## Reads
 
-- the board pointer and `cards/<feature-slug>/card.md`
+- the board pointer and `cards/<project-slug>/card.md`
 - relevant current planning artifact when it exists
 - bundled `references/html-demos.md`
 - bundled `templates/demo.html` as a starting point when helpful
 
 ## Writes
 
-- `docs/strike/cards/<feature-slug>/demos/<nn-topic>.html`
-- optional `docs/strike/cards/<feature-slug>/demos/README.md`
+- `docs/strike/cards/<project-slug>/demos/<nn-topic>.html`
+- optional `docs/strike/cards/<project-slug>/demos/README.md`
 
 Create the `demos/` folder if it does not exist.
 Before creating a demo file, run the bundled slug helper by absolute path from
 the plugin package:
 
 ```bash
-node <plugin-root>/references/scripts/slugify.mjs demo --text "<demo topic>" --index <n> --taken <existing-demo-file>
+node <plugin-root>/references/scripts/slugify.mjs demo \
+  --text "<demo topic>" \
+  --index <n> \
+  --taken <existing-demo-file>
 ```
 
-Pass every existing demo filename under `cards/<feature-slug>/demos/` as a
+Pass every existing demo filename under `cards/<project-slug>/demos/` as a
 separate `--taken` value. Use the returned `filename=` value as the demo file
 name. Follow `references/slug-policy.md`; do not hand-roll demo filename rules.
 
 ## Boundaries
 
-- Do not edit app/source files.
+- Do not edit repo source files.
 - Do not install packages or use build tools.
 - Do not use external CDNs, fonts, scripts, or image URLs.
 - Use mock data only.
@@ -87,4 +91,4 @@ Keep the response short and user-facing:
 - the feedback question the user should answer
 
 If this was created inside another Strike conversation, route back to the
-current stage rather than changing feature state.
+current stage rather than changing board state.

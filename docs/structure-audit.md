@@ -32,7 +32,8 @@ The Agent Skills spec and Codex docs name these optional directories. Claude Cod
 ### `plugins/strike/references/`
 
 - Grounded in research: Partly.
-- Made up or over-structured: No, because the imported production Strike skills already share these board/workflow references.
+- Made up or over-structured: No, because multiple Strike skills share these
+  board/workflow references.
 - Idiomatic: Acceptable as package support material, not as a host-discovered component path.
 
 The Strike plugin uses root `references/` for shared board and stage contracts cited by multiple skills. Hosts should not be expected to discover this directory automatically; skills and README files should point to specific files when they matter.
@@ -116,7 +117,7 @@ Claude Code and Copilot CLI both use plugin-root `agents/`. Codex custom agents 
 - Made up or over-structured: No.
 - Idiomatic: Yes.
 
-Codex documents `AGENTS.md` as project guidance, GitHub Copilot docs also recognize `AGENTS.md` for agent instructions, and the `agentsmd/agents.md` project describes it as an open format for coding agents.
+Codex documents `AGENTS.md` as repository guidance, GitHub Copilot docs also recognize `AGENTS.md` for agent instructions, and the `agentsmd/agents.md` site describes it as an open format for coding agents.
 
 ### `CLAUDE.md`
 
@@ -124,7 +125,7 @@ Codex documents `AGENTS.md` as project guidance, GitHub Copilot docs also recogn
 - Made up or over-structured: No.
 - Idiomatic: Yes.
 
-Claude Code documents project memory at `./CLAUDE.md`. This repo keeps it as a thin import of `@AGENTS.md` so there is one canonical instruction source.
+Claude Code documents repository memory at `./CLAUDE.md`. This repo keeps it as a thin import of `@AGENTS.md` so there is one canonical instruction source.
 
 ### `.github/copilot-instructions.md`
 
@@ -137,14 +138,15 @@ GitHub documents `.github/copilot-instructions.md` as repository-wide custom ins
 ### `templates/`
 
 - Grounded in research: Partly.
-- Made up or over-structured: The original location under the installable plugin root was too eager.
+- Made up or over-structured: Putting templates under the installable plugin
+  root would be too eager.
 - Idiomatic: Acceptable only as repo development aid outside the plugin package.
 
 Plugin hosts discover known component directories inside the plugin root. Templates are useful for authors but should not be shipped as plugin components or placed under `skills/`, where they could be discovered as real skills.
 
 ### Root `package.json` and `scripts/validate.mjs`
 
-- Grounded in research: The validator is project tooling, not host schema.
+- Grounded in research: The validator is repository tooling, not host schema.
 - Made up or over-structured: No, because it guards the known host structures without inventing runtime behavior.
 - Idiomatic: Acceptable repo tooling.
 
@@ -152,7 +154,7 @@ The hosts provide some validation, but not one command that checks the combined 
 
 ## Things We Should Not Add By Default
 
-- Do not add `.agents/skills`, `.claude/skills`, or `.github/skills` copies of the same skills. Those are project-scope skill locations, not installable plugin packaging, and would duplicate the plugin content during development.
+- Do not add `.agents/skills`, `.claude/skills`, or `.github/skills` copies of the same skills. Those are repository-scope skill locations, not installable plugin packaging, and would duplicate the plugin content during development.
 - Do not add empty plugin-root `scripts/`, `assets/`, `hooks/`, `.mcp.json`, `.app.json`, or `.lsp.json` until a real component needs them.
 - Do not add Codex custom agents inside the plugin until Codex documents plugin-shipped custom agents. For now, plugin `agents/` is for Claude Code and Copilot CLI compatibility.
 - Do not publish while `plugins/strike/skills/` is empty. An empty plugin may be useful during setup, but it should never be a release artifact.

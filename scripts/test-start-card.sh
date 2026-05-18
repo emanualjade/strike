@@ -34,35 +34,38 @@ run_start() {
 }
 
 test_generated_slug() {
-  local repo output slug
+  local repo output slug card
 
   repo="$(mktemp -d)"
   output="$(run_start "$repo" "Add user profile page")"
   slug="$(printf '%s\n' "$output" | field next_args)"
+  card="$repo/docs/strike/cards/user-profile-page/card.md"
 
   assert_eq "$slug" "user-profile-page" "generated slug"
-  assert_file "$repo/docs/strike/cards/user-profile-page/card.md"
+  assert_file "$card"
   assert_file "$repo/docs/strike/board/01-brainstorm/user-profile-page.md"
+  grep -F 'Brainstorm: sharpen fuzzy idea into a clear project direction.' "$card" >/dev/null \
+    || fail "starter checklist does not use project direction wording"
 }
 
-test_unquoted_feature_name() {
+test_unquoted_project_name() {
   local repo output slug
 
   repo="$(mktemp -d)"
   output="$(run_start "$repo" Add user profile page)"
   slug="$(printf '%s\n' "$output" | field next_args)"
 
-  assert_eq "$slug" "user-profile-page" "unquoted feature name slug"
+  assert_eq "$slug" "user-profile-page" "unquoted project name slug"
 }
 
-test_flag_like_feature_words() {
+test_flag_like_project_words() {
   local repo output slug
 
   repo="$(mktemp -d)"
   output="$(run_start "$repo" Add --dry-run flag)"
   slug="$(printf '%s\n' "$output" | field next_args)"
 
-  assert_eq "$slug" "dry-run-flag" "flag-like feature word slug"
+  assert_eq "$slug" "dry-run-flag" "flag-like project word slug"
 }
 
 test_long_slug_is_capped() {
@@ -140,7 +143,7 @@ test_suffix_stays_within_cap() {
   local repo base output slug
 
   repo="$(mktemp -d)"
-  base="this-is-a-very-long-feature-name-that-will-be-cut"
+  base="this-is-a-very-long-project-name-that-will-be-cut"
   run_start "$repo" First --slug "$base" >/dev/null
   output="$(run_start "$repo" Second --slug "$base")"
   slug="$(printf '%s\n' "$output" | field next_args)"
@@ -192,12 +195,44 @@ test_flag_like_description_words() {
     || fail "flag-like description word was not written"
 }
 
-test_unknown_flag_before_feature_fails() {
+test_unknown_flag_before_project_fails() {
   local repo
 
   repo="$(mktemp -d)"
   if run_start "$repo" --unknown Add user profile page >/dev/null 2>&1; then
-    fail "unknown flag before feature should fail"
+    fail "unknown flag before project should fail"
+  fi
+}
+
+test_missing_project_name_shows_usage() {
+  local repo stderr
+
+  repo="$(mktemp -d)"
+  stderr="$(mktemp)"
+  if run_start "$repo" >/dev/null 2>"$stderr"; then
+    fail "missing project name should fail"
+  fi
+
+  grep -F '<project name words>' "$stderr" >/dev/null \
+    || fail "missing project name did not show project usage"
+  if grep -F 'unbound variable' "$stderr" >/dev/null; then
+    fail "missing project name leaked shell unbound variable error"
+  fi
+}
+
+test_slug_without_project_name_shows_usage() {
+  local repo stderr
+
+  repo="$(mktemp -d)"
+  stderr="$(mktemp)"
+  if run_start "$repo" --slug explicit-slug >/dev/null 2>"$stderr"; then
+    fail "slug without project name should fail"
+  fi
+
+  grep -F '<project name words>' "$stderr" >/dev/null \
+    || fail "slug without project name did not show project usage"
+  if grep -F 'unbound variable' "$stderr" >/dev/null; then
+    fail "slug without project name leaked shell unbound variable error"
   fi
 }
 
@@ -214,8 +249,8 @@ test_markdown_text_is_normalized() {
 }
 
 test_generated_slug
-test_unquoted_feature_name
-test_flag_like_feature_words
+test_unquoted_project_name
+test_flag_like_project_words
 test_long_slug_is_capped
 test_article_after_task_verb_is_dropped
 test_short_task_verb_is_dropped
@@ -227,7 +262,9 @@ test_special_characters_are_sanitized
 test_invalid_slug_source_fails
 test_unquoted_description
 test_flag_like_description_words
-test_unknown_flag_before_feature_fails
+test_unknown_flag_before_project_fails
+test_missing_project_name_shows_usage
+test_slug_without_project_name_shows_usage
 test_markdown_text_is_normalized
 
 printf 'start-card tests passed\n'

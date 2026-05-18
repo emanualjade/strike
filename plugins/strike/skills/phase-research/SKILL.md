@@ -1,7 +1,7 @@
 ---
 name: phase-research
 description: Research one implementation phase before build-brief planning.
-argument-hint: "[feature-slug] phase:<phase-slug> [optional focus]"
+argument-hint: "[project-slug] phase:<phase-slug> [optional focus]"
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, WebFetch, WebSearch, Agent
 ---
@@ -42,14 +42,14 @@ Board location is state. This utility may work only when the card pointer is
 in:
 
 ```txt
-docs/strike/board/06-implementation/<feature-slug>.md
+docs/strike/board/06-implementation/<project-slug>.md
 ```
 
 Require an explicit phase argument:
 
 ```txt
 Next Strike skill: phase-research
-Arguments: <feature-slug> phase:<phase-slug>
+Arguments: <project-slug> phase:<phase-slug>
 ```
 
 If the pointer is in another lane, or the phase cannot be resolved, stop and
@@ -58,31 +58,31 @@ recommend:
 ```txt
 Reset context first: yes
 Next Strike skill: go
-Arguments: <feature-slug>
+Arguments: <project-slug>
 ```
 
-Do not write app code, tests, build briefs, build evidence, review, acceptance,
-retro, project glossary edits, durable IDs, YAML blocks, or hidden routing
-metadata.
+Do not write implementation files, tests, build briefs, build evidence, review,
+acceptance, retro, repo glossary edits, durable IDs, YAML blocks, or hidden
+routing metadata.
 
 ## Reads
 
 - board pointer
-- `cards/<feature-slug>/card.md`
+- `cards/<project-slug>/card.md`
 - `outputs/spec/spec.md`
 - `phases/<phase-slug>/plan.md`
 - existing `phases/<phase-slug>/research.md` if present
-- `outputs/research/research.md` when feature-level research is relevant
+- `outputs/research/research.md` when Project-level research is relevant
 - focused repo/docs context
 - official/current online docs when stack behavior or external contracts matter
 
-Treat `plan.md` and `spec.md` as the main inputs. Do not rerun feature
+Treat `plan.md` and `spec.md` as the main inputs. Do not rerun project
 research. Pull only what matters to this phase.
 
 ## Writes
 
-- `cards/<feature-slug>/phases/<phase-slug>/research.md`
-- `cards/<feature-slug>/card.md` only when a real blocker or decision needs to
+- `cards/<project-slug>/phases/<phase-slug>/research.md`
+- `cards/<project-slug>/card.md` only when a real blocker or decision needs to
   survive a context reset
 - board pointer moved back from `06-implementation` to `05-slice` only when
   research shows the phase split itself is wrong
@@ -95,14 +95,18 @@ Use the phase plan's focus/watchouts as the starting point. Pick only the lanes
 that matter:
 
 - `repo-precedents`: exact local files, helpers, components, schemas, server
-  functions, commands, or tests this phase should follow.
+  functions, commands, docs examples, config, APIs, or tests this phase should
+  follow.
 - `stack-docs`: official/current docs for libraries, SDKs, APIs, webhooks,
-  auth, accessibility, SSR, routing, animation, database, or testing behavior.
-- `test-dev-setup`: fixtures, env vars, dev server commands, data setup,
-  selectors, mocking rules, and focused verification commands.
-- `phase-pitfalls`: race conditions, tenant scope, permissions, idempotency,
-  webhook ordering, retries, partial states, security, privacy, reduced-motion,
-  a11y, data integrity, or failure modes specific to this phase.
+  auth, accessibility, SSR, routing, animation, database, CLI/tooling, package,
+  or testing behavior.
+- `test-dev-setup`: fixtures, env vars, local run commands, data setup,
+  selectors, mocking rules, generated artifacts, and focused verification
+  commands.
+- `phase-pitfalls`: race conditions, access boundaries, permissions,
+  idempotency, external event ordering, retries, partial states, security,
+  privacy, reduced-motion, a11y, data integrity, or failure modes specific to
+  this phase.
 - `prior-phase-carry-forward`: outputs or conventions from earlier phases, if
   this is not the first phase.
 
@@ -117,15 +121,16 @@ questions, file writes, and final output.
 
 ## Decision Handling
 
-Research should reduce build risk, not reopen the feature casually.
+Research should reduce build risk, not reopen the project casually.
 
 - If findings fit current spec/phase decisions, record the build-relevant
   implication in `research.md`.
 - If a small implementation detail is open, recommend a direction in
   `research.md` for phase-plan to accept or adjust.
-- If research finds a product/scope/surface/naming/model-shape decision that
-  should not be guessed, add the blocking question to `card.md`, leave the
-  pointer in `06-implementation`, and recommend the right prior handoff.
+- If research finds a product, technical, workflow, scope, surface, naming, or
+  model-shape decision that should not be guessed, add the blocking question to
+  `card.md`, leave the pointer in `06-implementation`, and recommend the right
+  prior handoff.
 - If the phase split itself seems wrong, add the concern to `card.md`, move the
   pointer back to `05-slice`, and recommend the `slice` skill.
 
@@ -177,7 +182,7 @@ ready when:
 - sources are named where phase-plan or build may need to verify
 - recommendations are clearly separated from facts
 - weak evidence is labeled
-- broad feature research was not repeated
+- broad project research was not repeated
 - phase-plan can use the document directly after a context reset
 
 ## Output
@@ -189,7 +194,7 @@ Final response should be short and user-facing:
 - whether board state changed; normally no, except wrong phase splits route
   back to `05-slice`
 - next prompt, rendered for the current host with `references/invocation.md`:
-  `phase-plan <feature-slug> phase:<phase-slug>`, or `slice <feature-slug>` if
+  `phase-plan <project-slug> phase:<phase-slug>`, or `slice <project-slug>` if
   the phase split was wrong
 
 Do not show raw handoff fields such as `Reset context first`, `Next Strike
@@ -197,7 +202,7 @@ skill`, or `Arguments`.
 
 ## Gates
 
-- Do not edit app code or tests.
+- Do not edit implementation or test files.
 - Do not write `build-brief.md`.
 - Do not move the board pointer except when routing a wrong phase split back to
   `05-slice`.

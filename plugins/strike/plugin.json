@@ -1,9 +1,9 @@
 {
   "name": "strike",
-  "version": "0.1.6",
-  "description": "Board-and-card workflow skills for turning rough feature ideas into scoped implementation, review, acceptance, and retro artifacts.",
+  "version": "0.1.15",
+  "description": "Board-and-card workflow skills for turning rough project ideas into scoped implementation, review, acceptance, and retro artifacts.",
   "author": {
-    "name": "Standard News"
+    "name": "Emanual Jade"
   },
   "license": "MIT",
   "keywords": [
