@@ -27,11 +27,6 @@ You need one of these AI coding tools:
 You also need Node.js 18 or newer available as `node`. Strike uses bundled
 deterministic Node scripts for card and filename setup.
 
-In the instructions below:
-
-- Terminal commands go in your macOS Terminal or another shell.
-- App prompts go inside the AI coding tool's chat or command prompt.
-
 ## Install Strike
 
 Choose the install path that matches the host and scope you want.
