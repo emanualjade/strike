@@ -1,6 +1,6 @@
 ---
 name: customize
-description: Initialize, list, check, or inspect repo-local Strike customization files.
+description: Run init, list, check, or load <skill-name> for repo-local Strike customization files.
 argument-hint: "init|list|check|load <skill-name>"
 disable-model-invocation: true
 allowed-tools: Read Bash Grep Glob
