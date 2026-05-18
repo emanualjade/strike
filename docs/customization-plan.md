@@ -8,7 +8,7 @@ Implement repo-local Strike customization for selected single-file skills plus
 a `customize` utility skill. The rollout uses a deterministic loader script
 instead of portable `!` imports.
 
-The shared Strike skills should not use `!docs/strike/customize/...`.
+The shared Strike skills should not use `!strike/customize/...`.
 Official docs do not define `!path` as a portable `SKILL.md` include, and
 Claude uses `!` for shell command injection. The portable contract is:
 supported skills run the bundled loader before material work, and the loader
@@ -23,21 +23,32 @@ prints a framed customization packet.
 - `customize init` creates the supported tree without overwriting user edits:
 
 ```txt
-docs/strike/customize/global.md
-docs/strike/customize/brainstorm/brainstorm.md
-docs/strike/customize/grill/grill.md
-docs/strike/customize/research/research.md
-docs/strike/customize/spec/spec.md
-docs/strike/customize/slice/slice.md
-docs/strike/customize/phase-research/phase-research.md
-docs/strike/customize/phase-plan/phase-plan.md
-docs/strike/customize/retro/retro.md
-docs/strike/customize/demo/demo.md
-docs/strike/customize/language/language.md
+strike/customize/global/global.md
+strike/customize/global/how-to-customize-global.md
+strike/customize/brainstorm/brainstorm.md
+strike/customize/brainstorm/how-to-customize-brainstorm.md
+strike/customize/grill/grill.md
+strike/customize/grill/how-to-customize-grill.md
+strike/customize/research/research.md
+strike/customize/research/how-to-customize-research.md
+strike/customize/spec/spec.md
+strike/customize/spec/how-to-customize-spec.md
+strike/customize/slice/slice.md
+strike/customize/slice/how-to-customize-slice.md
+strike/customize/phase-research/phase-research.md
+strike/customize/phase-research/how-to-customize-phase-research.md
+strike/customize/phase-plan/phase-plan.md
+strike/customize/phase-plan/how-to-customize-phase-plan.md
+strike/customize/retro/retro.md
+strike/customize/retro/how-to-customize-retro.md
+strike/customize/demo/demo.md
+strike/customize/demo/how-to-customize-demo.md
+strike/customize/language/language.md
+strike/customize/language/how-to-customize-language.md
 ```
 
-- Scaffold files are HTML-comment-only templates. `load`, `list`, and `check`
-  strip HTML comments before deciding whether a file has user customization.
+- Loaded customization files are created blank. Sidecar
+  `how-to-customize-*.md` files contain human guidance and are not loaded.
 - Add `## User Customization` to `brainstorm`, `grill`, `research`, `spec`,
   `slice`, `phase-research`, `phase-plan`, `retro`, `demo`, and `language`.
   Each skill resolves the bundled script by absolute path from the installed
@@ -50,16 +61,16 @@ docs/strike/customize/language/language.md
 
 ## Script Behavior
 
-- `init`: creates missing customization files/directories, preserves existing files,
-  and reports created vs existing paths.
+- `init`: creates missing customization files/directories, preserves existing
+  files and unrelated `strike/` content, and reports created vs existing paths.
 - `list`: reports supported entry points and file state as missing,
-  template-only/blank, or has user content.
-- `check`: exits nonzero only for structural or size errors, including unknown
-  `.md` paths under `docs/strike/customize/` and size violations. Heuristic
+  blank, or has user content.
+- `check`: exits nonzero only for structural or size errors in canonical loaded
+  files. Extra user notes under `strike/customize/` are allowed. Heuristic
   mechanic-conflict phrases produce warnings, not failures.
-- `load <skill>`: reads `global.md` then the skill file, skips missing,
-  template-only, and blank files, enforces 16KB per file and 64KB total, and
-  prints a Markdown packet.
+- `load <skill>`: reads `global/global.md` then the skill file, skips missing
+  and blank files, enforces 16KB per file and 64KB total, and prints a
+  Markdown packet.
 - The packet includes opening interpretation rules, loaded file contents with
   path labels, and a closing guard: user customization has ended and Strike
   skill mechanics remain authoritative.
@@ -71,15 +82,17 @@ docs/strike/customize/language/language.md
 ## Test Plan
 
 - Add `scripts/test-customize.mjs` and include it in `npm test`.
-- Test `init` creates the supported tree, preserves edited files, creates
-  comment-only templates, and supports script-level `--repo-root`.
-- Test `list` states for missing, template-only/blank, and user-content files.
+- Test `init` creates the supported tree, preserves edited files and unrelated
+  `strike/` content, creates blank loaded files plus how-to files, and supports
+  script-level `--repo-root`.
+- Test `list` states for missing, blank, and user-content files.
 - Test representative `load` commands for conversation, evidence/spec, and
-  phase-style skills, plus packet framing, comment stripping, closing guard,
-  unsupported skills, missing customization root, and size limits.
+  phase-style skills, plus packet framing, how-to/extra-file exclusion,
+  closing guard, unsupported skills, missing customization root, and size
+  limits.
 - Test `check` passes an absent or clean scaffold with an explanatory message,
-  fails unknown `.md` paths and oversized files, and emits warnings for
-  suspicious mechanic-changing phrases.
+  allows extra user notes, fails oversized canonical files, and emits warnings
+  for suspicious mechanic-changing phrases.
 - Run:
 
 ```bash
@@ -97,7 +110,8 @@ npm run validate:publish
   and host-specific generated skill builds are future work.
 - Portable Strike skills use the loader directive. Claude `!` injection is
   reconsidered only if Strike later generates host-specific skill builds.
-- Versioned surfaces for this behavior are bumped to `0.2.0`: root
+- Versioned surfaces for the initial rollout were bumped to `0.2.0`; the
+  blank-file and `strike/customize/` path cleanup is released as `0.3.0`: root
   `package.json`, all three plugin manifests, `.claude-plugin/marketplace.json`,
   and `.github/plugin/marketplace.json`. The Codex marketplace does not define
   a plugin version field.

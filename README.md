@@ -598,14 +598,14 @@ customize init
 Then edit the files under:
 
 ```text
-docs/strike/customize/
+strike/customize/
 ```
 
-Start with `global.md` for preferences that should apply everywhere, or edit a
-skill-specific file such as `brainstorm/brainstorm.md`, `spec/spec.md`, or
-`phase-plan/phase-plan.md`. Write your notes below the HTML comment in each
-generated file. Text left inside the comment is ignored by Strike's
-customization loader.
+Start with `global/global.md` for preferences that should apply everywhere, or
+edit a skill-specific file such as `brainstorm/brainstorm.md`,
+`spec/spec.md`, or `phase-plan/phase-plan.md`. The loaded customization files
+start blank. Each directory also includes a `how-to-customize-*.md` guide for
+suggestions; Strike does not load those how-to files.
 
 Check the files before relying on them:
 

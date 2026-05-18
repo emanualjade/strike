@@ -12,17 +12,28 @@ The first implementation supports selected single-file customization entries,
 not the full customization tree. It supports:
 
 ```txt
-docs/strike/customize/global.md
-docs/strike/customize/brainstorm/brainstorm.md
-docs/strike/customize/grill/grill.md
-docs/strike/customize/research/research.md
-docs/strike/customize/spec/spec.md
-docs/strike/customize/slice/slice.md
-docs/strike/customize/phase-research/phase-research.md
-docs/strike/customize/phase-plan/phase-plan.md
-docs/strike/customize/retro/retro.md
-docs/strike/customize/demo/demo.md
-docs/strike/customize/language/language.md
+strike/customize/global/global.md
+strike/customize/global/how-to-customize-global.md
+strike/customize/brainstorm/brainstorm.md
+strike/customize/brainstorm/how-to-customize-brainstorm.md
+strike/customize/grill/grill.md
+strike/customize/grill/how-to-customize-grill.md
+strike/customize/research/research.md
+strike/customize/research/how-to-customize-research.md
+strike/customize/spec/spec.md
+strike/customize/spec/how-to-customize-spec.md
+strike/customize/slice/slice.md
+strike/customize/slice/how-to-customize-slice.md
+strike/customize/phase-research/phase-research.md
+strike/customize/phase-research/how-to-customize-phase-research.md
+strike/customize/phase-plan/phase-plan.md
+strike/customize/phase-plan/how-to-customize-phase-plan.md
+strike/customize/retro/retro.md
+strike/customize/retro/how-to-customize-retro.md
+strike/customize/demo/demo.md
+strike/customize/demo/how-to-customize-demo.md
+strike/customize/language/language.md
+strike/customize/language/how-to-customize-language.md
 ```
 
 The rollout adds a `customize` utility skill and a deterministic
@@ -35,7 +46,7 @@ skill builds are future work.
 ## Feature Idea
 
 Let a consuming repository add custom Strike instructions under
-`docs/strike/customize/` so users can shape how Strike behaves at specific
+`strike/customize/` so users can shape how Strike behaves at specific
 workflow entry points.
 
 The purpose is not to create a general extension system. The purpose is to give
@@ -62,23 +73,30 @@ clearly.
 Proposed shape:
 
 ```txt
-docs/strike/customize/
-  global.md
+strike/customize/
+  global/
+    global.md
+    how-to-customize-global.md
 
   brainstorm/
     brainstorm.md
+    how-to-customize-brainstorm.md
 
   grill/
     grill.md
+    how-to-customize-grill.md
 
   research/
     research.md
+    how-to-customize-research.md
 
   spec/
     spec.md
+    how-to-customize-spec.md
 
   spec-review/
     spec-review.md
+    how-to-customize-spec-review.md
     reviews/
       security.md
       forms.md
@@ -123,7 +141,7 @@ Keep the first version to a small number of concepts.
 
 ### Global Customization
 
-`docs/strike/customize/global.md`
+`strike/customize/global/global.md`
 
 Repo-wide preferences that should apply across Strike skills when relevant.
 
@@ -137,7 +155,11 @@ Global customization still cannot change Strike mechanics.
 
 ### Skill Customization
 
-`docs/strike/customize/<skill-name>/<skill-name>.md`
+`strike/customize/<skill-name>/<skill-name>.md`
+
+Each customization directory can also contain a
+`how-to-customize-<skill-name>.md` guide. The how-to file is for humans and is
+not loaded by Strike.
 
 Entry-point-specific instructions for one Strike skill.
 
@@ -150,7 +172,7 @@ Examples:
 
 ### Review Files
 
-`docs/strike/customize/<review-skill>/reviews/*.md`
+`strike/customize/<review-skill>/reviews/*.md`
 
 Only review-like entry points should read multiple review files. Each file is a
 review lens for that specific entry point, not a universal topic.
@@ -202,9 +224,9 @@ Initial docs research does not support treating `!path` as a portable
   that scripts/resources can be referenced from the skill directory. They do
   not document `!` file imports for skills.
 
-Current implication: do not put `!docs/strike/customize/...` in portable Strike
+Current implication: do not put `!strike/customize/...` in portable Strike
 skills. The portable design should say explicitly that the skill reads
-`docs/strike/customize/global.md` and its own entry-point customization files
+`strike/customize/global/global.md` and its own entry-point customization file
 when present. If Claude-specific command injection is ever used, it should be a
 host-specific enhancement, not the shared source of truth.
 
@@ -214,7 +236,7 @@ Customization likely needs an init or scaffold path.
 
 Open options:
 
-- `start` creates `docs/strike/customize/` the first time it creates
+- `start` creates `strike/customize/` the first time it creates
   `docs/strike/`
 - a new utility skill such as `customize init` creates the customization tree
 - an install script creates the tree, if host install flows can reliably target
@@ -224,10 +246,10 @@ Current leaning:
 
 - prefer `start` or `customize init` over plugin install, because install may
   happen outside the consuming repository in some hosts
-- create directories and placeholder files so imports always have a stable
+- create directories and blank loaded files so the loader always has a stable
   target
-- keep placeholders short and clearly marked as user-editable customization
-  files
+- keep loaded customization files blank and put human guidance in sidecar
+  how-to files
 
 Need to decide whether to scaffold every skill file by default or only
 `global.md` plus the most common entry points.
@@ -246,7 +268,7 @@ customize list
 
 Checks to consider:
 
-- unknown customization paths
+- unexpected blocked paths where Strike needs directories or canonical files
 - files that are too long for useful context loading
 - host-specific invocation syntax in portable customization files
 - instructions that conflict with Strike board mechanics
@@ -264,7 +286,7 @@ questions.
 - [x] Research official host support for skill-file imports and repo-local
   custom instruction loading.
 - [x] Record the import decision in `docs/research-notes.md`.
-- [x] Add the initial `docs/strike/customize/` scaffold for selected
+- [x] Add the initial `strike/customize/` scaffold for selected
   single-file skills.
 - [x] Create customization through a new `customize` utility skill, not
   `start`.
@@ -274,6 +296,17 @@ questions.
 - [x] Update user-facing docs.
 - [x] Run `npm test`, `npm run validate`, `npm run validate:publish`, and
   `npm run release:validate`.
+
+## Resolved In 0.3.0
+
+- [x] Move customization to `strike/customize/`.
+- [x] Move global customization to `strike/customize/global/global.md`.
+- [x] Create loaded customization files as blank files.
+- [x] Put guidance in sidecar `how-to-customize-*.md` files.
+- [x] Allow extra user notes under `strike/customize/` without failing
+  `customize check`.
+- [x] Harden `customize init` around existing `strike/` content and blocked
+  paths.
 
 ## Future Questions
 

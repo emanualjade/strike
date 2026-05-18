@@ -6,7 +6,7 @@ import process from "node:process";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-export const CUSTOMIZE_ROOT = "docs/strike/customize";
+export const CUSTOMIZE_ROOT = "strike/customize";
 export const FILE_MAX_BYTES = 16 * 1024;
 export const TOTAL_MAX_BYTES = 64 * 1024;
 export const SUPPORTED_SKILLS = [
@@ -22,159 +22,135 @@ export const SUPPORTED_SKILLS = [
   "language",
 ];
 
-const TEMPLATE_FILES = new Map([
-  [
-    "global.md",
-    `<!--
-Strike global customization.
+const HOW_TO_DETAILS = {
+  global: {
+    title: "Global",
+    target: "all supported Strike customization skills",
+    ideas: [
+      "tone and collaboration preferences",
+      "repo-wide evidence standards",
+      "how much pushback or synthesis you prefer",
+      "artifact style that should apply across skills",
+    ],
+    boundary: "Keep global guidance additive. Skill-specific Strike mechanics still win.",
+  },
+  brainstorm: {
+    title: "Brainstorm",
+    target: "how brainstorm explores, challenges, narrows, and saves ideas",
+    ideas: [
+      "question style for vague ideas",
+      "how strongly to challenge assumptions",
+      "preferred audience, problem, or constraint framing",
+      "extra additive brainstorm notes under outputs/brainstorm/custom/",
+    ],
+    boundary: "Do not turn brainstorm into grill, spec, slice, or implementation.",
+  },
+  grill: {
+    title: "Grill",
+    target: "how grill asks decision questions and pressure-tests tradeoffs",
+    ideas: [
+      "decision-question style",
+      "how rejected paths should be recorded",
+      "technical, product, or workflow tradeoffs to emphasize",
+      "extra additive grill notes under outputs/grill/custom/",
+    ],
+    boundary: "Do not turn grill into spec, slice, implementation, acceptance, or retro.",
+  },
+  research: {
+    title: "Research",
+    target: "how research gathers evidence and summarizes findings",
+    ideas: [
+      "preferred source types",
+      "citation and freshness expectations",
+      "how deep to go before spec",
+      "extra additive research notes under outputs/research/custom/",
+    ],
+    boundary: "Do not turn research into spec, slice, implementation, acceptance, or retro.",
+  },
+  spec: {
+    title: "Spec",
+    target: "how spec writes durable project rules and acceptance detail",
+    ideas: [
+      "section emphasis",
+      "success-check wording",
+      "how constraints should be captured",
+      "extra additive spec notes under outputs/spec/custom/",
+    ],
+    boundary: "Do not turn spec into slicing, implementation planning, review, acceptance, or retro.",
+  },
+  slice: {
+    title: "Slice",
+    target: "how slice turns a spec into buildable vertical phases",
+    ideas: [
+      "phase sizing",
+      "phase naming",
+      "ordering preferences",
+      "extra additive slice notes under outputs/slice/custom/",
+    ],
+    boundary: "Do not turn slice into phase-plan, implementation, review, acceptance, or retro.",
+  },
+  "phase-research": {
+    title: "Phase Research",
+    target: "how phase-research checks tactical evidence before build planning",
+    ideas: [
+      "local precedent checks",
+      "phase-scoped evidence standards",
+      "risk summary style",
+      "extra additive notes under the selected phase's custom/research/ folder",
+    ],
+    boundary: "Do not turn phase-research into phase-plan, implementation, review, acceptance, or retro.",
+  },
+  "phase-plan": {
+    title: "Phase Plan",
+    target: "how phase-plan writes build briefs and verification plans",
+    ideas: [
+      "build brief style",
+      "implementation watchouts",
+      "verification planning preferences",
+      "extra additive notes under the selected phase's custom/plan/ folder",
+    ],
+    boundary: "Do not turn phase-plan into implementation, review, acceptance, or retro.",
+  },
+  retro: {
+    title: "Retro",
+    target: "what retro captures after accepted work",
+    ideas: [
+      "workflow lessons to capture",
+      "product, technical, or process follow-ups",
+      "how concise the retro should be",
+      "extra additive retro notes under outputs/retro/custom/",
+    ],
+    boundary: "Do not reopen implementation, review, or acceptance work from retro customization.",
+  },
+  demo: {
+    title: "Demo",
+    target: "how demo creates small planning demos for decision support",
+    ideas: [
+      "visual tone",
+      "interaction density",
+      "mock data preferences",
+      "extra additive demo files under demos/custom/",
+    ],
+    boundary: "Do not turn demo into production implementation or make demos required for any stage.",
+  },
+  language: {
+    title: "Language",
+    target: "how language reviews terminology and domain wording",
+    ideas: [
+      "glossary style",
+      "naming pressure",
+      "how uncertain terms should be discussed",
+      "when to ask before changing UBIQUITOUS_LANGUAGE.md",
+    ],
+    boundary: "Do not apply uncertain glossary changes without user approval.",
+  },
+};
 
-Write your customization below this HTML comment. Text inside comments is
-ignored by customize load, customize list, and customize check.
-
-Add repo-local preferences that should apply across supported Strike
-customization skills.
-Customization may shape judgment, tone, examples, emphasis, artifact style, and
-additive files. It must not override Strike board mechanics, required outputs,
-output paths, stage gates, verification honesty, or tool boundaries.
--->
-`,
-  ],
-  [
-    "brainstorm/brainstorm.md",
-    `<!--
-Strike brainstorm customization.
-
-Write your customization below this HTML comment. Text inside comments is
-ignored by customize load, customize list, and customize check.
-
-Add preferences for how brainstorm should explore, challenge, narrow, and save
-ideas in this repository. Extra brainstorm artifacts should be additive and
-belong under the active card's outputs/brainstorm/custom/ folder unless the
-user explicitly asks for another path already allowed by brainstorm.
--->
-`,
-  ],
-  [
-    "grill/grill.md",
-    `<!--
-Strike grill customization.
-
-Write your customization below this HTML comment. Text inside comments is
-ignored by customize load, customize list, and customize check.
-
-Add preferences for how grill should ask decision questions, pressure-test
-tradeoffs, record rejected paths, and save decisions in this repository. Extra
-grill artifacts should be additive and belong under the active card's
-outputs/grill/custom/ folder unless the user explicitly asks for another path
-already allowed by grill.
--->
-`,
-  ],
-  [
-    "research/research.md",
-    `<!--
-Strike research customization.
-
-Write your customization below this HTML comment. Text inside comments is
-ignored by customize load, customize list, and customize check.
-
-Add preferences for evidence quality, source types, citation style, research
-depth, and how Strike should summarize findings before spec.
--->
-`,
-  ],
-  [
-    "spec/spec.md",
-    `<!--
-Strike spec customization.
-
-Write your customization below this HTML comment. Text inside comments is
-ignored by customize load, customize list, and customize check.
-
-Add preferences for spec style, section emphasis, acceptance-check wording, and
-how project rules should be captured.
--->
-`,
-  ],
-  [
-    "slice/slice.md",
-    `<!--
-Strike slice customization.
-
-Write your customization below this HTML comment. Text inside comments is
-ignored by customize load, customize list, and customize check.
-
-Add preferences for phase sizing, naming, ordering, and how Strike should split
-spec work into buildable vertical phases.
--->
-`,
-  ],
-  [
-    "phase-research/phase-research.md",
-    `<!--
-Strike phase-research customization.
-
-Write your customization below this HTML comment. Text inside comments is
-ignored by customize load, customize list, and customize check.
-
-Add preferences for phase-scoped evidence, local precedent checks, and how
-phase research should summarize tactical risks.
--->
-`,
-  ],
-  [
-    "phase-plan/phase-plan.md",
-    `<!--
-Strike phase-plan customization.
-
-Write your customization below this HTML comment. Text inside comments is
-ignored by customize load, customize list, and customize check.
-
-Add preferences for build brief style, verification planning, implementation
-watchouts, and phase handoff detail.
--->
-`,
-  ],
-  [
-    "retro/retro.md",
-    `<!--
-Strike retro customization.
-
-Write your customization below this HTML comment. Text inside comments is
-ignored by customize load, customize list, and customize check.
-
-Add preferences for what retro should capture about workflow, product,
-technical, or Strike-process follow-ups.
--->
-`,
-  ],
-  [
-    "demo/demo.md",
-    `<!--
-Strike demo customization.
-
-Write your customization below this HTML comment. Text inside comments is
-ignored by customize load, customize list, and customize check.
-
-Add preferences for planning demo style, interaction density, mock data,
-visual tone, and decision support.
--->
-`,
-  ],
-  [
-    "language/language.md",
-    `<!--
-Strike language customization.
-
-Write your customization below this HTML comment. Text inside comments is
-ignored by customize load, customize list, and customize check.
-
-Add preferences for terminology review, glossary style, naming pressure, and
-how Strike should discuss domain language.
--->
-`,
-  ],
-]);
+const ENTRY_POINTS = ["global", ...SUPPORTED_SKILLS];
+const CANONICAL_FILES = ENTRY_POINTS.map((entryPoint) => canonicalPath(entryPoint));
+const HOW_TO_FILES = new Map(
+  ENTRY_POINTS.map((entryPoint) => [howToPath(entryPoint), howToContent(entryPoint)]),
+);
 
 const CONFLICT_PATTERNS = [
   { pattern: /\bskip\s+(?:all\s+)?verification\b/i, message: "mentions skipping verification" },
@@ -235,18 +211,49 @@ function pathFor(repoRoot, relativePath) {
   return path.join(customizeRoot(repoRoot), relativePath);
 }
 
+function canonicalPath(entryPoint) {
+  return `${entryPoint}/${entryPoint}.md`;
+}
+
+function howToPath(entryPoint) {
+  return `${entryPoint}/how-to-customize-${entryPoint}.md`;
+}
+
 function skillPath(skill) {
-  return `${skill}/${skill}.md`;
+  return canonicalPath(skill);
+}
+
+function howToContent(entryPoint) {
+  const details = HOW_TO_DETAILS[entryPoint];
+  if (!details) {
+    throw new Error(`Missing how-to details for ${entryPoint}`);
+  }
+
+  return `# How To Customize ${details.title}
+
+Write real customization in \`${entryPoint}.md\`.
+
+This how-to file is guidance for humans. Strike never loads this file with
+\`customize load\`, so keep actual instructions in \`${entryPoint}.md\`.
+
+This customization affects ${details.target}.
+
+Useful customization can describe:
+
+${details.ideas.map((idea) => `- ${idea}`).join("\n")}
+
+Boundaries:
+
+- ${details.boundary}
+- Do not override Strike board mechanics, required outputs, stage gates,
+  verification honesty, or tool boundaries.
+`;
 }
 
 function ensureSupportedSkill(skill) {
   if (!SUPPORTED_SKILLS.includes(skill)) {
     throw new Error(`Unsupported customization skill: ${skill || "(missing)"}. Supported skills: ${SUPPORTED_SKILLS.join(", ")}`);
   }
-}
-
-function allowedMarkdownPaths() {
-  return new Set(TEMPLATE_FILES.keys());
 }
 
 function readFileInfo(repoRoot, relativePath) {
@@ -290,35 +297,53 @@ function readFileInfo(repoRoot, relativePath) {
   };
 }
 
-function walkFiles(dir) {
-  if (!fs.existsSync(dir)) {
-    return [];
-  }
-  const files = [];
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const entryPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...walkFiles(entryPath));
-    } else if (entry.isFile()) {
-      files.push(entryPath);
+function ensureDirectory(repoRoot, relativePath) {
+  const absolutePath = path.join(repoRoot, relativePath);
+  if (fs.existsSync(absolutePath)) {
+    const stat = fs.statSync(absolutePath);
+    if (!stat.isDirectory()) {
+      throw new Error(`${displayPath(absolutePath, repoRoot)}: expected a directory but found a file`);
     }
+    return false;
   }
-  return files;
+
+  fs.mkdirSync(absolutePath, { recursive: true });
+  return true;
+}
+
+function ensureInitDirectories(repoRoot) {
+  ensureDirectory(repoRoot, "strike");
+  ensureDirectory(repoRoot, CUSTOMIZE_ROOT);
+  for (const entryPoint of ENTRY_POINTS) {
+    ensureDirectory(repoRoot, `${CUSTOMIZE_ROOT}/${entryPoint}`);
+  }
+}
+
+function initFileSpecs() {
+  const specs = [];
+  for (const entryPoint of ENTRY_POINTS) {
+    specs.push([canonicalPath(entryPoint), ""]);
+    specs.push([howToPath(entryPoint), HOW_TO_FILES.get(howToPath(entryPoint))]);
+  }
+  return specs;
 }
 
 function init(repoRoot) {
   const created = [];
   const existing = [];
 
-  fs.mkdirSync(customizeRoot(repoRoot), { recursive: true });
-  for (const [relativePath, template] of TEMPLATE_FILES) {
+  ensureInitDirectories(repoRoot);
+  for (const [relativePath, content] of initFileSpecs()) {
     const absolutePath = pathFor(repoRoot, relativePath);
-    fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
     if (fs.existsSync(absolutePath)) {
+      const stat = fs.statSync(absolutePath);
+      if (!stat.isFile()) {
+        throw new Error(`${displayPath(absolutePath, repoRoot)}: expected a file but found a directory`);
+      }
       existing.push(displayPath(absolutePath, repoRoot));
       continue;
     }
-    fs.writeFileSync(absolutePath, template, "utf8");
+    fs.writeFileSync(absolutePath, content, "utf8");
     created.push(displayPath(absolutePath, repoRoot));
   }
 
@@ -356,7 +381,12 @@ function list(repoRoot) {
     return;
   }
 
-  for (const relativePath of TEMPLATE_FILES.keys()) {
+  if (!fs.statSync(customizeRoot(repoRoot)).isDirectory()) {
+    console.log(`${CUSTOMIZE_ROOT}: expected a directory but found a file.`);
+    return;
+  }
+
+  for (const relativePath of CANONICAL_FILES) {
     const info = readFileInfo(repoRoot, relativePath);
     let state = "missing";
     if (info.exists && info.notFile) {
@@ -364,23 +394,10 @@ function list(repoRoot) {
     } else if (info.exists && info.hasUserContent) {
       state = "has user content";
     } else if (info.exists) {
-      state = "template-only/blank";
+      state = "blank";
     }
     console.log(`- ${CUSTOMIZE_ROOT}/${relativePath}: ${state}`);
   }
-}
-
-function unknownMarkdownPaths(repoRoot) {
-  const root = customizeRoot(repoRoot);
-  if (!fs.existsSync(root)) {
-    return [];
-  }
-  const allowed = allowedMarkdownPaths();
-  return walkFiles(root)
-    .filter((file) => file.endsWith(".md"))
-    .map((file) => path.relative(root, file).split(path.sep).join("/"))
-    .filter((relativePath) => !allowed.has(relativePath))
-    .sort();
 }
 
 function warningMessages(info) {
@@ -407,11 +424,11 @@ function check(repoRoot) {
     return 0;
   }
 
-  for (const relativePath of unknownMarkdownPaths(repoRoot)) {
-    errors.push(`${CUSTOMIZE_ROOT}/${relativePath}: unknown customization Markdown path`);
+  if (!fs.statSync(customizeRoot(repoRoot)).isDirectory()) {
+    errors.push(`${CUSTOMIZE_ROOT}: expected a directory`);
   }
 
-  for (const [relativePath, template] of TEMPLATE_FILES) {
+  for (const relativePath of CANONICAL_FILES) {
     const info = readFileInfo(repoRoot, relativePath);
     if (!info.exists) {
       continue;
@@ -422,9 +439,6 @@ function check(repoRoot) {
     }
     if (info.bytes > FILE_MAX_BYTES) {
       errors.push(`${CUSTOMIZE_ROOT}/${relativePath}: file is ${info.bytes} bytes; max is ${FILE_MAX_BYTES}`);
-    }
-    if (!info.hasUserContent && info.content.trim() && info.content.trim() !== template.trim()) {
-      warnings.push(`${CUSTOMIZE_ROOT}/${relativePath}: warning: file contains only HTML comments; write customization outside the comment so Strike can load it`);
     }
     warnings.push(...warningMessages(info));
   }
@@ -517,7 +531,7 @@ function skillMeaning(skill) {
 
 function load(repoRoot, skill) {
   ensureSupportedSkill(skill);
-  const filesToLoad = ["global.md", skillPath(skill)];
+  const filesToLoad = [canonicalPath("global"), skillPath(skill)];
   const loaded = [];
   const warnings = [];
   let totalBytes = 0;

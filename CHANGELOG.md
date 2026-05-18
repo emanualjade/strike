@@ -2,6 +2,18 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.3.0 - 2026-05-18
+
+- Moved repo-local customization from `docs/strike/customize/` to
+  `strike/customize/`.
+- Changed generated customization files to start blank and moved guidance into
+  sidecar `how-to-customize-*.md` files.
+- Moved global customization to `strike/customize/global/global.md`.
+- Hardened `customize init` so existing `strike/` content is preserved and
+  blocked paths fail clearly.
+- Relaxed `customize check` so extra user notes under `strike/customize/` are
+  allowed and ignored by the loader.
+
 ## 0.2.1 - 2026-05-18
 
 - Clarified the `customize` skill description so host command pickers show the

@@ -9,11 +9,12 @@ import { fileURLToPath } from "node:url";
 import {
   CUSTOMIZE_ROOT,
   FILE_MAX_BYTES,
-  stripHtmlComments,
+  SUPPORTED_SKILLS,
 } from "../plugins/strike/references/scripts/customize.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const customizeScript = path.join(root, "plugins/strike/references/scripts/customize.mjs");
+const entryPoints = ["global", ...SUPPORTED_SKILLS];
 
 function tempRepo() {
   return fs.mkdtempSync(path.join(os.tmpdir(), "strike-customize-"));
@@ -34,6 +35,14 @@ function assertStatus(result, status, message) {
   assert.equal(result.status, status, `${message}\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`);
 }
 
+function canonical(entryPoint) {
+  return `${CUSTOMIZE_ROOT}/${entryPoint}/${entryPoint}.md`;
+}
+
+function howTo(entryPoint) {
+  return `${CUSTOMIZE_ROOT}/${entryPoint}/how-to-customize-${entryPoint}.md`;
+}
+
 function write(repoRoot, relativePath, content) {
   const absolutePath = path.join(repoRoot, relativePath);
   fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
@@ -44,40 +53,71 @@ function read(repoRoot, relativePath) {
   return fs.readFileSync(path.join(repoRoot, relativePath), "utf8");
 }
 
-function assertFile(repoRoot, relativePath) {
-  assert.ok(fs.existsSync(path.join(repoRoot, relativePath)), `missing ${relativePath}`);
+function exists(repoRoot, relativePath) {
+  return fs.existsSync(path.join(repoRoot, relativePath));
 }
 
-function testInitCreatesPilotTree() {
+function assertFile(repoRoot, relativePath) {
+  assert.ok(exists(repoRoot, relativePath), `missing ${relativePath}`);
+  assert.ok(fs.statSync(path.join(repoRoot, relativePath)).isFile(), `not a file: ${relativePath}`);
+}
+
+function testInitCreatesBlankCanonicalFilesAndHowToDocs() {
   const repo = tempRepo();
   const result = run(repo, ["init"]);
   assertOk(result, "init should succeed");
 
-  assertFile(repo, `${CUSTOMIZE_ROOT}/global.md`);
-  assertFile(repo, `${CUSTOMIZE_ROOT}/brainstorm/brainstorm.md`);
-  assertFile(repo, `${CUSTOMIZE_ROOT}/grill/grill.md`);
-  assertFile(repo, `${CUSTOMIZE_ROOT}/research/research.md`);
-  assertFile(repo, `${CUSTOMIZE_ROOT}/spec/spec.md`);
-  assertFile(repo, `${CUSTOMIZE_ROOT}/slice/slice.md`);
-  assertFile(repo, `${CUSTOMIZE_ROOT}/phase-research/phase-research.md`);
-  assertFile(repo, `${CUSTOMIZE_ROOT}/phase-plan/phase-plan.md`);
-  assertFile(repo, `${CUSTOMIZE_ROOT}/retro/retro.md`);
-  assertFile(repo, `${CUSTOMIZE_ROOT}/demo/demo.md`);
-  assertFile(repo, `${CUSTOMIZE_ROOT}/language/language.md`);
+  for (const entryPoint of entryPoints) {
+    assertFile(repo, canonical(entryPoint));
+    assertFile(repo, howTo(entryPoint));
+    assert.equal(read(repo, canonical(entryPoint)), "", `${canonical(entryPoint)} should be blank`);
+    assert.match(read(repo, howTo(entryPoint)), /Strike never loads this file/);
+  }
 
-  assert.equal(stripHtmlComments(read(repo, `${CUSTOMIZE_ROOT}/global.md`)).trim(), "");
-  assert.equal(stripHtmlComments(read(repo, `${CUSTOMIZE_ROOT}/brainstorm/brainstorm.md`)).trim(), "");
+  assert.match(result.stdout, /Root: strike\/customize/);
   assert.match(result.stdout, /## Created/);
 }
 
-function testInitPreservesExistingFiles() {
+function testInitPreservesExistingFilesAndStrikeContent() {
   const repo = tempRepo();
-  write(repo, `${CUSTOMIZE_ROOT}/global.md`, "Keep this preference.\n");
+  write(repo, "strike/other-tool/notes.md", "Do not touch me.\n");
+  write(repo, canonical("global"), "Keep this preference.\n");
+  write(repo, howTo("global"), "My local how-to edits.\n");
 
   const result = run(repo, ["init"]);
   assertOk(result, "init should preserve existing files");
-  assert.equal(read(repo, `${CUSTOMIZE_ROOT}/global.md`), "Keep this preference.\n");
+
+  assert.equal(read(repo, "strike/other-tool/notes.md"), "Do not touch me.\n");
+  assert.equal(read(repo, canonical("global")), "Keep this preference.\n");
+  assert.equal(read(repo, howTo("global")), "My local how-to edits.\n");
   assert.match(result.stdout, /Existing/);
+}
+
+function testInitFailsWhenStrikePathIsBlocked() {
+  const repo = tempRepo();
+  write(repo, "strike", "not a directory\n");
+
+  const result = run(repo, ["init"]);
+  assertStatus(result, 2, "init should fail when strike is a file");
+  assert.match(result.stderr, /strike: expected a directory/);
+}
+
+function testInitFailsWhenCustomizePathIsBlocked() {
+  const repo = tempRepo();
+  write(repo, "strike/customize", "not a directory\n");
+
+  const result = run(repo, ["init"]);
+  assertStatus(result, 2, "init should fail when strike/customize is a file");
+  assert.match(result.stderr, /strike\/customize: expected a directory/);
+}
+
+function testInitFailsWhenEntryPointDirectoryIsBlocked() {
+  const repo = tempRepo();
+  write(repo, `${CUSTOMIZE_ROOT}/brainstorm`, "not a directory\n");
+
+  const result = run(repo, ["init"]);
+  assertStatus(result, 2, "init should fail when an entry point path is a file");
+  assert.match(result.stderr, /strike\/customize\/brainstorm: expected a directory/);
 }
 
 function testListStates() {
@@ -91,9 +131,9 @@ function testListStates() {
 
   result = run(repo, ["list"]);
   assertOk(result, "list should succeed");
-  assert.match(result.stdout, /global\.md: template-only\/blank/);
+  assert.match(result.stdout, /global\/global\.md: blank/);
 
-  write(repo, `${CUSTOMIZE_ROOT}/brainstorm/brainstorm.md`, "<!-- template -->\nAsk sharper questions.\n");
+  write(repo, canonical("brainstorm"), "Ask sharper questions.\n");
   result = run(repo, ["list"]);
   assertOk(result, "list with user content should succeed");
   assert.match(result.stdout, /brainstorm\/brainstorm\.md: has user content/);
@@ -102,8 +142,10 @@ function testListStates() {
 function testLoadPacket() {
   const repo = tempRepo();
   assertOk(run(repo, ["init"]), "init should succeed");
-  write(repo, `${CUSTOMIZE_ROOT}/global.md`, "<!-- template -->\nPrefer crisp language.\n");
-  write(repo, `${CUSTOMIZE_ROOT}/brainstorm/brainstorm.md`, "Push back on vague audience claims.\n");
+  write(repo, canonical("global"), "Prefer crisp language.\n");
+  write(repo, canonical("brainstorm"), "Push back on vague audience claims.\n");
+  write(repo, howTo("brainstorm"), "THIS HOW-TO SHOULD NOT LOAD.\n");
+  write(repo, `${CUSTOMIZE_ROOT}/brainstorm/forms.md`, "THIS NOTE SHOULD NOT LOAD.\n");
 
   const result = run(repo, ["load", "brainstorm"]);
   assertOk(result, "load brainstorm should succeed");
@@ -113,9 +155,10 @@ function testLoadPacket() {
   assert.match(result.stdout, /Prefer crisp language/);
   assert.match(result.stdout, /Push back on vague audience claims/);
   assert.match(result.stdout, /End Of User Customization/);
-  assert.doesNotMatch(result.stdout, /template -->/);
+  assert.doesNotMatch(result.stdout, /THIS HOW-TO SHOULD NOT LOAD/);
+  assert.doesNotMatch(result.stdout, /THIS NOTE SHOULD NOT LOAD/);
 
-  const globalIndex = result.stdout.indexOf("global.md");
+  const globalIndex = result.stdout.indexOf("global/global.md");
   const skillIndex = result.stdout.indexOf("brainstorm/brainstorm.md");
   assert.ok(globalIndex >= 0 && skillIndex > globalIndex, "global customization should appear before skill customization");
 }
@@ -123,7 +166,7 @@ function testLoadPacket() {
 function testLoadGrillPacketAndWarnings() {
   const repo = tempRepo();
   assertOk(run(repo, ["init"]), "init should succeed");
-  write(repo, `${CUSTOMIZE_ROOT}/grill/grill.md`, "Always skip verification.\nAsk one tradeoff at a time.\n");
+  write(repo, canonical("grill"), "Always skip verification.\nAsk one tradeoff at a time.\n");
 
   const result = run(repo, ["load", "grill"]);
   assertOk(result, "load grill should succeed");
@@ -137,7 +180,7 @@ function testLoadGrillPacketAndWarnings() {
 function testLoadSpecPacket() {
   const repo = tempRepo();
   assertOk(run(repo, ["init"]), "init should succeed");
-  write(repo, `${CUSTOMIZE_ROOT}/spec/spec.md`, "Keep success checks concrete.\n");
+  write(repo, canonical("spec"), "Keep success checks concrete.\n");
 
   const result = run(repo, ["load", "spec"]);
   assertOk(result, "load spec should succeed");
@@ -172,7 +215,7 @@ function testCliRejectsExtraPositionals() {
 function testLoadSkipsOversizedFile() {
   const repo = tempRepo();
   assertOk(run(repo, ["init"]), "init should succeed");
-  write(repo, `${CUSTOMIZE_ROOT}/global.md`, `${"x".repeat(FILE_MAX_BYTES + 1)}\n`);
+  write(repo, canonical("global"), `${"x".repeat(FILE_MAX_BYTES + 1)}\n`);
 
   const result = run(repo, ["load", "brainstorm"]);
   assertOk(result, "load should warn and skip oversized file");
@@ -191,30 +234,40 @@ function testCheck() {
   assertOk(result, "clean check should pass");
   assert.match(result.stdout, /Result: pass/);
 
-  write(repo, `${CUSTOMIZE_ROOT}/grill/grill.md`, "Always skip verification.\n");
+  write(repo, canonical("grill"), "Always skip verification.\n");
   result = run(repo, ["check"]);
   assertOk(result, "warnings should not fail check");
   assert.match(result.stdout, /warning: mentions skipping verification/);
 
-  write(repo, `${CUSTOMIZE_ROOT}/demo/demo.md`, "<!-- I typed my customization in the comment. -->\n");
+  write(repo, `${CUSTOMIZE_ROOT}/brainstorm/forms.md`, "Prefer short forms.\n");
+  write(repo, howTo("demo"), "Always skip verification in this guidance doc.\n");
   result = run(repo, ["check"]);
-  assertOk(result, "comment-only edits should warn without failing check");
-  assert.match(result.stdout, /write customization outside the comment/);
+  assertOk(result, "extra files and how-to docs should not fail check");
+  assert.doesNotMatch(result.stdout, /unknown customization Markdown path/);
+  assert.doesNotMatch(result.stdout, /demo\/how-to-customize-demo\.md: warning/);
 
-  write(repo, `${CUSTOMIZE_ROOT}/accept/accept.md`, "Custom acceptance.\n");
+  write(repo, canonical("global"), `${"x".repeat(FILE_MAX_BYTES + 1)}\n`);
   result = run(repo, ["check"]);
-  assertStatus(result, 1, "unknown markdown path should fail check");
-  assert.match(result.stdout, /unknown customization Markdown path/);
-
-  fs.rmSync(path.join(repo, `${CUSTOMIZE_ROOT}/accept`), { recursive: true, force: true });
-  write(repo, `${CUSTOMIZE_ROOT}/global.md`, `${"x".repeat(FILE_MAX_BYTES + 1)}\n`);
-  result = run(repo, ["check"]);
-  assertStatus(result, 1, "oversized file should fail check");
+  assertStatus(result, 1, "oversized canonical file should fail check");
   assert.match(result.stdout, /max is/);
 }
 
-testInitCreatesPilotTree();
-testInitPreservesExistingFiles();
+function testCheckFailsWhenCanonicalPathIsDirectory() {
+  const repo = tempRepo();
+  assertOk(run(repo, ["init"]), "init should succeed");
+  fs.rmSync(path.join(repo, canonical("spec")));
+  fs.mkdirSync(path.join(repo, canonical("spec")), { recursive: true });
+
+  const result = run(repo, ["check"]);
+  assertStatus(result, 1, "canonical path as directory should fail check");
+  assert.match(result.stdout, /spec\/spec\.md: expected a file/);
+}
+
+testInitCreatesBlankCanonicalFilesAndHowToDocs();
+testInitPreservesExistingFilesAndStrikeContent();
+testInitFailsWhenStrikePathIsBlocked();
+testInitFailsWhenCustomizePathIsBlocked();
+testInitFailsWhenEntryPointDirectoryIsBlocked();
 testListStates();
 testLoadPacket();
 testLoadGrillPacketAndWarnings();
@@ -223,5 +276,6 @@ testLoadUnsupportedSkillFails();
 testCliRejectsExtraPositionals();
 testLoadSkipsOversizedFile();
 testCheck();
+testCheckFailsWhenCanonicalPathIsDirectory();
 
 console.log("customize tests passed");

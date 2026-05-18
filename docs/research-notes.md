@@ -15,7 +15,7 @@ directory.
 
 ## Customization Imports
 
-2026-05-18 customization audit: do not treat `!docs/strike/customize/...` as a
+2026-05-18 customization audit: do not treat `!strike/customize/...` as a
 portable `SKILL.md` import. Codex Agent Skills, GitHub Copilot agent skills,
 and the Agent Skills specification document `SKILL.md` plus referenced
 supporting files; they do not define a shared `!` file-include syntax. Claude

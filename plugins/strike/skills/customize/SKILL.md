@@ -25,7 +25,7 @@ summarize the result.
 
 This utility supports single-file customization for:
 
-- `global.md`
+- `global/global.md`
 - `brainstorm/brainstorm.md`
 - `grill/grill.md`
 - `research/research.md`
@@ -68,26 +68,39 @@ without raw field labels.
 `init` creates the supported customization tree:
 
 ```txt
-docs/strike/customize/global.md
-docs/strike/customize/brainstorm/brainstorm.md
-docs/strike/customize/grill/grill.md
-docs/strike/customize/research/research.md
-docs/strike/customize/spec/spec.md
-docs/strike/customize/slice/slice.md
-docs/strike/customize/phase-research/phase-research.md
-docs/strike/customize/phase-plan/phase-plan.md
-docs/strike/customize/retro/retro.md
-docs/strike/customize/demo/demo.md
-docs/strike/customize/language/language.md
+strike/customize/global/global.md
+strike/customize/global/how-to-customize-global.md
+strike/customize/brainstorm/brainstorm.md
+strike/customize/brainstorm/how-to-customize-brainstorm.md
+strike/customize/grill/grill.md
+strike/customize/grill/how-to-customize-grill.md
+strike/customize/research/research.md
+strike/customize/research/how-to-customize-research.md
+strike/customize/spec/spec.md
+strike/customize/spec/how-to-customize-spec.md
+strike/customize/slice/slice.md
+strike/customize/slice/how-to-customize-slice.md
+strike/customize/phase-research/phase-research.md
+strike/customize/phase-research/how-to-customize-phase-research.md
+strike/customize/phase-plan/phase-plan.md
+strike/customize/phase-plan/how-to-customize-phase-plan.md
+strike/customize/retro/retro.md
+strike/customize/retro/how-to-customize-retro.md
+strike/customize/demo/demo.md
+strike/customize/demo/how-to-customize-demo.md
+strike/customize/language/language.md
+strike/customize/language/how-to-customize-language.md
 ```
 
-It preserves existing user files.
+It preserves existing user files. The loaded customization files start blank.
+The how-to files are human guidance only and are not loaded by `load`.
 
-`list` reports which supported customization files are missing, template-only or
-blank, or contain user customization.
+`list` reports which supported loaded customization files are missing, blank,
+or contain user customization.
 
-`check` validates the supported customization tree. Structural and size problems
-are errors. Suspicious mechanic-changing language is a warning.
+`check` validates the supported loaded customization files. Structural and size
+problems are errors. Suspicious mechanic-changing language is a warning. Extra
+user notes under `strike/customize/` are allowed but are not loaded.
 
 `load <skill-name>` prints the same customization packet used by the supported
 workflow skills. Treat it as a diagnostic command for inspecting what a skill

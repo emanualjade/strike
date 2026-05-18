@@ -6,18 +6,21 @@ shape how selected Strike skills behave without forking the plugin.
 This rollout supports single-file customization for:
 
 ```txt
-docs/strike/customize/global.md
-docs/strike/customize/brainstorm/brainstorm.md
-docs/strike/customize/grill/grill.md
-docs/strike/customize/research/research.md
-docs/strike/customize/spec/spec.md
-docs/strike/customize/slice/slice.md
-docs/strike/customize/phase-research/phase-research.md
-docs/strike/customize/phase-plan/phase-plan.md
-docs/strike/customize/retro/retro.md
-docs/strike/customize/demo/demo.md
-docs/strike/customize/language/language.md
+strike/customize/global/global.md
+strike/customize/brainstorm/brainstorm.md
+strike/customize/grill/grill.md
+strike/customize/research/research.md
+strike/customize/spec/spec.md
+strike/customize/slice/slice.md
+strike/customize/phase-research/phase-research.md
+strike/customize/phase-plan/phase-plan.md
+strike/customize/retro/retro.md
+strike/customize/demo/demo.md
+strike/customize/language/language.md
 ```
+
+Each directory also has a `how-to-customize-*.md` guide for humans. Those files
+are never loaded into a skill packet.
 
 ## Commands
 
@@ -39,9 +42,11 @@ The skill runs the bundled deterministic script:
 The script also accepts `--repo-root <path>` for skill, test, and internal use.
 That flag is not a normal user-facing Strike skill option.
 
-`customize init` creates comment-only template files. Write customization below
-the HTML comment in each file. Text left inside HTML comments is ignored by
-`customize load`, `customize list`, and `customize check`.
+`customize init` creates blank loaded customization files plus sidecar how-to
+guides. Write actual customization in the loaded files, such as
+`strike/customize/global/global.md` or
+`strike/customize/brainstorm/brainstorm.md`. The how-to files and any extra
+user notes under `strike/customize/` are ignored by `customize load`.
 
 ## Packet Contract
 
@@ -100,7 +105,7 @@ Extra files must not replace Strike's required artifacts:
 
 ## Why Not `!` Imports
 
-Do not put `!docs/strike/customize/...` in portable Strike skills.
+Do not put `!strike/customize/...` in portable Strike skills.
 
 Current host docs do not define `!path` as a portable `SKILL.md` file include.
 Claude Code documents `!` as shell command dynamic context injection, which is
