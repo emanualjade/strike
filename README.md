@@ -36,25 +36,62 @@ In the instructions below:
 - Terminal commands go in your macOS Terminal or another shell.
 - App prompts go inside the AI coding tool's chat or command prompt.
 
-## Install In Codex
+## Install Strike
 
-Choose one Codex install style.
+Choose the install path that matches the host and scope you want.
 
-### Codex Project Install And Uninstall
+| Host | Scope | Use When |
+| --- | --- | --- |
+| Codex | Global | You want Strike available across your Codex setup. |
+| Codex | One project | You want Strike available only from one repository. |
+| Claude Code | Global user | You want Strike available across your Claude Code setup. |
+| Claude Code | One project | You want the project to declare Strike for collaborators. |
+| GitHub Copilot CLI | CLI user | You want to try the packaged Copilot CLI plugin. |
+
+<details>
+<summary>Install globally in Codex</summary>
+
+Run this terminal command:
+
+```bash
+codex plugin marketplace add emanualjade/strike --sparse .agents/plugins --sparse plugins
+```
+
+This registers the Strike marketplace. It does not install Strike into the
+current conversation yet.
+
+Open Codex. You can use the Codex app, or run this terminal command:
+
+```bash
+codex
+```
+
+In the Codex prompt, open the plugin browser:
+
+```text
+/plugins
+```
+
+Find Strike and install or enable it. After that, start a fresh Codex
+conversation and run Strike from the root of the project you want it to work on.
+
+</details>
+
+<details>
+<summary>Install in one Codex project</summary>
 
 Use this when one project should offer Strike, and you do not want to add the
 Strike marketplace to your general Codex setup.
 
-Codex does not currently provide a project-scope `marketplace add` command.
-Project marketplaces are added by creating or editing this file in the project:
+Codex project marketplaces are added by creating or editing this file in the
+project:
 
 ```text
 .agents/plugins/marketplace.json
 ```
 
 If your project already has this file, add the Strike plugin entry to the
-existing `plugins` list instead of replacing the file. Do not run a command that
-overwrites this file unless you have checked that it is safe to replace.
+existing `plugins` list instead of replacing the file.
 
 For a project that does not already have `.agents/plugins/marketplace.json`,
 create the directory:
@@ -90,15 +127,6 @@ Then create `.agents/plugins/marketplace.json` with this content:
 }
 ```
 
-What this does:
-
-- `.agents/plugins/marketplace.json` tells Codex that this project has a plugin
-  marketplace.
-- `git@github.com:emanualjade/strike.git` is the Git repository Codex should
-  fetch Strike from.
-- `path: "./plugins/strike"` tells Codex where the Strike plugin lives inside
-  that repository.
-
 Open Codex from this same project root. You can use the Codex app, or run this
 terminal command from the project root:
 
@@ -115,75 +143,10 @@ In the Codex prompt, open the plugin browser:
 Find Strike in the project marketplace and install or enable it. After that,
 start a fresh Codex conversation from the same project root.
 
-To uninstall Strike from the project, first remove the installed plugin:
+</details>
 
-```text
-/plugins
-```
-
-Select Strike, then choose **Uninstall plugin**.
-
-Then remove the project marketplace entry. If `.agents/plugins/marketplace.json`
-only exists for Strike, delete that file. If it lists other plugins too, remove
-only the Strike entry from the `plugins` list.
-
-Restart Codex from the project root after changing the project marketplace file.
-
-### Codex Global Install And Uninstall
-
-Use this when you want Strike available across your Codex setup.
-
-Run this terminal command:
-
-```bash
-codex plugin marketplace add emanualjade/strike --sparse .agents/plugins --sparse plugins
-```
-
-What this does:
-
-- `codex plugin marketplace add` tells Codex about a plugin marketplace.
-- `emanualjade/strike` is the GitHub repository that contains the marketplace.
-- `--sparse .agents/plugins --sparse plugins` tells Codex to fetch only the
-  marketplace metadata and the plugin files, instead of cloning unrelated repo
-  files.
-
-This command registers the marketplace. It does not install Strike into the
-current conversation yet.
-
-Open Codex. You can use the Codex app, or run this terminal command:
-
-```bash
-codex
-```
-
-In the Codex prompt, open the plugin browser:
-
-```text
-/plugins
-```
-
-Find Strike and install or enable it. After that, start a fresh Codex
-conversation and run Strike from the root of the project you want it to work on.
-
-To uninstall Strike globally, first remove the installed plugin from the Codex
-plugin browser:
-
-```text
-/plugins
-```
-
-Select Strike, then choose **Uninstall plugin**.
-
-Then remove the global Strike marketplace with this terminal command:
-
-```bash
-codex plugin marketplace remove strike
-```
-
-Use the global uninstall when you no longer want Strike available across Codex,
-or when you want to switch from a global install to a project install.
-
-## Install In Claude Code
+<details>
+<summary>Install globally in Claude Code</summary>
 
 Run these terminal commands:
 
@@ -192,12 +155,27 @@ claude plugin marketplace add emanualjade/strike --sparse .claude-plugin plugins
 claude plugin install strike@strike
 ```
 
-What these do:
+Restart Claude Code after installing. If you are already inside a Claude Code
+session, you can try this app prompt instead of restarting:
 
-- The first command registers the Strike marketplace with Claude Code.
-- `--sparse .claude-plugin plugins` tells Claude Code to fetch only the Claude
-  marketplace metadata and the plugin files.
-- The second command installs the `strike` plugin from the `strike` marketplace.
+```text
+/reload-plugins
+```
+
+</details>
+
+<details>
+<summary>Install in one Claude Code project</summary>
+
+Run these terminal commands from the project root:
+
+```bash
+claude plugin marketplace add emanualjade/strike --sparse .claude-plugin plugins --scope project
+claude plugin install strike@strike --scope project
+```
+
+Claude Code project scope writes shared plugin settings under the project. Commit
+those settings only when you want collaborators to get the same Strike setup.
 
 Restart Claude Code after installing. If you are already inside a Claude Code
 session, you can try this app prompt instead of restarting:
@@ -206,7 +184,10 @@ session, you can try this app prompt instead of restarting:
 /reload-plugins
 ```
 
-## Install In GitHub Copilot CLI
+</details>
+
+<details>
+<summary>Install in GitHub Copilot CLI</summary>
 
 Copilot CLI support is packaged, but the live Copilot smoke test has not been
 completed yet. If you want to try it, run these terminal commands:
@@ -222,6 +203,96 @@ Before using a Strike skill in Copilot CLI, confirm the visible skill names:
 ```text
 /skills list
 ```
+
+</details>
+
+## Uninstall Strike
+
+<details>
+<summary>Uninstall global Codex</summary>
+
+First remove the installed plugin from the Codex plugin browser:
+
+```text
+/plugins
+```
+
+Select Strike, then choose **Uninstall plugin**.
+
+Then remove the global Strike marketplace with this terminal command:
+
+```bash
+codex plugin marketplace remove strike
+```
+
+</details>
+
+<details>
+<summary>Uninstall from one Codex project</summary>
+
+First remove the installed plugin from the Codex plugin browser:
+
+```text
+/plugins
+```
+
+Select Strike, then choose **Uninstall plugin**.
+
+Then remove the project marketplace entry. If `.agents/plugins/marketplace.json`
+only exists for Strike, delete that file. If it lists other plugins too, remove
+only the Strike entry from the `plugins` list.
+
+Restart Codex from the project root after changing the project marketplace file.
+
+</details>
+
+<details>
+<summary>Uninstall global Claude Code</summary>
+
+Run these terminal commands:
+
+```bash
+claude plugin uninstall strike@strike
+claude plugin marketplace remove strike
+```
+
+Restart Claude Code, or run this app prompt:
+
+```text
+/reload-plugins
+```
+
+</details>
+
+<details>
+<summary>Uninstall from one Claude Code project</summary>
+
+Run these terminal commands from the project root:
+
+```bash
+claude plugin uninstall strike@strike --scope project
+claude plugin marketplace remove strike
+```
+
+Restart Claude Code, or run this app prompt:
+
+```text
+/reload-plugins
+```
+
+</details>
+
+<details>
+<summary>Uninstall from GitHub Copilot CLI</summary>
+
+Run these terminal commands:
+
+```bash
+copilot plugin uninstall strike
+copilot plugin marketplace remove strike
+```
+
+</details>
 
 ## Start A Feature
 
@@ -414,7 +485,10 @@ skip`, `accept <feature-slug> dogfood`, or `go <feature-slug> verbose`.
 
 ## Update Strike
 
-For Codex, run this terminal command:
+<details>
+<summary>Update Codex</summary>
+
+For a global Codex marketplace, run this terminal command:
 
 ```bash
 codex plugin marketplace upgrade strike
@@ -422,11 +496,26 @@ codex plugin marketplace upgrade strike
 
 Then open Codex and check `/plugins` if Codex shows an available plugin update.
 
-For Claude Code, run these terminal commands:
+For a project Codex marketplace, open Codex from that project root and check
+`/plugins`.
+
+</details>
+
+<details>
+<summary>Update Claude Code</summary>
+
+For a global user install, run these terminal commands:
 
 ```bash
 claude plugin marketplace update strike
 claude plugin update strike@strike
+```
+
+For a project install, run these terminal commands from the project root:
+
+```bash
+claude plugin marketplace update strike
+claude plugin update strike@strike --scope project
 ```
 
 Restart Claude Code after updating, or run this app prompt:
@@ -435,11 +524,18 @@ Restart Claude Code after updating, or run this app prompt:
 /reload-plugins
 ```
 
-For GitHub Copilot CLI, run this terminal command:
+</details>
+
+<details>
+<summary>Update GitHub Copilot CLI</summary>
+
+Run this terminal command:
 
 ```bash
 copilot plugin update strike
 ```
+
+</details>
 
 ## Troubleshooting
 
