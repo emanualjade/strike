@@ -3,7 +3,7 @@ name: phase-plan
 description: Write the build brief for exactly one implementation phase.
 argument-hint: "[project-slug] phase:<phase-slug>"
 disable-model-invocation: true
-allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, WebFetch, WebSearch, Agent
+allowed-tools: Read Write Edit MultiEdit Bash Grep Glob WebFetch WebSearch Agent
 ---
 
 # Strike Phase Plan

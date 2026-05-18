@@ -1,6 +1,6 @@
 # Research Notes
 
-Checked on 2026-05-17.
+Checked on 2026-05-18.
 
 ## Portable Skills
 
@@ -69,6 +69,11 @@ This repo is both a marketplace and the plugin source:
 
 That shape gives us install and update paths for the major hosts while keeping the actual skills singular.
 
+2026-05-18 accuracy audit: The Agent Skills specification defines
+`allowed-tools` as a space-separated string. Strike now keeps shipped skill
+frontmatter in that portable form and the repo validator rejects comma-separated
+`allowed-tools` values.
+
 ## Validation
 
-`npm run validate` is a repo-shape smoke test for our combined layout. It is not a substitute for host-native validation or current official docs. It intentionally enforces stricter repo policy for portability and release hygiene in a few places, including explicit skill frontmatter, version alignment, Codex `agents/openai.yaml` metadata, host invocation references, known next-skill handoff targets, balanced Markdown fences, and avoiding Claude-only `/strike:<skill>` or `/clear` instructions inside portable skill docs and shared stage contracts. Use `npm run validate:publish` before release so empty skill packages fail, and pair it with available host validators such as `claude plugin validate`.
+`npm run validate` is a repo-shape smoke test for our combined layout. It is not a substitute for host-native validation or current official docs. It intentionally enforces stricter repo policy for portability and release hygiene in a few places, including explicit skill frontmatter, space-separated `allowed-tools`, version alignment, Codex `agents/openai.yaml` metadata, host invocation references, known next-skill handoff targets, balanced Markdown fences, and avoiding Claude-only `/strike:<skill>` or `/clear` instructions inside portable skill docs and shared stage contracts. Use `npm run validate:publish` before release so empty skill packages fail, and pair it with available host validators such as `claude plugin validate`.

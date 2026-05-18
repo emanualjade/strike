@@ -3,7 +3,7 @@ name: research
 description: Gather lean pre-spec evidence when it can change project decisions.
 argument-hint: "[project-slug] [optional focus|skip]"
 disable-model-invocation: true
-allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, WebFetch, WebSearch, Agent
+allowed-tools: Read Write Edit MultiEdit Bash Grep Glob WebFetch WebSearch Agent
 ---
 
 # Strike Research

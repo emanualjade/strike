@@ -342,6 +342,10 @@ function validateSkill(skillPath) {
     fail(`${rel(skillFile)}: frontmatter description should stay under 1024 characters`);
   }
 
+  if (frontmatter["allowed-tools"]?.includes(",")) {
+    fail(`${rel(skillFile)}: allowed-tools must be space-separated for Agent Skills portability`);
+  }
+
   const fenceCount = [...skillText.matchAll(/^\s*```/gm)].length;
   if (fenceCount % 2 !== 0) {
     fail(`${rel(skillFile)}: Markdown code fences must be balanced`);

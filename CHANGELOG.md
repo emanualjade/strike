@@ -2,6 +2,12 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.1.16 - 2026-05-18
+
+- Normalized shipped skill `allowed-tools` frontmatter to the portable
+  Agent Skills space-separated form.
+- Added validation to reject comma-separated `allowed-tools` values.
+
 ## 0.1.15 - 2026-05-18
 
 - Renamed Strike's top-level work unit to Project across shipped

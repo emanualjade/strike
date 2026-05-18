@@ -1,6 +1,6 @@
 # Structure Audit
 
-Last checked: 2026-05-17.
+Last checked: 2026-05-18.
 
 This file records the "is this grounded, invented, and idiomatic?" pass for the scaffold.
 
@@ -150,7 +150,7 @@ Plugin hosts discover known component directories inside the plugin root. Templa
 - Made up or over-structured: No, because it guards the known host structures without inventing runtime behavior.
 - Idiomatic: Acceptable repo tooling.
 
-The hosts provide some validation, but not one command that checks the combined Codex, Claude, Copilot, and Agent Skills layout. `npm run validate` is repo-local quality control, not a host-schema validator or proof of publishability. It intentionally enforces some stricter repo policies, such as version alignment, Codex skill metadata presence, explicit host invocation guidance in skills, known next-skill handoff targets, balanced Markdown fences, and host-neutral Strike handoffs in skills and stage contracts, even when a host schema marks equivalent fields optional. Use `npm run validate:publish` plus host-native validators before release.
+The hosts provide some validation, but not one command that checks the combined Codex, Claude, Copilot, and Agent Skills layout. `npm run validate` is repo-local quality control, not a host-schema validator or proof of publishability. It intentionally enforces some stricter repo policies, such as version alignment, Codex skill metadata presence, space-separated `allowed-tools`, explicit host invocation guidance in skills, known next-skill handoff targets, balanced Markdown fences, and host-neutral Strike handoffs in skills and stage contracts, even when a host schema marks equivalent fields optional. Use `npm run validate:publish` plus host-native validators before release.
 
 ## Things We Should Not Add By Default
 

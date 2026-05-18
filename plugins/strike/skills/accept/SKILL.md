@@ -3,7 +3,7 @@ name: accept
 description: Validate the assembled project against the Strike spec.
 argument-hint: "[project-slug]"
 disable-model-invocation: true
-allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob
+allowed-tools: Read Write Edit MultiEdit Bash Grep Glob
 ---
 
 # Strike Accept

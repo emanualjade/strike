@@ -3,7 +3,7 @@ name: spec-review
 description: Review and safely repair a Strike spec before slicing.
 argument-hint: "[project-slug]"
 disable-model-invocation: true
-allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, WebFetch, WebSearch
+allowed-tools: Read Write Edit MultiEdit Bash Grep Glob WebFetch WebSearch
 ---
 
 # Strike Spec Review

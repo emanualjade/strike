@@ -3,7 +3,7 @@ name: language
 description: Assess and update repo language discovered during Strike work.
 argument-hint: "[term|project-slug|path] [assess|trace|add|update|remove|clarify|apply]"
 disable-model-invocation: true
-allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob
+allowed-tools: Read Write Edit MultiEdit Bash Grep Glob
 ---
 
 # Strike Language
