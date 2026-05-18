@@ -585,43 +585,38 @@ skip` or `go <project-slug> verbose`.
 
 ## Customize Strike Skills
 
-The customization rollout lets a repository add local Markdown preferences for
-selected single-file Strike skills without forking Strike.
+Strike can load repo-local preferences for selected skills without forking the
+plugin. This is useful when a repo has a house style for brainstorming,
+research, specs, slicing, demos, or project language.
 
-Run:
+Create the customization files:
 
 ```text
 customize init
 ```
 
-Then edit:
+Then edit the files under:
 
 ```text
-docs/strike/customize/global.md
-docs/strike/customize/brainstorm/brainstorm.md
-docs/strike/customize/grill/grill.md
-docs/strike/customize/research/research.md
-docs/strike/customize/spec/spec.md
-docs/strike/customize/slice/slice.md
-docs/strike/customize/phase-research/phase-research.md
-docs/strike/customize/phase-plan/phase-plan.md
-docs/strike/customize/retro/retro.md
-docs/strike/customize/demo/demo.md
-docs/strike/customize/language/language.md
+docs/strike/customize/
 ```
 
-Write your preferences below the HTML comment in each generated file. Text left
-inside the comment is ignored by Strike's customization loader.
+Start with `global.md` for preferences that should apply everywhere, or edit a
+skill-specific file such as `brainstorm/brainstorm.md`, `spec/spec.md`, or
+`phase-plan/phase-plan.md`. Write your notes below the HTML comment in each
+generated file. Text left inside the comment is ignored by Strike's
+customization loader.
 
-Check the files with:
+Check the files before relying on them:
 
 ```text
 customize check
 ```
 
-Customization can shape judgment, tone, questions, examples, emphasis, artifact
-style, and additive files. It cannot override Strike board mechanics, required
-outputs, stage gates, or tool boundaries.
+Supported skills load the matching customization automatically. Customization
+can shape judgment, tone, questions, examples, emphasis, artifact style, and
+additive files. It cannot override Strike board mechanics, required outputs,
+stage gates, or tool boundaries.
 
 ## Troubleshooting
 
