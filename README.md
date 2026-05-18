@@ -230,6 +230,81 @@ Before using a Strike skill in Copilot CLI, confirm the visible skill names:
 
 </details>
 
+## Update Strike
+
+<details>
+<summary>Update Codex</summary>
+
+For a global Codex marketplace, run this terminal command:
+
+```bash
+codex plugin marketplace upgrade strike
+```
+
+Then open Codex and check `/plugins` if Codex shows an available plugin update.
+
+For a repository Codex marketplace, open Codex from that repo root and check
+`/plugins`.
+
+</details>
+
+<details>
+<summary>Update Claude Code</summary>
+
+Claude Code keeps a local marketplace clone and a versioned plugin cache under
+`~/.claude/plugins/`. Refresh the marketplace first so Claude can see the latest
+Strike version, then update the installed plugin for the scope where you use it.
+
+For a user-scope install, run these terminal commands:
+
+```bash
+claude plugin marketplace update strike
+claude plugin update strike@strike --scope user
+```
+
+For a Claude Code `project`-scope install, run these terminal commands from the repo root:
+
+```bash
+claude plugin marketplace update strike
+claude plugin update strike@strike --scope project
+```
+
+For a local-scope install, run these terminal commands from the repo root:
+
+```bash
+claude plugin marketplace update strike
+claude plugin update strike@strike --scope local
+```
+
+After updating, run this app prompt inside Claude Code to activate the update:
+
+```text
+/reload-plugins
+```
+
+To confirm the active installed version, run:
+
+```bash
+claude plugin list --json
+```
+
+Old version directories may remain in `~/.claude/plugins/cache/` for a while.
+That does not matter unless `claude plugin list --json` still shows Strike
+using the old version.
+
+</details>
+
+<details>
+<summary>Update GitHub Copilot CLI</summary>
+
+Run this terminal command:
+
+```bash
+copilot plugin update strike
+```
+
+</details>
+
 ## Uninstall Strike
 
 <details>
@@ -490,81 +565,6 @@ skip` or `go <project-slug> verbose`.
 - `retro`: record what happened and move accepted work to done.
 - `language`: keep repo terminology consistent.
 - `demo`: create a small planning demo for a card.
-
-## Update Strike
-
-<details>
-<summary>Update Codex</summary>
-
-For a global Codex marketplace, run this terminal command:
-
-```bash
-codex plugin marketplace upgrade strike
-```
-
-Then open Codex and check `/plugins` if Codex shows an available plugin update.
-
-For a repository Codex marketplace, open Codex from that repo root and check
-`/plugins`.
-
-</details>
-
-<details>
-<summary>Update Claude Code</summary>
-
-Claude Code keeps a local marketplace clone and a versioned plugin cache under
-`~/.claude/plugins/`. Refresh the marketplace first so Claude can see the latest
-Strike version, then update the installed plugin for the scope where you use it.
-
-For a user-scope install, run these terminal commands:
-
-```bash
-claude plugin marketplace update strike
-claude plugin update strike@strike --scope user
-```
-
-For a Claude Code `project`-scope install, run these terminal commands from the repo root:
-
-```bash
-claude plugin marketplace update strike
-claude plugin update strike@strike --scope project
-```
-
-For a local-scope install, run these terminal commands from the repo root:
-
-```bash
-claude plugin marketplace update strike
-claude plugin update strike@strike --scope local
-```
-
-After updating, run this app prompt inside Claude Code to activate the update:
-
-```text
-/reload-plugins
-```
-
-To confirm the active installed version, run:
-
-```bash
-claude plugin list --json
-```
-
-Old version directories may remain in `~/.claude/plugins/cache/` for a while.
-That does not matter unless `claude plugin list --json` still shows Strike
-using the old version.
-
-</details>
-
-<details>
-<summary>Update GitHub Copilot CLI</summary>
-
-Run this terminal command:
-
-```bash
-copilot plugin update strike
-```
-
-</details>
 
 ## Troubleshooting
 
