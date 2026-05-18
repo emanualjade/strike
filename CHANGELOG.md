@@ -2,6 +2,13 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.2.1 - 2026-05-18
+
+- Clarified the `customize` skill description so host command pickers show the
+  supported `init`, `list`, `check`, and `load <skill-name>` inputs.
+- Tightened the customization usage docs with shorter guidance on initializing,
+  editing, and checking repo-local preferences.
+
 ## 0.2.0 - 2026-05-18
 
 - Added the `customize` utility skill for initializing, listing, checking, and
