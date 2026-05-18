@@ -146,6 +146,8 @@ function testLoadPacket() {
   write(repo, canonical("brainstorm"), "Push back on vague audience claims.\n");
   write(repo, howTo("brainstorm"), "THIS HOW-TO SHOULD NOT LOAD.\n");
   write(repo, `${CUSTOMIZE_ROOT}/brainstorm/forms.md`, "THIS NOTE SHOULD NOT LOAD.\n");
+  write(repo, "docs/strike/customize/global.md", "THIS LEGACY GLOBAL SHOULD NOT LOAD.\n");
+  write(repo, "docs/strike/customize/brainstorm/brainstorm.md", "THIS LEGACY SKILL SHOULD NOT LOAD.\n");
 
   const result = run(repo, ["load", "brainstorm"]);
   assertOk(result, "load brainstorm should succeed");
@@ -157,6 +159,8 @@ function testLoadPacket() {
   assert.match(result.stdout, /End Of User Customization/);
   assert.doesNotMatch(result.stdout, /THIS HOW-TO SHOULD NOT LOAD/);
   assert.doesNotMatch(result.stdout, /THIS NOTE SHOULD NOT LOAD/);
+  assert.doesNotMatch(result.stdout, /THIS LEGACY GLOBAL SHOULD NOT LOAD/);
+  assert.doesNotMatch(result.stdout, /THIS LEGACY SKILL SHOULD NOT LOAD/);
 
   const globalIndex = result.stdout.indexOf("global/global.md");
   const skillIndex = result.stdout.indexOf("brainstorm/brainstorm.md");
@@ -240,6 +244,9 @@ function testCheck() {
   assert.match(result.stdout, /warning: mentions skipping verification/);
 
   write(repo, `${CUSTOMIZE_ROOT}/brainstorm/forms.md`, "Prefer short forms.\n");
+  write(repo, `${CUSTOMIZE_ROOT}/brainstorm/nested/forms.md`, "Prefer nested form notes.\n");
+  write(repo, `${CUSTOMIZE_ROOT}/security.md`, "Prefer explicit threat model notes.\n");
+  write(repo, `${CUSTOMIZE_ROOT}/notes/review-style.md`, "Prefer concise review notes.\n");
   write(repo, howTo("demo"), "Always skip verification in this guidance doc.\n");
   result = run(repo, ["check"]);
   assertOk(result, "extra files and how-to docs should not fail check");
