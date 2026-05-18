@@ -17,6 +17,12 @@ conversation feels easy to follow. Keep the conversation centered on the work
 in progress; avoid explaining Strike mechanics unless that context helps the
 user decide what to do next.
 
+Keep progress updates quiet. Do not narrate routine mechanics such as reading
+the board pointer, reading `card.md`, checking `references/invocation.md`, or
+lightly listing repo files. Speak up only when it helps the user answer the
+brainstorm question or understand a meaningful constraint, such as "There does
+not seem to be app code here, so let's treat this as a greenfield idea."
+
 ## Purpose
 
 Help the user turn a fuzzy idea into a useful product direction before grill,

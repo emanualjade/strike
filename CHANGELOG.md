@@ -2,6 +2,11 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.1.5 - 2026-05-17
+
+- Quieted `brainstorm` progress guidance so routine board/card/context reads
+  are not narrated as user-facing updates.
+
 ## 0.1.4 - 2026-05-17
 
 - Added a shared deterministic slug helper for feature slugs, phase folders,
