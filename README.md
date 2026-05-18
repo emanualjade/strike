@@ -100,20 +100,22 @@ create the directory:
 mkdir -p .agents/plugins
 ```
 
-Then create `.agents/plugins/marketplace.json` with this content:
+Then create `.agents/plugins/marketplace.json` with this content. The top-level
+`name` and `interface.displayName` describe your repository's plugin catalog;
+Strike is just one entry in the `plugins` list.
 
 ```json
 {
-  "name": "strike-repo",
+  "name": "my-project-plugins",
   "interface": {
-    "displayName": "Strike"
+    "displayName": "My Project Plugins"
   },
   "plugins": [
     {
       "name": "strike",
       "source": {
         "source": "git-subdir",
-        "url": "git@github.com:emanualjade/strike.git",
+        "url": "https://github.com/emanualjade/strike.git",
         "path": "./plugins/strike",
         "ref": "main"
       },
