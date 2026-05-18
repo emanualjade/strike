@@ -583,11 +583,24 @@ skip` or `go <project-slug> verbose`.
 - `language`: keep repo terminology consistent.
 - `demo`: create a small planning demo for a card.
 
-## Customize Strike Skills
+## Customize Strike
 
-Strike can load repo-local preferences for selected skills without forking the
-plugin. This is useful when a repo has a house style for brainstorming,
-research, specs, slicing, demos, or project language.
+You can customize each step in Strike so it works the way you like in this
+repo. Give Strike extra instructions for how to brainstorm, research, write
+specs, plan phases, make demos, or handle project language.
+
+For example, you can tell Strike:
+
+- how direct or exploratory brainstorm should be
+- what kind of evidence research should look for
+- how detailed specs should be
+- what planning style you prefer
+- what tone or terminology to use in this repo
+
+Strike still follows its normal workflow, required files, checks, and stage
+gates. Your customization gives it extra guidance for how to do the work.
+
+### How To Customize
 
 Create the customization files:
 
@@ -601,30 +614,30 @@ Then edit the files under:
 strike/customize/
 ```
 
-Start with `global/global.md` for preferences that should apply everywhere, or
-edit a skill-specific file such as `brainstorm/brainstorm.md`,
-`spec/spec.md`, or `phase-plan/phase-plan.md`. The loaded customization files
-start blank. Each directory also includes a `how-to-customize-*.md` guide for
-suggestions; Strike does not load those how-to files.
+Start with:
 
-Check the files before relying on them:
+```text
+strike/customize/global/global.md
+strike/customize/brainstorm/brainstorm.md
+strike/customize/spec/spec.md
+```
+
+Write your instructions in the matching file. Each folder also includes a
+`how-to-customize-*.md` guide with ideas for what to write.
+
+Check that the setup is healthy:
 
 ```text
 customize check
 ```
 
-`check` only verifies setup and size limits. To ask Strike to review whether
-customization language could hijack or break the workflow, run:
+Ask Strike to review whether your instructions are safe for the workflow:
 
 ```text
+customize review global
 customize review brainstorm
 customize review all
 ```
-
-Supported skills load the matching customization automatically. Customization
-can shape judgment, tone, questions, examples, emphasis, artifact style, and
-additive files. It cannot override Strike board mechanics, required outputs,
-stage gates, or tool boundaries.
 
 ## Troubleshooting
 

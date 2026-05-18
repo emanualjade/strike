@@ -47,12 +47,12 @@ language <term|project-slug|path>
 Other skills use positional arguments, plain optional words such as `skip`, or
 the `phase:<phase-slug>` token for phase-scoped work.
 
-`customize` is a utility for repo-local customization of supported single-file
-skills. Run `customize init` to create blank loaded files under
-`strike/customize/` plus sidecar `how-to-customize-*.md` guides. Run
-`customize check` for setup validation and `customize review <entry|all>` for
-LLM review of customization language. Supported skills load only the matching
-blank-start customization files after you edit them.
+Use `customize` when you want Strike to work more like you do in a repo. Run
+`customize init`, then add instructions under `strike/customize/` for things
+like brainstorm style, research standards, spec detail, phase planning, demos,
+or project language. Run `customize check` to make sure the setup is healthy
+and `customize review <entry|all>` to ask Strike whether the instructions are
+safe for the workflow.
 
 Claude Code examples:
 
