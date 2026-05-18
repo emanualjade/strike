@@ -364,9 +364,6 @@ The namespaced form also works if Codex shows or inserts it:
 $strike:start Add CSV export --description Let users export a CSV report.
 ```
 
-You can type `$` or `/skills` to browse available skills. If more than one
-`start` skill appears, choose the one from Strike.
-
 `start` creates a short slug automatically. Common leading task verbs are
 dropped, so `Add CSV export` becomes `csv-export`. You can still pass
 `--slug <slug>` when you want to choose the slug yourself.
