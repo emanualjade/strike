@@ -196,6 +196,11 @@ function testCheck() {
   assertOk(result, "warnings should not fail check");
   assert.match(result.stdout, /warning: mentions skipping verification/);
 
+  write(repo, `${CUSTOMIZE_ROOT}/demo/demo.md`, "<!-- I typed my customization in the comment. -->\n");
+  result = run(repo, ["check"]);
+  assertOk(result, "comment-only edits should warn without failing check");
+  assert.match(result.stdout, /write customization outside the comment/);
+
   write(repo, `${CUSTOMIZE_ROOT}/accept/accept.md`, "Custom acceptance.\n");
   result = run(repo, ["check"]);
   assertStatus(result, 1, "unknown markdown path should fail check");

@@ -93,6 +93,8 @@ know.
 ## Writes
 
 - `cards/<project-slug>/outputs/grill/grill.md`
+- optional additive customization files under
+  `cards/<project-slug>/outputs/grill/custom/`
 - `cards/<project-slug>/card.md`
 - board pointer moved from `02-grill` to `03-research` when evidence or
   guidance is needed before spec

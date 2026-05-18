@@ -90,6 +90,7 @@ the run.
 ## Writes
 
 - `outputs/retro/retro.md`
+- optional additive customization files under `outputs/retro/custom/`
 - `card.md`
 - board pointer moved from `08-retro` to `09-done`
 

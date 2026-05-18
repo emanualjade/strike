@@ -39,6 +39,10 @@ The skill runs the bundled deterministic script:
 The script also accepts `--repo-root <path>` for skill, test, and internal use.
 That flag is not a normal user-facing Strike skill option.
 
+`customize init` creates comment-only template files. Write customization below
+the HTML comment in each file. Text left inside HTML comments is ignored by
+`customize load`, `customize list`, and `customize check`.
+
 ## Packet Contract
 
 Supported skills load customization by running:

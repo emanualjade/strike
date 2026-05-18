@@ -259,33 +259,31 @@ Start with Markdown-only customization. Custom scripts are likely a separate,
 harder feature because they raise trust, execution, allowlist, and validation
 questions.
 
-## Open Questions
+## Resolved In 0.2.0
 
-- Which skills should support customization in the first version?
-- Should `go`, `start`, `demo`, and `language` read customization, or only the
-  core workflow skills?
-- Should empty customization files be committed to consuming repos, or should
-  only directories plus `.gitkeep` files exist until users opt in?
-- Should review files be limited to review skills, or should `research` and
-  `accept` also support multiple named files?
-- How should conflicts be worded in skill files so custom instructions cannot
-  override Strike mechanics?
-- Are `!` imports portable enough to rely on, or should they be treated as a
-  host-specific enhancement with plain instruction fallback?
-- Should customization be documented in `README.md`, `plugins/strike/README.md`,
-  or a shared `plugins/strike/references/customization.md` first?
-
-## Implementation Tasks
-
-- [ ] Research official host support for skill-file imports and repo-local
+- [x] Research official host support for skill-file imports and repo-local
   custom instruction loading.
-- [ ] Record structural decisions in `docs/structure-audit.md` or
-  `docs/research-notes.md` with source links.
-- [ ] Decide the initial `docs/strike/customize/` scaffold.
-- [ ] Decide whether customization is created by `start`, a new `customize`
-  skill, or both.
-- [ ] Add shared guidance in `plugins/strike/references/customization.md`.
-- [ ] Add a small customization section to each supported `SKILL.md`.
-- [ ] Add customization validation to repo tooling or a deterministic script.
-- [ ] Update user-facing docs once the behavior is implemented.
-- [ ] Run `npm run validate` after skill or manifest changes.
+- [x] Record the import decision in `docs/research-notes.md`.
+- [x] Add the initial `docs/strike/customize/` scaffold for selected
+  single-file skills.
+- [x] Create customization through a new `customize` utility skill, not
+  `start`.
+- [x] Add shared guidance in `plugins/strike/references/customization.md`.
+- [x] Add a customization loader section to supported `SKILL.md` files.
+- [x] Add deterministic customization validation/loading tooling.
+- [x] Update user-facing docs.
+- [x] Run `npm test`, `npm run validate`, `npm run validate:publish`, and
+  `npm run release:validate`.
+
+## Future Questions
+
+- Should review skills support both one entry-point file and
+  `reviews/*.md` lenses?
+- Should `accept` get single-file customization, or should it wait for the
+  review-lens model?
+- Should `phase-build` and `phase-fix` support customization after we test
+  write-boundary behavior?
+- Should Strike ever generate host-specific skill builds where Claude-only `!`
+  command injection can preload customization?
+- Should custom executable review scripts exist at all, and if so, what trust,
+  allowlist, and validation rules are required?

@@ -94,6 +94,8 @@ grill, or research inside slice.
 ## Writes
 
 - `cards/<project-slug>/phases/<phase-slug>/plan.md`
+- optional additive customization files under
+  `cards/<project-slug>/outputs/slice/custom/`
 - `cards/<project-slug>/card.md`
 - board pointer moved from `05-slice` to `06-implementation` only when the
   first phase can be phase-planned after a context reset

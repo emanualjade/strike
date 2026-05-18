@@ -610,6 +610,9 @@ docs/strike/customize/demo/demo.md
 docs/strike/customize/language/language.md
 ```
 
+Write your preferences below the HTML comment in each generated file. Text left
+inside the comment is ignored by Strike's customization loader.
+
 Check the files with:
 
 ```text

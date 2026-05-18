@@ -111,6 +111,8 @@ brainstorm, grill, research, or slice.
 ## Writes
 
 - `cards/<project-slug>/phases/<phase-slug>/build-brief.md`
+- optional additive customization files under
+  `cards/<project-slug>/phases/<phase-slug>/custom/plan/`
 - `cards/<project-slug>/card.md`
 - board pointer text in `06-implementation`
 - board pointer moved back from `06-implementation` to `02-grill` when a
@@ -309,4 +311,6 @@ skill`, or `Arguments`.
   a missing upstream decision or `05-slice` for a wrong phase split.
 - Do not write build, review, fix, acceptance, or retro artifacts.
 - Do not edit `UBIQUITOUS_LANGUAGE.md`.
-- Do not create sidecar checker files, drafts, durable IDs, or hidden state.
+- Do not create sidecar checker files, drafts, durable IDs, or hidden state;
+  optional customization artifacts may live only under the selected phase's
+  `custom/plan/` folder.

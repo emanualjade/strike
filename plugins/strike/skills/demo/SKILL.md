@@ -77,6 +77,8 @@ interactive choices.
 
 - `docs/strike/cards/<project-slug>/demos/<nn-topic>.html`
 - optional `docs/strike/cards/<project-slug>/demos/README.md`
+- optional additive customization files under
+  `docs/strike/cards/<project-slug>/demos/custom/`
 
 Create the `demos/` folder if it does not exist.
 Before creating a demo file, run the bundled slug helper by absolute path from

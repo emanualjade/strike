@@ -95,6 +95,8 @@ context. Do not inspect broadly just to feel prepared.
 ## Writes
 
 - `cards/<project-slug>/outputs/spec/spec.md`
+- optional additive customization files under
+  `cards/<project-slug>/outputs/spec/custom/`
 - `cards/<project-slug>/card.md`
 - board pointer moved back from `04-spec` to `02-grill` when missing project
   intent, affected audience or system, scope, boundaries, model shape, success, or

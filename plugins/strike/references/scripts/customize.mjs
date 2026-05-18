@@ -28,6 +28,9 @@ const TEMPLATE_FILES = new Map([
     `<!--
 Strike global customization.
 
+Write your customization below this HTML comment. Text inside comments is
+ignored by customize load, customize list, and customize check.
+
 Add repo-local preferences that should apply across supported Strike
 customization skills.
 Customization may shape judgment, tone, examples, emphasis, artifact style, and
@@ -41,6 +44,9 @@ output paths, stage gates, verification honesty, or tool boundaries.
     `<!--
 Strike brainstorm customization.
 
+Write your customization below this HTML comment. Text inside comments is
+ignored by customize load, customize list, and customize check.
+
 Add preferences for how brainstorm should explore, challenge, narrow, and save
 ideas in this repository. Extra brainstorm artifacts should be additive and
 belong under the active card's outputs/brainstorm/custom/ folder unless the
@@ -52,6 +58,9 @@ user explicitly asks for another path already allowed by brainstorm.
     "grill/grill.md",
     `<!--
 Strike grill customization.
+
+Write your customization below this HTML comment. Text inside comments is
+ignored by customize load, customize list, and customize check.
 
 Add preferences for how grill should ask decision questions, pressure-test
 tradeoffs, record rejected paths, and save decisions in this repository. Extra
@@ -66,6 +75,9 @@ already allowed by grill.
     `<!--
 Strike research customization.
 
+Write your customization below this HTML comment. Text inside comments is
+ignored by customize load, customize list, and customize check.
+
 Add preferences for evidence quality, source types, citation style, research
 depth, and how Strike should summarize findings before spec.
 -->
@@ -75,6 +87,9 @@ depth, and how Strike should summarize findings before spec.
     "spec/spec.md",
     `<!--
 Strike spec customization.
+
+Write your customization below this HTML comment. Text inside comments is
+ignored by customize load, customize list, and customize check.
 
 Add preferences for spec style, section emphasis, acceptance-check wording, and
 how project rules should be captured.
@@ -86,6 +101,9 @@ how project rules should be captured.
     `<!--
 Strike slice customization.
 
+Write your customization below this HTML comment. Text inside comments is
+ignored by customize load, customize list, and customize check.
+
 Add preferences for phase sizing, naming, ordering, and how Strike should split
 spec work into buildable vertical phases.
 -->
@@ -95,6 +113,9 @@ spec work into buildable vertical phases.
     "phase-research/phase-research.md",
     `<!--
 Strike phase-research customization.
+
+Write your customization below this HTML comment. Text inside comments is
+ignored by customize load, customize list, and customize check.
 
 Add preferences for phase-scoped evidence, local precedent checks, and how
 phase research should summarize tactical risks.
@@ -106,6 +127,9 @@ phase research should summarize tactical risks.
     `<!--
 Strike phase-plan customization.
 
+Write your customization below this HTML comment. Text inside comments is
+ignored by customize load, customize list, and customize check.
+
 Add preferences for build brief style, verification planning, implementation
 watchouts, and phase handoff detail.
 -->
@@ -115,6 +139,9 @@ watchouts, and phase handoff detail.
     "retro/retro.md",
     `<!--
 Strike retro customization.
+
+Write your customization below this HTML comment. Text inside comments is
+ignored by customize load, customize list, and customize check.
 
 Add preferences for what retro should capture about workflow, product,
 technical, or Strike-process follow-ups.
@@ -126,6 +153,9 @@ technical, or Strike-process follow-ups.
     `<!--
 Strike demo customization.
 
+Write your customization below this HTML comment. Text inside comments is
+ignored by customize load, customize list, and customize check.
+
 Add preferences for planning demo style, interaction density, mock data,
 visual tone, and decision support.
 -->
@@ -135,6 +165,9 @@ visual tone, and decision support.
     "language/language.md",
     `<!--
 Strike language customization.
+
+Write your customization below this HTML comment. Text inside comments is
+ignored by customize load, customize list, and customize check.
 
 Add preferences for terminology review, glossary style, naming pressure, and
 how Strike should discuss domain language.
@@ -378,7 +411,7 @@ function check(repoRoot) {
     errors.push(`${CUSTOMIZE_ROOT}/${relativePath}: unknown customization Markdown path`);
   }
 
-  for (const relativePath of TEMPLATE_FILES.keys()) {
+  for (const [relativePath, template] of TEMPLATE_FILES) {
     const info = readFileInfo(repoRoot, relativePath);
     if (!info.exists) {
       continue;
@@ -389,6 +422,9 @@ function check(repoRoot) {
     }
     if (info.bytes > FILE_MAX_BYTES) {
       errors.push(`${CUSTOMIZE_ROOT}/${relativePath}: file is ${info.bytes} bytes; max is ${FILE_MAX_BYTES}`);
+    }
+    if (!info.hasUserContent && info.content.trim() && info.content.trim() !== template.trim()) {
+      warnings.push(`${CUSTOMIZE_ROOT}/${relativePath}: warning: file contains only HTML comments; write customization outside the comment so Strike can load it`);
     }
     warnings.push(...warningMessages(info));
   }

@@ -108,6 +108,8 @@ or a later spec gap that routed the card back to research.
 ## Writes
 
 - `cards/<project-slug>/outputs/research/research.md`
+- optional additive customization files under
+  `cards/<project-slug>/outputs/research/custom/`
 - `cards/<project-slug>/outputs/grill/grill.md` only when research changes a
   decision and the user resolves it
 - `cards/<project-slug>/card.md`

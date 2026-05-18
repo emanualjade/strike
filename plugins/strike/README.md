@@ -49,7 +49,8 @@ the `phase:<phase-slug>` token for phase-scoped work.
 
 `customize` is a utility for repo-local customization of supported single-file
 skills. Run `customize init` to create files under `docs/strike/customize/`,
-then edit those files and run `customize check`.
+then write preferences below the HTML comment in those files and run
+`customize check`.
 
 Claude Code examples:
 

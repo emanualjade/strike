@@ -243,6 +243,12 @@ Do not add:
 - transient Project-local wording that is not ready to become repo language
 - speculative terms the user has not accepted
 
+## Writes
+
+- `UBIQUITOUS_LANGUAGE.md` only when the user approves a concrete glossary
+  change or provides exact text to apply
+- optional additive customization files only at a user-approved docs path
+
 ## Output
 
 Keep responses compact and user-facing:
@@ -261,3 +267,4 @@ Keep responses compact and user-facing:
 - Do not edit implementation files unless the user explicitly asks for code
   renames and confirms the scope.
 - Do not apply uncertain glossary changes without user approval.
+- Do not create additive language files without a user-approved docs path.

@@ -105,6 +105,8 @@ research. Pull only what matters to this phase.
 ## Writes
 
 - `cards/<project-slug>/phases/<phase-slug>/research.md`
+- optional additive customization files under
+  `cards/<project-slug>/phases/<phase-slug>/custom/research/`
 - `cards/<project-slug>/card.md` only when a real blocker or decision needs to
   survive a context reset
 - board pointer moved back from `06-implementation` to `05-slice` only when
@@ -230,4 +232,6 @@ skill`, or `Arguments`.
 - Do not move the board pointer except when routing a wrong phase split back to
   `05-slice`.
 - Do not edit `UBIQUITOUS_LANGUAGE.md`.
-- Do not create sidecar checker files, drafts, durable IDs, or hidden state.
+- Do not create sidecar checker files, drafts, durable IDs, or hidden state;
+  optional customization artifacts may live only under the selected phase's
+  `custom/research/` folder.

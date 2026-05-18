@@ -106,6 +106,8 @@ implementation.
 ## Writes
 
 - `cards/<project-slug>/outputs/brainstorm/brainstorm.md`
+- optional additive customization files under
+  `cards/<project-slug>/outputs/brainstorm/custom/`
 - `cards/<project-slug>/card.md`
 - board pointer moved from `01-brainstorm` to `02-grill` when the brainstorm
   is ready for decision-tree grilling
