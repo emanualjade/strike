@@ -1,7 +1,7 @@
 ---
 name: start
 description: Create a new Strike feature card and first board pointer in docs/strike.
-argument-hint: "\"<feature name>\" [--slug <slug>] [--description \"<short description>\"]"
+argument-hint: "<feature name words> [--slug <slug>] [--description <short description words>]"
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob
 ---
@@ -27,6 +27,11 @@ rules. If the current directory is not a Git repo, mention the fallback once:
 
 Create the smallest useful Strike feature card: a stable card folder plus a
 tiny board pointer in `docs/strike/board/01-brainstorm/`.
+
+Generated slugs should stay short enough to repeat in later Strike commands.
+The bundled script sanitizes slugs, drops common leading task verbs from
+generated slugs, caps them at 48 characters, and deduplicates collisions with
+numeric suffixes.
 
 ## Host Invocation
 

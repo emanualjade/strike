@@ -2,6 +2,19 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.1.3 - 2026-05-17
+
+- Made `start` generate shorter command-friendly slugs by dropping common
+  leading task verbs and capping generated paths at 48 characters.
+- Allowed unquoted multi-word feature names and descriptions in the start
+  helper script.
+- Deduplicated explicit `--slug` values the same way generated slugs are
+  deduplicated.
+- Treated flag-like words such as `--dry-run` as feature/description text when
+  they appear inside the natural-language start input.
+- Included existing board pointers in start-card slug collision checks.
+- Added focused tests for start-card slugging, dedupe, and text normalization.
+
 ## 0.1.2 - 2026-05-17
 
 - Cleaned up stage skill output guidance so follow-up prompts are shown as

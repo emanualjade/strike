@@ -2,11 +2,12 @@
 set -euo pipefail
 
 usage() {
-  printf 'Usage: %s [--repo-root <path>] "<feature name>" [--slug <slug>] [--description "<short description>"]\n' "$0" >&2
+  printf 'Usage: %s [--repo-root <path>] <feature name words> [--slug <slug>] [--description <short description words>]\n' "$0" >&2
   printf 'Set STRIKE_REPO_ROOT as an alternative to --repo-root.\n' >&2
 }
 
-feature_name=""
+max_slug_length=48
+feature_name_parts=()
 slug_override=""
 description=""
 repo_root="${STRIKE_REPO_ROOT:-}"
@@ -24,26 +25,46 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     --description)
-      [[ $# -ge 2 ]] || { usage; exit 2; }
-      description="$2"
-      shift 2
+      shift
+      description_parts=()
+      while [[ $# -gt 0 ]]; do
+        case "$1" in
+          --repo-root|--slug|--description)
+            break
+            ;;
+          *)
+            description_parts+=("$1")
+            shift
+            ;;
+        esac
+      done
+      [[ ${#description_parts[@]} -gt 0 ]] || { usage; exit 2; }
+      description="${description_parts[*]}"
+      ;;
+    --)
+      shift
+      while [[ $# -gt 0 ]]; do
+        feature_name_parts+=("$1")
+        shift
+      done
       ;;
     -*)
-      printf 'Unknown flag: %s\n' "$1" >&2
-      usage
-      exit 2
-      ;;
-    *)
-      if [[ -n "$feature_name" ]]; then
-        printf 'Feature name was provided more than once.\n' >&2
+      if [[ ${#feature_name_parts[@]} -eq 0 ]]; then
+        printf 'Unknown flag: %s\n' "$1" >&2
         usage
         exit 2
       fi
-      feature_name="$1"
+      feature_name_parts+=("$1")
+      shift
+      ;;
+    *)
+      feature_name_parts+=("$1")
       shift
       ;;
   esac
 done
+
+feature_name="${feature_name_parts[*]}"
 
 if [[ -z "$feature_name" ]]; then
   usage
@@ -62,20 +83,115 @@ fi
 repo_root="$(cd "$repo_root" && pwd)"
 strike_root="$repo_root/docs/strike"
 
-slugify() {
+normalize_text() {
   printf '%s' "$1" \
+    | tr '\r\n\t' '   ' \
+    | sed -E 's/[[:cntrl:]]+/ /g; s/[[:space:]]+/ /g; s/^ //; s/ $//'
+}
+
+slugify() {
+  normalize_text "$1" \
     | tr '[:upper:]' '[:lower:]' \
     | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//; s/-+/-/g'
+}
+
+shorten_slug() {
+  local value="$1"
+  local shortened
+  local boundary
+
+  if (( ${#value} <= max_slug_length )); then
+    printf '%s' "$value"
+    return
+  fi
+
+  shortened="${value:0:max_slug_length}"
+  if [[ "$shortened" == *-* ]]; then
+    boundary="${shortened%-*}"
+    if (( ${#boundary} >= max_slug_length / 2 )); then
+      shortened="$boundary"
+    fi
+  fi
+  shortened="${shortened%-}"
+  printf '%s' "$shortened"
+}
+
+drop_leading_task_verb() {
+  local value="$1"
+  local first
+  local rest
+  local dropped_task_verb="no"
+  local -a parts
+
+  IFS='-' read -r -a parts <<< "$value"
+  if (( ${#parts[@]} < 2 )); then
+    printf '%s' "$value"
+    return
+  fi
+
+  first="${parts[0]}"
+  rest="${value#*-}"
+  case "$first" in
+    add|allow|build|create|enable|fix|implement|improve|make|remove|support|update)
+      value="$rest"
+      dropped_task_verb="yes"
+      ;;
+    *)
+      ;;
+  esac
+
+  if [[ "$dropped_task_verb" == "yes" ]]; then
+    IFS='-' read -r -a parts <<< "$value"
+    if (( ${#parts[@]} >= 2 )); then
+      first="${parts[0]}"
+      rest="${value#*-}"
+      case "$first" in
+        a|an|the)
+          value="$rest"
+          ;;
+      esac
+    fi
+  fi
+
+  printf '%s' "$value"
+}
+
+slug_with_suffix() {
+  local base="$1"
+  local suffix="$2"
+  local max_base_length=$((max_slug_length - ${#suffix}))
+  local stem
+
+  if (( max_base_length < 1 )); then
+    max_base_length=1
+  fi
+  stem="${base:0:max_base_length}"
+  stem="${stem%-}"
+  if [[ -z "$stem" ]]; then
+    stem="${base:0:1}"
+  fi
+
+  printf '%s%s' "$stem" "$suffix"
+}
+
+board_pointer_exists() {
+  local value="$1"
+
+  find "$strike_root/board" -mindepth 2 -maxdepth 2 -type f -name "$value.md" -print -quit 2>/dev/null \
+    | grep -q .
 }
 
 if [[ -n "$slug_override" ]]; then
   slug="$(slugify "$slug_override")"
 else
   slug="$(slugify "$feature_name")"
+  slug="$(drop_leading_task_verb "$slug")"
 fi
 
+slug="$(shorten_slug "$slug")"
+
 if [[ -z "$slug" ]]; then
-  printf 'Could not derive a valid slug.\n' >&2
+  printf 'Could not derive a valid slug. Use a feature name or --slug with at least one ASCII letter or number.\n' >&2
   exit 2
 fi
 
@@ -106,17 +222,17 @@ touch \
   "$strike_root/cards/.gitkeep"
 
 base_slug="$slug"
-if [[ -z "$slug_override" ]]; then
-  counter=2
-  while [[ -d "$strike_root/cards/$slug" ]]; do
-    slug="$base_slug-$counter"
-    counter=$((counter + 1))
-  done
-fi
+counter=2
+while [[ -d "$strike_root/cards/$slug" ]] || board_pointer_exists "$slug"; do
+  suffix="-$counter"
+  slug="$(slug_with_suffix "$base_slug" "$suffix")"
+  counter=$((counter + 1))
+done
 
 card_dir="$strike_root/cards/$slug"
 card_path="$card_dir/card.md"
 pointer_path="$strike_root/board/01-brainstorm/$slug.md"
+display_feature_name="$(normalize_text "$feature_name")"
 
 existing_pointer="$(find "$strike_root/board" -mindepth 2 -maxdepth 2 -type f -name "$slug.md" -print -quit 2>/dev/null || true)"
 
@@ -141,13 +257,13 @@ if [[ ! -d "$card_dir" ]]; then
     "$card_dir/demos/.gitkeep" \
     "$card_dir/phases/.gitkeep"
 
-  short_description="$description"
+  short_description="$(normalize_text "$description")"
   if [[ -z "$short_description" ]]; then
     short_description="_Add the rough idea or user-facing outcome here._"
   fi
 
   cat > "$card_path" <<EOF
-# $feature_name
+# $display_feature_name
 
 Short description:
 $short_description
@@ -189,7 +305,7 @@ fi
 
 if [[ -z "$existing_pointer" ]]; then
   cat > "$pointer_path" <<EOF
-# $feature_name
+# $display_feature_name
 
 Card: ../../cards/$slug/card.md
 

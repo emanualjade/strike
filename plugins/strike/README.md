@@ -17,7 +17,7 @@ Strike skills are portable; each host renders the same skill differently.
 Canonical skill names:
 
 ```txt
-start "<feature name>"
+start <feature name words>
 go <feature-slug>
 brainstorm <feature-slug>
 grill <feature-slug>
@@ -40,7 +40,7 @@ language <term|feature-slug|path>
 Claude Code examples:
 
 ```txt
-/strike:start "<feature name>"
+/strike:start Add user profile page
 /strike:go <feature-slug>
 /strike:brainstorm <feature-slug>
 /strike:grill <feature-slug>

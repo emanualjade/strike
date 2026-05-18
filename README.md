@@ -225,23 +225,27 @@ Before using a Strike skill in Copilot CLI, confirm the visible skill names:
 In Claude Code, use the Strike command form:
 
 ```text
-/strike:start "Add CSV export" --slug csv-export --description "Let users export a CSV report."
+/strike:start Add CSV export --description Let users export a CSV report.
 ```
 
 In Codex, use the skill shortcut. The short form is:
 
 ```text
-$start "Add CSV export" --slug csv-export --description "Let users export a CSV report."
+$start Add CSV export --description Let users export a CSV report.
 ```
 
 The namespaced form also works if Codex shows or inserts it:
 
 ```text
-$strike:start "Add CSV export" --slug csv-export --description "Let users export a CSV report."
+$strike:start Add CSV export --description Let users export a CSV report.
 ```
 
 You can type `$` or `/skills` to browse available skills. If more than one
 `start` skill appears, choose the one from Strike.
+
+`start` creates a short slug automatically. Common leading task verbs are
+dropped, so `Add CSV export` becomes `csv-export`. You can still pass
+`--slug <slug>` when you want to choose the slug yourself.
 
 After the card is created, ask Strike what to do next.
 
@@ -308,7 +312,7 @@ Here is what a small Claude Code run might look like from start to finish.
 Assume the feature slug is `csv-export`.
 
 ```text
-/strike:start "Add CSV export" --slug csv-export --description "Let users export a CSV report."
+/strike:start Add CSV export --description Let users export a CSV report.
 /clear
 /strike:brainstorm csv-export
 /clear
