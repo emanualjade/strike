@@ -72,8 +72,9 @@ In the Codex prompt, open the plugin browser:
 /plugins
 ```
 
-Find Strike and install or enable it. After that, start a fresh Codex
-conversation and run Strike from the repo root you want it to work on.
+Select **Install plugin**. If Strike is already installed but disabled, toggle
+it on. After that, start a fresh Codex conversation and run Strike from the repo
+root you want it to work on.
 
 </details>
 
@@ -142,8 +143,8 @@ In the Codex prompt, open the plugin browser:
 /plugins
 ```
 
-Find Strike in the repository marketplace and install or enable it. After that,
-start a fresh Codex conversation from the same repo root.
+Select **Install plugin**. If Strike is already installed but disabled, toggle
+it on. After that, start a fresh Codex conversation from the same repo root.
 
 </details>
 
@@ -241,10 +242,11 @@ For a global Codex marketplace, run this terminal command:
 codex plugin marketplace upgrade strike
 ```
 
-Then open Codex and check `/plugins` if Codex shows an available plugin update.
+Restart Codex, open `/plugins`, apply any available Strike update, then start a
+new thread.
 
-For a repository Codex marketplace, open Codex from that repo root and check
-`/plugins`.
+For a repository Codex marketplace, restart Codex from that repo root, open
+`/plugins`, and apply any available Strike update.
 
 </details>
 
@@ -288,8 +290,8 @@ To confirm the active installed version, run:
 claude plugin list --json
 ```
 
-Old version directories may remain in `~/.claude/plugins/cache/` for a while.
-That does not matter unless `claude plugin list --json` still shows Strike
+Old version directories may remain in `~/.claude/plugins/cache/` for up to 7
+days. That does not matter unless `claude plugin list --json` still shows Strike
 using the old version.
 
 </details>
@@ -333,12 +335,14 @@ If you installed Strike from a repository marketplace, edit or delete:
 Delete the file if it only lists Strike. If it lists other plugins, remove only
 the Strike entry from `plugins`.
 
+Strike project files stay in `docs/strike/` until you delete them.
+
 </details>
 
 <details>
 <summary>Uninstall Claude Code</summary>
 
-From the repo root, uninstall any scopes you used:
+From the repo root, run only the uninstall command for the scope you installed:
 
 ```bash
 claude plugin uninstall strike@strike --scope user
@@ -346,7 +350,8 @@ claude plugin uninstall strike@strike --scope project
 claude plugin uninstall strike@strike --scope local
 ```
 
-Remove the Strike marketplace:
+Remove the Strike marketplace. This also uninstalls Strike plugins installed
+from that marketplace:
 
 ```bash
 claude plugin marketplace remove strike
@@ -378,6 +383,15 @@ Run these terminal commands:
 copilot plugin uninstall strike
 copilot plugin marketplace remove strike
 ```
+
+Verify:
+
+```bash
+copilot plugin list
+copilot plugin marketplace list
+```
+
+Strike project files stay in `docs/strike/` until you delete them.
 
 </details>
 
