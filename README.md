@@ -152,8 +152,7 @@ claude plugin install strike@strike --scope user
 
 Claude Code user scope makes Strike available for you across all projects.
 
-Restart Claude Code after installing. If you are already inside a Claude Code
-session, you can try this app prompt instead of restarting:
+After installing, run this app prompt inside Claude Code to activate Strike:
 
 ```text
 /reload-plugins
@@ -175,8 +174,7 @@ Claude Code project scope writes shared plugin settings to
 `.claude/settings.json`. Commit those settings only when you want collaborators
 to get the same Strike setup.
 
-Restart Claude Code after installing. If you are already inside a Claude Code
-session, you can try this app prompt instead of restarting:
+After installing, run this app prompt inside Claude Code to activate Strike:
 
 ```text
 /reload-plugins
@@ -197,8 +195,7 @@ claude plugin install strike@strike --scope local
 Claude Code local scope writes personal project settings to
 `.claude/settings.local.json`, which should stay out of source control.
 
-Restart Claude Code after installing. If you are already inside a Claude Code
-session, you can try this app prompt instead of restarting:
+After installing, run this app prompt inside Claude Code to activate Strike:
 
 ```text
 /reload-plugins
@@ -266,6 +263,10 @@ Restart Codex from the project root after changing the project marketplace file.
 
 </details>
 
+Claude Code note: uninstalling from the last installed scope also deletes
+Claude-managed plugin data unless you add `--keep-data`. Strike cards and board
+files live in your project under `docs/strike/`.
+
 <details>
 <summary>Uninstall Claude Code user scope</summary>
 
@@ -275,7 +276,7 @@ Run this terminal command:
 claude plugin uninstall strike@strike --scope user
 ```
 
-Restart Claude Code, or run this app prompt:
+After uninstalling, run this app prompt inside Claude Code to refresh active plugins:
 
 ```text
 /reload-plugins
@@ -292,7 +293,7 @@ Run this terminal command from the project root:
 claude plugin uninstall strike@strike --scope project
 ```
 
-Restart Claude Code, or run this app prompt:
+After uninstalling, run this app prompt inside Claude Code to refresh active plugins:
 
 ```text
 /reload-plugins
@@ -309,7 +310,7 @@ Run this terminal command from the project root:
 claude plugin uninstall strike@strike --scope local
 ```
 
-Restart Claude Code, or run this app prompt:
+After uninstalling, run this app prompt inside Claude Code to refresh active plugins:
 
 ```text
 /reload-plugins
@@ -572,7 +573,7 @@ claude plugin marketplace update strike
 claude plugin update strike@strike --scope local
 ```
 
-Restart Claude Code after updating, or run this app prompt:
+After updating, run this app prompt inside Claude Code to activate the update:
 
 ```text
 /reload-plugins

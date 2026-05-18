@@ -14,7 +14,7 @@ The imported Strike plugin also keeps shared board/workflow references under `pl
 
 [Claude Code plugin docs](https://code.claude.com/docs/en/plugins) describe plugins as GitHub or local packages with a `.claude-plugin/plugin.json` manifest. The [plugin reference](https://code.claude.com/docs/en/plugins-reference) lists supported plugin components such as skills and agents. The [marketplace docs](https://code.claude.com/docs/en/plugin-marketplaces) describe `.claude-plugin/marketplace.json` for plugin marketplaces.
 
-Claude Code supports local development with `--plugin-dir` and marketplace installation from GitHub. The docs also call out plugin versions for update behavior, so this repo starts at `0.1.0` and should bump versions before publishing meaningful changes.
+Claude Code supports local development with `--plugin-dir` and marketplace installation from GitHub. The docs also call out plugin versions for update behavior, so this repo keeps host plugin versions aligned and bumps versions before publishing meaningful changes.
 
 Claude Code's skill frontmatter fields are optional, with `description` recommended and `name` inferred from the directory when omitted. Claude supports scripts and arbitrary supporting files; `references/` and `assets/` are portable Agent Skills conventions rather than Claude-specific discovery paths.
 
