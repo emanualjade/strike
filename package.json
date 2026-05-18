@@ -7,7 +7,10 @@
   "scripts": {
     "test": "node scripts/test-slugify.mjs && bash scripts/test-start-card.sh",
     "validate": "node scripts/validate.mjs",
-    "validate:publish": "node scripts/validate.mjs --publish"
+    "validate:publish": "node scripts/validate.mjs --publish",
+    "release:validate": "npm test && npm run validate:publish && claude plugin validate ./plugins/strike && claude plugin validate ./.claude-plugin/marketplace.json",
+    "release:check": "npm run release:validate && claude plugin tag --dry-run ./plugins/strike",
+    "release:tag": "npm run release:check && claude plugin tag --push ./plugins/strike"
   },
   "engines": {
     "node": ">=18"

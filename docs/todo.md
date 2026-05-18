@@ -60,12 +60,11 @@ plugin users; this file tracks release, validation, and setup work.
 Run these before the first public release and before later releases:
 
 ```bash
-npm run validate
-npm run validate:publish
-claude plugin validate ./plugins/strike
-claude plugin validate ./.claude-plugin/marketplace.json
-claude plugin tag --dry-run --force ./plugins/strike
+npm run release:check
+npm run release:tag
 ```
 
-Also run `skills-ref validate` and Copilot CLI smoke tests when those tools are
-available.
+See `docs/release.md` for the difference between normal validation, release
+validation, and publishing a release tag.
+
+Also run `skills-ref validate` when that tool is available.
