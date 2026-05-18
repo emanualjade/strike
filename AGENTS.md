@@ -55,6 +55,15 @@ This repository publishes Strike as a cross-agent plugin and skills marketplace.
 - Treat `/strike:*` as Claude Code invocation syntax. Portable skill handoffs should use `Next Strike skill` plus `Arguments` and render host-specific commands through `plugins/strike/references/invocation.md`.
 - Run `npm run validate` after moving in skills or editing manifests. Before publishing, run `npm run validate:publish`, every available host-native validator, and `skills-ref validate` when the Agent Skills reference validator is available.
 
+## Release Checklist
+
+- Use `docs/release.md` for the full release workflow.
+- If installed users need to receive a change through normal plugin update, make a semver release instead of only pushing to `main`.
+- Before committing the release, update `CHANGELOG.md` and bump every versioned surface that exists: `package.json`, `plugins/strike/.codex-plugin/plugin.json`, `plugins/strike/.claude-plugin/plugin.json`, `plugins/strike/plugin.json`, `.claude-plugin/marketplace.json`, and `.github/plugin/marketplace.json`.
+- Do not add a version to `.agents/plugins/marketplace.json`; that marketplace entry intentionally uses the Codex local-path shape.
+- Run `npm run release:validate` before the release commit when practical, then commit and push the version/changelog changes.
+- After the release commit is pushed, run `npm run release:tag`; it reruns the release checks, creates `strike--v<version>`, and pushes the tag.
+
 ## Working Rules
 
 - Preserve user-written skill content. If a skill exists, edit it narrowly and avoid broad rewrites.

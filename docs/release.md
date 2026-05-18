@@ -32,7 +32,12 @@ strike--v<version>
 
 Release only after the version and changelog changes are committed and pushed.
 
-1. Update the version fields and `CHANGELOG.md`.
+1. Update `CHANGELOG.md` and all versioned package surfaces:
+   `package.json`, `plugins/strike/.codex-plugin/plugin.json`,
+   `plugins/strike/.claude-plugin/plugin.json`, `plugins/strike/plugin.json`,
+   `.claude-plugin/marketplace.json`, and
+   `.github/plugin/marketplace.json`. Do not add a version to
+   `.agents/plugins/marketplace.json`.
 2. Commit the release changes.
 3. Push the commit to GitHub.
 4. Run:
