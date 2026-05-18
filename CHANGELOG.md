@@ -2,6 +2,15 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.4.1 - 2026-05-18
+
+- Hardened `customize review` packets by emitting customization content as JSON
+  data records instead of raw Markdown fences.
+- Made `customize check` fail when expected customization entry directories are
+  blocked by files.
+- Hid the internal `review-packet` mode from public script help while keeping it
+  available to the `customize` skill.
+
 ## 0.4.0 - 2026-05-18
 
 - Added `customize review <entry|all>` for LLM semantic review of repo-local
