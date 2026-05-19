@@ -1,0 +1,73 @@
+name: Host Smoke - Codex
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      - name: Prepare diagnostics
+        run: mkdir -p host-smoke-artifacts/codex
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.1.3 --activate
+
+      - name: Print runtime versions
+        run: |
+          node --version
+          npm --version
+          pnpm --version
+
+      - name: Validate repository
+        run: |
+          pnpm run test
+          pnpm run validate
+          pnpm run validate:publish
+
+      - name: Install Codex CLI on GitHub runner
+        working-directory: ${{ runner.temp }}
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            if npm install -g @openai/codex; then
+              exit 0
+            fi
+            if [ "$attempt" = "3" ]; then
+              exit 1
+            fi
+            sleep 10
+          done
+
+      - name: Run Codex host smoke
+        run: >
+          node scripts/host-smoke.mjs
+          --host codex
+          --strict-missing
+          --artifacts-dir host-smoke-artifacts/codex
+          --codex-source "$GITHUB_REPOSITORY"
+          --codex-ref "$GITHUB_SHA"
+          --codex-sparse .agents/plugins
+          --codex-sparse plugins
+
+      - name: Upload diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: host-smoke-codex
+          path: host-smoke-artifacts/codex
+          if-no-files-found: ignore
+          retention-days: 7

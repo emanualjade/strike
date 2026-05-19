@@ -123,4 +123,80 @@ frontmatter in that portable form and the repo validator rejects comma-separated
 
 ## Validation
 
-`npm run validate` is a repo-shape smoke test for our combined layout. It is not a substitute for host-native validation or current official docs. It intentionally enforces stricter repo policy for portability and release hygiene in a few places, including explicit skill frontmatter, space-separated `allowed-tools`, version alignment, Codex `agents/openai.yaml` metadata, host invocation references, known next-skill handoff targets, balanced Markdown fences, and avoiding Claude-only `/strike:<skill>` or `/clear` instructions inside portable skill docs and shared stage contracts. Use `npm run validate:publish` before release so empty skill packages fail, and pair it with available host validators such as `claude plugin validate`.
+`pnpm run validate` is a repo-shape smoke test for our combined layout. It is not a substitute for host-native validation or current official docs. It intentionally enforces stricter repo policy for portability and release hygiene in a few places, including explicit skill frontmatter, space-separated `allowed-tools`, version alignment, Codex `agents/openai.yaml` metadata, host invocation references, known next-skill handoff targets, balanced Markdown fences, and avoiding Claude-only `/strike:<skill>` or `/clear` instructions inside portable skill docs and shared stage contracts. Use `pnpm run validate:publish` before release so empty skill packages fail, and pair it with available host validators such as `claude plugin validate`.
+
+## Package Manager Hardening
+
+2026-05-19 pnpm research pass: npm registry metadata lists pnpm `11.1.3` as
+the current latest release and requires Node `>=22.13`, so Strike pins
+`packageManager` to `pnpm@11.1.3` and raises the repo engine floor to Node
+`>=22.13`. pnpm 11 documents `minimumReleaseAge`,
+`minimumReleaseAgeStrict`, `minimumReleaseAgeIgnoreMissingTime`,
+`trustPolicy`, `trustPolicyExclude`, `blockExoticSubdeps`, `allowBuilds`,
+`strictDepBuilds`, `engineStrict`, `pmOnFail`, and `verifyDepsBeforeRun` in
+`pnpm-workspace.yaml`. Strike uses these settings to delay fresh package
+versions, require strict release-age behavior, block transitive exotic package
+sources, avoid trust downgrades, require explicit build-script approval, fail
+instead of auto-downloading another package manager, and avoid dependency
+auto-install checks before `pnpm run`.
+
+pnpm 11 audit docs say `auditConfig.ignoreGhsas` replaces the older
+`auditConfig.ignoreCves` filter, so Strike keeps an empty GHSA ignore list
+instead of a CVE ignore list.
+
+## GitHub Actions Host Smoke Tests
+
+2026-05-19 research pass: keep the first host smoke workflows manual
+(`workflow_dispatch`) and deterministic. GitHub documents manual workflow
+dispatch, workflow notifications, logs, failed-step log filtering with
+`gh run view --log-failed`, debug re-runs, error annotations, and artifacts for
+persisting logs or other diagnostic files after a run.
+
+Claude Code documents npm installation with `@anthropic-ai/claude-code`,
+`claude --version`, `DISABLE_AUTOUPDATER`, non-interactive plugin marketplace
+commands, `claude plugin validate`, `claude plugin install`, `claude plugin
+list --json`, and plugin cache behavior under `~/.claude/plugins/cache`.
+
+GitHub documents Copilot CLI npm installation with `@github/copilot`, Node.js
+22+, `copilot plugin marketplace add`, `copilot plugin install`, `copilot
+plugin list`, `copilot plugin update`, `copilot plugin uninstall`, and the
+`COPILOT_HOME` / `COPILOT_CACHE_HOME` isolation variables.
+
+Codex documents `codex plugin marketplace add`, `upgrade`, and `remove`, and
+the OpenAI Codex CLI repository documents npm installation with `@openai/codex`.
+The Codex plugin docs say marketplace plugins are installed into
+`~/.codex/plugins/cache/$MARKETPLACE_NAME/$PLUGIN_NAME/$VERSION/` and can be
+enabled/disabled, but they do not currently document a Claude/Copilot-style
+non-interactive `codex plugin install` command in the same reference. Therefore
+Codex GitHub smoke coverage should start as marketplace-lifecycle coverage and
+must not be described as full non-interactive plugin install coverage until a
+documented command path is confirmed and tested.
+
+2026-05-19 best-practice note: Claude has the richest native validation and CI
+surface for plugin smoke tests. Use `claude plugin validate`, JSON list output,
+and documented plugin-cache environment variables such as
+`CLAUDE_CODE_PLUGIN_CACHE_DIR`, `CLAUDE_CODE_PLUGIN_PREFER_HTTPS`,
+`CLAUDE_CODE_PLUGIN_GIT_TIMEOUT_MS`, and
+`CLAUDE_CODE_DISABLE_OFFICIAL_MARKETPLACE_AUTOINSTALL`. GitHub Copilot CLI does
+not currently document a separate plugin validator; its documented validation
+loop is install locally, list installed plugins, check component discovery, then
+uninstall. Use `COPILOT_HOME`, `COPILOT_CACHE_HOME`, and
+`COPILOT_AUTO_UPDATE=false` to isolate CI state. Codex should use a temp `HOME`
+and documented marketplace lifecycle commands until the install/enable command
+surface is clearer.
+
+2026-05-19 local tooling probe: Claude Code `2.1.144` and Codex CLI `0.130.0`
+were available locally; GitHub Copilot CLI was not. With `HOME`,
+`XDG_CACHE_HOME`, and `XDG_CONFIG_HOME` set to temp directories, Claude
+successfully ran `claude plugin validate .`, `claude plugin validate
+./plugins/strike`, marketplace add, `plugin install strike@strike`, JSON list,
+update, uninstall, and marketplace remove without touching the maintainer's real
+home directory. The installed cache contained `.claude-plugin/plugin.json`,
+`.codex-plugin/plugin.json`, root `plugin.json`, and all Strike skill
+`SKILL.md` files under the temp `CLAUDE_CODE_PLUGIN_CACHE_DIR`. Codex
+successfully ran version checks and local marketplace add/remove with temp
+`HOME`; on macOS it warned that it would not create helper binaries under the
+system temp directory, but exited successfully. `codex plugin marketplace
+upgrade strike` failed for a local marketplace because the source is not
+Git-backed, so local Codex coverage should be add/remove only while GitHub
+coverage can test upgrade from the repository source.

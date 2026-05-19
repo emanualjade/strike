@@ -22,20 +22,22 @@ plugin users; this file tracks release, validation, and setup work.
     skills-ref validate plugins/strike/skills/go
     skills-ref validate plugins/strike/skills/spec
     ```
-- [ ] Run GitHub Copilot CLI smoke tests.
-  - Owner: user installs/authenticates the `copilot` command; Codex runs the
-    checks.
-  - When it matters: before claiming Copilot CLI support is fully verified.
-  - How once available:
-    ```bash
-    copilot plugin marketplace add emanualjade/strike
-    copilot plugin install strike@strike
-    copilot plugin list
-    ```
-    Then in Copilot CLI, confirm `/skills list` and a low-risk Strike skill.
+- [ ] Run GitHub Actions host smoke workflows from a feature branch and iron
+  out failures.
+  - Owner: user starts the manual workflows in GitHub Actions after the workflow
+    files are on a branch GitHub can run; Codex iterates on failures.
+  - When it matters: before promoting host smoke workflows to a release gate.
+  - Notes: see `docs/host-smoke-tests.md` before implementing or editing the
+    workflow files.
 
 ### Codex Can Do Later
 
+- [ ] Iron out host smoke workflow failures and decide which checks can become
+  release gates.
+  - Owner: Codex.
+  - When it matters: after the manual GitHub workflows have real run history.
+  - Notes: keep live model invocation out of required checks until auth and
+    cost behavior are explicit.
 - [ ] After the next versioned Strike release, rerun host update checks.
   - Owner: Codex.
   - When it matters: after a behavior change, skill change, or version bump is
@@ -73,8 +75,8 @@ plugin users; this file tracks release, validation, and setup work.
 Run these before versioned releases:
 
 ```bash
-npm run release:check
-npm run release:tag
+pnpm run release:check
+pnpm run release:tag
 ```
 
 See `docs/release.md` for the difference between normal validation, release

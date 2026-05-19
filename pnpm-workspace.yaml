@@ -1,0 +1,17 @@
+# Security
+minimumReleaseAge: 14400 # 10 days (expressed in minutes)
+minimumReleaseAgeStrict: true
+minimumReleaseAgeIgnoreMissingTime: false
+minimumReleaseAgeExclude: []
+strictDepBuilds: true
+allowBuilds: {}
+blockExoticSubdeps: true
+trustPolicy: no-downgrade
+trustPolicyExclude: []
+auditConfig:
+  ignoreGhsas: []
+
+# Local workstation package-manager/runtime behavior
+engineStrict: true
+pmOnFail: error
+verifyDepsBeforeRun: false
