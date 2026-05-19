@@ -8,7 +8,7 @@ This file records the "is this grounded, invented, and idiomatic?" pass for the 
 
 - OpenAI Codex: [Agent Skills](https://developers.openai.com/codex/skills), [Plugins](https://developers.openai.com/codex/plugins), [Build plugins](https://developers.openai.com/codex/plugins/build), [Codex app commands](https://developers.openai.com/codex/app/commands), [CLI slash commands](https://developers.openai.com/codex/cli/slash-commands), [Subagents](https://developers.openai.com/codex/subagents), [AGENTS.md](https://developers.openai.com/codex/guides/agents-md)
 - Claude Code: [Create plugins](https://code.claude.com/docs/en/plugins), [Plugin marketplaces](https://code.claude.com/docs/en/plugin-marketplaces), [Plugins reference](https://code.claude.com/docs/en/plugins-reference), [Skills](https://code.claude.com/docs/en/skills), [Subagents](https://code.claude.com/docs/en/sub-agents), [Memory](https://code.claude.com/docs/en/memory)
-- GitHub Copilot: [Repository custom instructions](https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions), [Agent skills](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills), [Copilot CLI plugin reference](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference)
+- GitHub Copilot: [Repository custom instructions](https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions), [Agent skills](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills), [Adding agent skills for Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-skills), [Copilot CLI command reference](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference), [Copilot CLI plugin reference](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference)
 - Open standard: [Agent Skills specification](https://agentskills.io/specification)
 
 ## Decisions
@@ -152,6 +152,12 @@ Plugin hosts discover known component directories inside the plugin root. Templa
 - Idiomatic: Acceptable repo tooling.
 
 The hosts provide some validation, but not one command that checks the combined Codex, Claude, Copilot, and Agent Skills layout. `npm run validate` is repo-local quality control, not a host-schema validator or proof of publishability. It intentionally enforces some stricter repo policies, such as version alignment, Codex skill metadata presence, space-separated `allowed-tools`, explicit host invocation guidance in skills, known next-skill handoff targets, balanced Markdown fences, and host-neutral Strike handoffs in skills and stage contracts, even when a host schema marks equivalent fields optional. Use `npm run validate:publish` plus host-native validators before release.
+
+2026-05-19 update: the space-separated `allowed-tools` validator follows the
+Agent Skills specification and Claude Code docs. GitHub Copilot CLI docs also
+show and document its own `allowed-tools` handling, including CLI-specific
+string or array forms, so Copilot behavior should stay on the smoke-test list
+until the installed `copilot` CLI can validate the packaged skills directly.
 
 ## Things We Should Not Add By Default
 

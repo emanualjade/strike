@@ -1,6 +1,7 @@
 # Release Workflow
 
-Use this workflow when publishing a Strike version for Claude and Codex users.
+Use this workflow when publishing a Strike version for Claude Code, Codex, and
+GitHub Copilot CLI users.
 
 ## Normal Work
 

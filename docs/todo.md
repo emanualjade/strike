@@ -1,6 +1,6 @@
 # Strike Todo
 
-Last updated: 2026-05-18.
+Last updated: 2026-05-19.
 
 This is the maintainer checklist for Strike. The public `README.md` is for
 plugin users; this file tracks release, validation, and setup work.
@@ -44,8 +44,11 @@ plugin users; this file tracks release, validation, and setup work.
     ```bash
     codex plugin marketplace upgrade strike
     claude plugin marketplace update strike
-    claude plugin update strike@strike
+    claude plugin update strike@strike --scope user
+    claude plugin update strike@strike --scope project
+    claude plugin update strike@strike --scope local
     ```
+    Run only the Claude update command for the scope being checked.
 - [ ] Update `README.md` with any exact invocation details learned from the
   Codex UI check or Copilot CLI smoke test.
   - Owner: Codex.
@@ -57,7 +60,7 @@ plugin users; this file tracks release, validation, and setup work.
 
 ## Release Checklist
 
-Run these before the first public release and before later releases:
+Run these before versioned releases:
 
 ```bash
 npm run release:check

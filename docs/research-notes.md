@@ -69,10 +69,10 @@ version is stored in a separate directory, and previous version directories are
 marked orphaned and removed automatically later. The docs also say Claude uses
 the resolved plugin version as the cache key and skips updates when the resolved
 version matches the installed one. A disposable fresh install of Strike from the
-public GitHub marketplace resolved `strike@strike` to `0.1.16`, while an older
-local marketplace cache in this machine still contained `0.1.0`; therefore
-Strike docs should direct Claude users to run marketplace update before plugin
-update when checking for a new release.
+public GitHub marketplace resolved `strike@strike` to the then-current
+`0.1.16`, while an older local marketplace cache in this machine still
+contained `0.1.0`; therefore Strike docs should direct Claude users to run
+marketplace update before plugin update when checking for a new release.
 
 ## Codex
 
@@ -82,7 +82,15 @@ The repo keeps `AGENTS.md` as the canonical agent guidance file and adds `CLAUDE
 
 ## GitHub Copilot CLI
 
-[GitHub Copilot agent skills docs](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills) describe skills as folders of instructions, scripts, and resources using the Agent Skills specification. Copilot supports repository-local skills under `.github/skills`, `.claude/skills`, or `.agents/skills`, but for installable bundles the [Copilot CLI plugin reference](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference) defines plugins with a root `plugin.json`, default `skills/` and `agents/` directories, and marketplaces at `.github/plugin/marketplace.json`. Copilot CLI also looks in `.claude-plugin/marketplace.json`, but this repo includes the GitHub-native path too.
+[GitHub Copilot agent skills docs](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills) describe skills as folders of instructions, scripts, and resources using the Agent Skills specification. The [Copilot CLI skill docs](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-skills) document project skills under `.github/skills`, `.claude/skills`, or `.agents/skills`, `/skills list`, `/skills info`, and direct `/SKILL-NAME` prompting. For installable bundles, the [Copilot CLI plugin reference](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference) defines plugins with a root `plugin.json`, default `skills/` and `agents/` directories, terminal `copilot plugin ...` commands, and marketplaces at `.github/plugin/marketplace.json`. Copilot CLI also looks in `.claude-plugin/marketplace.json`, but this repo includes the GitHub-native path too.
+
+The Agent Skills specification and Claude Code docs define `allowed-tools` as a
+space-separated string. GitHub's Copilot CLI command reference currently
+documents `allowed-tools` as a comma-separated string or YAML array, while the
+Copilot skill how-to examples use a single string value such as `shell`. Strike
+keeps the Agent Skills/Claude space-separated form as repo policy for now, and
+the GitHub Copilot CLI smoke test must verify whether this field is accepted
+as-is before claiming fully verified Copilot support.
 
 ## Invocation Syntax
 
