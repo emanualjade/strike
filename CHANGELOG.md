@@ -2,6 +2,24 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.5.0 - 2026-05-19
+
+- Moved `customize` command wording into Markdown templates under
+  `plugins/strike/references/customization/messages/`.
+- Moved customization entry-point details and skill-specific load meanings into
+  `plugins/strike/references/customization/entry-points.json`.
+- Moved generated `how-to-customize-*.md` wording into
+  `plugins/strike/references/customization/templates/how-to.md`.
+- Moved the maintainer-facing customization explanation out of shipped plugin
+  references to `docs/customization-reference.md`.
+- Added validation to keep `plugins/strike/references/` limited to explicit
+  runtime-loaded assets.
+- Reworked customization guidance for extra docs/assets so Strike asks when the
+  destination or per-project/shared intent is unclear and recommends
+  `strike/user-docs/...` paths instead of old per-card custom folders.
+- Made `customize load <skill>` print a short status message instead of the full
+  packet when no repo-local customization is present.
+
 ## 0.4.2 - 2026-05-18
 
 - Clarified `customize init` next steps so `check` is described as setup health

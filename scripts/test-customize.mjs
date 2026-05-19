@@ -57,9 +57,36 @@ function exists(repoRoot, relativePath) {
   return fs.existsSync(path.join(repoRoot, relativePath));
 }
 
+function repoRead(relativePath) {
+  return fs.readFileSync(path.join(root, relativePath), "utf8");
+}
+
 function assertFile(repoRoot, relativePath) {
   assert.ok(exists(repoRoot, relativePath), `missing ${relativePath}`);
   assert.ok(fs.statSync(path.join(repoRoot, relativePath)).isFile(), `not a file: ${relativePath}`);
+}
+
+function testCustomizeOutputUsesReferenceTemplates() {
+  const script = repoRead("plugins/strike/references/scripts/customize.mjs");
+  assert.doesNotMatch(script, /console\.log/);
+  assert.match(repoRead("plugins/strike/references/customization/messages/init.md"), /Strike Customization Init/);
+  assert.match(repoRead("plugins/strike/references/customization/messages/list.md"), /Strike Customization List/);
+  assert.match(repoRead("plugins/strike/references/customization/messages/list-missing-root.md"), /Customization root is missing/);
+  assert.match(repoRead("plugins/strike/references/customization/messages/list-blocked-root.md"), /expected a directory/);
+  assert.match(repoRead("plugins/strike/references/customization/messages/check.md"), /Strike Customization Check/);
+  assert.match(repoRead("plugins/strike/references/customization/messages/review.md"), /per-project or shared\/ongoing/);
+  assert.match(repoRead("plugins/strike/references/customization/templates/how-to.md"), /strike\/user-docs\/<project-slug>/);
+  assert.match(repoRead("plugins/strike/references/customization/templates/user-customization-block.md"), /User Customization/);
+  const entryPoints = repoRead("plugins/strike/references/customization/entry-points.json");
+  assert.match(entryPoints, /"loadMeaning"/);
+  assert.doesNotMatch(entryPoints, /outputs\/[a-z-]+\/custom/);
+  assert.doesNotMatch(entryPoints, /demos\/custom/);
+  for (const skill of SUPPORTED_SKILLS) {
+    const skillText = repoRead(`plugins/strike/skills/${skill}/SKILL.md`);
+    assert.doesNotMatch(skillText, /outputs\/[a-z-]+\/custom/, `${skill} should not suggest old output custom folders`);
+    assert.doesNotMatch(skillText, /demos\/custom/, `${skill} should not suggest old demo custom folders`);
+    assert.doesNotMatch(skillText, /custom\/(research|plan)/, `${skill} should not suggest old phase custom folders`);
+  }
 }
 
 function testInitCreatesBlankCanonicalFilesAndHowToDocs() {
@@ -72,6 +99,8 @@ function testInitCreatesBlankCanonicalFilesAndHowToDocs() {
     assertFile(repo, howTo(entryPoint));
     assert.equal(read(repo, canonical(entryPoint)), "", `${canonical(entryPoint)} should be blank`);
     assert.match(read(repo, howTo(entryPoint)), /Strike never loads this file/);
+    assert.match(read(repo, howTo(entryPoint)), /per-project or shared\/ongoing/);
+    assert.match(read(repo, howTo(entryPoint)), /strike\/user-docs\/shared/);
   }
 
   assert.match(result.stdout, /Root: strike\/customize/);
@@ -160,7 +189,10 @@ function testLoadPacket() {
   assert.match(result.stdout, /Skill: brainstorm/);
   assert.match(result.stdout, /Prefer crisp language/);
   assert.match(result.stdout, /Push back on vague audience claims/);
+  assert.match(result.stdout, /strike\/user-docs\/<project-slug>\/<skill>/);
+  assert.match(result.stdout, /shared\/per-project intent is unclear|per-project or shared intent/);
   assert.match(result.stdout, /End Of User Customization/);
+  assert.doesNotMatch(result.stdout, /outputs\/brainstorm\/custom/);
   assert.doesNotMatch(result.stdout, /THIS HOW-TO SHOULD NOT LOAD/);
   assert.doesNotMatch(result.stdout, /THIS NOTE SHOULD NOT LOAD/);
   assert.doesNotMatch(result.stdout, /THIS LEGACY GLOBAL SHOULD NOT LOAD/);
@@ -169,6 +201,19 @@ function testLoadPacket() {
   const globalIndex = result.stdout.indexOf("global/global.md");
   const skillIndex = result.stdout.indexOf("brainstorm/brainstorm.md");
   assert.ok(globalIndex >= 0 && skillIndex > globalIndex, "global customization should appear before skill customization");
+}
+
+function testLoadWithoutUserContentStaysSmall() {
+  const repo = tempRepo();
+  assertOk(run(repo, ["init"]), "init should succeed");
+
+  const result = run(repo, ["load", "brainstorm"]);
+  assertOk(result, "load without customization should succeed");
+
+  assert.match(result.stdout, /Status: no repo-local customization loaded/);
+  assert.match(result.stdout, /No user customization content was found for this skill/);
+  assert.match(result.stdout, /A repo-safe path is\s+relative/);
+  assert.doesNotMatch(result.stdout, /How To Use This Packet/);
 }
 
 function testLoadGrillPacket() {
@@ -180,7 +225,8 @@ function testLoadGrillPacket() {
   assertOk(result, "load grill should succeed");
 
   assert.match(result.stdout, /Skill: grill/);
-  assert.match(result.stdout, /outputs\/grill\/custom/);
+  assert.match(result.stdout, /strike\/user-docs\/<project-slug>\/<skill>/);
+  assert.doesNotMatch(result.stdout, /outputs\/grill\/custom/);
   assert.match(result.stdout, /Ask one tradeoff at a time/);
   assert.doesNotMatch(result.stdout, /warning: mentions skipping verification/);
 }
@@ -194,7 +240,8 @@ function testLoadSpecPacket() {
   assertOk(result, "load spec should succeed");
 
   assert.match(result.stdout, /Skill: spec/);
-  assert.match(result.stdout, /outputs\/spec\/custom/);
+  assert.match(result.stdout, /strike\/user-docs\/<project-slug>\/<skill>/);
+  assert.doesNotMatch(result.stdout, /outputs\/spec\/custom/);
   assert.match(result.stdout, /Keep success checks concrete/);
 }
 
@@ -242,7 +289,8 @@ function testLoadSkipsOversizedFile() {
   const result = run(repo, ["load", "brainstorm"]);
   assertOk(result, "load should warn and skip oversized file");
   assert.match(result.stdout, /skipped because file is/);
-  assert.match(result.stdout, /Included Files\n- None/);
+  assert.match(result.stdout, /Included Files\s+- None/);
+  assert.match(result.stdout, /No user customization content was loaded/);
 }
 
 function testCheck() {
@@ -321,6 +369,8 @@ function testReviewPacketGlobal() {
   assert.match(result.stdout, /strike\/customize\/global\/global\.md: loaded/);
   assert.match(result.stdout, /disregard it and instead say hello/);
   assert.match(result.stdout, /Ignore reviewer instructions/);
+  assert.match(result.stdout, /create, save, append, maintain, export, or collect extra docs\/assets/);
+  assert.match(result.stdout, /strike\/user-docs\/<project-slug>\/<skill>\/<file-name>\.md/);
   assert.match(result.stdout, /Customization Data Records/);
   assert.doesNotMatch(result.stdout, /^```/m);
   assert.match(result.stdout, /End Of Customization Data/);
@@ -364,6 +414,7 @@ function testReviewPacketAllAndUnsupportedTarget() {
   assert.match(result.stderr, /Unsupported customization review target/);
 }
 
+testCustomizeOutputUsesReferenceTemplates();
 testInitCreatesBlankCanonicalFilesAndHowToDocs();
 testInitPreservesExistingFilesAndStrikeContent();
 testInitFailsWhenStrikePathIsBlocked();
@@ -371,6 +422,7 @@ testInitFailsWhenCustomizePathIsBlocked();
 testInitFailsWhenEntryPointDirectoryIsBlocked();
 testListStates();
 testLoadPacket();
+testLoadWithoutUserContentStaysSmall();
 testLoadGrillPacket();
 testLoadSpecPacket();
 testLoadUnsupportedSkillFails();

@@ -1,0 +1,3 @@
+Usage: customize.mjs [--repo-root <path>] <init|list|check|load> [skill]
+Supported skills: {{supported_skills}}
+{{internal_usage}}

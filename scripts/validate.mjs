@@ -509,6 +509,8 @@ function validateVersionAlignment() {
 }
 
 function validateSharedReferences() {
+  validateRuntimeReferenceBoundary();
+
   const stageContractsPath = "plugins/strike/references/stage-contracts.md";
   if (!exists(stageContractsPath)) {
     fail(`${stageContractsPath}: missing shared stage contracts`);
@@ -526,6 +528,26 @@ function validateSharedReferences() {
   }
   if (/(^|\n)\s*\/clear(\s|$)/.test(stageContracts) || stageContracts.includes("`/clear`")) {
     fail(`${stageContractsPath}: /clear is host-specific; use Reset context first: yes plus references/invocation.md rendering`);
+  }
+}
+
+function validateRuntimeReferenceBoundary() {
+  const allowedRuntimeReferences = [
+    /^plugins\/strike\/references\/board-model\.md$/,
+    /^plugins\/strike\/references\/invocation\.md$/,
+    /^plugins\/strike\/references\/slug-policy\.md$/,
+    /^plugins\/strike\/references\/stage-contracts\.md$/,
+    /^plugins\/strike\/references\/scripts\/[a-z0-9-]+\.mjs$/,
+    /^plugins\/strike\/references\/customization\/entry-points\.json$/,
+    /^plugins\/strike\/references\/customization\/messages\/[a-z0-9-]+\.(md|txt)$/,
+    /^plugins\/strike\/references\/customization\/templates\/[a-z0-9-]+\.md$/,
+  ];
+
+  for (const relativePath of walkFiles("plugins/strike/references")) {
+    const normalizedPath = relativePath.split(path.sep).join("/");
+    if (!allowedRuntimeReferences.some((pattern) => pattern.test(normalizedPath))) {
+      fail(`${normalizedPath}: plugin references are runtime-loaded assets; move dev docs to docs/ or add an explicit runtime allowlist entry`);
+    }
   }
 }
 

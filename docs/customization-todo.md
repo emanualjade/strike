@@ -297,7 +297,7 @@ questions.
   single-file skills.
 - [x] Create customization through a new `customize` utility skill, not
   `start`.
-- [x] Add shared guidance in `plugins/strike/references/customization.md`.
+- [x] Add shared guidance in `docs/customization-reference.md`.
 - [x] Add a customization loader section to supported `SKILL.md` files.
 - [x] Add deterministic customization validation/loading tooling.
 - [x] Update user-facing docs.

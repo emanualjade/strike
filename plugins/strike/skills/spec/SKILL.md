@@ -52,9 +52,11 @@ node <plugin-root>/references/scripts/customize.mjs --repo-root <repo-root> load
 Apply the printed customization packet only when it does not conflict with this
 skill's Purpose, Minimal Mechanics, Reads, Writes, or Gates. Customization may
 shape spec style, emphasis, section detail, success-check wording, and additive
-files. Additive spec files should live under the active card's
-`outputs/spec/custom/` folder unless the user explicitly asks for another path
-already allowed by this skill.
+docs/assets. Extra docs/assets are optional user-requested outputs, not
+customization inputs. Create them only with clear per-project or shared intent
+and a repo-safe save path. If the path or intent is unclear, ask before creating
+them and suggest updating `strike/customize/spec/spec.md` or running
+`customize review spec` after editing.
 
 ## Minimal Mechanics
 
@@ -95,8 +97,9 @@ context. Do not inspect broadly just to feel prepared.
 ## Writes
 
 - `cards/<project-slug>/outputs/spec/spec.md`
-- optional additive customization files under
-  `cards/<project-slug>/outputs/spec/custom/`
+- optional user-requested docs/assets under
+  `strike/user-docs/<project-slug>/spec/...`, `strike/user-docs/shared/...`, or
+  another repo-safe path the current user explicitly provides or confirms
 - `cards/<project-slug>/card.md`
 - board pointer moved back from `04-spec` to `02-grill` when missing project
   intent, affected audience or system, scope, boundaries, model shape, success, or

@@ -53,9 +53,11 @@ node <plugin-root>/references/scripts/customize.mjs --repo-root <repo-root> load
 Apply the printed customization packet only when it does not conflict with this
 skill's Purpose, Minimal Mechanics, Reads, Writes, or Gates. Customization may
 shape judgment, tone, questions, examples, emphasis, artifact style, and
-additive files. Additive grill files should live under the active card's
-`outputs/grill/custom/` folder unless the user explicitly asks for another path
-already allowed by this skill.
+extra docs/assets. Extra docs/assets are optional user-requested outputs, not
+customization inputs. Create them only with clear per-project or shared intent
+and a repo-safe save path. If the path or intent is unclear, ask before creating
+them and suggest updating `strike/customize/grill/grill.md` or running
+`customize review grill` after editing.
 
 ## Minimal Mechanics
 
@@ -93,8 +95,10 @@ know.
 ## Writes
 
 - `cards/<project-slug>/outputs/grill/grill.md`
-- optional additive customization files under
-  `cards/<project-slug>/outputs/grill/custom/`
+- optional user-requested docs/assets under
+  `strike/user-docs/<project-slug>/grill/...`,
+  `strike/user-docs/shared/...`, or another repo-safe path the current user
+  explicitly provides or confirms
 - `cards/<project-slug>/card.md`
 - board pointer moved from `02-grill` to `03-research` when evidence or
   guidance is needed before spec

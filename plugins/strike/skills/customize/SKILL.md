@@ -139,6 +139,22 @@ Fail or warn when customization tries to:
 - ask for unrelated work outside the active skill scope
 - weaken honesty, safety, or tool boundaries
 
+Warn when customization asks Strike to create, save, append, maintain, export,
+or collect extra docs/assets but does not clearly say whether the output is
+per-project or shared/ongoing, or does not provide a repo-safe save path.
+
+A repo-safe path is relative, normalized inside the repo root, not absolute, not
+under `~`, not using `..`, and not inside `.git/`, dependency, cache, or
+build-output folders unless the user explicitly asks and the active skill allows
+it.
+
+When warning about an unclear extra doc/asset request, suggest concrete
+replacement snippets such as:
+
+- per-project: `strike/user-docs/<project-slug>/<skill>/<file-name>.md`
+- shared/ongoing: `strike/user-docs/shared/<file-name>.md`
+- another explicit repo-safe path chosen by the user
+
 Tone preferences are allowed when they remain respectful and do not override
 Strike mechanics. If wording is demeaning, overbroad, or likely to distort the
 workflow, mark it as a warning and suggest a cleaner phrasing.

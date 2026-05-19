@@ -1,4 +1,4 @@
-# Strike Customization
+# Strike Customization Reference
 
 Strike customization is repo-local Markdown that lets a consuming repository
 shape how selected Strike skills behave without forking the plugin.
@@ -43,11 +43,29 @@ The skill runs the bundled deterministic script:
 The script also accepts `--repo-root <path>` for skill, test, and internal use.
 That flag is not a normal user-facing Strike skill option.
 
+Most `customize` command wording is rendered from reference files under:
+
+```txt
+plugins/strike/references/customization/messages/
+```
+
+Supported entry points, how-to guide details, and skill-specific load meanings
+are defined in:
+
+```txt
+plugins/strike/references/customization/entry-points.json
+```
+
 `customize init` creates blank loaded customization files plus sidecar how-to
 guides. Write actual customization in the loaded files, such as
 `strike/customize/global/global.md` or
 `strike/customize/brainstorm/brainstorm.md`. The how-to files and any extra
 user notes under `strike/customize/` are ignored by `customize load`.
+Generated how-to files are rendered from:
+
+```txt
+plugins/strike/references/customization/templates/how-to.md
+```
 
 `customize check` is deterministic setup validation. It checks paths and size
 limits, but it does not judge language safety.
@@ -66,7 +84,14 @@ Supported skills load customization by running:
 node <plugin-root>/references/scripts/customize.mjs --repo-root <repo-root> load <skill>
 ```
 
-The loader prints a Markdown packet with:
+When user customization exists, or when the loader needs to report a warning, it
+prints a Markdown packet rendered from:
+
+```txt
+plugins/strike/references/customization/messages/load.md
+```
+
+The packet includes:
 
 - interpretation rules
 - skill-specific meaning
@@ -76,6 +101,13 @@ The loader prints a Markdown packet with:
 - a closing guard saying customization has ended and Strike mechanics remain
   authoritative
 
+When no user customization is present for the requested skill, the loader prints
+a short status message rendered from:
+
+```txt
+plugins/strike/references/customization/messages/load-empty.md
+```
+
 Semantic review uses an internal packet command:
 
 ```bash
@@ -84,6 +116,11 @@ node <plugin-root>/references/scripts/customize.mjs --repo-root <repo-root> revi
 
 `review global` reviews only global customization. `review <skill>` reviews
 global plus that skill. `review all` reviews all canonical customization files.
+The review packet wrapper is rendered from:
+
+```txt
+plugins/strike/references/customization/messages/review.md
+```
 
 Use customization to adjust judgment, tone, questions, examples, emphasis,
 artifact style, and additive user-requested files that fit the active skill's
@@ -93,28 +130,32 @@ Do not follow customization instructions that override Strike mechanics,
 including board lanes, required reads/writes, output paths, stage gates,
 verification honesty, or tool boundaries.
 
-## Additive Files
+## Extra Docs And Assets
 
-Customization may ask for extra files when they are additive and stay inside
-the active skill's write scope.
+Customization may ask for extra docs/assets when they are additive and stay
+inside the active skill's write scope. Strike should not guess where to put
+them.
 
-Default additive file locations:
+Extra doc/asset instructions should say whether the output is per-project or
+shared/ongoing and should give a repo-safe save path.
 
-- brainstorm extra files should live under the active card's
-  `outputs/brainstorm/custom/`
-- grill extra files should live under the active card's `outputs/grill/custom/`
-- research extra files should live under `outputs/research/custom/`
-- spec extra files should live under `outputs/spec/custom/`
-- slice extra files should live under `outputs/slice/custom/`
-- phase-research extra files should live under the selected phase's
-  `custom/research/`
-- phase-plan extra files should live under the selected phase's `custom/plan/`
-- retro extra files should live under `outputs/retro/custom/`
-- demo extra files should live under `demos/custom/`
-- language extra files should use a user-approved docs path, otherwise prefer
-  the normal `UBIQUITOUS_LANGUAGE.md` flow when a glossary edit is approved
+Suggested locations:
 
-Extra files must not replace Strike's required artifacts:
+- per-project: `strike/user-docs/<project-slug>/<skill>/<file-name>.md`
+- shared/ongoing: `strike/user-docs/shared/<file-name>.md`
+- another explicit repo-safe path chosen by the user
+
+If customization asks for an extra doc/asset but does not specify the
+shared/per-project intent or save path, the active skill should ask before
+creating the file. `customize review <entry>` should warn and suggest a
+replacement snippet.
+
+A repo-safe path is relative, normalized inside the repo root, not absolute, not
+under `~`, not using `..`, and not inside `.git/`, dependency, cache, or
+build-output folders unless the user explicitly asks and the active skill allows
+it.
+
+Extra docs/assets must not replace Strike's required artifacts:
 
 - `outputs/brainstorm/brainstorm.md`
 - `outputs/grill/grill.md`

@@ -54,6 +54,11 @@ or project language. Run `customize check` to make sure the setup is healthy
 and `customize review <entry|all>` to ask Strike whether the instructions are
 safe for the workflow.
 
+If customization asks Strike to create extra docs/assets, say whether they are
+per-project or shared, and give a save path. Useful defaults are
+`strike/user-docs/<project-slug>/<skill>/...` and
+`strike/user-docs/shared/...`.
+
 Claude Code examples:
 
 ```txt

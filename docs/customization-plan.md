@@ -54,8 +54,8 @@ strike/customize/language/how-to-customize-language.md
   Each skill resolves the bundled script by absolute path from the installed
   plugin package and runs `load <skill>` from the consuming repo root before
   material work.
-- Add `plugins/strike/references/customization.md` documenting the rollout,
-  packet contract, additive files, command surface, and why `!` imports are
+- Add `docs/customization-reference.md` documenting the rollout,
+  packet contract, extra docs/assets, command surface, and why `!` imports are
   deferred to possible future host-specific builds.
 - Keep `start` out of customization setup. Users run `customize init`.
 
@@ -77,8 +77,9 @@ strike/customize/language/how-to-customize-language.md
 - The packet includes opening interpretation rules, loaded file contents with
   path labels, and a closing guard: user customization has ended and Strike
   skill mechanics remain authoritative.
-- Customization may request additive files. Each supported skill names its
-  preferred custom output location in the loader packet and `SKILL.md`.
+- Customization may request extra docs/assets. The loader packet and `SKILL.md`
+  files require clear per-project or shared intent plus a repo-safe save path;
+  otherwise the active skill asks before creating the file.
 - `--repo-root <path>` is script/test/internal support, not a normal
   user-facing skill argument.
 

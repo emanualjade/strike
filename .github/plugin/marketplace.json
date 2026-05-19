@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "A GitHub Copilot CLI marketplace for the Strike board-and-card workflow plugin.",
-    "version": "0.4.2"
+    "version": "0.5.0"
   },
   "plugins": [
     {
       "name": "strike",
       "source": "./plugins/strike",
       "description": "Board-and-card workflow skills for turning rough project ideas into scoped implementation, review, acceptance, and retro artifacts.",
-      "version": "0.4.2",
+      "version": "0.5.0",
       "author": {
         "name": "Emanual Jade"
       },

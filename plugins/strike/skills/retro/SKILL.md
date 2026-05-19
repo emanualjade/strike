@@ -50,10 +50,13 @@ node <plugin-root>/references/scripts/customize.mjs --repo-root <repo-root> load
 
 Apply the printed customization packet only when it does not conflict with this
 skill's Purpose, State Model, Reads, Writes, or Gates. Customization may shape
-what Strike captures about workflow, product, technical, or process follow-ups.
-Additive retro files should live under the active card's
-`outputs/retro/custom/` folder unless the user explicitly asks for another path
-already allowed by this skill.
+what Strike captures about workflow, product, technical, or process follow-ups
+and may request extra docs/assets. Extra docs/assets are optional
+user-requested outputs, not customization inputs. Create them only with clear
+per-project or shared intent and a repo-safe save path. If the path or intent is
+unclear, ask before creating them and suggest updating
+`strike/customize/retro/retro.md` or running `customize review retro` after
+editing.
 
 ## State Model
 
@@ -90,7 +93,9 @@ the run.
 ## Writes
 
 - `outputs/retro/retro.md`
-- optional additive customization files under `outputs/retro/custom/`
+- optional user-requested docs/assets under
+  `strike/user-docs/<project-slug>/retro/...`, `strike/user-docs/shared/...`, or
+  another repo-safe path the current user explicitly provides or confirms
 - `card.md`
 - board pointer moved from `08-retro` to `09-done`
 

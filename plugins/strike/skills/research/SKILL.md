@@ -63,9 +63,11 @@ node <plugin-root>/references/scripts/customize.mjs --repo-root <repo-root> load
 Apply the printed customization packet only when it does not conflict with this
 skill's Purpose, Minimal Mechanics, Reads, Writes, or Gates. Customization may
 shape evidence standards, source choices, citation style, synthesis depth, and
-additive files. Additive research files should live under the active card's
-`outputs/research/custom/` folder unless the user explicitly asks for another
-path already allowed by this skill.
+extra docs/assets. Extra docs/assets are optional user-requested outputs, not
+customization inputs. Create them only with clear per-project or shared intent
+and a repo-safe save path. If the path or intent is unclear, ask before creating
+them and suggest updating `strike/customize/research/research.md` or running
+`customize review research` after editing.
 
 ## Minimal Mechanics
 
@@ -108,8 +110,10 @@ or a later spec gap that routed the card back to research.
 ## Writes
 
 - `cards/<project-slug>/outputs/research/research.md`
-- optional additive customization files under
-  `cards/<project-slug>/outputs/research/custom/`
+- optional user-requested docs/assets under
+  `strike/user-docs/<project-slug>/research/...`,
+  `strike/user-docs/shared/...`, or another repo-safe path the current user
+  explicitly provides or confirms
 - `cards/<project-slug>/outputs/grill/grill.md` only when research changes a
   decision and the user resolves it
 - `cards/<project-slug>/card.md`

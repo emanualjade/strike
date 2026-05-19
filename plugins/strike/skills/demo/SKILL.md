@@ -50,9 +50,11 @@ node <plugin-root>/references/scripts/customize.mjs --repo-root <repo-root> load
 Apply the printed customization packet only when it does not conflict with this
 skill's Purpose, Reads, Writes, Boundaries, or Output. Customization may shape
 planning demo style, interaction density, mock data, visual tone, decision
-support, and additive files. Additive demo files should live under the active
-card's `demos/custom/` folder unless the user explicitly asks for another path
-already allowed by this skill.
+support, and extra docs/assets. Extra docs/assets are optional user-requested
+outputs, not customization inputs. Create them only with clear per-project or
+shared intent and a repo-safe save path. If the path or intent is unclear, ask
+before creating them and suggest updating `strike/customize/demo/demo.md` or
+running `customize review demo` after editing.
 
 ## Use When
 
@@ -77,8 +79,9 @@ interactive choices.
 
 - `docs/strike/cards/<project-slug>/demos/<nn-topic>.html`
 - optional `docs/strike/cards/<project-slug>/demos/README.md`
-- optional additive customization files under
-  `docs/strike/cards/<project-slug>/demos/custom/`
+- optional user-requested docs/assets under
+  `strike/user-docs/<project-slug>/demo/...`, `strike/user-docs/shared/...`, or
+  another repo-safe path the current user explicitly provides or confirms
 
 Create the `demos/` folder if it does not exist.
 Before creating a demo file, run the bundled slug helper by absolute path from

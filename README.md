@@ -625,6 +625,11 @@ strike/customize/spec/spec.md
 Write your instructions in the matching file. Each folder also includes a
 `how-to-customize-*.md` guide with ideas for what to write.
 
+If you want Strike to create extra docs or assets, tell it whether they are for
+one project or shared across projects, and give it a save path. Handy defaults
+are `strike/user-docs/<project-slug>/<skill>/...` for project notes and
+`strike/user-docs/shared/...` for shared notes.
+
 Check that the setup is healthy:
 
 ```text

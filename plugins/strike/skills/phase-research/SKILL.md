@@ -55,9 +55,12 @@ node <plugin-root>/references/scripts/customize.mjs --repo-root <repo-root> load
 Apply the printed customization packet only when it does not conflict with this
 skill's Purpose, Minimal Mechanics, Reads, Writes, or Gates. Customization may
 shape phase-scoped evidence, local precedent checks, tactical risk synthesis,
-and additive files. Additive phase-research files should live under the
-selected phase's `custom/research/` folder unless the user explicitly asks for
-another path already allowed by this skill.
+and extra docs/assets. Extra docs/assets are optional user-requested outputs,
+not customization inputs. Create them only with clear per-project or shared
+intent and a repo-safe save path. If the path or intent is unclear, ask before
+creating them and suggest updating
+`strike/customize/phase-research/phase-research.md` or running
+`customize review phase-research` after editing.
 
 ## Minimal Mechanics
 
@@ -105,8 +108,10 @@ research. Pull only what matters to this phase.
 ## Writes
 
 - `cards/<project-slug>/phases/<phase-slug>/research.md`
-- optional additive customization files under
-  `cards/<project-slug>/phases/<phase-slug>/custom/research/`
+- optional user-requested docs/assets under
+  `strike/user-docs/<project-slug>/phase-research/...`,
+  `strike/user-docs/shared/...`, or another repo-safe path the current user
+  explicitly provides or confirms
 - `cards/<project-slug>/card.md` only when a real blocker or decision needs to
   survive a context reset
 - board pointer moved back from `06-implementation` to `05-slice` only when
@@ -232,6 +237,6 @@ skill`, or `Arguments`.
 - Do not move the board pointer except when routing a wrong phase split back to
   `05-slice`.
 - Do not edit `UBIQUITOUS_LANGUAGE.md`.
-- Do not create sidecar checker files, drafts, durable IDs, or hidden state;
-  optional customization artifacts may live only under the selected phase's
-  `custom/research/` folder.
+- Do not create sidecar checker files, drafts, durable IDs, or hidden state.
+  Optional user-requested docs/assets may live only under `strike/user-docs/` or
+  another repo-safe path the current user explicitly provides or confirms.

@@ -58,9 +58,11 @@ node <plugin-root>/references/scripts/customize.mjs --repo-root <repo-root> load
 Apply the printed customization packet only when it does not conflict with this
 skill's Purpose, Minimal Mechanics, Reads, Writes, or Gates. Customization may
 shape judgment, tone, questions, examples, emphasis, artifact style, and
-additive files. Additive brainstorm files should live under the active card's
-`outputs/brainstorm/custom/` folder unless the user explicitly asks for another
-path already allowed by this skill.
+extra docs/assets. Extra docs/assets are optional user-requested outputs, not
+customization inputs. Create them only with clear per-project or shared intent
+and a repo-safe save path. If the path or intent is unclear, ask before creating
+them and suggest updating `strike/customize/brainstorm/brainstorm.md` or running
+`customize review brainstorm` after editing.
 
 ## Philosophy
 
@@ -90,7 +92,8 @@ Arguments: <project-slug>
 ```
 
 Do not read or write outside `docs/strike/` except for light repo context
-inspection. Keep mechanics boring; the value is the conversation.
+inspection and optional user-requested docs/assets under `strike/user-docs/`.
+Keep mechanics boring; the value is the conversation.
 
 ## Reads
 
@@ -106,8 +109,10 @@ implementation.
 ## Writes
 
 - `cards/<project-slug>/outputs/brainstorm/brainstorm.md`
-- optional additive customization files under
-  `cards/<project-slug>/outputs/brainstorm/custom/`
+- optional user-requested docs/assets under
+  `strike/user-docs/<project-slug>/brainstorm/...`,
+  `strike/user-docs/shared/...`, or another repo-safe path the current user
+  explicitly provides or confirms
 - `cards/<project-slug>/card.md`
 - board pointer moved from `01-brainstorm` to `02-grill` when the brainstorm
   is ready for decision-tree grilling

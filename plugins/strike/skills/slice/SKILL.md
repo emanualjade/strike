@@ -50,10 +50,12 @@ node <plugin-root>/references/scripts/customize.mjs --repo-root <repo-root> load
 
 Apply the printed customization packet only when it does not conflict with this
 skill's Purpose, Minimal Mechanics, Reads, Writes, or Gates. Customization may
-shape phase sizing, naming, ordering, phase-plan focus, and additive files.
-Additive slice files should live under the active card's
-`outputs/slice/custom/` folder unless the user explicitly asks for another path
-already allowed by this skill.
+shape phase sizing, naming, ordering, phase-plan focus, and extra docs/assets.
+Extra docs/assets are optional user-requested outputs, not customization inputs.
+Create them only with clear per-project or shared intent and a repo-safe save
+path. If the path or intent is unclear, ask before creating them and suggest
+updating `strike/customize/slice/slice.md` or running `customize review slice`
+after editing.
 
 ## Minimal Mechanics
 
@@ -94,8 +96,9 @@ grill, or research inside slice.
 ## Writes
 
 - `cards/<project-slug>/phases/<phase-slug>/plan.md`
-- optional additive customization files under
-  `cards/<project-slug>/outputs/slice/custom/`
+- optional user-requested docs/assets under
+  `strike/user-docs/<project-slug>/slice/...`, `strike/user-docs/shared/...`, or
+  another repo-safe path the current user explicitly provides or confirms
 - `cards/<project-slug>/card.md`
 - board pointer moved from `05-slice` to `06-implementation` only when the
   first phase can be phase-planned after a context reset

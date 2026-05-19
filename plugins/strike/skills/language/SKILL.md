@@ -52,9 +52,12 @@ node <plugin-root>/references/scripts/customize.mjs --repo-root <repo-root> load
 Apply the printed customization packet only when it does not conflict with this
 skill's Purpose, Source Of Truth, Usage Modes, Output, or Gates. Customization
 may shape terminology review, glossary style, naming pressure, domain-language
-discussion, and additive files. If additive language files are useful, use a
-user-approved docs path; otherwise prefer the normal `UBIQUITOUS_LANGUAGE.md`
-flow when a glossary edit is approved.
+discussion, and extra docs/assets. Extra docs/assets are optional
+user-requested outputs, not customization inputs. Create them only with clear
+per-project or shared intent and a repo-safe save path. If the path or intent is
+unclear, ask before creating them and suggest updating
+`strike/customize/language/language.md` or running `customize review language`
+after editing.
 
 ## Source Of Truth
 
@@ -247,7 +250,10 @@ Do not add:
 
 - `UBIQUITOUS_LANGUAGE.md` only when the user approves a concrete glossary
   change or provides exact text to apply
-- optional additive customization files only at a user-approved docs path
+- optional user-requested docs/assets under
+  `strike/user-docs/<project-slug>/language/...`,
+  `strike/user-docs/shared/...`, or another repo-safe path the current user
+  explicitly provides or confirms
 
 ## Output
 
@@ -267,4 +273,5 @@ Keep responses compact and user-facing:
 - Do not edit implementation files unless the user explicitly asks for code
   renames and confirms the scope.
 - Do not apply uncertain glossary changes without user approval.
-- Do not create additive language files without a user-approved docs path.
+- Do not create extra language docs/assets without clear per-project or shared
+  intent and a repo-safe path.
