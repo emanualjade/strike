@@ -61,7 +61,7 @@ Next Strike skill: go
 Arguments: <project-slug>
 ```
 
-Do not write slices, implementation plans, review, acceptance, retro,
+Do not write slices, implementation plans, review, readiness, retro,
 implementation files, repo glossary edits, durable IDs, YAML blocks, or
 machine-readable routing metadata.
 
@@ -264,14 +264,14 @@ Split success checks into:
 
 - repo-verifiable checks: tests, command output, API responses, generated
   files, screenshots, routes, rendered states, type checks, browser
-  walkthroughs, logs, or repo evidence acceptance can inspect
+  walkthroughs, logs, or repo evidence readiness review can inspect
 - live/human checks: user taste calls, maintainer or stakeholder signoff, live
   sales/demo checks, external user signoff, production smoke checks, or
   analytics that cannot be proven from repo evidence alone
 
-Acceptance can pass only when required checks are satisfied. If a live or human
-check is required and has not happened yet, acceptance should wait for that
-signoff instead of treating it as complete.
+Readiness review can pass only when required checks are satisfied. If a live or
+human check is required and has not happened yet, readiness review should wait
+for that signoff instead of treating it as complete.
 
 Do not invent measurable metrics just to look rigorous. Use observable checks
 that match the project's real risk.

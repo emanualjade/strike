@@ -68,7 +68,7 @@ cards/<project-slug>/outputs/brainstorm/
 cards/<project-slug>/outputs/grill/
 cards/<project-slug>/outputs/research/
 cards/<project-slug>/outputs/spec/
-cards/<project-slug>/outputs/acceptance/
+cards/<project-slug>/outputs/readiness/
 cards/<project-slug>/outputs/retro/
 cards/<project-slug>/demos/
 ```

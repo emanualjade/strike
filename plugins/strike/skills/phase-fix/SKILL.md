@@ -1,6 +1,6 @@
 ---
 name: phase-fix
-description: Fix phase-scoped review or acceptance findings and route back to review.
+description: Fix phase-scoped review or readiness findings and route back to review.
 argument-hint: "[project-slug] phase:<phase-slug>"
 disable-model-invocation: true
 allowed-tools: Read Write Edit MultiEdit Bash Grep Glob WebFetch WebSearch
@@ -21,11 +21,12 @@ user decide what to do next.
 
 Repair blocking findings for one phase.
 
-The usual source of truth is `phases/<phase-slug>/review.md`. When acceptance
-has moved the card back to implementation, the source can instead be
-phase-scoped acceptance fixes recorded in `outputs/acceptance/acceptance.md`
-and `card.md`. Fix only those blocking items, rerun relevant checks, write
-`fix.md`, and route back to the `phase-review` skill.
+The usual source of truth is `phases/<phase-slug>/review.md`. When
+readiness-review has moved the card back to implementation, the source can
+instead be phase-scoped readiness fixes recorded in
+`outputs/readiness/readiness.md` and `card.md`. Fix only those blocking items,
+rerun relevant checks, write `fix.md`, and route back to the `phase-review`
+skill.
 
 This is not a rebuild, redesign, or cleanup pass.
 
@@ -83,7 +84,7 @@ Arguments: <project-slug> phase:<phase-slug>
 ```
 
 If `review.md` contains no blocking fixes and there are no phase-scoped
-acceptance fixes for this phase, stop and recommend:
+readiness fixes for this phase, stop and recommend:
 
 ```txt
 Reset context first: yes
@@ -91,7 +92,7 @@ Next Strike skill: go
 Arguments: <project-slug>
 ```
 
-Do not create review, acceptance, retro, durable IDs, YAML blocks, hidden
+Do not create review, readiness, retro, durable IDs, YAML blocks, hidden
 routing metadata, or repo glossary edits.
 
 ## Reads
@@ -104,21 +105,21 @@ routing metadata, or repo glossary edits.
 - selected phase `build.md`
 - selected phase `review.md`
 - existing selected phase `fix.md` if present
-- `outputs/acceptance/acceptance.md` if acceptance moved the card back to
+- `outputs/readiness/readiness.md` if readiness review moved the card back to
   implementation
 - current `git status --short`
 - current implementation/test files named by the blocking fixes and build
   evidence
 
 Use `review.md` to decide what to fix when review has blocking fixes. If the
-card was sent back from acceptance, use only acceptance fixes explicitly
+card was sent back from readiness review, use only readiness fixes explicitly
 assigned to this phase. Use `spec.md`, `plan.md`, and `build-brief.md` only to
 preserve the intended phase shape.
 
 ## Writes
 
 - implementation, test, or documentation files needed to close the blocking
-  review or acceptance findings
+  review or readiness findings
 - optional user-requested docs/assets under
   `strike/user-docs/<project-slug>/phase-fix/...`,
   `strike/user-docs/shared/...`, or another repo-safe path the current user
@@ -142,7 +143,7 @@ For each blocking item:
 - rerun relevant checks
 - leave unrelated issues alone
 
-If a review or acceptance item is wrong, ambiguous, or would require a product,
+If a review or readiness item is wrong, ambiguous, or would require a product,
 technical, workflow, scope, or design decision, stop and explain. Do not
 silently reinterpret the finding.
 
@@ -173,13 +174,13 @@ Write `fix.md` compactly:
 
 ## Summary
 
-[What blocking review or acceptance findings were fixed.]
+[What blocking review or readiness findings were fixed.]
 
-Source: [Phase review or acceptance.]
+Source: [Phase review or readiness review.]
 
 ## Fixes
 
-- [x] [Review or acceptance finding] — [what changed].
+- [x] [Review or readiness finding] — [what changed].
 
 ## Files Changed
 
@@ -230,7 +231,7 @@ the fix addressed.
 Before finishing, reread `fix.md` as if the chat transcript is gone. It is
 ready when:
 
-- each blocking review or acceptance item is addressed or the blocker is explicit
+- each blocking review or readiness item is addressed or the blocker is explicit
 - changed files are listed
 - verification results are recorded honestly
 - rollback notes exist for changed implementation/test files
@@ -252,9 +253,9 @@ skill`, or `Arguments`.
 
 ## Gates
 
-- Do not fix anything outside the review or phase-scoped acceptance findings
+- Do not fix anything outside the review or phase-scoped readiness findings
   unless the user explicitly expands scope.
-- Do not run review or acceptance.
+- Do not run review or readiness review.
 - Do not create durable IDs or hidden state fields.
 - Do not move out of `06-implementation`.
 - Do not commit.

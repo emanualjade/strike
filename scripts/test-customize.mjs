@@ -139,6 +139,14 @@ function testInitCreatesBlankCanonicalFilesAndHowToDocs() {
     assert.match(read(repo, howTo(entryPoint)), /strike\/user-docs\/shared/);
   }
 
+  const customizationReference = JSON.parse(repoRead("plugins/strike/references/customization/entry-points.json"));
+  for (const [entryPoint, details] of Object.entries(customizationReference.entryPoints)) {
+    if (details.reviewFiles === true) {
+      assert.ok(fs.statSync(path.join(repo, CUSTOMIZE_USER_ROOT, entryPoint, "reviews")).isDirectory(), `missing reviews dir for ${entryPoint}`);
+      assert.match(read(repo, howTo(entryPoint)), /Review lenses:/);
+    }
+  }
+
   assert.match(result.stdout, /# Strike Init/);
   assert.match(result.stdout, /Root: strike\/customize/);
   assert.match(result.stdout, /User customization: strike\/customize\/user/);
@@ -268,6 +276,16 @@ function testListStates() {
   result = run(repo, ["list"]);
   assertOk(result, "list with user content should succeed");
   assert.match(result.stdout, /brainstorm\/brainstorm\.md: has user content/);
+  assert.match(result.stdout, /phase-review\/reviews\/\*\.md: none/);
+
+  write(repo, `${CUSTOMIZE_USER_ROOT}/phase-review/reviews/accessibility.md`, "Check focus behavior.\n");
+  write(repo, `${CUSTOMIZE_USER_ROOT}/phase-review/reviews/security.md`, "\n");
+  write(repo, `${CUSTOMIZE_USER_ROOT}/accept/accept.md`, "Legacy readiness guidance.\n");
+  result = run(repo, ["list"]);
+  assertOk(result, "list should include review lens states and legacy warnings");
+  assert.match(result.stdout, /phase-review\/reviews\/accessibility\.md: has user content/);
+  assert.match(result.stdout, /phase-review\/reviews\/security\.md: blank/);
+  assert.match(result.stdout, /accept\/accept\.md: legacy accept customization is ignored/);
 }
 
 function testPreviewPacket() {
@@ -341,25 +359,44 @@ function testPreviewSpecPacket() {
   assert.match(result.stdout, /Keep success checks concrete/);
 }
 
-function testPreviewBuildFixAcceptPackets() {
+function testPreviewBuildFixReadinessPackets() {
   const repo = tempRepo();
   assertOk(runInit(repo), "init should succeed");
   write(repo, canonical("phase-build"), "Prefer small, reviewable implementation steps.\n");
+  write(repo, canonical("phase-review"), "Treat missing keyboard checks as blocking.\n");
   write(repo, canonical("phase-fix"), "Resolve only blocking findings unless the user expands scope.\n");
-  write(repo, canonical("accept"), "Be strict about unresolved human checks.\n");
+  write(repo, canonical("readiness-review"), "Be strict about unresolved human checks.\n");
+  write(repo, `${CUSTOMIZE_USER_ROOT}/phase-review/reviews/security.md`, "Check auth boundaries.\n");
+  write(repo, `${CUSTOMIZE_USER_ROOT}/phase-review/reviews/accessibility.md`, "Check focus order and visible focus.\n");
 
   let result = run(repo, ["preview", "phase-build"]);
   assertOk(result, "preview phase-build should succeed");
   assert.match(result.stdout, /# Strike Custom User Instructions/);
   assert.match(result.stdout, /Prefer small, reviewable implementation steps/);
 
+  result = run(repo, ["preview", "phase-review"]);
+  assertOk(result, "preview phase-review should succeed");
+  assert.match(result.stdout, /# Strike Custom User Instructions/);
+  assert.match(result.stdout, /Treat missing keyboard checks as blocking/);
+  assert.match(result.stdout, /Check focus order and visible focus/);
+  assert.match(result.stdout, /Check auth boundaries/);
+  assert.match(result.stdout, /read-only review lenses/);
+  assert.ok(
+    result.stdout.indexOf("phase-review/phase-review.md") < result.stdout.indexOf("phase-review/reviews/accessibility.md"),
+    "skill customization should load before review lenses",
+  );
+  assert.ok(
+    result.stdout.indexOf("phase-review/reviews/accessibility.md") < result.stdout.indexOf("phase-review/reviews/security.md"),
+    "review lenses should load in filename order",
+  );
+
   result = run(repo, ["preview", "phase-fix"]);
   assertOk(result, "preview phase-fix should succeed");
   assert.match(result.stdout, /# Strike Custom User Instructions/);
   assert.match(result.stdout, /Resolve only blocking findings/);
 
-  result = run(repo, ["preview", "accept"]);
-  assertOk(result, "preview accept should succeed");
+  result = run(repo, ["preview", "readiness-review"]);
+  assertOk(result, "preview readiness-review should succeed");
   assert.match(result.stdout, /# Strike Custom User Instructions/);
   assert.match(result.stdout, /Be strict about unresolved human checks/);
 }
@@ -367,7 +404,7 @@ function testPreviewBuildFixAcceptPackets() {
 function testPreviewUnsupportedSkillFails() {
   const repo = tempRepo();
   assertOk(runInit(repo), "init should succeed");
-  const result = run(repo, ["preview", "phase-review"]);
+  const result = run(repo, ["preview", "accept"]);
   assertStatus(result, 2, "unsupported skill should fail");
   assert.match(result.stderr, /Unsupported customization skill/);
 }
@@ -481,6 +518,109 @@ function testCheck() {
   assert.match(result.stdout, /max is/);
 }
 
+function testReviewLensPathSafetyAndWarnings() {
+  const repo = tempRepo();
+  assertOk(runInit(repo), "init should succeed");
+  const outside = fs.mkdtempSync(path.join(os.tmpdir(), "strike-customize-outside-"));
+  write(outside, "outside.md", "OUTSIDE SHOULD NOT LOAD.\n");
+
+  fs.rmSync(path.join(repo, `${CUSTOMIZE_USER_ROOT}/phase-review/reviews`), { recursive: true, force: true });
+  fs.symlinkSync(outside, path.join(repo, `${CUSTOMIZE_USER_ROOT}/phase-review/reviews`));
+
+  let result = run(repo, ["preview", "phase-review"]);
+  assertOk(result, "preview should warn instead of following symlinked review lens directories");
+  assert.match(result.stdout, /expected a normal directory but found a symlink/);
+  assert.doesNotMatch(result.stdout, /OUTSIDE SHOULD NOT LOAD/);
+
+  result = run(repo, ["check-setup"]);
+  assertStatus(result, 1, "check-setup should fail symlinked review lens directories");
+  assert.match(result.stdout, /expected a normal directory but found a symlink/);
+
+  fs.rmSync(path.join(repo, `${CUSTOMIZE_USER_ROOT}/phase-review/reviews`), { recursive: true, force: true });
+  fs.mkdirSync(path.join(repo, `${CUSTOMIZE_USER_ROOT}/phase-review/reviews`), { recursive: true });
+  fs.symlinkSync(path.join(outside, "outside.md"), path.join(repo, `${CUSTOMIZE_USER_ROOT}/phase-review/reviews/security.md`));
+
+  result = run(repo, ["preview", "phase-review"]);
+  assertOk(result, "preview should warn instead of following symlinked review lens files");
+  assert.match(result.stdout, /security\.md: skipped because expected a normal file but found a symlink/);
+  assert.doesNotMatch(result.stdout, /OUTSIDE SHOULD NOT LOAD/);
+
+  result = run(repo, ["check-setup"]);
+  assertStatus(result, 1, "check-setup should fail symlinked review lens files");
+  assert.match(result.stdout, /security\.md: skipped because expected a normal file but found a symlink/);
+}
+
+function testReviewLensInvalidOversizedAndTotalSizeChecks() {
+  const repo = tempRepo();
+  assertOk(runInit(repo), "init should succeed");
+  write(repo, canonical("phase-review"), "Review carefully.\n");
+  write(repo, `${CUSTOMIZE_USER_ROOT}/phase-review/reviews/Bad_Name.md`, "Bad filename.\n");
+  write(repo, `${CUSTOMIZE_USER_ROOT}/phase-review/reviews/oversized.md`, `${"x".repeat(FILE_MAX_BYTES + 1)}\n`);
+
+  let result = run(repo, ["check-setup"]);
+  assertStatus(result, 1, "check-setup should warn on invalid lens names and fail oversized lenses");
+  assert.match(result.stdout, /Bad_Name\.md: skipped because review lens filenames must be lowercase kebab-case/);
+  assert.match(result.stdout, /oversized\.md: file is/);
+
+  result = run(repo, ["preview", "phase-review"]);
+  assertOk(result, "preview should skip invalid and oversized lenses");
+  assert.match(result.stdout, /Bad_Name\.md: skipped because review lens filenames must be lowercase kebab-case/);
+  assert.match(result.stdout, /oversized\.md: skipped because file is/);
+  assert.doesNotMatch(result.stdout, /Bad filename/);
+
+  const repoWithTotal = tempRepo();
+  assertOk(runInit(repoWithTotal), "init should succeed");
+  write(repoWithTotal, canonical("global"), `${"g".repeat(15 * 1000)}\n`);
+  write(repoWithTotal, canonical("phase-review"), `${"p".repeat(15 * 1000)}\n`);
+  write(repoWithTotal, `${CUSTOMIZE_USER_ROOT}/phase-review/reviews/accessibility.md`, `${"a".repeat(15 * 1000)}\n`);
+  write(repoWithTotal, `${CUSTOMIZE_USER_ROOT}/phase-review/reviews/data-integrity.md`, `${"d".repeat(15 * 1000)}\n`);
+  write(repoWithTotal, `${CUSTOMIZE_USER_ROOT}/phase-review/reviews/edge-cases.md`, `${"e".repeat(8 * 1000)}\n`);
+
+  result = run(repoWithTotal, ["check-setup"]);
+  assertStatus(result, 1, "check-setup should include review lenses in total size checks");
+  assert.match(result.stdout, /and review lenses total/);
+
+  result = run(repoWithTotal, ["preview", "phase-review"]);
+  assertOk(result, "preview should skip lens content that exceeds total load size");
+  assert.match(result.stdout, /edge-cases\.md: skipped because total loaded customization would exceed/);
+}
+
+function testReviewLensBlockedDirectoryAndLegacyAcceptWarnings() {
+  const repo = tempRepo();
+  assertOk(runInit(repo), "init should succeed");
+  write(repo, `${CUSTOMIZE_USER_ROOT}/accept/accept.md`, "Legacy accept guidance.\n");
+
+  let result = runInit(repo);
+  assertOk(result, "init should warn about legacy accept customization without migrating it");
+  assert.match(result.stdout, /accept\/accept\.md: legacy accept customization is ignored/);
+
+  fs.rmSync(path.join(repo, `${CUSTOMIZE_USER_ROOT}/slice-review/reviews`), { recursive: true, force: true });
+  write(repo, `${CUSTOMIZE_USER_ROOT}/slice-review/reviews`, "not a directory\n");
+
+  result = run(repo, ["check-setup"]);
+  assertStatus(result, 1, "check-setup should fail blocked review lens directories and warn on legacy accept customization");
+  assert.match(result.stdout, /slice-review\/reviews: expected a directory/);
+  assert.match(result.stdout, /accept\/accept\.md: legacy accept customization is ignored/);
+
+  result = run(repo, ["preview", "slice-review"]);
+  assertOk(result, "preview should warn instead of crashing on blocked review lens directories");
+  assert.match(result.stdout, /slice-review\/reviews: expected a directory/);
+
+  const permissionRepo = tempRepo();
+  assertOk(runInit(permissionRepo), "init should succeed");
+  const reviewsDir = path.join(permissionRepo, `${CUSTOMIZE_USER_ROOT}/readiness-review/reviews`);
+  fs.chmodSync(reviewsDir, 0o000);
+  try {
+    result = run(permissionRepo, ["check-setup"]);
+    assert.notEqual(result.status, 2, `permission-blocked reviews directory should not crash\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`);
+    if (result.status === 1) {
+      assert.match(result.stdout, /readiness-review\/reviews: could not read directory/);
+    }
+  } finally {
+    fs.chmodSync(reviewsDir, 0o700);
+  }
+}
+
 function testCheckReportsMissingCanonicalFile() {
   const repo = tempRepo();
   assertOk(runInit(repo), "init should succeed");
@@ -558,16 +698,25 @@ function testReviewInstructionsPacketAllAndUnsupportedTarget() {
   const repo = tempRepo();
   assertOk(runInit(repo), "init should succeed");
   write(repo, canonical("spec"), "Keep acceptance checks concrete.\n");
+  write(repo, `${CUSTOMIZE_USER_ROOT}/readiness-review/reviews/release-readiness.md`, "Require human signoff before moving to retro.\n");
 
   let result = run(repo, ["review-instructions-packet", "all"]);
   assertOk(result, "review-instructions-packet all should succeed");
   assert.match(result.stdout, /Target: all/);
   assert.match(result.stdout, /global\/global\.md: blank/);
   assert.match(result.stdout, /spec\/spec\.md: loaded/);
+  assert.match(result.stdout, /readiness-review\/reviews\/release-readiness\.md: loaded/);
   assert.match(result.stdout, /Keep acceptance checks concrete/);
+  assert.match(result.stdout, /Require human signoff before moving to retro/);
   assert.match(result.stdout, /"content":"Keep acceptance checks concrete\."/);
 
-  result = run(repo, ["review-instructions-packet", "phase-review"]);
+  const specIndex = result.stdout.indexOf("spec/spec.md");
+  const readinessIndex = result.stdout.indexOf("readiness-review/readiness-review.md");
+  const lensIndex = result.stdout.indexOf("readiness-review/reviews/release-readiness.md");
+  assert.ok(specIndex >= 0 && readinessIndex > specIndex, "all review packet should include canonical files before lens files");
+  assert.ok(lensIndex > readinessIndex, "review packet should include review lenses after their canonical skill file");
+
+  result = run(repo, ["review-instructions-packet", "accept"]);
   assertStatus(result, 2, "unsupported review target should fail");
   assert.match(result.stderr, /Unsupported customization review target/);
 }
@@ -587,13 +736,16 @@ testPreviewPacket();
 testPreviewWithoutUserContentIsSilent();
 testPreviewGrillPacket();
 testPreviewSpecPacket();
-testPreviewBuildFixAcceptPackets();
+testPreviewBuildFixReadinessPackets();
 testPreviewUnsupportedSkillFails();
 testCliRejectsExtraPositionals();
 testPreviewSkipsOversizedFile();
 testPreviewWarnsWhenCanonicalPathIsDirectory();
 testPreviewPacketIncludesWarningsWithContent();
 testCheck();
+testReviewLensPathSafetyAndWarnings();
+testReviewLensInvalidOversizedAndTotalSizeChecks();
+testReviewLensBlockedDirectoryAndLegacyAcceptWarnings();
 testCheckReportsMissingCanonicalFile();
 testCheckFailsWhenEntryPointDirectoryIsBlocked();
 testCheckFailsWhenCanonicalPathIsDirectory();

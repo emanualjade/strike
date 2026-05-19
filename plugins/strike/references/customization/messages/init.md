@@ -16,6 +16,10 @@ System runtime: {{system_root}}
 
 {{existing_files}}
 
+## Warnings
+
+{{warnings}}
+
 ## Next Steps
 
 - Edit a customization file such as `strike/customize/user/global/global.md` or `strike/customize/user/brainstorm/brainstorm.md`.

@@ -94,5 +94,5 @@ host-specific label.
 ## Gates
 
 - Do not create production files.
-- Do not create brainstorm, grill, spec, slice, acceptance, or retro outputs.
+- Do not create brainstorm, grill, spec, slice, readiness, or retro outputs.
 - Do not migrate or edit unrelated Strike artifacts.

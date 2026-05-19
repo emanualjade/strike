@@ -6,10 +6,10 @@ This note captures the early design for repo-local Strike customization
 documents. The idea is still fuzzy, so this file preserves the direction,
 feedback, and questions before implementation hardens the shape too early.
 
-## Current Single-File Rollout
+## Current Rollout
 
-The first implementation supports selected single-file customization entries,
-not the full customization tree. It supports:
+The current implementation supports selected customization entries plus
+read-only review lenses for review skills. It supports:
 
 ```txt
 strike/customize/system/customize.mjs
@@ -24,18 +24,28 @@ strike/customize/user/research/research.md
 strike/customize/user/research/how-to-customize-research.md
 strike/customize/user/spec/spec.md
 strike/customize/user/spec/how-to-customize-spec.md
+strike/customize/user/spec-review/spec-review.md
+strike/customize/user/spec-review/how-to-customize-spec-review.md
+strike/customize/user/spec-review/reviews/
 strike/customize/user/slice/slice.md
 strike/customize/user/slice/how-to-customize-slice.md
+strike/customize/user/slice-review/slice-review.md
+strike/customize/user/slice-review/how-to-customize-slice-review.md
+strike/customize/user/slice-review/reviews/
 strike/customize/user/phase-research/phase-research.md
 strike/customize/user/phase-research/how-to-customize-phase-research.md
 strike/customize/user/phase-plan/phase-plan.md
 strike/customize/user/phase-plan/how-to-customize-phase-plan.md
 strike/customize/user/phase-build/phase-build.md
 strike/customize/user/phase-build/how-to-customize-phase-build.md
+strike/customize/user/phase-review/phase-review.md
+strike/customize/user/phase-review/how-to-customize-phase-review.md
+strike/customize/user/phase-review/reviews/
 strike/customize/user/phase-fix/phase-fix.md
 strike/customize/user/phase-fix/how-to-customize-phase-fix.md
-strike/customize/user/accept/accept.md
-strike/customize/user/accept/how-to-customize-accept.md
+strike/customize/user/readiness-review/readiness-review.md
+strike/customize/user/readiness-review/how-to-customize-readiness-review.md
+strike/customize/user/readiness-review/reviews/
 strike/customize/user/retro/retro.md
 strike/customize/user/retro/how-to-customize-retro.md
 strike/customize/user/demo/demo.md
@@ -52,8 +62,8 @@ runtime, while `customize` exposes `list`, `check-setup`,
 Supported skills run the repo-local loader before material work; it is silent
 when no customization exists, prints lean custom-instructions text when
 customization loads, and prints a short warning when all customization is
-skipped for size. Review files, custom executable scripts, and host-specific
-generated skill builds are future work.
+skipped for size. Custom executable scripts and host-specific generated skill
+builds are future work.
 
 ## Feature Idea
 
@@ -68,7 +78,7 @@ users a durable place to say things like:
 - how research should gather evidence
 - what spec review should care about
 - what phase review should check
-- how acceptance should judge readiness
+- how readiness review should judge readiness
 
 Customization should shape judgment, tone, standards, examples, and review
 checks. It should not override Strike mechanics, board state, output paths,
@@ -138,8 +148,8 @@ strike/customize/
   phase-fix/
     phase-fix.md
 
-  accept/
-    accept.md
+  readiness-review/
+    readiness-review.md
     reviews/
       release-readiness.md
 
@@ -195,7 +205,7 @@ Examples:
   clearly enough before slicing or building
 - `phase-review/reviews/forms.md`: inspect a built phase against local form
   implementation standards
-- `accept/reviews/release-readiness.md`: check assembled project readiness
+- `readiness-review/reviews/release-readiness.md`: check assembled project readiness
   before moving to retro
 
 This avoids a vague top-level `lenses/` directory where it is unclear when a
@@ -352,10 +362,16 @@ questions.
 - [x] Add single-file customization for `phase-build`, `phase-fix`, and
   `accept`.
 
+## Resolved In 0.7.0
+
+- [x] Rename the final `accept` workflow step to `readiness-review` without a
+  compatibility alias.
+- [x] Add customization for `spec-review`, `slice-review`, `phase-review`, and
+  `readiness-review`.
+- [x] Add optional read-only `reviews/*.md` lenses for review skills.
+
 ## Future Questions
 
-- Should review skills support both one entry-point file and
-  `reviews/*.md` lenses?
 - Should Strike ever generate host-specific skill builds where Claude-only `!`
   command injection can preload customization?
 - Should custom executable review scripts exist at all, and if so, what trust,

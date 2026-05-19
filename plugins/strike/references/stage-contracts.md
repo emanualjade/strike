@@ -214,10 +214,10 @@ Writes:
 Move to `05-slice` when:
 
 - the spec is concrete enough to slice
-- repo-verifiable success checks are concrete enough to review and accept, or
-  the card clearly says acceptance depends on live/human signoff
-- live/human checks, if any, are separated from checks acceptance can grade from
-  repo evidence
+- repo-verifiable success checks are concrete enough for readiness review, or
+  the card clearly says readiness depends on live/human signoff
+- live/human checks, if any, are separated from checks readiness review can
+  grade from repo evidence
 - known risks are visible
 
 Move back to `03-research` when:
@@ -451,25 +451,25 @@ Primary job:
 - review a built phase from fresh context
 - write plain-language blocking fixes or a pass verdict
 - leave implementation/test repairs to phase-fix when fixes are needed
-- move to acceptance only when all phases are cleanly reviewed
+- move to readiness only when all phases are cleanly reviewed
 
 Writes:
 
 - `phases/<phase-slug>/review.md`
 - updates `card.md`
-- may move board pointer to `07-acceptance`
+- may move board pointer to `07-readiness`
 
 Validation:
 
 - phase plan, build evidence, and current diff were read
 - blocking fixes are plain unchecked checklist items
-- pass verdict has enough evidence to trust acceptance as the next stage
+- pass verdict has enough evidence to trust readiness review as the next stage
 - skipped, failed, or missing checks are not hidden
 
-Move to `07-acceptance` when:
+Move to `07-readiness` when:
 
 - all planned phases are reviewed cleanly or intentionally skipped in prose
-- no blocking implementation or acceptance-fix checklist items remain
+- no blocking implementation or readiness-fix checklist items remain
 
 ## Phase Fix
 
@@ -477,7 +477,7 @@ Allowed lane: `06-implementation`.
 
 Primary job:
 
-- fix blocking work found by phase-review or phase-scoped acceptance fixes
+- fix blocking work found by phase-review or phase-scoped readiness fixes
 - stay inside the selected phase unless the user explicitly expands scope
 - rerun the relevant checks
 - write fix evidence and return to phase-review
@@ -489,22 +489,22 @@ Writes:
 
 Validation:
 
-- every fix maps to a real review finding, a phase-scoped acceptance fix, or
+- every fix maps to a real review finding, a phase-scoped readiness fix, or
   user-approved expansion
 - the phase is ready for another phase-review after a context reset
 - card/board state stays in `06-implementation` and routes back to phase-review
 
-## Acceptance
+## Readiness Review
 
-Allowed lane: `07-acceptance`.
+Allowed lane: `07-readiness`.
 
 Primary job:
 
-- validate the assembled project against the spec's success checks
+- review the assembled project against the spec's success checks
 - verify that the project has been built in full and accurately, not merely
   that phase files exist
 - verify that important project tests/checks exist, or that missing tests are
-  explicitly called out as acceptance gaps
+  explicitly called out as readiness gaps
 - run broad enough tests, command/API checks, manual checks, or browser checks
   for confidence
 - route failures back as plain-language checklist items
@@ -512,8 +512,8 @@ Primary job:
 
 Writes:
 
-- `outputs/acceptance/acceptance.md`
-- updates `card.md` with acceptance fixes when needed
+- `outputs/readiness/readiness.md`
+- updates `card.md` with readiness fixes when needed
 - may move board pointer to `08-retro`
 - may move board pointer back to `06-implementation`
 
@@ -525,14 +525,14 @@ Move to `08-retro` when:
   appropriate
 - important project behavior has tests/checks, or the absence of tests is
   intentionally accepted and visible
-- no acceptance fix checklist items remain open
+- no readiness fix checklist items remain open
 
 Move back to `06-implementation` when:
 
-- acceptance found fixable work
-- acceptance fixes are assigned to the affected phase when possible, so
-  phase-fix can repair them and phase-review can verify them before acceptance
-  runs again
+- readiness review found fixable work
+- readiness fixes are assigned to the affected phase when possible, so
+  phase-fix can repair them and phase-review can verify them before readiness
+  review runs again
 
 ## Retro
 

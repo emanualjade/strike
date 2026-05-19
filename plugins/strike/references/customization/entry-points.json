@@ -4,12 +4,15 @@
     "grill",
     "research",
     "spec",
+    "spec-review",
     "slice",
+    "slice-review",
     "phase-research",
     "phase-plan",
     "phase-build",
+    "phase-review",
     "phase-fix",
-    "accept",
+    "readiness-review",
     "retro",
     "demo",
     "language"
@@ -46,7 +49,7 @@
         "technical, product, or workflow tradeoffs to emphasize",
         "extra docs or assets with clear per-project or shared intent and a repo-safe save path"
       ],
-      "boundary": "Do not turn grill into spec, slice, implementation, acceptance, or retro."
+      "boundary": "Do not turn grill into spec, slice, implementation, readiness review, or retro."
     },
     "research": {
       "title": "Research",
@@ -57,18 +60,30 @@
         "how deep to go before spec",
         "extra docs or assets with clear per-project or shared intent and a repo-safe save path"
       ],
-      "boundary": "Do not turn research into spec, slice, implementation, acceptance, or retro."
+      "boundary": "Do not turn research into spec, slice, implementation, readiness review, or retro."
     },
     "spec": {
       "title": "Spec",
-      "target": "how spec writes durable project rules and acceptance detail",
+      "target": "how spec writes durable project rules and success-check detail",
       "ideas": [
         "section emphasis",
         "success-check wording",
         "how constraints should be captured",
         "extra docs or assets with clear per-project or shared intent and a repo-safe save path"
       ],
-      "boundary": "Do not turn spec into slicing, implementation planning, review, acceptance, or retro."
+      "boundary": "Do not turn spec into slicing, implementation planning, review, readiness review, or retro."
+    },
+    "spec-review": {
+      "title": "Spec Review",
+      "target": "how spec-review checks and safely repairs the project spec before slicing",
+      "reviewFiles": true,
+      "ideas": [
+        "spec quality standards",
+        "domain-specific review concerns",
+        "when to ask instead of safely repairing the spec",
+        "read-only review lenses such as security, accessibility, data integrity, or edge cases"
+      ],
+      "boundary": "Do not turn spec-review into new product discovery, broad research, slicing, implementation planning, implementation, or approval."
     },
     "slice": {
       "title": "Slice",
@@ -79,7 +94,19 @@
         "ordering preferences",
         "extra docs or assets with clear per-project or shared intent and a repo-safe save path"
       ],
-      "boundary": "Do not turn slice into phase-plan, implementation, review, acceptance, or retro."
+      "boundary": "Do not turn slice into phase-plan, implementation, review, readiness review, or retro."
+    },
+    "slice-review": {
+      "title": "Slice Review",
+      "target": "how slice-review checks and safely repairs phase plans before implementation",
+      "reviewFiles": true,
+      "ideas": [
+        "phase quality standards",
+        "local slicing risks to check before build planning",
+        "when to reroute upstream instead of editing phase plans",
+        "read-only review lenses such as dependencies, testability, rollout, or edge cases"
+      ],
+      "boundary": "Do not turn slice-review into spec rewriting, phase planning, implementation, implementation review, or approval."
     },
     "phase-research": {
       "title": "Phase Research",
@@ -90,7 +117,7 @@
         "risk summary style",
         "extra docs or assets with clear per-project or shared intent and a repo-safe save path"
       ],
-      "boundary": "Do not turn phase-research into phase-plan, implementation, review, acceptance, or retro."
+      "boundary": "Do not turn phase-research into phase-plan, implementation, review, readiness review, or retro."
     },
     "phase-plan": {
       "title": "Phase Plan",
@@ -101,7 +128,7 @@
         "verification planning preferences",
         "extra docs or assets with clear per-project or shared intent and a repo-safe save path"
       ],
-      "boundary": "Do not turn phase-plan into implementation, review, acceptance, or retro."
+      "boundary": "Do not turn phase-plan into implementation, review, readiness review, or retro."
     },
     "phase-build": {
       "title": "Phase Build",
@@ -112,30 +139,44 @@
         "verification depth and evidence detail",
         "extra docs or assets with clear per-project or shared intent and a repo-safe save path"
       ],
-      "boundary": "Do not expand beyond the selected phase, skip verification, change board mechanics, create review, acceptance, or retro artifacts, or commit."
+      "boundary": "Do not expand beyond the selected phase, skip verification, change board mechanics, create review, readiness, or retro artifacts, or commit."
+    },
+    "phase-review": {
+      "title": "Phase Review",
+      "target": "how phase-review checks one built phase and records review findings",
+      "reviewFiles": true,
+      "ideas": [
+        "implementation review strictness",
+        "repo-specific quality, test, and risk checks",
+        "what should be blocking vs non-blocking",
+        "read-only review lenses such as accessibility, security, data integrity, UI polish, or edge cases"
+      ],
+      "boundary": "Do not edit implementation files, create fixes, skip evidence checks, move board state with unresolved blockers, or commit."
     },
     "phase-fix": {
       "title": "Phase Fix",
-      "target": "how phase-fix repairs blocking review or acceptance findings",
+      "target": "how phase-fix repairs blocking review or readiness findings",
       "ideas": [
         "fix sizing and prioritization",
         "how to handle ambiguous findings",
         "verification and evidence style",
         "extra docs or assets with clear per-project or shared intent and a repo-safe save path"
       ],
-      "boundary": "Do not fix outside blocking review or acceptance findings, rerun review or acceptance, move the board out of implementation, or commit."
+      "boundary": "Do not fix outside blocking review or readiness findings, rerun review or readiness review, move the board out of implementation, or commit."
     },
-    "accept": {
-      "title": "Accept",
-      "target": "how acceptance judges readiness against the Strike spec",
+    "readiness-review": {
+      "title": "Readiness Review",
+      "target": "how readiness-review judges readiness against the Strike spec",
+      "reviewFiles": true,
       "ideas": [
-        "acceptance strictness",
+        "readiness strictness",
         "evidence style",
         "human-check wording",
         "fix summary style",
+        "read-only review lenses such as release readiness, human signoff, operational risk, or documentation",
         "extra docs or assets with clear per-project or shared intent and a repo-safe save path"
       ],
-      "boundary": "Do not lower acceptance gates, edit implementation files, create retro files, or move to retro with unresolved fixes or human checks."
+      "boundary": "Do not lower readiness gates, edit implementation files, create retro files, or move to retro with unresolved fixes or human checks."
     },
     "retro": {
       "title": "Retro",
@@ -146,7 +187,7 @@
         "how concise the retro should be",
         "extra docs or assets with clear per-project or shared intent and a repo-safe save path"
       ],
-      "boundary": "Do not reopen implementation, review, or acceptance work from retro customization."
+      "boundary": "Do not reopen implementation, review, or readiness work from retro customization."
     },
     "demo": {
       "title": "Demo",

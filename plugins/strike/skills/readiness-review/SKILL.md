@@ -1,12 +1,12 @@
 ---
-name: accept
-description: Validate the assembled project against the Strike spec.
+name: readiness-review
+description: Review whether the assembled project is ready against the Strike spec.
 argument-hint: "[project-slug]"
 disable-model-invocation: true
 allowed-tools: Read Write Edit MultiEdit Bash Grep Glob
 ---
 
-# Strike Accept
+# Strike Readiness Review
 
 ## Communication
 
@@ -19,8 +19,8 @@ user decide what to do next.
 
 ## Purpose
 
-Validate the assembled project after implementation review. Acceptance checks
-whether the reviewed work satisfies the spec's success checks closely
+Review the assembled project after implementation review. Readiness review
+checks whether the reviewed work satisfies the spec's success checks closely
 enough to move to retro, or whether fixes/signoff remain.
 
 ## Host Invocation
@@ -33,23 +33,24 @@ without raw field labels.
 
 ## User Customization
 
-Before doing any material acceptance work, you MUST run the repo-local
+Before doing any material readiness-review work, you MUST run the repo-local
 customization loader from the consuming repository root:
 
 ```bash
 test -f strike/customize/system/customize.mjs || { echo 'Strike is not initialized in this repo yet. Run the Strike `init` skill first.'; exit 1; }
-node strike/customize/system/customize.mjs --repo-root <repo-root> preview accept
+node strike/customize/system/customize.mjs --repo-root <repo-root> preview readiness-review
 ```
 
-If the loader says `accept` is unsupported, the repo-local runtime is out of
-date. Stop and tell the user to run the Strike `init` skill to refresh it.
+If the loader says `readiness-review` is unsupported, the repo-local runtime is
+out of date. Stop and tell the user to run the Strike `init` skill to refresh
+it.
 
 ## State Model
 
 Board location is state. This skill may work only when the card pointer is in:
 
 ```txt
-docs/strike/board/07-acceptance/<project-slug>.md
+docs/strike/board/07-readiness/<project-slug>.md
 ```
 
 If the pointer is in another lane, stop and recommend:
@@ -64,11 +65,11 @@ If any argument beyond the project slug is passed, stop and show the valid
 form:
 
 ```txt
-Next Strike skill: accept
+Next Strike skill: readiness-review
 Arguments: <project-slug>
 ```
 
-Keep acceptance scoped to this project's Strike card artifacts and the
+Keep readiness review scoped to this project's Strike card artifacts and the
 implementation/test diffs named by the build, fix, and review evidence.
 
 ## Reads
@@ -83,21 +84,22 @@ implementation/test diffs named by the build, fix, and review evidence.
 
 ## Writes
 
-- `outputs/acceptance/acceptance.md`
+- `outputs/readiness/readiness.md`
 - optional user-requested docs/assets under
-  `strike/user-docs/<project-slug>/accept/...`, `strike/user-docs/shared/...`,
-  or another repo-safe path the current user explicitly provides or confirms
+  `strike/user-docs/<project-slug>/readiness-review/...`,
+  `strike/user-docs/shared/...`, or another repo-safe path the current user
+  explicitly provides or confirms
 - `card.md`
-- board pointer moved from `07-acceptance` to `08-retro` only when acceptance
+- board pointer moved from `07-readiness` to `08-retro` only when readiness
   passes
-- board pointer moved from `07-acceptance` back to `06-implementation` when
-  fixable acceptance work remains
+- board pointer moved from `07-readiness` back to `06-implementation` when
+  fixable readiness work remains
 
-Write `acceptance.md` as plain Markdown with verdict, what was accepted,
-repo-verifiable checks, live/human checks, evidence, and acceptance fixes. Do
+Write `readiness.md` as plain Markdown with verdict, what was reviewed,
+repo-verifiable checks, live/human checks, evidence, and readiness fixes. Do
 not use IDs, YAML blocks, status fields, or routing metadata.
 
-## Acceptance Lenses
+## Readiness Checks
 
 Check:
 
@@ -106,35 +108,36 @@ Check:
 - the assembled project appears built in full and accurately against
   `outputs/spec/spec.md`
 - repo-verifiable success checks from spec are satisfied or have
-  acceptance-fix checklist items
+  readiness-fix checklist items
 - important project behavior has tests/checks, or the absence of tests is
-  recorded as an acceptance gap
-- live/human success checks from spec are satisfied, or acceptance waits for
+  recorded as a readiness gap
+- live/human success checks from spec are satisfied, or readiness review waits for
   human signoff
 - build/fix/review evidence includes checks and rollback notes
 - fix evidence, when present, is consistent with the passing review
-- implementation diff still matches the accepted build evidence
-- acceptance fixes, if any, are plain unchecked checklist items
+- implementation diff still matches the reviewed build evidence
+- readiness fixes, if any, are plain unchecked checklist items
 
 Do not edit implementation files.
 
 ## Verdict
 
-Use one of these plain verdicts in `acceptance.md`:
+Use one of these plain verdicts in `readiness.md`:
 
 - `Pass` — success checks passed; move to retro.
 - `Needs fixes` — fixable implementation issues remain; move or leave in
   implementation.
 - `Awaiting human check` — implementation evidence is clean, but real user,
   stakeholder, or live-environment signoff is required before calling the
-  project accepted.
-- `Blocked` — acceptance cannot reach a verdict because evidence is missing.
+  project ready.
+- `Blocked` — readiness review cannot reach a verdict because evidence is
+  missing.
 
 ## Card Update
 
 When verdict is `Pass`:
 
-- mark the acceptance checklist item complete
+- mark the readiness-review checklist item complete
 - add a retro checklist item if missing:
   `- [ ] Retro: capture workflow lessons.`
 - move the board pointer to `08-retro`
@@ -142,14 +145,14 @@ When verdict is `Pass`:
 When verdict is `Needs fixes`:
 
 - keep or move the pointer to `06-implementation`
-- add plain acceptance-fix checklist items to `card.md`
-- assign each acceptance fix to an existing phase when possible
+- add plain readiness-fix checklist items to `card.md`
+- assign each readiness fix to an existing phase when possible
 - add a phase-fix checklist item for the first affected phase when a phase is
   clear
 
 When verdict is `Awaiting human check` or `Blocked`:
 
-- leave the pointer in `07-acceptance`
+- leave the pointer in `07-readiness`
 - add the needed human check or missing evidence to `card.md`
 
 ## Moving The Board
@@ -162,12 +165,12 @@ exists for the project slug under `docs/strike/board/*/`.
 
 Final response should be short and user-facing:
 
-- acceptance path written
+- readiness path written
 - verdict
-- acceptance fixes or human checks, if any
+- readiness fixes or human checks, if any
 - whether the card moved to `08-retro`
 - next prompt, rendered for the current host with `references/invocation.md`:
-  - accepted: `retro <project-slug>`
+  - ready: `retro <project-slug>`
   - needs fixes: show the specific
     `phase-fix <project-slug> phase:<phase-slug>` prompt when an affected phase
     is clear; otherwise show `go <project-slug>` as a state check
@@ -180,5 +183,6 @@ skill`, or `Arguments`.
 - Do not edit implementation files.
 - Do not create retro files.
 - Do not create durable IDs or hidden state fields.
-- Do not move to retro when acceptance has unresolved fixes or human checks.
+- Do not move to retro when readiness review has unresolved fixes or human
+  checks.
 - Do not commit.

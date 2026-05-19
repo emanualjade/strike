@@ -73,7 +73,7 @@ the run.
 - `outputs/spec/spec.md`
 - every phase `plan.md`, `build-brief.md`, `build.md`, `review.md`, and
   `fix.md` that exists
-- `outputs/acceptance/acceptance.md`
+- `outputs/readiness/readiness.md`
 - current `git status --short`
 
 ## Writes

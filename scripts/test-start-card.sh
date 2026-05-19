@@ -44,8 +44,12 @@ test_generated_slug() {
   assert_eq "$slug" "user-profile-page" "generated slug"
   assert_file "$card"
   assert_file "$repo/docs/strike/board/01-brainstorm/user-profile-page.md"
+  assert_file "$repo/docs/strike/board/07-readiness/.gitkeep"
+  assert_file "$repo/docs/strike/cards/user-profile-page/outputs/readiness/.gitkeep"
   grep -F 'Brainstorm: sharpen fuzzy idea into a clear project direction.' "$card" >/dev/null \
     || fail "starter checklist does not use project direction wording"
+  grep -F 'Readiness: `outputs/readiness/`' "$card" >/dev/null \
+    || fail "starter card does not use readiness output wording"
 }
 
 test_unquoted_project_name() {

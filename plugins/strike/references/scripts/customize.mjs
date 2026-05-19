@@ -22,11 +22,13 @@ export const CUSTOMIZE_USER_ROOT = `${CUSTOMIZE_ROOT}/user`;
 export const FILE_MAX_BYTES = 16 * 1024;
 export const TOTAL_MAX_BYTES = 64 * 1024;
 export const SUPPORTED_SKILLS = CUSTOMIZATION_REFERENCE.supportedSkills ?? [];
+export const REVIEW_LENS_DIR = "reviews";
 
 validateCustomizationReference();
 
 const ENTRY_POINTS = ["global", ...SUPPORTED_SKILLS];
 const CANONICAL_FILES = ENTRY_POINTS.map((entryPoint) => canonicalPath(entryPoint));
+const LEGACY_ACCEPT_CUSTOMIZATION = "accept/accept.md";
 
 function usage({ includeInternal = false } = {}) {
   return renderTemplate("messages/usage.txt", {
@@ -145,6 +147,18 @@ function skillPath(skill) {
   return canonicalPath(skill);
 }
 
+function supportsReviewFiles(entryPoint) {
+  return ENTRY_POINT_DETAILS[entryPoint]?.reviewFiles === true;
+}
+
+function reviewLensDirectory(entryPoint) {
+  return `${entryPoint}/${REVIEW_LENS_DIR}`;
+}
+
+function isReviewLensFileName(fileName) {
+  return /^[a-z0-9]+(?:-[a-z0-9]+)*\.md$/.test(fileName);
+}
+
 function ensureSupportedSkill(skill) {
   if (!SUPPORTED_SKILLS.includes(skill)) {
     throw new Error(`Unsupported customization skill: ${skill || "(missing)"}. Supported skills: ${SUPPORTED_SKILLS.join(", ")}`);
@@ -158,9 +172,47 @@ function ensureSupportedReviewTarget(target) {
   throw new Error(`Unsupported customization review target: ${target || "(missing)"}. Supported targets: global, ${SUPPORTED_SKILLS.join(", ")}, all`);
 }
 
+function inspectPath(absolutePath) {
+  try {
+    return fs.lstatSync(absolutePath);
+  } catch (error) {
+    if (error.code === "ENOENT" || error.code === "ENOTDIR") {
+      return null;
+    }
+    throw error;
+  }
+}
+
+function skippedFileReason(info) {
+  if (info.symlink) {
+    return "expected a normal file but found a symlink";
+  }
+  if (info.notFile) {
+    return "expected a file";
+  }
+  if (info.readError) {
+    return `could not read file (${info.readError})`;
+  }
+  return "";
+}
+
+function checkFileProblem(info) {
+  if (info.symlink) {
+    return "expected a normal file but found a symlink";
+  }
+  if (info.notFile) {
+    return "expected a file";
+  }
+  if (info.readError) {
+    return `could not read file (${info.readError})`;
+  }
+  return "";
+}
+
 function readFileInfo(repoRoot, relativePath) {
   const absolutePath = pathFor(repoRoot, relativePath);
-  if (!fs.existsSync(absolutePath)) {
+  const stat = inspectPath(absolutePath);
+  if (!stat) {
     return {
       relativePath,
       absolutePath,
@@ -172,7 +224,20 @@ function readFileInfo(repoRoot, relativePath) {
     };
   }
 
-  const stat = fs.statSync(absolutePath);
+  if (stat.isSymbolicLink()) {
+    return {
+      relativePath,
+      absolutePath,
+      exists: true,
+      bytes: stat.size,
+      content: "",
+      normalizedContent: "",
+      hasUserContent: false,
+      symlink: true,
+      notFile: true,
+    };
+  }
+
   if (!stat.isFile()) {
     return {
       relativePath,
@@ -186,7 +251,21 @@ function readFileInfo(repoRoot, relativePath) {
     };
   }
 
-  const content = fs.readFileSync(absolutePath, "utf8");
+  let content = "";
+  try {
+    content = fs.readFileSync(absolutePath, "utf8");
+  } catch (error) {
+    return {
+      relativePath,
+      absolutePath,
+      exists: true,
+      bytes: stat.size,
+      content: "",
+      normalizedContent: "",
+      hasUserContent: false,
+      readError: error.code || error.message,
+    };
+  }
   const normalizedContent = normalizeContent(content);
   return {
     relativePath,
@@ -197,6 +276,126 @@ function readFileInfo(repoRoot, relativePath) {
     normalizedContent,
     hasUserContent: normalizedContent.length > 0,
   };
+}
+
+function legacyAcceptCustomizationWarnings(repoRoot) {
+  const info = readFileInfo(repoRoot, LEGACY_ACCEPT_CUSTOMIZATION);
+  if (!info.exists) {
+    return [];
+  }
+  if (info.hasUserContent || info.symlink || info.notFile || info.readError) {
+    return [`${CUSTOMIZE_USER_ROOT}/${LEGACY_ACCEPT_CUSTOMIZATION}: legacy accept customization is ignored; move any needed guidance to ${CUSTOMIZE_USER_ROOT}/readiness-review/readiness-review.md`];
+  }
+  return [];
+}
+
+function reviewLensWarningIsError(warning) {
+  return (
+    warning.includes(": expected a directory") ||
+    warning.includes(": expected a normal directory") ||
+    warning.includes(": could not read directory") ||
+    warning.includes(": skipped because expected a file") ||
+    warning.includes(": skipped because expected a normal file") ||
+    warning.includes(": skipped because could not read file")
+  );
+}
+
+function discoverReviewLensFiles(repoRoot, entryPoint) {
+  if (!supportsReviewFiles(entryPoint)) {
+    return {
+      files: [],
+      warnings: [],
+    };
+  }
+
+  const relativeDirectory = reviewLensDirectory(entryPoint);
+  const absoluteDirectory = pathFor(repoRoot, relativeDirectory);
+  const directoryStat = inspectPath(absoluteDirectory);
+  if (!directoryStat) {
+    return {
+      files: [],
+      warnings: [],
+    };
+  }
+
+  if (directoryStat.isSymbolicLink()) {
+    return {
+      files: [],
+      warnings: [`${CUSTOMIZE_USER_ROOT}/${relativeDirectory}: expected a normal directory but found a symlink`],
+    };
+  }
+
+  if (!directoryStat.isDirectory()) {
+    return {
+      files: [],
+      warnings: [`${CUSTOMIZE_USER_ROOT}/${relativeDirectory}: expected a directory`],
+    };
+  }
+
+  const files = [];
+  const warnings = [];
+  let entries = [];
+  try {
+    entries = fs.readdirSync(absoluteDirectory, { withFileTypes: true })
+      .sort((left, right) => left.name.localeCompare(right.name));
+  } catch (error) {
+    return {
+      files: [],
+      warnings: [`${CUSTOMIZE_USER_ROOT}/${relativeDirectory}: could not read directory (${error.code || error.message})`],
+    };
+  }
+
+  for (const entry of entries) {
+    if (entry.name.startsWith(".") || !entry.name.endsWith(".md")) {
+      continue;
+    }
+    const relativePath = `${relativeDirectory}/${entry.name}`;
+    if (!isReviewLensFileName(entry.name)) {
+      warnings.push(`${CUSTOMIZE_USER_ROOT}/${relativePath}: skipped because review lens filenames must be lowercase kebab-case .md files`);
+      continue;
+    }
+    const info = readFileInfo(repoRoot, relativePath);
+    const problem = skippedFileReason(info);
+    if (problem) {
+      warnings.push(`${CUSTOMIZE_USER_ROOT}/${relativePath}: skipped because ${problem}`);
+      continue;
+    }
+    files.push(info);
+  }
+
+  return { files, warnings };
+}
+
+function previewPaths(repoRoot, skill) {
+  const paths = [canonicalPath("global"), skillPath(skill)];
+  const { files } = discoverReviewLensFiles(repoRoot, skill);
+  for (const info of files) {
+    paths.push(info.relativePath);
+  }
+  return paths;
+}
+
+function reviewInstructionPaths(repoRoot, target) {
+  ensureSupportedReviewTarget(target);
+  if (target === "global") {
+    return [canonicalPath("global")];
+  }
+  if (target === "all") {
+    const paths = [...CANONICAL_FILES];
+    for (const skill of SUPPORTED_SKILLS) {
+      const { files } = discoverReviewLensFiles(repoRoot, skill);
+      for (const info of files) {
+        paths.push(info.relativePath);
+      }
+    }
+    return paths;
+  }
+
+  return [
+    canonicalPath("global"),
+    skillPath(target),
+    ...discoverReviewLensFiles(repoRoot, target).files.map((info) => info.relativePath),
+  ];
 }
 
 function list(repoRoot) {
@@ -218,8 +417,12 @@ function list(repoRoot) {
   for (const relativePath of CANONICAL_FILES) {
     const info = readFileInfo(repoRoot, relativePath);
     let state = "missing";
-    if (info.exists && info.notFile) {
+    if (info.exists && info.symlink) {
+      state = "symlink";
+    } else if (info.exists && info.notFile) {
       state = "not a file";
+    } else if (info.exists && info.readError) {
+      state = `unreadable (${info.readError})`;
     } else if (info.exists && info.hasUserContent) {
       state = "has user content";
     } else if (info.exists) {
@@ -227,6 +430,21 @@ function list(repoRoot) {
     }
     lines.push(`${CUSTOMIZE_USER_ROOT}/${relativePath}: ${state}`);
   }
+  for (const skill of SUPPORTED_SKILLS.filter(supportsReviewFiles)) {
+    const lensResult = discoverReviewLensFiles(repoRoot, skill);
+    for (const warning of lensResult.warnings) {
+      lines.push(warning);
+    }
+    if (lensResult.files.length === 0 && lensResult.warnings.length === 0) {
+      lines.push(`${CUSTOMIZE_USER_ROOT}/${reviewLensDirectory(skill)}/*.md: none`);
+      continue;
+    }
+    for (const info of lensResult.files) {
+      const state = info.hasUserContent ? "has user content" : "blank";
+      lines.push(`${CUSTOMIZE_USER_ROOT}/${info.relativePath}: ${state}`);
+    }
+  }
+  lines.push(...legacyAcceptCustomizationWarnings(repoRoot));
   process.stdout.write(renderTemplate("messages/list.md", {
     customization_root: CUSTOMIZE_USER_ROOT,
     entries: bulletList(lines),
@@ -242,13 +460,19 @@ function checkSetup(repoRoot) {
     return 0;
   }
 
-  if (!fs.statSync(customizeUserRoot(repoRoot)).isDirectory()) {
+  const userRootStat = inspectPath(customizeUserRoot(repoRoot));
+  if (userRootStat?.isSymbolicLink()) {
+    errors.push(`${CUSTOMIZE_USER_ROOT}: expected a normal directory but found a symlink`);
+  } else if (!userRootStat?.isDirectory()) {
     errors.push(`${CUSTOMIZE_USER_ROOT}: expected a directory`);
   }
 
   for (const entryPoint of ENTRY_POINTS) {
     const entryPath = pathFor(repoRoot, entryPoint);
-    if (fs.existsSync(entryPath) && !fs.statSync(entryPath).isDirectory()) {
+    const entryStat = inspectPath(entryPath);
+    if (entryStat?.isSymbolicLink()) {
+      errors.push(`${CUSTOMIZE_USER_ROOT}/${entryPoint}: expected a normal directory but found a symlink`);
+    } else if (entryStat && !entryStat.isDirectory()) {
       errors.push(`${CUSTOMIZE_USER_ROOT}/${entryPoint}: expected a directory`);
     }
   }
@@ -259,8 +483,9 @@ function checkSetup(repoRoot) {
       warnings.push(`${CUSTOMIZE_USER_ROOT}/${relativePath}: missing; run the Strike init skill to create it`);
       continue;
     }
-    if (info.notFile) {
-      errors.push(`${CUSTOMIZE_USER_ROOT}/${relativePath}: expected a file`);
+    const problem = checkFileProblem(info);
+    if (problem) {
+      errors.push(`${CUSTOMIZE_USER_ROOT}/${relativePath}: ${problem}`);
       continue;
     }
     if (info.bytes > FILE_MAX_BYTES) {
@@ -268,36 +493,44 @@ function checkSetup(repoRoot) {
     }
   }
 
+  for (const skill of SUPPORTED_SKILLS.filter(supportsReviewFiles)) {
+    const lensResult = discoverReviewLensFiles(repoRoot, skill);
+    for (const warning of lensResult.warnings) {
+      if (reviewLensWarningIsError(warning)) {
+        errors.push(warning);
+      } else {
+        warnings.push(warning);
+      }
+    }
+    for (const info of lensResult.files) {
+      if (info.bytes > FILE_MAX_BYTES) {
+        errors.push(`${CUSTOMIZE_USER_ROOT}/${info.relativePath}: file is ${info.bytes} bytes; max is ${FILE_MAX_BYTES}`);
+      }
+    }
+  }
+
   const globalInfo = readFileInfo(repoRoot, canonicalPath("global"));
   for (const skill of SUPPORTED_SKILLS) {
     const skillInfo = readFileInfo(repoRoot, skillPath(skill));
-    if (!globalInfo.exists || globalInfo.notFile || !skillInfo.exists || skillInfo.notFile) {
+    if (!globalInfo.exists || checkFileProblem(globalInfo) || !skillInfo.exists || checkFileProblem(skillInfo)) {
       continue;
     }
-    const pairBytes = globalInfo.bytes + skillInfo.bytes;
-    if (pairBytes > TOTAL_MAX_BYTES) {
-      errors.push(`${CUSTOMIZE_USER_ROOT}/${canonicalPath("global")} plus ${CUSTOMIZE_USER_ROOT}/${skillPath(skill)} total ${pairBytes} bytes; max is ${TOTAL_MAX_BYTES}`);
+    let totalBytes = globalInfo.bytes + skillInfo.bytes;
+    for (const info of discoverReviewLensFiles(repoRoot, skill).files) {
+      totalBytes += info.bytes;
+    }
+    if (totalBytes > TOTAL_MAX_BYTES) {
+      errors.push(`${CUSTOMIZE_USER_ROOT}/${canonicalPath("global")} plus ${CUSTOMIZE_USER_ROOT}/${skillPath(skill)} and review lenses total ${totalBytes} bytes; max is ${TOTAL_MAX_BYTES}`);
     }
   }
 
   process.stdout.write(renderTemplate("messages/check-setup.md", {
     result: errors.length === 0 ? "pass" : "fail",
     errors: bulletList(errors),
-    warnings: bulletList(warnings),
+    warnings: bulletList([...warnings, ...legacyAcceptCustomizationWarnings(repoRoot)]),
   }));
 
   return errors.length > 0 ? 1 : 0;
-}
-
-function reviewPaths(target) {
-  ensureSupportedReviewTarget(target);
-  if (target === "global") {
-    return [canonicalPath("global")];
-  }
-  if (target === "all") {
-    return CANONICAL_FILES;
-  }
-  return [canonicalPath("global"), skillPath(target)];
 }
 
 function reviewInstructionsPacket(repoRoot, target) {
@@ -306,14 +539,22 @@ function reviewInstructionsPacket(repoRoot, target) {
   const warnings = [];
   let totalBytes = 0;
 
-  for (const relativePath of reviewPaths(target)) {
+  const lensWarningSkills = target === "all"
+    ? SUPPORTED_SKILLS.filter(supportsReviewFiles)
+    : supportsReviewFiles(target) ? [target] : [];
+  for (const skill of lensWarningSkills) {
+    warnings.push(...discoverReviewLensFiles(repoRoot, skill).warnings);
+  }
+
+  for (const relativePath of reviewInstructionPaths(repoRoot, target)) {
     const info = readFileInfo(repoRoot, relativePath);
     if (!info.exists) {
       warnings.push(`${CUSTOMIZE_USER_ROOT}/${relativePath}: missing; run the Strike init skill to create it`);
       continue;
     }
-    if (info.notFile) {
-      warnings.push(`${CUSTOMIZE_USER_ROOT}/${relativePath}: expected a file`);
+    const problem = checkFileProblem(info);
+    if (problem) {
+      warnings.push(`${CUSTOMIZE_USER_ROOT}/${relativePath}: ${problem}`);
       continue;
     }
     if (!info.hasUserContent) {
@@ -349,9 +590,11 @@ function reviewInstructionsPacket(repoRoot, target) {
 
 function preview(repoRoot, skill) {
   ensureSupportedSkill(skill);
-  const filesToLoad = [canonicalPath("global"), skillPath(skill)];
+  const filesToLoad = previewPaths(repoRoot, skill);
   const loaded = [];
-  const warnings = [];
+  const warnings = supportsReviewFiles(skill)
+    ? [...discoverReviewLensFiles(repoRoot, skill).warnings]
+    : [];
   let totalBytes = 0;
 
   for (const relativePath of filesToLoad) {
@@ -359,8 +602,9 @@ function preview(repoRoot, skill) {
     if (!info.exists) {
       continue;
     }
-    if (info.notFile) {
-      warnings.push(`${CUSTOMIZE_USER_ROOT}/${relativePath}: skipped because expected a file`);
+    const problem = skippedFileReason(info);
+    if (problem) {
+      warnings.push(`${CUSTOMIZE_USER_ROOT}/${relativePath}: skipped because ${problem}`);
       continue;
     }
     if (!info.hasUserContent) {

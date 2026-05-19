@@ -62,7 +62,7 @@ Next Strike skill: go
 Arguments: <project-slug>
 ```
 
-Do not write spec, slices, implementation, acceptance, retro, implementation
+Do not write spec, slices, implementation, readiness, retro, implementation
 files, repo glossary edits, durable IDs, YAML blocks, or machine-readable
 routing metadata.
 
@@ -322,7 +322,7 @@ skill`, or `Arguments`.
 
 ## Gates
 
-- Do not write spec, slice, implementation, review, acceptance, or retro files.
+- Do not write spec, slice, implementation, review, readiness, or retro files.
 - Do not write implementation files.
 - Do not edit `UBIQUITOUS_LANGUAGE.md`.
 - Do not create durable IDs or hidden state fields.

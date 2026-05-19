@@ -102,14 +102,14 @@ Use the board lane as workflow state:
   Arguments: <project-slug>
   ```
 - `06-implementation` -> inspect the card and phase folders:
-  - card has unchecked acceptance-fix items assigned to a phase -> show the
+  - card has unchecked readiness-fix items assigned to a phase -> show the
     first affected phase fix handoff:
     ```txt
     Reset context first: yes
     Next Strike skill: phase-fix
     Arguments: <project-slug> phase:<phase-slug>
     ```
-  - card has unchecked acceptance-fix items that are not assigned to a phase ->
+  - card has unchecked readiness-fix items that are not assigned to a phase ->
     report that the fixes need a phase assignment before repair and ask which
     phase should own the first fix. Do not guess a repair handoff.
   - phase has `plan.md`, `research.md`, and no `build-brief.md` -> say phase
@@ -172,10 +172,10 @@ Use the board lane as workflow state:
     Next Strike skill: phase-review
     Arguments: <project-slug> phase:<last-phase-slug>
     ```
-- `07-acceptance` -> acceptance validation:
+- `07-readiness` -> readiness review:
   ```txt
   Reset context first: yes
-  Next Strike skill: accept
+  Next Strike skill: readiness-review
   Arguments: <project-slug>
   ```
 - `08-retro` -> retro.

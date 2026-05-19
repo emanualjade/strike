@@ -274,7 +274,7 @@ skill`, or `Arguments`.
 ## Gates
 
 - Do not edit implementation or test files.
-- Do not write build briefs, build evidence, review, acceptance, or retro
+- Do not write build briefs, build evidence, review, readiness, or retro
   artifacts.
 - Do not create durable IDs, hidden state fields, or routing metadata.
 - Do not move to implementation unless at least one phase is concrete enough

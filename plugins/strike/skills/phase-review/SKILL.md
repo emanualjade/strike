@@ -68,8 +68,21 @@ Next Strike skill: phase-build
 Arguments: <project-slug> phase:<phase-slug>
 ```
 
-Do not edit implementation or test files. Do not create fix, acceptance, or
+Do not edit implementation or test files. Do not create fix, readiness, or
 retro files.
+
+## User Customization
+
+Before doing any material phase-review work, you MUST run the repo-local
+customization loader from the consuming repository root:
+
+```bash
+test -f strike/customize/system/customize.mjs || { echo 'Strike is not initialized in this repo yet. Run the Strike `init` skill first.'; exit 1; }
+node strike/customize/system/customize.mjs --repo-root <repo-root> preview phase-review
+```
+
+If the loader says `phase-review` is unsupported, the repo-local runtime is out
+of date. Stop and tell the user to run the Strike `init` skill to refresh it.
 
 ## Reads
 
@@ -91,7 +104,7 @@ Treat `build.md` and the current diff as the main review target. Use
 
 - `cards/<project-slug>/phases/<phase-slug>/review.md`
 - `cards/<project-slug>/card.md`
-- board pointer moved from `06-implementation` to `07-acceptance` only when
+- board pointer moved from `06-implementation` to `07-readiness` only when
   every listed phase has a clean review and no implementation checklist items
   remain open
 
@@ -171,7 +184,7 @@ Write `review.md` compactly:
 
 ## Next Step
 
-[Acceptance, phase-fix, or missing evidence.]
+[Readiness-review, phase-fix, or missing evidence.]
 ```
 
 ## Card And Board Update
@@ -180,10 +193,11 @@ When review passes:
 
 - mark the matching phase-review checklist item complete
 - update the phase line in `## Phases` to mention `review.md`
-- if all listed phases are reviewed and no implementation or acceptance-fix
-  checklist items remain open, add an acceptance checklist item if missing:
-  `- [ ] Acceptance: validate the assembled project.`
-- move the board pointer to `07-acceptance` only when all listed phases are
+- if all listed phases are reviewed and no implementation or readiness-fix
+  checklist items remain open, add a readiness-review checklist item if
+  missing:
+  `- [ ] Readiness-review: validate the assembled project.`
+- move the board pointer to `07-readiness` only when all listed phases are
   reviewed cleanly
 
 When review needs fixes:
@@ -207,7 +221,7 @@ ready when:
 - verdict is clear
 - reviewed inputs are listed
 - blocking fixes are actionable plain checkboxes, or the pass verdict has
-  enough evidence to trust acceptance as next
+  enough evidence to trust readiness review as next
 - skipped, failed, or missing checks are not hidden
 - rollback adequacy is recorded
 - board/card state matches the verdict
@@ -219,13 +233,13 @@ Final response should be short and user-facing:
 - review path written
 - verdict
 - blocking fixes, if any
-- whether the card moved to `07-acceptance` or stayed in `06-implementation`
+- whether the card moved to `07-readiness` or stayed in `06-implementation`
 - next prompt, rendered for the current host with `references/invocation.md`:
   - needs fixes: `phase-fix <project-slug> phase:<phase-slug>`
   - phase passed and more phases remain: optional
     `phase-research <project-slug> phase:<next-phase-slug>` and direct
     `phase-plan <project-slug> phase:<next-phase-slug>`
-  - all phases passed: `accept <project-slug>`
+  - all phases passed: `readiness-review <project-slug>`
   - blocked by missing evidence: show the prompt that supplies that evidence
     when obvious; otherwise show `go <project-slug>` as a state check
 
@@ -235,7 +249,7 @@ skill`, or `Arguments`.
 ## Gates
 
 - Do not edit implementation or test files.
-- Do not create fix, acceptance, or retro files.
+- Do not create fix, readiness, or retro files.
 - Do not create durable IDs or hidden state fields.
-- Do not move the card to acceptance if blocking fixes or missing evidence remain.
+- Do not move the card to readiness if blocking fixes or missing evidence remain.
 - Do not commit.

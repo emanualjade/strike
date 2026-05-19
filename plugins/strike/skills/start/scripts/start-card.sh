@@ -139,7 +139,7 @@ mkdir -p \
   "$strike_root/board/04-spec" \
   "$strike_root/board/05-slice" \
   "$strike_root/board/06-implementation" \
-  "$strike_root/board/07-acceptance" \
+  "$strike_root/board/07-readiness" \
   "$strike_root/board/08-retro" \
   "$strike_root/board/09-done" \
   "$strike_root/board/blocked" \
@@ -152,7 +152,7 @@ touch \
   "$strike_root/board/04-spec/.gitkeep" \
   "$strike_root/board/05-slice/.gitkeep" \
   "$strike_root/board/06-implementation/.gitkeep" \
-  "$strike_root/board/07-acceptance/.gitkeep" \
+  "$strike_root/board/07-readiness/.gitkeep" \
   "$strike_root/board/08-retro/.gitkeep" \
   "$strike_root/board/09-done/.gitkeep" \
   "$strike_root/board/blocked/.gitkeep" \
@@ -172,7 +172,7 @@ if [[ ! -d "$card_dir" ]]; then
     "$card_dir/outputs/grill" \
     "$card_dir/outputs/research" \
     "$card_dir/outputs/spec" \
-    "$card_dir/outputs/acceptance" \
+    "$card_dir/outputs/readiness" \
     "$card_dir/outputs/retro" \
     "$card_dir/demos" \
     "$card_dir/phases"
@@ -181,7 +181,7 @@ if [[ ! -d "$card_dir" ]]; then
     "$card_dir/outputs/grill/.gitkeep" \
     "$card_dir/outputs/research/.gitkeep" \
     "$card_dir/outputs/spec/.gitkeep" \
-    "$card_dir/outputs/acceptance/.gitkeep" \
+    "$card_dir/outputs/readiness/.gitkeep" \
     "$card_dir/outputs/retro/.gitkeep" \
     "$card_dir/demos/.gitkeep" \
     "$card_dir/phases/.gitkeep"
@@ -215,7 +215,7 @@ $short_description
 - Grill: \`outputs/grill/\`
 - Research: \`outputs/research/\`
 - Spec: \`outputs/spec/\`
-- Acceptance: \`outputs/acceptance/\`
+- Readiness: \`outputs/readiness/\`
 - Retro: \`outputs/retro/\`
 
 ## Phases

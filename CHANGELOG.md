@@ -2,6 +2,17 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.7.0 - 2026-05-19
+
+- Renamed the final `accept` workflow step to `readiness-review` with no
+  compatibility alias.
+- Renamed the final board lane and output artifact to `07-readiness` and
+  `outputs/readiness/readiness.md`.
+- Added customization support for `spec-review`, `slice-review`,
+  `phase-review`, and `readiness-review`.
+- Added optional read-only review lens files under each review skill's
+  `reviews/*.md` directory.
+
 ## 0.6.1 - 2026-05-19
 
 - Added single-file customization support for `phase-build`, `phase-fix`, and

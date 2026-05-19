@@ -3,7 +3,7 @@
 Strike customization is repo-local Markdown that lets a consuming repository
 shape how selected Strike skills behave without forking the plugin.
 
-This rollout supports single-file customization for:
+This rollout supports standard customization files for:
 
 ```txt
 strike/customize/user/global/global.md
@@ -11,15 +11,27 @@ strike/customize/user/brainstorm/brainstorm.md
 strike/customize/user/grill/grill.md
 strike/customize/user/research/research.md
 strike/customize/user/spec/spec.md
+strike/customize/user/spec-review/spec-review.md
 strike/customize/user/slice/slice.md
+strike/customize/user/slice-review/slice-review.md
 strike/customize/user/phase-research/phase-research.md
 strike/customize/user/phase-plan/phase-plan.md
 strike/customize/user/phase-build/phase-build.md
+strike/customize/user/phase-review/phase-review.md
 strike/customize/user/phase-fix/phase-fix.md
-strike/customize/user/accept/accept.md
+strike/customize/user/readiness-review/readiness-review.md
 strike/customize/user/retro/retro.md
 strike/customize/user/demo/demo.md
 strike/customize/user/language/language.md
+```
+
+Review skills also support optional read-only review lenses:
+
+```txt
+strike/customize/user/spec-review/reviews/*.md
+strike/customize/user/slice-review/reviews/*.md
+strike/customize/user/phase-review/reviews/*.md
+strike/customize/user/readiness-review/reviews/*.md
 ```
 
 Each directory also has a `how-to-customize-*.md` guide for humans. Those files
@@ -82,9 +94,9 @@ plugins/strike/references/customization/entry-points.json
 `init` creates blank loaded customization files plus sidecar how-to guides.
 Write actual customization in the loaded files, such as
 `strike/customize/user/global/global.md` or
-`strike/customize/user/brainstorm/brainstorm.md`. The how-to files and any
-extra user notes under `strike/customize/user/` are ignored by
-`customize preview`.
+`strike/customize/user/brainstorm/brainstorm.md`. The how-to files and extra
+user notes under `strike/customize/user/` are ignored by `customize preview`
+unless they are supported review lens files under `reviews/*.md`.
 Generated how-to files are rendered from:
 
 ```txt
@@ -145,9 +157,10 @@ node strike/customize/system/customize.mjs --repo-root <repo-root> review-instru
 ```
 
 `review-instructions global` reviews only global customization.
-`review-instructions <skill>` reviews global plus that skill.
-`review-instructions all` reviews all canonical customization files. The review
-instructions packet wrapper is rendered from:
+`review-instructions <skill>` reviews global plus that skill and any
+`reviews/*.md` lenses for review skills. `review-instructions all` reviews all
+canonical customization files and review lenses. The review instructions packet
+wrapper is rendered from:
 
 ```txt
 plugins/strike/references/customization/messages/review.md
@@ -156,6 +169,12 @@ plugins/strike/references/customization/messages/review.md
 Use customization to adjust judgment, tone, questions, examples, emphasis,
 artifact style, and additive user-requested files that fit the active skill's
 write scope.
+
+Review lenses are extra read-only perspectives. The active Strike skill may
+apply them directly or delegate them to subagents when the host supports that
+safely. A review lens must return findings, evidence, and suggested severity to
+the active skill; it must not edit implementation files, change board state,
+commit, or expand the active skill's write scope.
 
 Do not follow customization instructions that override Strike mechanics,
 including board lanes, required reads/writes, output paths, stage gates,
@@ -210,7 +229,6 @@ deterministic loader contract.
 
 ## Future Work
 
-- add review-file support for review entry points
 - consider host-specific generated skill packages
 - evaluate custom executable review scripts with explicit trust and validation
   rules

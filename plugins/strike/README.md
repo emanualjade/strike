@@ -38,7 +38,7 @@ phase-plan <project-slug> phase:<phase-slug>
 phase-build <project-slug> phase:<phase-slug>
 phase-review <project-slug> phase:<phase-slug>
 phase-fix <project-slug> phase:<phase-slug>
-accept <project-slug>
+readiness-review <project-slug>
 retro <project-slug>
 demo <project-slug> "<what the demo should explore>"
 language <term|project-slug|path>
@@ -55,11 +55,15 @@ need to refresh those managed runtime files.
 
 Use `customize` when you want Strike to work more like you do in a repo. Add
 instructions under `strike/customize/user/` for things like brainstorm style,
-research standards, spec detail, phase planning, build/fix habits, acceptance
-strictness, demos, or project language.
+research standards, spec detail, review lenses, phase planning, build/fix
+habits, readiness strictness, demos, or project language.
 Run `customize check-setup` to make sure the setup is healthy and
 `customize review-instructions <entry|all>` to ask Strike whether the
 instructions are safe for the workflow.
+
+Review skills can load optional read-only lens files under
+`strike/customize/user/<review-skill>/reviews/*.md`. The active Strike skill
+still owns all writes, routing, and final synthesis.
 
 If customization asks Strike to create extra docs/assets, say whether they are
 per-project or shared, and give a save path. Useful defaults are
@@ -85,7 +89,7 @@ Claude Code examples:
 /strike:phase-build <project-slug> phase:<phase-slug>
 /strike:phase-review <project-slug> phase:<phase-slug>
 /strike:phase-fix <project-slug> phase:<phase-slug>
-/strike:accept <project-slug>
+/strike:readiness-review <project-slug>
 /strike:retro <project-slug>
 /strike:demo <project-slug> "<what the demo should explore>"
 /strike:language <term|project-slug|path>

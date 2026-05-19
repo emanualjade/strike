@@ -76,7 +76,7 @@ Next Strike skill: go
 Arguments: <project-slug>
 ```
 
-Do not write implementation files, tests, build evidence, review, acceptance,
+Do not write implementation files, tests, build evidence, review, readiness,
 retro, repo glossary edits, durable IDs, YAML blocks, or hidden routing
 metadata.
 
@@ -300,7 +300,7 @@ skill`, or `Arguments`.
 - Do not create tests.
 - Do not move out of `06-implementation` except when routing to `02-grill` for
   a missing upstream decision or `05-slice` for a wrong phase split.
-- Do not write build, review, fix, acceptance, or retro artifacts.
+- Do not write build, review, fix, readiness, or retro artifacts.
 - Do not edit `UBIQUITOUS_LANGUAGE.md`.
 - Do not create sidecar checker files, drafts, durable IDs, or hidden state.
   Optional user-requested docs/assets may live only under `strike/user-docs/` or

@@ -15,6 +15,7 @@ const RUNTIME_SCRIPT = path.join(PLUGIN_ROOT, "references", "scripts", "customiz
 const CUSTOMIZE_ROOT = "strike/customize";
 const CUSTOMIZE_SYSTEM_ROOT = `${CUSTOMIZE_ROOT}/system`;
 const CUSTOMIZE_USER_ROOT = `${CUSTOMIZE_ROOT}/user`;
+const LEGACY_ACCEPT_CUSTOMIZATION = `${CUSTOMIZE_USER_ROOT}/accept/accept.md`;
 
 const CUSTOMIZATION_REFERENCE = readReferenceJson("entry-points.json");
 const ENTRY_POINT_DETAILS = CUSTOMIZATION_REFERENCE.entryPoints ?? {};
@@ -56,6 +57,14 @@ function bulletList(items) {
     return "- None";
   }
   return items.map((item) => `- ${item}`).join("\n");
+}
+
+function stripHtmlComments(text) {
+  return String(text ?? "").replace(/<!--[\s\S]*?-->/g, "");
+}
+
+function hasUserContent(text) {
+  return stripHtmlComments(text).replace(/\r\n/g, "\n").trim().length > 0;
 }
 
 function readTemplate(name) {
@@ -109,7 +118,7 @@ function inspectPath(absolutePath) {
     const stat = fs.lstatSync(absolutePath);
     return { stat, symlink: stat.isSymbolicLink() };
   } catch (error) {
-    if (error.code === "ENOENT") {
+    if (error.code === "ENOENT" || error.code === "ENOTDIR") {
       return null;
     }
     throw error;
@@ -186,12 +195,27 @@ function howToContent(entryPoint) {
     throw new Error(`Missing how-to details for ${entryPoint}`);
   }
 
+  const reviewLenses = details.reviewFiles === true
+    ? [
+        "Review lenses:",
+        "",
+        "- Optional files under `reviews/*.md` are loaded as read-only review",
+        "  perspectives for this entry point.",
+        "- Use lowercase kebab-case filenames such as",
+        "  `reviews/accessibility.md` or `reviews/edge-cases.md`.",
+        "- A review lens should return findings and evidence to the active Strike",
+        "  skill. It should not edit implementation files, change board state,",
+        "  commit, or expand the active skill's write scope.",
+      ].join("\n")
+    : "";
+
   return renderTemplate("templates/how-to.md", {
     title: details.title,
     entry_point: entryPoint,
     target: details.target,
     ideas: bulletList(details.ideas),
     boundary: details.boundary,
+    review_lenses: reviewLenses,
   });
 }
 
@@ -210,6 +234,9 @@ function ensureInitDirectories(repoRoot) {
   ensureDirectory(repoRoot, CUSTOMIZE_USER_ROOT);
   for (const entryPoint of ENTRY_POINTS) {
     ensureDirectory(repoRoot, `${CUSTOMIZE_USER_ROOT}/${entryPoint}`);
+    if (ENTRY_POINT_DETAILS[entryPoint]?.reviewFiles === true) {
+      ensureDirectory(repoRoot, `${CUSTOMIZE_USER_ROOT}/${entryPoint}/reviews`);
+    }
   }
 }
 
@@ -265,9 +292,27 @@ function initFileSpecs() {
   return specs;
 }
 
+function legacyCustomizationWarnings(repoRoot) {
+  const legacyPath = path.join(repoRoot, LEGACY_ACCEPT_CUSTOMIZATION);
+  const info = inspectPath(legacyPath);
+  if (!info) {
+    return [];
+  }
+  const warning = `${LEGACY_ACCEPT_CUSTOMIZATION}: legacy accept customization is ignored; move any needed guidance to ${CUSTOMIZE_USER_ROOT}/readiness-review/readiness-review.md`;
+  if (info.symlink || !info.stat.isFile()) {
+    return [warning];
+  }
+  try {
+    return hasUserContent(fs.readFileSync(legacyPath, "utf8")) ? [warning] : [];
+  } catch {
+    return [warning];
+  }
+}
+
 function initialize(repoRoot) {
   const created = [];
   const existing = [];
+  const warnings = [];
 
   ensureInitDirectories(repoRoot);
   const systemFiles = installSystemRuntime(repoRoot);
@@ -285,6 +330,8 @@ function initialize(repoRoot) {
     created.push(displayPath(absolutePath, repoRoot));
   }
 
+  warnings.push(...legacyCustomizationWarnings(repoRoot));
+
   process.stdout.write(renderTemplate("messages/init.md", {
     customization_root: CUSTOMIZE_ROOT,
     user_root: CUSTOMIZE_USER_ROOT,
@@ -292,6 +339,7 @@ function initialize(repoRoot) {
     system_files: bulletList(systemFiles),
     created_files: bulletList(created),
     existing_files: bulletList(existing),
+    warnings: bulletList(warnings),
   }));
 }
 

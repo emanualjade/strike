@@ -72,7 +72,7 @@ Arguments: <project-slug>
 ```
 
 Do not write implementation files, tests, build briefs, build evidence, review,
-acceptance, retro, repo glossary edits, durable IDs, YAML blocks, or hidden
+readiness, retro, repo glossary edits, durable IDs, YAML blocks, or hidden
 routing metadata.
 
 ## Reads

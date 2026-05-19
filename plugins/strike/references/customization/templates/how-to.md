@@ -17,6 +17,8 @@ Boundaries:
 - Do not override Strike board mechanics, required outputs, stage gates,
   verification honesty, or tool boundaries.
 
+{{review_lenses}}
+
 Extra docs/assets:
 
 - If you want Strike to create, append, collect, or maintain an extra doc or

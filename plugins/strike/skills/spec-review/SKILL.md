@@ -39,6 +39,19 @@ When showing follow-up Strike skills, use the plugin package's
 the host is unknown, show the skill name and arguments as a plain next action
 without raw field labels.
 
+## User Customization
+
+Before doing any material spec-review work, you MUST run the repo-local
+customization loader from the consuming repository root:
+
+```bash
+test -f strike/customize/system/customize.mjs || { echo 'Strike is not initialized in this repo yet. Run the Strike `init` skill first.'; exit 1; }
+node strike/customize/system/customize.mjs --repo-root <repo-root> preview spec-review
+```
+
+If the loader says `spec-review` is unsupported, the repo-local runtime is out
+of date. Stop and tell the user to run the Strike `init` skill to refresh it.
+
 ## Reads
 
 - `docs/strike/cards/<project-slug>/card.md`
@@ -199,7 +212,7 @@ skill`, or `Arguments`.
 - Do not move board pointers for safe in-place fixes.
 - Do not mark the spec approved or complete, and do not advance workflow state.
 - Do not write drafts, sidecars, review reports, slices, implementation plans,
-  review artifacts, acceptance, retro, or implementation files.
+  review artifacts, readiness, retro, or implementation files.
 - Do not edit `UBIQUITOUS_LANGUAGE.md`.
 - Do not create durable IDs or hidden state fields.
 - Do not use the spec review to relitigate product or workflow scope unless the

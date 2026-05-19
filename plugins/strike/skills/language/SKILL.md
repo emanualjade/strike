@@ -255,7 +255,7 @@ Keep responses compact and user-facing:
 
 - Do not move Strike board pointers.
 - Do not write brainstorm, grill, spec, slice, implementation, review,
-  acceptance, or retro outputs.
+  readiness, or retro outputs.
 - Do not edit implementation files unless the user explicitly asks for code
   renames and confirms the scope.
 - Do not apply uncertain glossary changes without user approval.

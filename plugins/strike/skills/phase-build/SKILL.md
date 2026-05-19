@@ -32,7 +32,7 @@ A good phase build:
 - runs the brief's verification, plus any focused check made necessary by the
   code
 - records changed files, checks, rollback notes, and review notes
-- leaves review, acceptance, and retro for later steps
+- leaves review, readiness, and retro for later steps
 
 ## Host Invocation
 
@@ -87,7 +87,7 @@ Next Strike skill: phase-plan
 Arguments: <project-slug> phase:<phase-slug>
 ```
 
-Do not create review, fix, acceptance, retro, durable IDs, YAML blocks, hidden
+Do not create review, fix, readiness, retro, durable IDs, YAML blocks, hidden
 routing metadata, or repo glossary edits.
 
 ## Reads
@@ -318,7 +318,7 @@ skill`, or `Arguments`.
 - Do not build more than one phase.
 - Do not move out of `06-implementation` except when routing a blocker to the
   upstream lane that owns it.
-- Do not create review, fix, acceptance, or retro artifacts.
+- Do not create review, fix, readiness, or retro artifacts.
 - Do not create durable IDs or hidden state fields.
 - Do not commit.
 - Do not run or recommend `git checkout --`, `git clean`, or repo-wide

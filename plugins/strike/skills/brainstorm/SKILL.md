@@ -335,7 +335,7 @@ skill`, or `Arguments`.
 
 ## Gates
 
-- Do not write grill/spec/slice/implementation/review/acceptance/retro outputs.
+- Do not write grill/spec/slice/implementation/review/readiness/retro outputs.
 - Do not write implementation code.
 - Do not create durable IDs or hidden state fields.
 - Do not move the card if grill would have to rerun brainstorm.

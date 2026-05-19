@@ -5,7 +5,7 @@ a rough idea to a planned, built, reviewed, accepted, and remembered change.
 
 It gives your agent a repeatable workflow. You start a project card, ask Strike
 what should happen next, and then move through planning, research, specification,
-implementation, review, acceptance, and retro steps.
+implementation, review, readiness, and retro steps.
 
 A Project is one unit of work Strike plans inside your existing repository. It
 can be tiny, like `Docs Refresh`, or broad, like `Payments`; it is not a new
@@ -451,7 +451,7 @@ Strike is designed to reset context between most workflow steps.
 
 That matters because each skill should start with the saved card files, not a
 long chat history from earlier planning. This keeps the context window smaller
-and helps review, build, and acceptance steps stay independent.
+and helps review, build, and readiness steps stay independent.
 
 When Strike shows this:
 
@@ -530,13 +530,13 @@ and reviewed, finish the project:
 
 ```text
 /clear
-/strike:accept csv-export
+/strike:readiness-review csv-export
 /clear
 /strike:retro csv-export
 ```
 
 This is the happy path. Strike may send you backward when it finds missing
-decisions, research gaps, review findings, or acceptance failures. In that case,
+decisions, research gaps, review findings, or readiness failures. In that case,
 follow the `Next Strike skill` handoff it gives you.
 
 In Codex, use the same skill names and arguments with `$` skill shortcuts. The
@@ -580,7 +580,7 @@ skip` or `go <project-slug> verbose`.
 - `init`: initialize or refresh Strike repo-local runtime and customization
   files.
 - `customize`: list files, check setup, review instructions, or preview
-  runtime customization for supported single-file skills.
+  runtime customization for supported skills and review lenses.
 - `start`: create a new project card.
 - `go`: inspect the board and recommend the next step.
 - `brainstorm`, `grill`, `research`: shape and pressure-test the idea.
@@ -588,8 +588,9 @@ skip` or `go <project-slug> verbose`.
 - `slice`, `slice-review`: split the project into buildable phases.
 - `phase-research`, `phase-plan`, `phase-build`, `phase-review`, `phase-fix`:
   work through one implementation phase at a time.
-- `accept`: check the assembled project against the spec.
-- `retro`: record what happened and move accepted work to done.
+- `readiness-review`: check whether the assembled project is ready against the
+  spec.
+- `retro`: record what happened and move ready work to done.
 - `language`: keep repo terminology consistent.
 - `demo`: create a small planning demo for a card.
 
@@ -597,7 +598,7 @@ skip` or `go <project-slug> verbose`.
 
 You can customize each step in Strike so it works the way you like in this
 repo. Give Strike extra instructions for how to brainstorm, research, write
-specs, plan phases, build, fix, accept, make demos, or handle project language.
+specs, review, plan phases, build, fix, make demos, or handle project language.
 
 For example, you can tell Strike:
 
@@ -605,7 +606,8 @@ For example, you can tell Strike:
 - what kind of evidence research should look for
 - how detailed specs should be
 - what planning style you prefer
-- how strict build verification and acceptance should be
+- how strict build verification and readiness review should be
+- what focused review lenses should check
 - what tone or terminology to use in this repo
 
 Strike still follows its normal workflow, required files, checks, and stage
@@ -631,12 +633,23 @@ Start with:
 strike/customize/user/global/global.md
 strike/customize/user/brainstorm/brainstorm.md
 strike/customize/user/spec/spec.md
+strike/customize/user/phase-review/phase-review.md
 ```
 
 Write your instructions in the matching file. Each folder also includes a
 `how-to-customize-*.md` guide with ideas for what to write.
 Strike-managed loader files live under `strike/customize/system/`; rerun
 `init` after updating Strike if you need to refresh them.
+
+Review skills can also load optional read-only lens files, such as:
+
+```text
+strike/customize/user/phase-review/reviews/accessibility.md
+strike/customize/user/readiness-review/reviews/release-readiness.md
+```
+
+Each lens is an extra review perspective. The active Strike skill still owns
+writes, board movement, and final synthesis.
 
 If you want Strike to create extra docs or assets, tell it whether they are for
 one project or shared across projects, and give it a save path. Handy defaults
