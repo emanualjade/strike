@@ -53,7 +53,11 @@ This repository publishes Strike as a cross-agent plugin and skills marketplace.
 - Keep host plugin manifests aligned unless a host-specific schema requires a difference.
 - When this repo intentionally requires stricter metadata than a host schema, document it as repo policy rather than a host requirement.
 - Treat `/strike:*` as Claude Code invocation syntax. Portable skill handoffs should use `Next Strike skill` plus `Arguments` and render host-specific commands through `plugins/strike/references/invocation.md`.
-- Run `npm run validate` after moving in skills or editing manifests. Before publishing, run `npm run validate:publish`, every available host-native validator, and `skills-ref validate` when the Agent Skills reference validator is available.
+- Local workstation package work uses pnpm only. Never use `npm` or `npx` locally for repo scripts, installs, or one-off package execution. Use `pnpm run` for scripts and `pnpm exec` for installed binaries.
+- Use the normal `pnpm` command so local Socket Firewall aliases or wrappers can apply. Do not bypass wrappers with `command pnpm` or an absolute pnpm binary path.
+- Do not run local package installs unless the user explicitly approves. If pnpm is missing or the version is wrong, ask the user to install or enable pnpm 11.1.3.
+- Never approve pnpm dependency build scripts unilaterally. If pnpm asks for build-script approval, stop and work with the user to validate each package before allowlisting it.
+- Run `pnpm run validate` after moving in skills or editing manifests. Before publishing, run `pnpm run validate:publish`, every available host-native validator, and `skills-ref validate` when the Agent Skills reference validator is available.
 
 ## Release Checklist
 
@@ -61,8 +65,19 @@ This repository publishes Strike as a cross-agent plugin and skills marketplace.
 - If installed users need to receive a change through normal plugin update, make a semver release instead of only pushing to `main`.
 - Before committing the release, update `CHANGELOG.md` and bump every versioned surface that exists: `package.json`, `plugins/strike/.codex-plugin/plugin.json`, `plugins/strike/.claude-plugin/plugin.json`, `plugins/strike/plugin.json`, `.claude-plugin/marketplace.json`, and `.github/plugin/marketplace.json`.
 - Do not add a version to `.agents/plugins/marketplace.json`; that marketplace entry intentionally uses the Codex local-path shape.
-- Run `npm run release:validate` before the release commit when practical, then commit and push the version/changelog changes.
-- After the release commit is pushed, run `npm run release:tag`; it reruns the release checks, creates `strike--v<version>`, and pushes the tag.
+- Run `pnpm run release:validate` before the release commit when practical, then commit and push the version/changelog changes.
+- After the release commit is pushed, run `pnpm run release:tag`; it reruns the release checks, creates `strike--v<version>`, and pushes the tag.
+
+## Host Smoke Workflows
+
+- Use precise terms: `target CLI` means Claude Code, Codex, or GitHub Copilot CLI; `local workstation` means the maintainer's machine; `GitHub runner` means the disposable Actions machine.
+- Develop GitHub Actions host smoke-test changes on a separate branch first.
+- Keep new or experimental host smoke workflows as `workflow_dispatch` until they have passed reliably in GitHub Actions.
+- Do not make host smoke workflows required PR or release gates until their CLI install, auth, cache, and cleanup behavior is stable.
+- Keep host smoke-test implementation notes in `docs/host-smoke-tests.md`, not the public `README.md`.
+- Never install or update target CLIs from local workstation checks. Local checks may use target CLIs already on `PATH`; if one is missing, ask the user to install it or run the GitHub workflow.
+- GitHub runner workflows may install target CLIs because runners are disposable. Treat GitHub-hosted workflows as the source of truth for fresh-install and update confidence. Local Docker, temp-home, or `act` runs are debugging aids unless the repo explicitly promotes them later.
+- Keep each host isolated in its own workflow so Claude Code, Codex, and GitHub Copilot CLI failures can be debugged independently.
 
 ## Working Rules
 
@@ -74,7 +89,7 @@ This repository publishes Strike as a cross-agent plugin and skills marketplace.
 
 ## Lessons Learned
 
-- Treat `npm run validate` as repo-shape validation, not proof that every host schema accepts the package.
+- Treat `pnpm run validate` as repo-shape validation, not proof that every host schema accepts the package.
 - Keep Codex, Claude, and Copilot manifest/source rules separate; shared skills are portable, plugin packaging is host-specific.
 - Keep host invocation syntax separate too: `/strike:*` is Claude Code plugin syntax, not a universal Strike command language.
 - Label host requirements separately from portable repo policy. Do not turn a stricter local convention into a claimed platform rule.

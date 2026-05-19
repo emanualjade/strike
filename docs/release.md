@@ -8,8 +8,8 @@ GitHub Copilot CLI users.
 Before committing ordinary changes, run:
 
 ```bash
-npm test
-npm run validate
+pnpm run test
+pnpm run validate
 ```
 
 Then commit and push as usual:
@@ -44,7 +44,7 @@ Release only after the version and changelog changes are committed and pushed.
 4. Run:
 
 ```bash
-npm run release:check
+pnpm run release:check
 ```
 
 This validates the repo, validates the Claude plugin and marketplace manifests,
@@ -53,19 +53,19 @@ and asks Claude to rehearse the tag creation with `--dry-run`.
 If the check passes, publish the tag:
 
 ```bash
-npm run release:tag
+pnpm run release:tag
 ```
 
 That creates and pushes the `strike--v<version>` git tag.
 
 ## Command Meanings
 
-- `npm run release:validate`: safe validation for the package and Claude
+- `pnpm run release:validate`: safe validation for the package and Claude
   manifests. It does not check tag availability.
-- `npm run release:check`: pre-release validation. It includes Claude's tag
+- `pnpm run release:check`: pre-release validation. It includes Claude's tag
   dry-run, so it fails if the current version tag already exists.
-- `npm run release:tag`: creates and pushes the release tag. Run it only after
-  `npm run release:check` passes.
+- `pnpm run release:tag`: creates and pushes the release tag. Run it only after
+  `pnpm run release:check` passes.
 
 Do not put `release:check` in normal GitHub Actions. After a release tag exists,
 that command should fail until the next version bump. Normal CI should answer
