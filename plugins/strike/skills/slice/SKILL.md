@@ -36,26 +36,13 @@ without raw field labels.
 
 ## User Customization
 
-Before material slice work, load repo-local customization for this skill.
-
-Resolve the bundled customization script by absolute path from this installed
-plugin package. This skill lives at `<plugin-root>/skills/slice/SKILL.md`; the
-script lives at `<plugin-root>/references/scripts/customize.mjs`.
-
-Run the loader from the consuming repository root:
+Before doing any material slice work, you MUST run the repo-local customization
+loader from the consuming repository root:
 
 ```bash
-node <plugin-root>/references/scripts/customize.mjs --repo-root <repo-root> load slice
+test -f strike/customize/system/customize.mjs || { echo 'Strike is not initialized in this repo yet. Run the Strike `init` skill first.'; exit 1; }
+node strike/customize/system/customize.mjs --repo-root <repo-root> preview slice
 ```
-
-Apply the printed customization packet only when it does not conflict with this
-skill's Purpose, Minimal Mechanics, Reads, Writes, or Gates. Customization may
-shape phase sizing, naming, ordering, phase-plan focus, and extra docs/assets.
-Extra docs/assets are optional user-requested outputs, not customization inputs.
-Create them only with clear per-project or shared intent and a repo-safe save
-path. If the path or intent is unclear, ask before creating them and suggest
-updating `strike/customize/slice/slice.md` or running `customize review slice`
-after editing.
 
 ## Minimal Mechanics
 

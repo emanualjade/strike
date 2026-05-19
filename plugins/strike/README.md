@@ -22,7 +22,8 @@ Strike skills are portable; each host renders the same skill differently.
 Canonical skill names:
 
 ```txt
-customize init|list|check|review <entry|all>|load <supported-skill>
+init
+customize list|check-setup|review-instructions <entry|all>|preview <supported-skill>
 start <project name words> [--slug <slug>] [--description <description words>]
 go <project-slug>
 brainstorm <project-slug>
@@ -47,12 +48,16 @@ language <term|project-slug|path>
 Other skills use positional arguments, plain optional words such as `skip`, or
 the `phase:<phase-slug>` token for phase-scoped work.
 
-Use `customize` when you want Strike to work more like you do in a repo. Run
-`customize init`, then add instructions under `strike/customize/` for things
-like brainstorm style, research standards, spec detail, phase planning, demos,
-or project language. Run `customize check` to make sure the setup is healthy
-and `customize review <entry|all>` to ask Strike whether the instructions are
-safe for the workflow.
+Use `init` once per repo before normal Strike workflow skills. It installs
+Strike-managed runtime files under `strike/customize/system/` and creates user
+customization files under `strike/customize/user/`.
+
+Use `customize` when you want Strike to work more like you do in a repo. Add
+instructions under `strike/customize/user/` for things like brainstorm style,
+research standards, spec detail, phase planning, demos, or project language.
+Run `customize check-setup` to make sure the setup is healthy and
+`customize review-instructions <entry|all>` to ask Strike whether the
+instructions are safe for the workflow.
 
 If customization asks Strike to create extra docs/assets, say whether they are
 per-project or shared, and give a save path. Useful defaults are
@@ -62,8 +67,8 @@ per-project or shared, and give a save path. Useful defaults are
 Claude Code examples:
 
 ```txt
-/strike:customize init
-/strike:customize review brainstorm
+/strike:init
+/strike:customize review-instructions brainstorm
 /strike:start Add user profile page
 /strike:go <project-slug>
 /strike:brainstorm <project-slug>

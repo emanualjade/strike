@@ -1,4 +1,4 @@
-# Strike Customization Review Packet
+# Strike Customization Review Instructions Packet
 
 Target: {{target}}
 Customization root: {{customization_root}}

@@ -1,4 +1,4 @@
-# Strike Customization Check
+# Strike Customization Setup Check
 
 Result: {{result}}
 

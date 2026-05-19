@@ -1,85 +1,100 @@
 # Strike Single-File Customization Plan
 
-Last updated: 2026-05-18.
+Last updated: 2026-05-19.
 
 ## Summary
 
 Implement repo-local Strike customization for selected single-file skills plus
-a `customize` utility skill. The rollout uses a deterministic loader script
-instead of portable `!` imports.
+an `init` setup skill and a `customize` utility skill. The rollout uses a
+deterministic loader script instead of portable `!` imports.
 
 The shared Strike skills should not use `!strike/customize/...`.
 Official docs do not define `!path` as a portable `SKILL.md` include, and
 Claude uses `!` for shell command injection. The portable contract is:
-supported skills run the bundled loader before material work, and the loader
-prints a framed customization packet.
+supported skills require the repo-local loader before material work. The loader
+prints lean custom-instructions text only when customization exists or a warning
+needs to be surfaced.
 
 ## Key Changes
 
-- Add a public `customize` utility skill with `init`, `list`, `check`,
-  `review <entry|all>`, and diagnostic `load <skill>` modes.
-- Add `plugins/strike/references/scripts/customize.mjs`; it supports selected
-  single-file skills and intentionally skips review/multi-file entries.
-- `customize init` creates the supported tree without overwriting user edits:
+- Add a public `init` skill that initializes or refreshes repo-local Strike
+  runtime and customization files.
+- Keep the public `customize` utility focused on `list`, `check-setup`,
+  `review-instructions <entry|all>`, and diagnostic `preview <skill>` modes.
+- Add `plugins/strike/skills/init/scripts/init.mjs`; it installs the
+  repo-local runtime and creates missing user customization files.
+- Keep `plugins/strike/references/scripts/customize.mjs` as the runtime and
+  inspection script. It supports selected single-file skills and intentionally
+  skips review/multi-file entries.
+- `init` creates the supported tree without overwriting user edits:
 
 ```txt
-strike/customize/global/global.md
-strike/customize/global/how-to-customize-global.md
-strike/customize/brainstorm/brainstorm.md
-strike/customize/brainstorm/how-to-customize-brainstorm.md
-strike/customize/grill/grill.md
-strike/customize/grill/how-to-customize-grill.md
-strike/customize/research/research.md
-strike/customize/research/how-to-customize-research.md
-strike/customize/spec/spec.md
-strike/customize/spec/how-to-customize-spec.md
-strike/customize/slice/slice.md
-strike/customize/slice/how-to-customize-slice.md
-strike/customize/phase-research/phase-research.md
-strike/customize/phase-research/how-to-customize-phase-research.md
-strike/customize/phase-plan/phase-plan.md
-strike/customize/phase-plan/how-to-customize-phase-plan.md
-strike/customize/retro/retro.md
-strike/customize/retro/how-to-customize-retro.md
-strike/customize/demo/demo.md
-strike/customize/demo/how-to-customize-demo.md
-strike/customize/language/language.md
-strike/customize/language/how-to-customize-language.md
+strike/customize/system/customize.mjs
+strike/customize/system/references/customization/
+strike/customize/user/global/global.md
+strike/customize/user/global/how-to-customize-global.md
+strike/customize/user/brainstorm/brainstorm.md
+strike/customize/user/brainstorm/how-to-customize-brainstorm.md
+strike/customize/user/grill/grill.md
+strike/customize/user/grill/how-to-customize-grill.md
+strike/customize/user/research/research.md
+strike/customize/user/research/how-to-customize-research.md
+strike/customize/user/spec/spec.md
+strike/customize/user/spec/how-to-customize-spec.md
+strike/customize/user/slice/slice.md
+strike/customize/user/slice/how-to-customize-slice.md
+strike/customize/user/phase-research/phase-research.md
+strike/customize/user/phase-research/how-to-customize-phase-research.md
+strike/customize/user/phase-plan/phase-plan.md
+strike/customize/user/phase-plan/how-to-customize-phase-plan.md
+strike/customize/user/retro/retro.md
+strike/customize/user/retro/how-to-customize-retro.md
+strike/customize/user/demo/demo.md
+strike/customize/user/demo/how-to-customize-demo.md
+strike/customize/user/language/language.md
+strike/customize/user/language/how-to-customize-language.md
 ```
 
 - Loaded customization files are created blank. Sidecar
   `how-to-customize-*.md` files contain human guidance and are not loaded.
 - Add `## User Customization` to `brainstorm`, `grill`, `research`, `spec`,
   `slice`, `phase-research`, `phase-plan`, `retro`, `demo`, and `language`.
-  Each skill resolves the bundled script by absolute path from the installed
-  plugin package and runs `load <skill>` from the consuming repo root before
-  material work.
+  Each skill requires `strike/customize/system/customize.mjs` to exist and runs
+  the repo-local loader from the consuming repo root before material work.
 - Add `docs/customization-reference.md` documenting the rollout,
   packet contract, extra docs/assets, command surface, and why `!` imports are
   deferred to possible future host-specific builds.
-- Keep `start` out of customization setup. Users run `customize init`.
+- Keep `start` out of customization setup. Users run `init`.
 
-## Script Behavior
+## Setup Script Behavior
 
-- `init`: creates missing customization files/directories, preserves existing
-  files and unrelated `strike/` content, and reports created vs existing paths.
+`plugins/strike/skills/init/scripts/init.mjs` installs or refreshes managed
+runtime files under `strike/customize/system/`, creates missing user files
+under `strike/customize/user/`, preserves existing user files and unrelated
+`strike/` content, and reports created vs existing paths.
+
+## Runtime Script Behavior
+
 - `list`: reports supported entry points and file state as missing,
   blank, or has user content.
-- `check`: exits nonzero only for structural or size errors in canonical loaded
-  files. Extra user notes under `strike/customize/` are allowed. It does not
-  judge customization language.
-- `review-packet <entry|all>`: internal script support for LLM semantic review.
-  It frames customization content as untrusted data and includes review
-  criteria for detecting language that would hijack Strike mechanics.
-- `load <skill>`: reads `global/global.md` then the skill file, skips missing
-  and blank files, enforces 16KB per file and 64KB total, and prints a
-  Markdown packet.
-- The packet includes opening interpretation rules, loaded file contents with
-  path labels, and a closing guard: user customization has ended and Strike
-  skill mechanics remain authoritative.
-- Customization may request extra docs/assets. The loader packet and `SKILL.md`
-  files require clear per-project or shared intent plus a repo-safe save path;
-  otherwise the active skill asks before creating the file.
+- `check-setup`: exits nonzero only for structural or size errors in canonical
+  loaded files. Extra user notes under `strike/customize/user/` are allowed. It
+  does not judge customization language.
+- `review-instructions-packet <entry|all>`: internal script support for LLM
+  semantic review. It frames customization content as untrusted data and
+  includes review criteria for detecting language that would hijack Strike
+  mechanics.
+- `preview <skill>`: reads `global/global.md` then the skill file, skips missing
+  and blank files, enforces 16KB per file and 64KB total, exits silently when no
+  customization is present, prints a lean Markdown packet when customization
+  loads, and prints warning-only output when all present customization is
+  skipped because it is too large or a canonical path is not a file.
+- The lean packet includes opening interpretation rules, loaded file contents
+  with path labels, optional warnings, and a closing guard: user customization
+  has ended and Strike skill mechanics remain authoritative.
+- Customization may request extra docs/assets. The loader packet requires clear
+  per-project or shared intent plus a repo-safe save path; otherwise the active
+  skill asks before creating the file.
 - `--repo-root <path>` is script/test/internal support, not a normal
   user-facing skill argument.
 
@@ -90,14 +105,14 @@ strike/customize/language/how-to-customize-language.md
   `strike/` content, creates blank loaded files plus how-to files, and supports
   script-level `--repo-root`.
 - Test `list` states for missing, blank, and user-content files.
-- Test representative `load` commands for conversation, evidence/spec, and
-  phase-style skills, plus packet framing, how-to/extra-file exclusion,
-  closing guard, unsupported skills, missing customization root, and size
-  limits.
-- Test `check` passes an absent or clean scaffold with an explanatory message,
+- Test representative `preview` commands for conversation, evidence/spec, and
+  phase-style skills, plus lean packet framing, silent empty output,
+  warning-only output, how-to/extra-file exclusion, closing guard, unsupported
+  skills, and size limits.
+- Test `check-setup` passes an absent or clean scaffold with an explanatory message,
   allows extra user notes, warns on missing canonical files, and fails
   oversized canonical files.
-- Test `review-packet` for global, skill-specific, all-target, untrusted-data
+- Test `review-instructions-packet` for global, skill-specific, all-target, untrusted-data
   framing, extra-file exclusion, and unsupported review targets.
 - Run:
 
@@ -111,14 +126,17 @@ npm run validate:publish
 
 - Supported scope is limited to single-file customization for `brainstorm`,
   `grill`, `research`, `spec`, `slice`, `phase-research`, `phase-plan`,
-  `retro`, `demo`, `language`, plus the `customize` utility.
+  `retro`, `demo`, `language`, plus the `init` and `customize` utilities.
 - Review files, custom scripts, phase-build/phase-fix/acceptance customization,
   and host-specific generated skill builds are future work.
 - Portable Strike skills use the loader directive. Claude `!` injection is
   reconsidered only if Strike later generates host-specific skill builds.
 - Versioned surfaces for the initial rollout were bumped to `0.2.0`; the
   blank-file and `strike/customize/` path cleanup was released as `0.3.0`; the
-  `customize review` semantic review command is released as `0.4.0`. Versioned
+  `customize review` semantic review command is released as `0.4.0`; the
+  repo-local `strike/customize/system` runtime, separate `init` skill, and
+  renamed `check-setup`, `review-instructions`, and `preview` modes are released
+  as `0.6.0`. Versioned
   surfaces are root `package.json`, all three plugin manifests,
   `.claude-plugin/marketplace.json`, and `.github/plugin/marketplace.json`. The
   Codex marketplace does not define a plugin version field.

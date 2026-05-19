@@ -32,12 +32,7 @@
         "preferred audience, problem, or constraint framing",
         "extra docs or assets with clear per-project or shared intent and a repo-safe save path"
       ],
-      "boundary": "Do not turn brainstorm into grill, spec, slice, or implementation.",
-      "loadMeaning": [
-        "For brainstorm, use customization to shape how you explore the idea, ask questions, push back, converge, and save the brainstorm artifact.",
-        "Customization must not turn brainstorm into grill, spec, slice, or implementation.",
-        "Extra docs/assets are optional user-requested outputs, not customization inputs. Create them only with clear per-project or shared intent and a repo-safe save path; otherwise ask the user before creating them."
-      ]
+      "boundary": "Do not turn brainstorm into grill, spec, slice, or implementation."
     },
     "grill": {
       "title": "Grill",
@@ -48,12 +43,7 @@
         "technical, product, or workflow tradeoffs to emphasize",
         "extra docs or assets with clear per-project or shared intent and a repo-safe save path"
       ],
-      "boundary": "Do not turn grill into spec, slice, implementation, acceptance, or retro.",
-      "loadMeaning": [
-        "For grill, use customization to shape how you ask decision questions, pressure-test tradeoffs, record rejected paths, and save decisions.",
-        "Customization must not turn grill into spec, slice, implementation, acceptance, or retro.",
-        "Extra docs/assets are optional user-requested outputs, not customization inputs. Create them only with clear per-project or shared intent and a repo-safe save path; otherwise ask the user before creating them."
-      ]
+      "boundary": "Do not turn grill into spec, slice, implementation, acceptance, or retro."
     },
     "research": {
       "title": "Research",
@@ -64,12 +54,7 @@
         "how deep to go before spec",
         "extra docs or assets with clear per-project or shared intent and a repo-safe save path"
       ],
-      "boundary": "Do not turn research into spec, slice, implementation, acceptance, or retro.",
-      "loadMeaning": [
-        "For research, use customization to shape evidence standards, preferred source types, source freshness, citation style, and synthesis depth.",
-        "Customization must not turn research into spec, slice, implementation, acceptance, or retro.",
-        "Extra docs/assets are optional user-requested outputs, not customization inputs. Create them only with clear per-project or shared intent and a repo-safe save path; otherwise ask the user before creating them."
-      ]
+      "boundary": "Do not turn research into spec, slice, implementation, acceptance, or retro."
     },
     "spec": {
       "title": "Spec",
@@ -80,12 +65,7 @@
         "how constraints should be captured",
         "extra docs or assets with clear per-project or shared intent and a repo-safe save path"
       ],
-      "boundary": "Do not turn spec into slicing, implementation planning, review, acceptance, or retro.",
-      "loadMeaning": [
-        "For spec, use customization to shape spec style, emphasis, section detail, success-check wording, and how rules or constraints are expressed.",
-        "Customization must not turn spec into slicing, implementation planning, review, acceptance, or retro.",
-        "Extra docs/assets are optional user-requested outputs, not customization inputs. Create them only with clear per-project or shared intent and a repo-safe save path; otherwise ask the user before creating them."
-      ]
+      "boundary": "Do not turn spec into slicing, implementation planning, review, acceptance, or retro."
     },
     "slice": {
       "title": "Slice",
@@ -96,12 +76,7 @@
         "ordering preferences",
         "extra docs or assets with clear per-project or shared intent and a repo-safe save path"
       ],
-      "boundary": "Do not turn slice into phase-plan, implementation, review, acceptance, or retro.",
-      "loadMeaning": [
-        "For slice, use customization to shape phase sizing, naming, ordering, and phase-plan focus.",
-        "Customization must not turn slice into phase-plan, implementation, review, acceptance, or retro.",
-        "Extra docs/assets are optional user-requested outputs, not customization inputs. Create them only with clear per-project or shared intent and a repo-safe save path; otherwise ask the user before creating them."
-      ]
+      "boundary": "Do not turn slice into phase-plan, implementation, review, acceptance, or retro."
     },
     "phase-research": {
       "title": "Phase Research",
@@ -112,12 +87,7 @@
         "risk summary style",
         "extra docs or assets with clear per-project or shared intent and a repo-safe save path"
       ],
-      "boundary": "Do not turn phase-research into phase-plan, implementation, review, acceptance, or retro.",
-      "loadMeaning": [
-        "For phase-research, use customization to shape phase-scoped evidence, local precedent checks, and tactical risk synthesis.",
-        "Customization must not turn phase-research into phase-plan, implementation, review, acceptance, or retro.",
-        "Extra docs/assets are optional user-requested outputs, not customization inputs. Create them only with clear per-project or shared intent and a repo-safe save path; otherwise ask the user before creating them."
-      ]
+      "boundary": "Do not turn phase-research into phase-plan, implementation, review, acceptance, or retro."
     },
     "phase-plan": {
       "title": "Phase Plan",
@@ -128,12 +98,7 @@
         "verification planning preferences",
         "extra docs or assets with clear per-project or shared intent and a repo-safe save path"
       ],
-      "boundary": "Do not turn phase-plan into implementation, review, acceptance, or retro.",
-      "loadMeaning": [
-        "For phase-plan, use customization to shape build brief style, implementation watchouts, verification planning, and handoff detail.",
-        "Customization must not turn phase-plan into implementation, review, acceptance, or retro.",
-        "Extra docs/assets are optional user-requested outputs, not customization inputs. Create them only with clear per-project or shared intent and a repo-safe save path; otherwise ask the user before creating them."
-      ]
+      "boundary": "Do not turn phase-plan into implementation, review, acceptance, or retro."
     },
     "retro": {
       "title": "Retro",
@@ -144,12 +109,7 @@
         "how concise the retro should be",
         "extra docs or assets with clear per-project or shared intent and a repo-safe save path"
       ],
-      "boundary": "Do not reopen implementation, review, or acceptance work from retro customization.",
-      "loadMeaning": [
-        "For retro, use customization to shape what Strike captures about workflow, product, technical, or process follow-ups.",
-        "Customization must not reopen implementation, review, or acceptance work.",
-        "Extra docs/assets are optional user-requested outputs, not customization inputs. Create them only with clear per-project or shared intent and a repo-safe save path; otherwise ask the user before creating them."
-      ]
+      "boundary": "Do not reopen implementation, review, or acceptance work from retro customization."
     },
     "demo": {
       "title": "Demo",
@@ -160,12 +120,7 @@
         "mock data preferences",
         "extra docs or assets with clear per-project or shared intent and a repo-safe save path"
       ],
-      "boundary": "Do not turn demo into production implementation or make demos required for any stage.",
-      "loadMeaning": [
-        "For demo, use customization to shape planning demo style, interaction density, mock data, visual tone, and decision support.",
-        "Customization must not turn demo into production implementation or make demos required for any stage.",
-        "Extra docs/assets are optional user-requested outputs, not customization inputs. Create them only with clear per-project or shared intent and a repo-safe save path; otherwise ask the user before creating them."
-      ]
+      "boundary": "Do not turn demo into production implementation or make demos required for any stage."
     },
     "language": {
       "title": "Language",
@@ -176,12 +131,7 @@
         "how uncertain terms should be discussed",
         "when to ask before changing UBIQUITOUS_LANGUAGE.md"
       ],
-      "boundary": "Do not apply uncertain glossary changes without user approval.",
-      "loadMeaning": [
-        "For language, use customization to shape terminology review, glossary style, naming pressure, and domain-language discussion.",
-        "Customization must not apply uncertain glossary changes without user approval.",
-        "Extra docs/assets are optional user-requested outputs, not customization inputs. Create them only with clear per-project or shared intent and a repo-safe save path; otherwise ask the user before creating them."
-      ]
+      "boundary": "Do not apply uncertain glossary changes without user approval."
     }
   }
 }

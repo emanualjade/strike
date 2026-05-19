@@ -8,11 +8,17 @@ import { fileURLToPath } from "node:url";
 
 const SCRIPT_FILE = fileURLToPath(import.meta.url);
 const SCRIPT_DIR = path.dirname(SCRIPT_FILE);
-const CUSTOMIZATION_REFERENCE_ROOT = path.resolve(SCRIPT_DIR, "..", "customization");
+const LOCAL_CUSTOMIZATION_REFERENCE_ROOT = path.resolve(SCRIPT_DIR, "references", "customization");
+const PLUGIN_CUSTOMIZATION_REFERENCE_ROOT = path.resolve(SCRIPT_DIR, "..", "customization");
+const CUSTOMIZATION_REFERENCE_ROOT = fs.existsSync(path.join(LOCAL_CUSTOMIZATION_REFERENCE_ROOT, "entry-points.json"))
+  ? LOCAL_CUSTOMIZATION_REFERENCE_ROOT
+  : PLUGIN_CUSTOMIZATION_REFERENCE_ROOT;
 const CUSTOMIZATION_REFERENCE = readReferenceJson("entry-points.json");
 const ENTRY_POINT_DETAILS = CUSTOMIZATION_REFERENCE.entryPoints ?? {};
 
 export const CUSTOMIZE_ROOT = "strike/customize";
+export const CUSTOMIZE_SYSTEM_ROOT = `${CUSTOMIZE_ROOT}/system`;
+export const CUSTOMIZE_USER_ROOT = `${CUSTOMIZE_ROOT}/user`;
 export const FILE_MAX_BYTES = 16 * 1024;
 export const TOTAL_MAX_BYTES = 64 * 1024;
 export const SUPPORTED_SKILLS = CUSTOMIZATION_REFERENCE.supportedSkills ?? [];
@@ -21,14 +27,11 @@ validateCustomizationReference();
 
 const ENTRY_POINTS = ["global", ...SUPPORTED_SKILLS];
 const CANONICAL_FILES = ENTRY_POINTS.map((entryPoint) => canonicalPath(entryPoint));
-const HOW_TO_FILES = new Map(
-  ENTRY_POINTS.map((entryPoint) => [howToPath(entryPoint), howToContent(entryPoint)]),
-);
 
 function usage({ includeInternal = false } = {}) {
   return renderTemplate("messages/usage.txt", {
     supported_skills: SUPPORTED_SKILLS.join(", "),
-    internal_usage: includeInternal ? "Internal mode for the customize skill: review-packet <global|skill|all>" : "",
+    internal_usage: includeInternal ? "Internal mode for the customize skill: review-instructions-packet <global|skill|all>" : "",
   }).trimEnd();
 }
 
@@ -58,9 +61,6 @@ function validateCustomizationReference() {
     }
     if (!Array.isArray(details.ideas) || typeof details.boundary !== "string") {
       throw new Error(`Customization reference ${entryPoint} must define ideas and boundary.`);
-    }
-    if (entryPoint !== "global" && !Array.isArray(details.loadMeaning)) {
-      throw new Error(`Customization reference ${entryPoint} must define loadMeaning.`);
     }
   }
 }
@@ -100,13 +100,9 @@ function renderTemplate(name, values) {
 
 function customizationBlock(info) {
   return renderTemplate("templates/user-customization-block.md", {
-    path: `${CUSTOMIZE_ROOT}/${info.relativePath}`,
+    path: `${CUSTOMIZE_USER_ROOT}/${info.relativePath}`,
     content: info.normalizedContent,
   }).trimEnd();
-}
-
-function displayPath(filePath, repoRoot) {
-  return path.relative(repoRoot, filePath).split(path.sep).join("/");
 }
 
 function resolveRepoRoot(repoRootOption) {
@@ -133,39 +129,20 @@ function resolveRepoRoot(repoRootOption) {
   return fs.realpathSync(process.cwd());
 }
 
-function customizeRoot(repoRoot) {
-  return path.join(repoRoot, CUSTOMIZE_ROOT);
+function customizeUserRoot(repoRoot) {
+  return path.join(repoRoot, CUSTOMIZE_USER_ROOT);
 }
 
 function pathFor(repoRoot, relativePath) {
-  return path.join(customizeRoot(repoRoot), relativePath);
+  return path.join(customizeUserRoot(repoRoot), relativePath);
 }
 
 function canonicalPath(entryPoint) {
   return `${entryPoint}/${entryPoint}.md`;
 }
 
-function howToPath(entryPoint) {
-  return `${entryPoint}/how-to-customize-${entryPoint}.md`;
-}
-
 function skillPath(skill) {
   return canonicalPath(skill);
-}
-
-function howToContent(entryPoint) {
-  const details = ENTRY_POINT_DETAILS[entryPoint];
-  if (!details) {
-    throw new Error(`Missing how-to details for ${entryPoint}`);
-  }
-
-  return renderTemplate("templates/how-to.md", {
-    title: details.title,
-    entry_point: entryPoint,
-    target: details.target,
-    ideas: bulletList(details.ideas),
-    boundary: details.boundary,
-  });
 }
 
 function ensureSupportedSkill(skill) {
@@ -222,74 +199,17 @@ function readFileInfo(repoRoot, relativePath) {
   };
 }
 
-function ensureDirectory(repoRoot, relativePath) {
-  const absolutePath = path.join(repoRoot, relativePath);
-  if (fs.existsSync(absolutePath)) {
-    const stat = fs.statSync(absolutePath);
-    if (!stat.isDirectory()) {
-      throw new Error(`${displayPath(absolutePath, repoRoot)}: expected a directory but found a file`);
-    }
-    return false;
-  }
-
-  fs.mkdirSync(absolutePath, { recursive: true });
-  return true;
-}
-
-function ensureInitDirectories(repoRoot) {
-  ensureDirectory(repoRoot, "strike");
-  ensureDirectory(repoRoot, CUSTOMIZE_ROOT);
-  for (const entryPoint of ENTRY_POINTS) {
-    ensureDirectory(repoRoot, `${CUSTOMIZE_ROOT}/${entryPoint}`);
-  }
-}
-
-function initFileSpecs() {
-  const specs = [];
-  for (const entryPoint of ENTRY_POINTS) {
-    specs.push([canonicalPath(entryPoint), ""]);
-    specs.push([howToPath(entryPoint), HOW_TO_FILES.get(howToPath(entryPoint))]);
-  }
-  return specs;
-}
-
-function init(repoRoot) {
-  const created = [];
-  const existing = [];
-
-  ensureInitDirectories(repoRoot);
-  for (const [relativePath, content] of initFileSpecs()) {
-    const absolutePath = pathFor(repoRoot, relativePath);
-    if (fs.existsSync(absolutePath)) {
-      const stat = fs.statSync(absolutePath);
-      if (!stat.isFile()) {
-        throw new Error(`${displayPath(absolutePath, repoRoot)}: expected a file but found a directory`);
-      }
-      existing.push(displayPath(absolutePath, repoRoot));
-      continue;
-    }
-    fs.writeFileSync(absolutePath, content, "utf8");
-    created.push(displayPath(absolutePath, repoRoot));
-  }
-
-  process.stdout.write(renderTemplate("messages/init.md", {
-    customization_root: CUSTOMIZE_ROOT,
-    created_files: bulletList(created),
-    existing_files: bulletList(existing),
-  }));
-}
-
 function list(repoRoot) {
-  if (!fs.existsSync(customizeRoot(repoRoot))) {
+  if (!fs.existsSync(customizeUserRoot(repoRoot))) {
     process.stdout.write(renderTemplate("messages/list-missing-root.md", {
-      customization_root: CUSTOMIZE_ROOT,
+      customization_root: CUSTOMIZE_USER_ROOT,
     }));
     return;
   }
 
-  if (!fs.statSync(customizeRoot(repoRoot)).isDirectory()) {
+  if (!fs.statSync(customizeUserRoot(repoRoot)).isDirectory()) {
     process.stdout.write(renderTemplate("messages/list-blocked-root.md", {
-      customization_root: CUSTOMIZE_ROOT,
+      customization_root: CUSTOMIZE_USER_ROOT,
     }));
     return;
   }
@@ -305,46 +225,46 @@ function list(repoRoot) {
     } else if (info.exists) {
       state = "blank";
     }
-    lines.push(`${CUSTOMIZE_ROOT}/${relativePath}: ${state}`);
+    lines.push(`${CUSTOMIZE_USER_ROOT}/${relativePath}: ${state}`);
   }
   process.stdout.write(renderTemplate("messages/list.md", {
-    customization_root: CUSTOMIZE_ROOT,
+    customization_root: CUSTOMIZE_USER_ROOT,
     entries: bulletList(lines),
   }));
 }
 
-function check(repoRoot) {
+function checkSetup(repoRoot) {
   const errors = [];
   const warnings = [];
 
-  if (!fs.existsSync(customizeRoot(repoRoot))) {
-    process.stdout.write(renderTemplate("messages/check-missing-root.md", {}));
+  if (!fs.existsSync(customizeUserRoot(repoRoot))) {
+    process.stdout.write(renderTemplate("messages/check-setup-missing-root.md", {}));
     return 0;
   }
 
-  if (!fs.statSync(customizeRoot(repoRoot)).isDirectory()) {
-    errors.push(`${CUSTOMIZE_ROOT}: expected a directory`);
+  if (!fs.statSync(customizeUserRoot(repoRoot)).isDirectory()) {
+    errors.push(`${CUSTOMIZE_USER_ROOT}: expected a directory`);
   }
 
   for (const entryPoint of ENTRY_POINTS) {
     const entryPath = pathFor(repoRoot, entryPoint);
     if (fs.existsSync(entryPath) && !fs.statSync(entryPath).isDirectory()) {
-      errors.push(`${CUSTOMIZE_ROOT}/${entryPoint}: expected a directory`);
+      errors.push(`${CUSTOMIZE_USER_ROOT}/${entryPoint}: expected a directory`);
     }
   }
 
   for (const relativePath of CANONICAL_FILES) {
     const info = readFileInfo(repoRoot, relativePath);
     if (!info.exists) {
-      warnings.push(`${CUSTOMIZE_ROOT}/${relativePath}: missing; run customize init to create it`);
+      warnings.push(`${CUSTOMIZE_USER_ROOT}/${relativePath}: missing; run the Strike init skill to create it`);
       continue;
     }
     if (info.notFile) {
-      errors.push(`${CUSTOMIZE_ROOT}/${relativePath}: expected a file`);
+      errors.push(`${CUSTOMIZE_USER_ROOT}/${relativePath}: expected a file`);
       continue;
     }
     if (info.bytes > FILE_MAX_BYTES) {
-      errors.push(`${CUSTOMIZE_ROOT}/${relativePath}: file is ${info.bytes} bytes; max is ${FILE_MAX_BYTES}`);
+      errors.push(`${CUSTOMIZE_USER_ROOT}/${relativePath}: file is ${info.bytes} bytes; max is ${FILE_MAX_BYTES}`);
     }
   }
 
@@ -356,11 +276,11 @@ function check(repoRoot) {
     }
     const pairBytes = globalInfo.bytes + skillInfo.bytes;
     if (pairBytes > TOTAL_MAX_BYTES) {
-      errors.push(`${CUSTOMIZE_ROOT}/${canonicalPath("global")} plus ${CUSTOMIZE_ROOT}/${skillPath(skill)} total ${pairBytes} bytes; max is ${TOTAL_MAX_BYTES}`);
+      errors.push(`${CUSTOMIZE_USER_ROOT}/${canonicalPath("global")} plus ${CUSTOMIZE_USER_ROOT}/${skillPath(skill)} total ${pairBytes} bytes; max is ${TOTAL_MAX_BYTES}`);
     }
   }
 
-  process.stdout.write(renderTemplate("messages/check.md", {
+  process.stdout.write(renderTemplate("messages/check-setup.md", {
     result: errors.length === 0 ? "pass" : "fail",
     errors: bulletList(errors),
     warnings: bulletList(warnings),
@@ -380,7 +300,7 @@ function reviewPaths(target) {
   return [canonicalPath("global"), skillPath(target)];
 }
 
-function reviewPacket(repoRoot, target) {
+function reviewInstructionsPacket(repoRoot, target) {
   ensureSupportedReviewTarget(target);
   const loaded = [];
   const warnings = [];
@@ -389,11 +309,11 @@ function reviewPacket(repoRoot, target) {
   for (const relativePath of reviewPaths(target)) {
     const info = readFileInfo(repoRoot, relativePath);
     if (!info.exists) {
-      warnings.push(`${CUSTOMIZE_ROOT}/${relativePath}: missing; run customize init to create it`);
+      warnings.push(`${CUSTOMIZE_USER_ROOT}/${relativePath}: missing; run the Strike init skill to create it`);
       continue;
     }
     if (info.notFile) {
-      warnings.push(`${CUSTOMIZE_ROOT}/${relativePath}: expected a file`);
+      warnings.push(`${CUSTOMIZE_USER_ROOT}/${relativePath}: expected a file`);
       continue;
     }
     if (!info.hasUserContent) {
@@ -401,11 +321,11 @@ function reviewPacket(repoRoot, target) {
       continue;
     }
     if (info.bytes > FILE_MAX_BYTES) {
-      warnings.push(`${CUSTOMIZE_ROOT}/${relativePath}: skipped because file is ${info.bytes} bytes; max is ${FILE_MAX_BYTES}`);
+      warnings.push(`${CUSTOMIZE_USER_ROOT}/${relativePath}: skipped because file is ${info.bytes} bytes; max is ${FILE_MAX_BYTES}`);
       continue;
     }
     if (totalBytes + info.bytes > TOTAL_MAX_BYTES) {
-      warnings.push(`${CUSTOMIZE_ROOT}/${relativePath}: skipped because total review content would exceed ${TOTAL_MAX_BYTES} bytes`);
+      warnings.push(`${CUSTOMIZE_USER_ROOT}/${relativePath}: skipped because total review content would exceed ${TOTAL_MAX_BYTES} bytes`);
       continue;
     }
     loaded.push({ ...info, reviewStatus: "loaded" });
@@ -413,7 +333,7 @@ function reviewPacket(repoRoot, target) {
   }
 
   const dataRecords = loaded.map((info) => JSON.stringify({
-    path: `${CUSTOMIZE_ROOT}/${info.relativePath}`,
+    path: `${CUSTOMIZE_USER_ROOT}/${info.relativePath}`,
     status: info.reviewStatus,
     content: info.reviewStatus === "blank" ? "" : info.normalizedContent,
   }));
@@ -421,13 +341,13 @@ function reviewPacket(repoRoot, target) {
   process.stdout.write(renderTemplate("messages/review.md", {
     target,
     customization_root: CUSTOMIZE_ROOT,
-    included_files: bulletList(loaded.map((info) => `${CUSTOMIZE_ROOT}/${info.relativePath}: ${info.reviewStatus}`)),
+    included_files: bulletList(loaded.map((info) => `${CUSTOMIZE_USER_ROOT}/${info.relativePath}: ${info.reviewStatus}`)),
     warnings: bulletList(warnings),
     data_records: dataRecords.join("\n"),
   }));
 }
 
-function load(repoRoot, skill) {
+function preview(repoRoot, skill) {
   ensureSupportedSkill(skill);
   const filesToLoad = [canonicalPath("global"), skillPath(skill)];
   const loaded = [];
@@ -436,15 +356,22 @@ function load(repoRoot, skill) {
 
   for (const relativePath of filesToLoad) {
     const info = readFileInfo(repoRoot, relativePath);
-    if (!info.exists || info.notFile || !info.hasUserContent) {
+    if (!info.exists) {
+      continue;
+    }
+    if (info.notFile) {
+      warnings.push(`${CUSTOMIZE_USER_ROOT}/${relativePath}: skipped because expected a file`);
+      continue;
+    }
+    if (!info.hasUserContent) {
       continue;
     }
     if (info.bytes > FILE_MAX_BYTES) {
-      warnings.push(`${CUSTOMIZE_ROOT}/${relativePath}: skipped because file is ${info.bytes} bytes; max is ${FILE_MAX_BYTES}`);
+      warnings.push(`${CUSTOMIZE_USER_ROOT}/${relativePath}: skipped because file is ${info.bytes} bytes; max is ${FILE_MAX_BYTES}`);
       continue;
     }
     if (totalBytes + info.bytes > TOTAL_MAX_BYTES) {
-      warnings.push(`${CUSTOMIZE_ROOT}/${relativePath}: skipped because total loaded customization would exceed ${TOTAL_MAX_BYTES} bytes`);
+      warnings.push(`${CUSTOMIZE_USER_ROOT}/${relativePath}: skipped because total loaded customization would exceed ${TOTAL_MAX_BYTES} bytes`);
       continue;
     }
     loaded.push(info);
@@ -452,21 +379,20 @@ function load(repoRoot, skill) {
   }
 
   if (loaded.length === 0 && warnings.length === 0) {
-    process.stdout.write(renderTemplate("messages/load-empty.md", {
+    return;
+  }
+
+  if (loaded.length === 0) {
+    process.stdout.write(renderTemplate("messages/preview-warning.md", {
       skill,
-      customization_root: CUSTOMIZE_ROOT,
+      warnings: bulletList(warnings),
     }));
     return;
   }
 
-  process.stdout.write(renderTemplate("messages/load.md", {
-    skill,
-    customization_root: CUSTOMIZE_ROOT,
-    status: `${loaded.length} customization file${loaded.length === 1 ? "" : "s"} loaded.`,
-    skill_meaning: bulletList(ENTRY_POINT_DETAILS[skill].loadMeaning),
-    included_files: bulletList(loaded.map((info) => `${CUSTOMIZE_ROOT}/${info.relativePath}`)),
-    warnings: bulletList(warnings),
-    customization_blocks: loaded.map(customizationBlock).join("\n\n") || "No user customization content was loaded.",
+  process.stdout.write(renderTemplate("messages/preview.md", {
+    warning_block: warnings.length > 0 ? `\n## Customization Warnings\n\n${bulletList(warnings)}\n` : "",
+    customization_blocks: loaded.map(customizationBlock).join("\n\n"),
   }));
 }
 
@@ -508,50 +434,47 @@ export function runCli(argv = process.argv.slice(2)) {
     throw new Error(usage());
   }
 
-  if (["init", "list", "check"].includes(command) && (skill || extraArgs.length > 0)) {
+  if (["list", "check-setup"].includes(command) && (skill || extraArgs.length > 0)) {
     throw new Error(`${command} does not accept positional arguments.\n${usage()}`);
   }
-  if (command === "load") {
+  if (command === "preview") {
     if (!skill) {
-      throw new Error(`load requires a skill.\n${usage()}`);
+      throw new Error(`preview requires a skill.\n${usage()}`);
     }
     if (extraArgs.length > 0) {
-      throw new Error(`load accepts exactly one skill.\n${usage()}`);
+      throw new Error(`preview accepts exactly one skill.\n${usage()}`);
     }
   }
-  if (command === "review-packet") {
+  if (command === "review-instructions-packet") {
     if (!skill) {
-      throw new Error(`review-packet requires a review target.\n${usage({ includeInternal: true })}`);
+      throw new Error(`review-instructions-packet requires a review target.\n${usage({ includeInternal: true })}`);
     }
     if (extraArgs.length > 0) {
-      throw new Error(`review-packet accepts exactly one target.\n${usage({ includeInternal: true })}`);
+      throw new Error(`review-instructions-packet accepts exactly one target.\n${usage({ includeInternal: true })}`);
     }
   }
 
   const repoRoot = resolveRepoRoot(options.repoRoot);
   switch (command) {
-    case "init":
-      init(repoRoot);
-      return 0;
     case "list":
       list(repoRoot);
       return 0;
-    case "check":
-      return check(repoRoot);
-    case "load":
-      load(repoRoot, skill);
+    case "check-setup":
+      return checkSetup(repoRoot);
+    case "preview":
+      preview(repoRoot, skill);
       return 0;
-    case "review-packet":
-      reviewPacket(repoRoot, skill);
+    case "review-instructions-packet":
+      reviewInstructionsPacket(repoRoot, skill);
       return 0;
     default:
       throw new Error(`Unknown command: ${command}\n${usage()}`);
   }
 }
 
-const invokedFile = process.argv[1] ? path.resolve(process.argv[1]) : "";
+const invokedFile = process.argv[1] ? fs.realpathSync(path.resolve(process.argv[1])) : "";
 
-if (SCRIPT_FILE === invokedFile) {
+if (fs.realpathSync(SCRIPT_FILE) === invokedFile) {
   try {
     const status = runCli();
     process.exitCode = status;

@@ -563,7 +563,8 @@ Strike prompts mostly use plain positional arguments. `start` is the only
 normal user-facing skill with double-dash options today:
 
 ```text
-customize init|list|check|review <entry|all>|load <supported-skill>
+init
+customize list|check-setup|review-instructions <entry|all>|preview <supported-skill>
 start <project name words> [--slug <slug>] [--description <description words>]
 ```
 
@@ -576,8 +577,10 @@ phase-build <project-slug> phase:<phase-slug>
 Some skills accept one optional plain word, such as `research <project-slug>
 skip` or `go <project-slug> verbose`.
 
-- `customize`: initialize, list, check, review, or inspect repo-local
-  customization for supported single-file skills.
+- `init`: initialize or refresh Strike repo-local runtime and customization
+  files.
+- `customize`: list files, check setup, review instructions, or preview
+  runtime customization for supported single-file skills.
 - `start`: create a new project card.
 - `go`: inspect the board and recommend the next step.
 - `brainstorm`, `grill`, `research`: shape and pressure-test the idea.
@@ -609,28 +612,30 @@ gates. Your customization gives it extra guidance for how to do the work.
 
 ### How To Customize
 
-Create the customization files:
+Initialize Strike in the repo:
 
 ```text
-customize init
+init
 ```
 
-Then edit the files under:
+Then edit user customization files under:
 
 ```text
-strike/customize/
+strike/customize/user/
 ```
 
 Start with:
 
 ```text
-strike/customize/global/global.md
-strike/customize/brainstorm/brainstorm.md
-strike/customize/spec/spec.md
+strike/customize/user/global/global.md
+strike/customize/user/brainstorm/brainstorm.md
+strike/customize/user/spec/spec.md
 ```
 
 Write your instructions in the matching file. Each folder also includes a
 `how-to-customize-*.md` guide with ideas for what to write.
+Strike-managed loader files live under `strike/customize/system/`; rerun
+`init` after updating Strike if you need to refresh them.
 
 If you want Strike to create extra docs or assets, tell it whether they are for
 one project or shared across projects, and give it a save path. Handy defaults
@@ -640,15 +645,15 @@ are `strike/user-docs/<project-slug>/<skill>/...` for project notes and
 Check that the setup is healthy:
 
 ```text
-customize check
+customize check-setup
 ```
 
 Ask Strike to review whether your instructions are safe for the workflow:
 
 ```text
-customize review global
-customize review brainstorm
-customize review all
+customize review-instructions global
+customize review-instructions brainstorm
+customize review-instructions all
 ```
 
 ## Troubleshooting

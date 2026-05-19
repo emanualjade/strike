@@ -12,36 +12,43 @@ The first implementation supports selected single-file customization entries,
 not the full customization tree. It supports:
 
 ```txt
-strike/customize/global/global.md
-strike/customize/global/how-to-customize-global.md
-strike/customize/brainstorm/brainstorm.md
-strike/customize/brainstorm/how-to-customize-brainstorm.md
-strike/customize/grill/grill.md
-strike/customize/grill/how-to-customize-grill.md
-strike/customize/research/research.md
-strike/customize/research/how-to-customize-research.md
-strike/customize/spec/spec.md
-strike/customize/spec/how-to-customize-spec.md
-strike/customize/slice/slice.md
-strike/customize/slice/how-to-customize-slice.md
-strike/customize/phase-research/phase-research.md
-strike/customize/phase-research/how-to-customize-phase-research.md
-strike/customize/phase-plan/phase-plan.md
-strike/customize/phase-plan/how-to-customize-phase-plan.md
-strike/customize/retro/retro.md
-strike/customize/retro/how-to-customize-retro.md
-strike/customize/demo/demo.md
-strike/customize/demo/how-to-customize-demo.md
-strike/customize/language/language.md
-strike/customize/language/how-to-customize-language.md
+strike/customize/system/customize.mjs
+strike/customize/system/references/customization/
+strike/customize/user/global/global.md
+strike/customize/user/global/how-to-customize-global.md
+strike/customize/user/brainstorm/brainstorm.md
+strike/customize/user/brainstorm/how-to-customize-brainstorm.md
+strike/customize/user/grill/grill.md
+strike/customize/user/grill/how-to-customize-grill.md
+strike/customize/user/research/research.md
+strike/customize/user/research/how-to-customize-research.md
+strike/customize/user/spec/spec.md
+strike/customize/user/spec/how-to-customize-spec.md
+strike/customize/user/slice/slice.md
+strike/customize/user/slice/how-to-customize-slice.md
+strike/customize/user/phase-research/phase-research.md
+strike/customize/user/phase-research/how-to-customize-phase-research.md
+strike/customize/user/phase-plan/phase-plan.md
+strike/customize/user/phase-plan/how-to-customize-phase-plan.md
+strike/customize/user/retro/retro.md
+strike/customize/user/retro/how-to-customize-retro.md
+strike/customize/user/demo/demo.md
+strike/customize/user/demo/how-to-customize-demo.md
+strike/customize/user/language/language.md
+strike/customize/user/language/how-to-customize-language.md
 ```
 
-The rollout adds a `customize` utility skill and a deterministic
-`plugins/strike/references/scripts/customize.mjs` loader with `init`, `list`,
-`check`, `review <entry|all>`, and `load <skill>` modes. Supported skills load
-a framed customization packet before material work. Review files, custom
-executable scripts, phase-build/phase-fix/acceptance customization, and
-host-specific generated skill builds are future work.
+The rollout adds an `init` setup skill, a `customize` utility skill, and a
+repo-local runtime. `plugins/strike/skills/init/scripts/init.mjs` installs the
+runtime, while `customize` exposes `list`, `check-setup`,
+`review-instructions <entry|all>`, and `preview <skill>` modes through
+`strike/customize/system/customize.mjs`.
+Supported skills run the repo-local loader before material work; it is silent
+when no customization exists, prints lean custom-instructions text when
+customization loads, and prints a short warning when all customization is
+skipped for size. Review files, custom executable scripts,
+phase-build/phase-fix/acceptance customization, and host-specific generated
+skill builds are future work.
 
 ## Feature Idea
 
@@ -141,7 +148,7 @@ Keep the first version to a small number of concepts.
 
 ### Global Customization
 
-`strike/customize/global/global.md`
+`strike/customize/user/global/global.md`
 
 Repo-wide preferences that should apply across Strike skills when relevant.
 
@@ -155,7 +162,7 @@ Global customization still cannot change Strike mechanics.
 
 ### Skill Customization
 
-`strike/customize/<skill-name>/<skill-name>.md`
+`strike/customize/user/<skill-name>/<skill-name>.md`
 
 Each customization directory can also contain a
 `how-to-customize-<skill-name>.md` guide. The how-to file is for humans and is
@@ -172,7 +179,7 @@ Examples:
 
 ### Review Files
 
-`strike/customize/<review-skill>/reviews/*.md`
+`strike/customize/user/<review-skill>/reviews/*.md`
 
 Only review-like entry points should read multiple review files. Each file is a
 review lens for that specific entry point, not a universal topic.
@@ -194,14 +201,16 @@ topic should be applied.
 The resolved direction is to make customization visible through a
 deterministic loader script, not portable `!` imports.
 
-Each supported skill should run the bundled loader before material work:
+Each supported skill should require the repo-local loader before material work:
 
 ```bash
-node <plugin-root>/references/scripts/customize.mjs --repo-root <repo-root> load <skill-name>
+test -f strike/customize/system/customize.mjs || { echo 'Strike is not initialized in this repo yet. Run the Strike `init` skill first.'; exit 1; }
+node strike/customize/system/customize.mjs --repo-root <repo-root> preview <skill-name>
 ```
 
-The loader prints a framed packet with interpretation rules, loaded user
-customization, warnings, and a closing guard. This gives the model clear
+The loader prints lean custom-instructions text with interpretation rules,
+loaded user customization, optional warnings, and a closing guard only when
+there is customization or a warning to surface. This gives the model clear
 context without relying on host-specific import syntax.
 
 ### Research Note: 2026-05-18
@@ -226,9 +235,9 @@ Initial docs research does not support treating `!path` as a portable
 
 Current implication: do not put `!strike/customize/...` in portable Strike
 skills. The portable design should say explicitly that the skill reads
-`strike/customize/global/global.md` and its own entry-point customization file
-when present. If Claude-specific command injection is ever used, it should be a
-host-specific enhancement, not the shared source of truth.
+`strike/customize/user/global/global.md` and its own entry-point customization
+file when present. If Claude-specific command injection is ever used, it should
+be a host-specific enhancement, not the shared source of truth.
 
 ## Initialization
 
@@ -238,14 +247,14 @@ Open options:
 
 - `start` creates `strike/customize/` the first time it creates
   `docs/strike/`
-- a new utility skill such as `customize init` creates the customization tree
+- a setup skill such as `init` creates the customization tree
 - an install script creates the tree, if host install flows can reliably target
   the consuming repository
 
 Current leaning:
 
-- prefer `start` or `customize init` over plugin install, because install may
-  happen outside the consuming repository in some hosts
+- prefer `init` over plugin install, because install may happen outside the
+  consuming repository in some hosts
 - create directories and blank loaded files so the loader always has a stable
   target
 - keep loaded customization files blank and put human guidance in sidecar
@@ -261,10 +270,10 @@ A future utility could check customization docs.
 Possible commands:
 
 ```txt
-customize check
-customize init
+customize check-setup
+init
 customize list
-customize review <entry|all>
+customize review-instructions <entry|all>
 ```
 
 Checks to consider:
@@ -273,8 +282,8 @@ Checks to consider:
 - files that are too long for useful context loading
 - host-specific invocation syntax in portable customization files
 
-Language review belongs in `customize review <entry|all>`, not deterministic
-`customize check`.
+Language review belongs in `customize review-instructions <entry|all>`, not
+deterministic `customize check-setup`.
 
 Semantic review should consider:
 
@@ -312,7 +321,7 @@ questions.
 - [x] Put guidance in sidecar `how-to-customize-*.md` files.
 - [x] Allow extra user notes under `strike/customize/` without failing
   `customize check`.
-- [x] Harden `customize init` around existing `strike/` content and blocked
+- [x] Harden initialization around existing `strike/` content and blocked
   paths.
 
 ## Resolved In 0.4.0
@@ -322,6 +331,16 @@ questions.
   customization language.
 - [x] Add an internal review packet so file discovery stays deterministic while
   language judgment is handled by the LLM.
+
+## Resolved In 0.6.0
+
+- [x] Split setup into a dedicated `init` skill.
+- [x] Move user-owned customization files under `strike/customize/user/`.
+- [x] Install the repo-local managed runtime under `strike/customize/system/`.
+- [x] Make supported workflow skills require the repo-local loader before
+  material work.
+- [x] Rename user-facing utility modes to `check-setup`,
+  `review-instructions <entry|all>`, and `preview <skill>`.
 
 ## Future Questions
 

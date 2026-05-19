@@ -3,7 +3,7 @@
 Write real customization in `{{entry_point}}.md`.
 
 This how-to file is guidance for humans. Strike never loads this file with
-`customize load`, so keep actual instructions in `{{entry_point}}.md`.
+`customize preview`, so keep actual instructions in `{{entry_point}}.md`.
 
 This customization affects {{target}}.
 

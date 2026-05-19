@@ -2,6 +2,23 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.6.0 - 2026-05-19
+
+- Added the `init` setup skill for first-run Strike repository initialization.
+- Split customization state into Strike-managed runtime files under
+  `strike/customize/system/` and user-owned files under
+  `strike/customize/user/`.
+- Changed supported workflow skills to require the repo-local loader at
+  `strike/customize/system/customize.mjs` before material work.
+- Removed user-facing `customize init`; the `customize` utility now focuses on
+  `list`, `check-setup`, `review-instructions <entry|all>`, and diagnostic
+  `preview <skill>`.
+- Renamed customization utility modes from `check`, `review <entry|all>`, and
+  `load <skill>` to `check-setup`, `review-instructions <entry|all>`, and
+  `preview <skill>`.
+- Moved setup into `plugins/strike/skills/init/scripts/init.mjs` so
+  `customize.mjs` is only the repo-local runtime and inspection tool.
+
 ## 0.5.1 - 2026-05-19
 
 - Clarified host-specific Strike invocation guidance for Codex app, Codex CLI,
@@ -10,6 +27,9 @@ All notable changes to Strike will be recorded here.
   selection from Codex CLI `/skills` and `/clear` behavior.
 - Fixed stale customization notes so the implemented `customize review
   <entry|all>` command is listed with the current utility modes.
+- Slimmed runtime customization loading so `customize load <skill>` is silent
+  when no customization is present, emits a lean packet when customization
+  exists, and uses a short warning-only message for oversized skipped files.
 
 ## 0.5.0 - 2026-05-19
 

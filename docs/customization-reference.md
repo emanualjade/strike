@@ -6,39 +6,58 @@ shape how selected Strike skills behave without forking the plugin.
 This rollout supports single-file customization for:
 
 ```txt
-strike/customize/global/global.md
-strike/customize/brainstorm/brainstorm.md
-strike/customize/grill/grill.md
-strike/customize/research/research.md
-strike/customize/spec/spec.md
-strike/customize/slice/slice.md
-strike/customize/phase-research/phase-research.md
-strike/customize/phase-plan/phase-plan.md
-strike/customize/retro/retro.md
-strike/customize/demo/demo.md
-strike/customize/language/language.md
+strike/customize/user/global/global.md
+strike/customize/user/brainstorm/brainstorm.md
+strike/customize/user/grill/grill.md
+strike/customize/user/research/research.md
+strike/customize/user/spec/spec.md
+strike/customize/user/slice/slice.md
+strike/customize/user/phase-research/phase-research.md
+strike/customize/user/phase-plan/phase-plan.md
+strike/customize/user/retro/retro.md
+strike/customize/user/demo/demo.md
+strike/customize/user/language/language.md
 ```
 
 Each directory also has a `how-to-customize-*.md` guide for humans. Those files
 are never loaded into a skill packet.
 
+Strike-managed runtime files are installed under:
+
+```txt
+strike/customize/system/
+```
+
 ## Commands
 
-Use the `customize` utility skill for normal use:
+Use `init` once per consuming repo, then use the `customize` utility skill for
+normal inspection and review:
 
 ```txt
-customize init
+init
 customize list
-customize check
-customize review <global|supported-skill|all>
-customize load <supported-skill>
+customize check-setup
+customize review-instructions <entry|all>
+customize preview <supported-skill>
 ```
 
-The skill runs the bundled deterministic script:
+The `init` skill runs its bundled deterministic setup script from the installed
+plugin package:
 
 ```txt
-<plugin-root>/references/scripts/customize.mjs
+<plugin-root>/skills/init/scripts/init.mjs
 ```
+
+That setup script creates `strike/customize/user/` files and copies the
+repo-local runtime to:
+
+```txt
+strike/customize/system/customize.mjs
+strike/customize/system/references/customization/
+```
+
+After initialization, workflow skills and the `customize` utility run the
+repo-local script under `strike/customize/system/`.
 
 The script also accepts `--repo-root <path>` for skill, test, and internal use.
 That flag is not a normal user-facing Strike skill option.
@@ -49,74 +68,81 @@ Most `customize` command wording is rendered from reference files under:
 plugins/strike/references/customization/messages/
 ```
 
-Supported entry points, how-to guide details, and skill-specific load meanings
-are defined in:
+Supported entry points and how-to guide details are defined in:
 
 ```txt
 plugins/strike/references/customization/entry-points.json
 ```
 
-`customize init` creates blank loaded customization files plus sidecar how-to
-guides. Write actual customization in the loaded files, such as
-`strike/customize/global/global.md` or
-`strike/customize/brainstorm/brainstorm.md`. The how-to files and any extra
-user notes under `strike/customize/` are ignored by `customize load`.
+`init` creates blank loaded customization files plus sidecar how-to guides.
+Write actual customization in the loaded files, such as
+`strike/customize/user/global/global.md` or
+`strike/customize/user/brainstorm/brainstorm.md`. The how-to files and any
+extra user notes under `strike/customize/user/` are ignored by
+`customize preview`.
 Generated how-to files are rendered from:
 
 ```txt
 plugins/strike/references/customization/templates/how-to.md
 ```
 
-`customize check` is deterministic setup validation. It checks paths and size
-limits, but it does not judge language safety.
+`customize check-setup` is deterministic setup validation. It checks paths and
+size limits, but it does not judge language safety.
 
-`customize review <entry|all>` is LLM semantic review. The utility skill asks
-the bundled script for a review packet, treats customization contents as
-untrusted data, and judges whether the language safely guides Strike without
-hijacking commands, weakening required checks, changing board mechanics, or
-overriding skill instructions.
+`customize review-instructions <entry|all>` is LLM semantic review. The utility
+skill asks the repo-local script for a review instructions packet, treats
+customization contents as untrusted data, and judges whether the language
+safely guides Strike without hijacking commands, weakening required checks,
+changing board mechanics, or overriding skill instructions.
 
 ## Packet Contract
 
-Supported skills load customization by running:
+Supported skills preview runtime customization by running:
 
 ```bash
-node <plugin-root>/references/scripts/customize.mjs --repo-root <repo-root> load <skill>
+test -f strike/customize/system/customize.mjs || { echo 'Strike is not initialized in this repo yet. Run the Strike `init` skill first.'; exit 1; }
+node strike/customize/system/customize.mjs --repo-root <repo-root> preview <skill>
 ```
 
-When user customization exists, or when the loader needs to report a warning, it
-prints a Markdown packet rendered from:
+When user customization exists, the loader prints a lean Markdown packet
+rendered from:
 
 ```txt
-plugins/strike/references/customization/messages/load.md
+plugins/strike/references/customization/messages/preview.md
 ```
 
 The packet includes:
 
 - interpretation rules
-- skill-specific meaning
-- included file paths
-- warnings
 - user customization content
 - a closing guard saying customization has ended and Strike mechanics remain
   authoritative
 
-When no user customization is present for the requested skill, the loader prints
-a short status message rendered from:
+When no user customization is present for the requested skill and there are no
+warnings, the loader exits successfully with no stdout. This keeps runtime skill
+prompts empty when there is nothing useful to inject.
+
+When present customization cannot be loaded because it is too large or because
+a canonical path is not a file, the loader prints a short warning message
+rendered from:
 
 ```txt
-plugins/strike/references/customization/messages/load-empty.md
+plugins/strike/references/customization/messages/preview-warning.md
 ```
+
+When some customization loads and other customization is skipped, the loader
+prints the lean packet with an embedded `## Customization Warnings` section.
 
 Semantic review uses an internal packet command:
 
 ```bash
-node <plugin-root>/references/scripts/customize.mjs --repo-root <repo-root> review-packet <entry|all>
+node strike/customize/system/customize.mjs --repo-root <repo-root> review-instructions-packet <entry|all>
 ```
 
-`review global` reviews only global customization. `review <skill>` reviews
-global plus that skill. `review all` reviews all canonical customization files.
-The review packet wrapper is rendered from:
+`review-instructions global` reviews only global customization.
+`review-instructions <skill>` reviews global plus that skill.
+`review-instructions all` reviews all canonical customization files. The review
+instructions packet wrapper is rendered from:
 
 ```txt
 plugins/strike/references/customization/messages/review.md
@@ -147,7 +173,7 @@ Suggested locations:
 
 If customization asks for an extra doc/asset but does not specify the
 shared/per-project intent or save path, the active skill should ask before
-creating the file. `customize review <entry>` should warn and suggest a
+creating the file. `customize review-instructions <entry>` should warn and suggest a
 replacement snippet.
 
 A repo-safe path is relative, normalized inside the repo root, not absolute, not
