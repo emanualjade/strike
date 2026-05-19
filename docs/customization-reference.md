@@ -226,9 +226,3 @@ a shared `!` import syntax.
 If Strike later generates host-specific skill builds, Claude-specific `!`
 injection may be reconsidered there. The shared portable source should use the
 deterministic loader contract.
-
-## Future Work
-
-- consider host-specific generated skill packages
-- evaluate custom executable review scripts with explicit trust and validation
-  rules

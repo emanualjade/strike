@@ -57,6 +57,16 @@ plugin users; this file tracks release, validation, and setup work.
   - Owner: Codex.
   - When it matters: whenever we change plugin structure, skill metadata,
     invocation language, or host manifests.
+- [ ] Reconsider host-specific generated skill packages only if the portable
+  customization loader becomes insufficient.
+  - Owner: Codex.
+  - When it matters: if a supported host offers a clearly better, documented way
+    to preload repo-local customization without weakening portability.
+- [ ] Decide whether custom executable review scripts should exist.
+  - Owner: Codex.
+  - When it matters: only if Markdown review lenses are not enough.
+  - Notes: define trust, allowlist, execution, and validation rules before adding
+    any executable customization surface.
 
 ## Release Checklist
 

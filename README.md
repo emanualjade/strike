@@ -307,6 +307,11 @@ copilot plugin update strike
 
 </details>
 
+After updating Strike in any host, rerun `init` from each repository where you
+use Strike if you need to refresh Strike-managed runtime files under
+`strike/customize/system/`. Existing user customization files under
+`strike/customize/user/` are preserved.
+
 ## Uninstall Strike
 
 <details>
@@ -396,6 +401,31 @@ Strike project files stay in `docs/strike/` until you delete them.
 </details>
 
 ## Start A Project
+
+Before running normal Strike workflow skills in a repository, initialize Strike
+once from that repo root.
+
+Claude Code:
+
+```text
+/strike:init
+```
+
+Codex:
+
+```text
+$init
+```
+
+GitHub Copilot CLI:
+
+```text
+/init
+```
+
+`init` installs or refreshes Strike-managed runtime files under
+`strike/customize/system/` and creates user customization files under
+`strike/customize/user/`.
 
 In Claude Code, use the Strike command form:
 
@@ -494,6 +524,7 @@ Here is what a small Claude Code run might look like from start to finish.
 Assume the project slug is `csv-export`.
 
 ```text
+/strike:init
 /strike:start Add CSV export --description Let users export a CSV report.
 /clear
 /strike:brainstorm csv-export
