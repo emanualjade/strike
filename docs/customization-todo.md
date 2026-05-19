@@ -1,6 +1,6 @@
 # Strike Customization Todo
 
-Last updated: 2026-05-18.
+Last updated: 2026-05-19.
 
 This note captures the early design for repo-local Strike customization
 documents. The idea is still fuzzy, so this file preserves the direction,
@@ -38,10 +38,10 @@ strike/customize/language/how-to-customize-language.md
 
 The rollout adds a `customize` utility skill and a deterministic
 `plugins/strike/references/scripts/customize.mjs` loader with `init`, `list`,
-`check`, and `load <skill>` modes. Supported skills load a framed customization
-packet before material work. Review files, custom executable scripts,
-phase-build/phase-fix/acceptance customization, and host-specific generated
-skill builds are future work.
+`check`, `review <entry|all>`, and `load <skill>` modes. Supported skills load
+a framed customization packet before material work. Review files, custom
+executable scripts, phase-build/phase-fix/acceptance customization, and
+host-specific generated skill builds are future work.
 
 ## Feature Idea
 

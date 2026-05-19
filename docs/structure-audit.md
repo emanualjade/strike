@@ -1,12 +1,12 @@
 # Structure Audit
 
-Last checked: 2026-05-18.
+Last checked: 2026-05-19.
 
 This file records the "is this grounded, invented, and idiomatic?" pass for the scaffold.
 
 ## Sources Used
 
-- OpenAI Codex: [Agent Skills](https://developers.openai.com/codex/skills), [Build plugins](https://developers.openai.com/codex/plugins/build), [Subagents](https://developers.openai.com/codex/subagents), [AGENTS.md](https://developers.openai.com/codex/guides/agents-md)
+- OpenAI Codex: [Agent Skills](https://developers.openai.com/codex/skills), [Plugins](https://developers.openai.com/codex/plugins), [Build plugins](https://developers.openai.com/codex/plugins/build), [Codex app commands](https://developers.openai.com/codex/app/commands), [CLI slash commands](https://developers.openai.com/codex/cli/slash-commands), [Subagents](https://developers.openai.com/codex/subagents), [AGENTS.md](https://developers.openai.com/codex/guides/agents-md)
 - Claude Code: [Create plugins](https://code.claude.com/docs/en/plugins), [Plugin marketplaces](https://code.claude.com/docs/en/plugin-marketplaces), [Plugins reference](https://code.claude.com/docs/en/plugins-reference), [Skills](https://code.claude.com/docs/en/skills), [Subagents](https://code.claude.com/docs/en/sub-agents), [Memory](https://code.claude.com/docs/en/memory)
 - GitHub Copilot: [Repository custom instructions](https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions), [Agent skills](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills), [Copilot CLI plugin reference](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference)
 - Open standard: [Agent Skills specification](https://agentskills.io/specification)
@@ -49,10 +49,11 @@ replace skill-local `scripts/` for behavior that belongs to exactly one skill.
 - Made up or over-structured: No.
 - Idiomatic: Yes as package guidance for a cross-host workflow.
 
-Claude Code plugin skills use `/plugin-name:skill-name`, Codex uses plugin and
-skill mention/selection rather than custom plugin slash commands, and GitHub
-Copilot CLI documents `/SKILL-NAME` invocation. Strike keeps `/strike:*` only as
-Claude Code rendering and records portable handoffs as `Next Strike skill` plus
+Claude Code plugin skills use `/plugin-name:skill-name`. Codex app uses `$`
+skill mentions and `@` plugin or bundled-skill selection; Codex CLI uses
+`/skills` for skill browsing and `/clear` for a fresh chat. GitHub Copilot CLI
+documents `/SKILL-NAME` invocation. Strike keeps `/strike:*` only as Claude
+Code rendering and records portable handoffs as `Next Strike skill` plus
 `Arguments`.
 
 ### `.codex-plugin/plugin.json`

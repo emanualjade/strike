@@ -1,6 +1,6 @@
 # Research Notes
 
-Checked on 2026-05-18.
+Checked on 2026-05-19.
 
 ## Portable Skills
 
@@ -76,9 +76,9 @@ update when checking for a new release.
 
 ## Codex
 
-OpenAI documents `AGENTS.md` as the repository-level instruction file for Codex in the [Codex AGENTS.md guide](https://developers.openai.com/codex/guides/agents-md). The local Codex plugin creator guidance in this environment defines a `.codex-plugin/plugin.json` manifest and a repo marketplace at `.agents/plugins/marketplace.json`, with entries pointing to `./plugins/<plugin-name>`.
+OpenAI documents `AGENTS.md` as the repository-level instruction file for Codex in the [Codex AGENTS.md guide](https://developers.openai.com/codex/guides/agents-md). The [Codex plugin docs](https://developers.openai.com/codex/plugins/build) define a `.codex-plugin/plugin.json` manifest and a repo marketplace at `.agents/plugins/marketplace.json`, with entries pointing to `./plugins/<plugin-name>`.
 
-The repo keeps `AGENTS.md` as the canonical agent guidance file and adds `CLAUDE.md` plus `.github/copilot-instructions.md` as thin pointers. Current Codex CLI commands manage marketplaces; plugin install and enable flows happen through the Codex plugin browser.
+The repo keeps `AGENTS.md` as the canonical agent guidance file and adds `CLAUDE.md` plus `.github/copilot-instructions.md` as thin pointers. Current Codex CLI commands manage marketplaces; plugin install and enable flows happen through the Codex plugin browser. Codex app docs say `$` invokes skills and enabled skills appear in the slash command list; Codex plugin docs also say `@` can invoke a plugin or bundled skill directly. Codex CLI docs document `/skills` for skill browsing and `/clear` for a fresh chat in the same CLI session.
 
 ## GitHub Copilot CLI
 
@@ -87,11 +87,11 @@ The repo keeps `AGENTS.md` as the canonical agent guidance file and adds `CLAUDE
 ## Invocation Syntax
 
 Host invocation syntax is not portable. Claude Code plugin skills are
-namespaced as `/plugin-name:skill-name`. Codex documents explicit skill use
-through `/skills`, `$` skill mentions, and plugin/skill selection; it does not
-document custom `/strike:*` slash commands for plugin skills. GitHub Copilot CLI
-documents skill invocation as `/SKILL-NAME` and deduplicates plugin skills by
-the `name` field inside `SKILL.md`.
+namespaced as `/plugin-name:skill-name`. Codex app documents `$` skill mentions
+and `@` plugin/bundled-skill selection, while Codex CLI documents `/skills` and
+`/clear`. Codex does not document custom `/strike:*` slash commands for plugin
+skills. GitHub Copilot CLI documents skill invocation as `/SKILL-NAME` and
+deduplicates plugin skills by the `name` field inside `SKILL.md`.
 
 Strike therefore treats the stable handoff as `Next Strike skill` plus
 `Arguments`, with host-specific rendering documented in

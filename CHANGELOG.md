@@ -2,6 +2,15 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.5.1 - 2026-05-19
+
+- Clarified host-specific Strike invocation guidance for Codex app, Codex CLI,
+  Claude Code, and GitHub Copilot CLI.
+- Updated the shared invocation reference to distinguish Codex app `$`/`@`
+  selection from Codex CLI `/skills` and `/clear` behavior.
+- Fixed stale customization notes so the implemented `customize review
+  <entry|all>` command is listed with the current utility modes.
+
 ## 0.5.0 - 2026-05-19
 
 - Moved `customize` command wording into Markdown templates under

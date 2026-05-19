@@ -30,7 +30,8 @@ next command:
 | Host | Render the same handoff as |
 | --- | --- |
 | Claude Code plugin | `/clear`, then `/strike:<skill-name> <args>` |
-| Codex | Start a fresh conversation from the same repo root, then type `$` and select the installed Strike skill, or use `/skills` to browse. The short form is `$<skill-name> <args>`; namespaced `$strike:<skill-name> <args>` also works. |
+| Codex app | Start a new thread from the same repo root, then type `$` to select the installed Strike skill, or `@` to choose Strike or one of its bundled skills. The short prompt form is `$<skill-name> <args>`; namespaced `$strike:<skill-name> <args>` may appear. |
+| Codex CLI | Run `/clear`, then use `/skills` or `$<skill-name> <args>` from the same repo root. Namespaced `$strike:<skill-name> <args>` may appear. |
 | GitHub Copilot CLI | Start a fresh session if no reset command is visible, then `/<skill-name> <args>` after confirming the skill is visible with `/skills list` or `/skills info <skill-name>`. |
 
 When the handoff does not ask for a reset, run only the skill command for the
@@ -53,7 +54,10 @@ Arguments: checkout-redesign
 Claude Code:
 /clear
 /strike:brainstorm checkout-redesign
-Codex: $brainstorm checkout-redesign
+Codex app: start a new thread, then $brainstorm checkout-redesign
+Codex CLI:
+/clear
+$brainstorm checkout-redesign
 Codex namespaced: $strike:brainstorm checkout-redesign
 GitHub Copilot CLI: /brainstorm checkout-redesign
 ```
@@ -65,7 +69,10 @@ Arguments: checkout-redesign phase:api-contract
 Claude Code:
 /clear
 /strike:phase-plan checkout-redesign phase:api-contract
-Codex: $phase-plan checkout-redesign phase:api-contract
+Codex app: start a new thread, then $phase-plan checkout-redesign phase:api-contract
+Codex CLI:
+/clear
+$phase-plan checkout-redesign phase:api-contract
 Codex namespaced: $strike:phase-plan checkout-redesign phase:api-contract
 GitHub Copilot CLI: /phase-plan checkout-redesign phase:api-contract
 ```

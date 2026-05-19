@@ -16,7 +16,7 @@ Strike skills are portable; each host renders the same skill differently.
 | Host | Invocation form |
 | --- | --- |
 | Claude Code plugin | `/strike:<skill> <args>`; when a handoff says `Reset context first: yes`, run `/clear` first. |
-| Codex | Type `$` and select the installed Strike skill, or use `/skills` to browse. The short form is `$<skill> <args>`; namespaced `$strike:<skill> <args>` also works. |
+| Codex | App: type `$` to select the installed Strike skill, or `@` to choose Strike or one of its bundled skills. CLI: use `/skills` to browse and `/clear` when a handoff asks for reset. The short prompt form is `$<skill> <args>`; namespaced `$strike:<skill> <args>` may appear. |
 | GitHub Copilot CLI | `/<skill> <args>` after confirming the installed skills with `/skills list` or `/skills info`. |
 
 Canonical skill names:

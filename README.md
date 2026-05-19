@@ -415,6 +415,9 @@ The namespaced form also works if Codex shows or inserts it:
 $strike:start Add CSV export --description Let users export a CSV report.
 ```
 
+Codex can also let you choose an installed plugin or bundled skill with `@`;
+select Strike's `start` skill and pass the same arguments.
+
 `start` creates a short slug automatically. Common leading task verbs are
 dropped, so `Add CSV export` becomes `csv-export`. You can still pass
 `--slug <slug>` when you want to choose the slug yourself.
@@ -472,10 +475,11 @@ Then run the next Strike command:
 /strike:spec csv-export
 ```
 
-Do not run `/clear` in your terminal. It is a Claude Code app prompt.
+Do not run `/clear` as a shell command. Type it inside Claude Code.
 
-In Codex, start a fresh conversation from the same repo root, then use the
-next Strike skill shortcut:
+In Codex CLI, `/clear` starts a fresh chat in the same session. In the Codex
+app, start a new thread from the same repo root. Then use the next Strike skill
+shortcut:
 
 ```text
 $spec csv-export
@@ -551,6 +555,9 @@ $strike:phase-build csv-export phase:export-query
 ```
 
 ## All Skills
+
+Canonical Strike skill names are not prefixed. Host syntax may add a namespace,
+such as `/strike:` in Claude Code or `$strike:` in Codex when Codex inserts it.
 
 Strike prompts mostly use plain positional arguments. `start` is the only
 normal user-facing skill with double-dash options today:
