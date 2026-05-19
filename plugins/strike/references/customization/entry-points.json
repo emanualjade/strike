@@ -7,6 +7,9 @@
     "slice",
     "phase-research",
     "phase-plan",
+    "phase-build",
+    "phase-fix",
+    "accept",
     "retro",
     "demo",
     "language"
@@ -99,6 +102,40 @@
         "extra docs or assets with clear per-project or shared intent and a repo-safe save path"
       ],
       "boundary": "Do not turn phase-plan into implementation, review, acceptance, or retro."
+    },
+    "phase-build": {
+      "title": "Phase Build",
+      "target": "how phase-build implements a planned phase and records build evidence",
+      "ideas": [
+        "implementation style and change sizing",
+        "how strongly to prefer existing repo patterns",
+        "verification depth and evidence detail",
+        "extra docs or assets with clear per-project or shared intent and a repo-safe save path"
+      ],
+      "boundary": "Do not expand beyond the selected phase, skip verification, change board mechanics, create review, acceptance, or retro artifacts, or commit."
+    },
+    "phase-fix": {
+      "title": "Phase Fix",
+      "target": "how phase-fix repairs blocking review or acceptance findings",
+      "ideas": [
+        "fix sizing and prioritization",
+        "how to handle ambiguous findings",
+        "verification and evidence style",
+        "extra docs or assets with clear per-project or shared intent and a repo-safe save path"
+      ],
+      "boundary": "Do not fix outside blocking review or acceptance findings, rerun review or acceptance, move the board out of implementation, or commit."
+    },
+    "accept": {
+      "title": "Accept",
+      "target": "how acceptance judges readiness against the Strike spec",
+      "ideas": [
+        "acceptance strictness",
+        "evidence style",
+        "human-check wording",
+        "fix summary style",
+        "extra docs or assets with clear per-project or shared intent and a repo-safe save path"
+      ],
+      "boundary": "Do not lower acceptance gates, edit implementation files, create retro files, or move to retro with unresolved fixes or human checks."
     },
     "retro": {
       "title": "Retro",

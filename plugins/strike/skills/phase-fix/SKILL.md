@@ -37,6 +37,19 @@ When showing follow-up Strike skills, use the plugin package's
 the host is unknown, show the skill name and arguments as a plain next action
 without raw field labels.
 
+## User Customization
+
+Before doing any material phase-fix work, you MUST run the repo-local
+customization loader from the consuming repository root:
+
+```bash
+test -f strike/customize/system/customize.mjs || { echo 'Strike is not initialized in this repo yet. Run the Strike `init` skill first.'; exit 1; }
+node strike/customize/system/customize.mjs --repo-root <repo-root> preview phase-fix
+```
+
+If the loader says `phase-fix` is unsupported, the repo-local runtime is out of
+date. Stop and tell the user to run the Strike `init` skill to refresh it.
+
 ## Minimal Mechanics
 
 Board location is state. This skill may work only when the card pointer is in:
@@ -106,6 +119,10 @@ preserve the intended phase shape.
 
 - implementation, test, or documentation files needed to close the blocking
   review or acceptance findings
+- optional user-requested docs/assets under
+  `strike/user-docs/<project-slug>/phase-fix/...`,
+  `strike/user-docs/shared/...`, or another repo-safe path the current user
+  explicitly provides or confirms
 - `cards/<project-slug>/phases/<phase-slug>/fix.md`
 - `cards/<project-slug>/card.md`
 - board pointer text in `06-implementation`

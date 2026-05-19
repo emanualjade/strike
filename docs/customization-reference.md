@@ -14,6 +14,9 @@ strike/customize/user/spec/spec.md
 strike/customize/user/slice/slice.md
 strike/customize/user/phase-research/phase-research.md
 strike/customize/user/phase-plan/phase-plan.md
+strike/customize/user/phase-build/phase-build.md
+strike/customize/user/phase-fix/phase-fix.md
+strike/customize/user/accept/accept.md
 strike/customize/user/retro/retro.md
 strike/customize/user/demo/demo.md
 strike/customize/user/language/language.md
@@ -58,6 +61,8 @@ strike/customize/system/references/customization/
 
 After initialization, workflow skills and the `customize` utility run the
 repo-local script under `strike/customize/system/`.
+Rerun `init` after updating Strike when managed runtime files need to pick up
+new supported customization entries.
 
 The script also accepts `--repo-root <path>` for skill, test, and internal use.
 That flag is not a normal user-facing Strike skill option.
@@ -206,8 +211,6 @@ deterministic loader contract.
 ## Future Work
 
 - add review-file support for review entry points
-- decide whether to add customization for phase-build, phase-fix, and
-  acceptance after testing write-boundary behavior
 - consider host-specific generated skill packages
 - evaluate custom executable review scripts with explicit trust and validation
   rules

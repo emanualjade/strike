@@ -2,6 +2,16 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.6.1 - 2026-05-19
+
+- Added single-file customization support for `phase-build`, `phase-fix`, and
+  `accept`.
+- Extended `init`, `customize list`, `check-setup`, `review-instructions`, and
+  `preview` coverage to those entries without changing the runtime packet
+  format.
+- Clarified that rerunning `init` refreshes repo-local managed runtime files
+  after Strike updates.
+
 ## 0.6.0 - 2026-05-19
 
 - Added the `init` setup skill for first-run Strike repository initialization.

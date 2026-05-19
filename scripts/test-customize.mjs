@@ -179,6 +179,28 @@ function testInitRerunKeepsRuntimeReferences() {
   assertOk(run(repo, ["preview", "brainstorm"]), "repo-local runtime should still preview after rerun");
 }
 
+function testInitRefreshesStaleRuntimeReferences() {
+  const repo = tempRepo();
+  assertOk(runInit(repo), "plugin init should succeed");
+
+  const entryPointsPath = path.join(repo, CUSTOMIZE_SYSTEM_ROOT, "references/customization/entry-points.json");
+  const entryPointsData = JSON.parse(fs.readFileSync(entryPointsPath, "utf8"));
+  entryPointsData.supportedSkills = entryPointsData.supportedSkills.filter((skill) => skill !== "phase-build");
+  delete entryPointsData.entryPoints["phase-build"];
+  fs.writeFileSync(entryPointsPath, `${JSON.stringify(entryPointsData, null, 2)}\n`, "utf8");
+
+  let result = run(repo, ["preview", "phase-build"]);
+  assertStatus(result, 2, "stale runtime references should reject newly supported skills");
+  assert.match(result.stderr, /Unsupported customization skill: phase-build/);
+
+  assertOk(runInit(repo), "init rerun should refresh stale runtime references");
+  write(repo, canonical("phase-build"), "Prefer small, reviewable implementation steps.\n");
+
+  result = run(repo, ["preview", "phase-build"]);
+  assertOk(result, "refreshed runtime should preview newly supported skills");
+  assert.match(result.stdout, /Prefer small, reviewable implementation steps/);
+}
+
 function testInitFailsWhenStrikePathIsBlocked() {
   const repo = tempRepo();
   write(repo, "strike", "not a directory\n");
@@ -319,10 +341,33 @@ function testPreviewSpecPacket() {
   assert.match(result.stdout, /Keep success checks concrete/);
 }
 
+function testPreviewBuildFixAcceptPackets() {
+  const repo = tempRepo();
+  assertOk(runInit(repo), "init should succeed");
+  write(repo, canonical("phase-build"), "Prefer small, reviewable implementation steps.\n");
+  write(repo, canonical("phase-fix"), "Resolve only blocking findings unless the user expands scope.\n");
+  write(repo, canonical("accept"), "Be strict about unresolved human checks.\n");
+
+  let result = run(repo, ["preview", "phase-build"]);
+  assertOk(result, "preview phase-build should succeed");
+  assert.match(result.stdout, /# Strike Custom User Instructions/);
+  assert.match(result.stdout, /Prefer small, reviewable implementation steps/);
+
+  result = run(repo, ["preview", "phase-fix"]);
+  assertOk(result, "preview phase-fix should succeed");
+  assert.match(result.stdout, /# Strike Custom User Instructions/);
+  assert.match(result.stdout, /Resolve only blocking findings/);
+
+  result = run(repo, ["preview", "accept"]);
+  assertOk(result, "preview accept should succeed");
+  assert.match(result.stdout, /# Strike Custom User Instructions/);
+  assert.match(result.stdout, /Be strict about unresolved human checks/);
+}
+
 function testPreviewUnsupportedSkillFails() {
   const repo = tempRepo();
   assertOk(runInit(repo), "init should succeed");
-  const result = run(repo, ["preview", "phase-build"]);
+  const result = run(repo, ["preview", "phase-review"]);
   assertStatus(result, 2, "unsupported skill should fail");
   assert.match(result.stderr, /Unsupported customization skill/);
 }
@@ -522,7 +567,7 @@ function testReviewInstructionsPacketAllAndUnsupportedTarget() {
   assert.match(result.stdout, /Keep acceptance checks concrete/);
   assert.match(result.stdout, /"content":"Keep acceptance checks concrete\."/);
 
-  result = run(repo, ["review-instructions-packet", "phase-build"]);
+  result = run(repo, ["review-instructions-packet", "phase-review"]);
   assertStatus(result, 2, "unsupported review target should fail");
   assert.match(result.stderr, /Unsupported customization review target/);
 }
@@ -531,6 +576,7 @@ testCustomizeOutputUsesReferenceTemplates();
 testInitCreatesBlankCanonicalFilesAndHowToDocs();
 testInitPreservesExistingFilesAndStrikeContent();
 testInitRerunKeepsRuntimeReferences();
+testInitRefreshesStaleRuntimeReferences();
 testInitFailsWhenStrikePathIsBlocked();
 testInitFailsWhenCustomizePathIsBlocked();
 testInitFailsWhenEntryPointDirectoryIsBlocked();
@@ -541,6 +587,7 @@ testPreviewPacket();
 testPreviewWithoutUserContentIsSilent();
 testPreviewGrillPacket();
 testPreviewSpecPacket();
+testPreviewBuildFixAcceptPackets();
 testPreviewUnsupportedSkillFails();
 testCliRejectsExtraPositionals();
 testPreviewSkipsOversizedFile();

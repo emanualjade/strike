@@ -31,6 +31,19 @@ When showing follow-up Strike skills, use the plugin package's
 the host is unknown, show the skill name and arguments as a plain next action
 without raw field labels.
 
+## User Customization
+
+Before doing any material acceptance work, you MUST run the repo-local
+customization loader from the consuming repository root:
+
+```bash
+test -f strike/customize/system/customize.mjs || { echo 'Strike is not initialized in this repo yet. Run the Strike `init` skill first.'; exit 1; }
+node strike/customize/system/customize.mjs --repo-root <repo-root> preview accept
+```
+
+If the loader says `accept` is unsupported, the repo-local runtime is out of
+date. Stop and tell the user to run the Strike `init` skill to refresh it.
+
 ## State Model
 
 Board location is state. This skill may work only when the card pointer is in:
@@ -71,6 +84,9 @@ implementation/test diffs named by the build, fix, and review evidence.
 ## Writes
 
 - `outputs/acceptance/acceptance.md`
+- optional user-requested docs/assets under
+  `strike/user-docs/<project-slug>/accept/...`, `strike/user-docs/shared/...`,
+  or another repo-safe path the current user explicitly provides or confirms
 - `card.md`
 - board pointer moved from `07-acceptance` to `08-retro` only when acceptance
   passes

@@ -30,6 +30,12 @@ strike/customize/user/phase-research/phase-research.md
 strike/customize/user/phase-research/how-to-customize-phase-research.md
 strike/customize/user/phase-plan/phase-plan.md
 strike/customize/user/phase-plan/how-to-customize-phase-plan.md
+strike/customize/user/phase-build/phase-build.md
+strike/customize/user/phase-build/how-to-customize-phase-build.md
+strike/customize/user/phase-fix/phase-fix.md
+strike/customize/user/phase-fix/how-to-customize-phase-fix.md
+strike/customize/user/accept/accept.md
+strike/customize/user/accept/how-to-customize-accept.md
 strike/customize/user/retro/retro.md
 strike/customize/user/retro/how-to-customize-retro.md
 strike/customize/user/demo/demo.md
@@ -46,9 +52,8 @@ runtime, while `customize` exposes `list`, `check-setup`,
 Supported skills run the repo-local loader before material work; it is silent
 when no customization exists, prints lean custom-instructions text when
 customization loads, and prints a short warning when all customization is
-skipped for size. Review files, custom executable scripts,
-phase-build/phase-fix/acceptance customization, and host-specific generated
-skill builds are future work.
+skipped for size. Review files, custom executable scripts, and host-specific
+generated skill builds are future work.
 
 ## Feature Idea
 
@@ -342,14 +347,15 @@ questions.
 - [x] Rename user-facing utility modes to `check-setup`,
   `review-instructions <entry|all>`, and `preview <skill>`.
 
+## Resolved In 0.6.1
+
+- [x] Add single-file customization for `phase-build`, `phase-fix`, and
+  `accept`.
+
 ## Future Questions
 
 - Should review skills support both one entry-point file and
   `reviews/*.md` lenses?
-- Should `accept` get single-file customization, or should it wait for the
-  review-lens model?
-- Should `phase-build` and `phase-fix` support customization after we test
-  write-boundary behavior?
 - Should Strike ever generate host-specific skill builds where Claude-only `!`
   command injection can preload customization?
 - Should custom executable review scripts exist at all, and if so, what trust,

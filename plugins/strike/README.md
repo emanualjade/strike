@@ -48,13 +48,15 @@ language <term|project-slug|path>
 Other skills use positional arguments, plain optional words such as `skip`, or
 the `phase:<phase-slug>` token for phase-scoped work.
 
-Use `init` once per repo before normal Strike workflow skills. It installs
-Strike-managed runtime files under `strike/customize/system/` and creates user
-customization files under `strike/customize/user/`.
+Use `init` before normal Strike workflow skills. It installs Strike-managed
+runtime files under `strike/customize/system/` and creates user customization
+files under `strike/customize/user/`. Rerun it after updating Strike when you
+need to refresh those managed runtime files.
 
 Use `customize` when you want Strike to work more like you do in a repo. Add
 instructions under `strike/customize/user/` for things like brainstorm style,
-research standards, spec detail, phase planning, demos, or project language.
+research standards, spec detail, phase planning, build/fix habits, acceptance
+strictness, demos, or project language.
 Run `customize check-setup` to make sure the setup is healthy and
 `customize review-instructions <entry|all>` to ask Strike whether the
 instructions are safe for the workflow.

@@ -47,6 +47,12 @@ strike/customize/user/phase-research/phase-research.md
 strike/customize/user/phase-research/how-to-customize-phase-research.md
 strike/customize/user/phase-plan/phase-plan.md
 strike/customize/user/phase-plan/how-to-customize-phase-plan.md
+strike/customize/user/phase-build/phase-build.md
+strike/customize/user/phase-build/how-to-customize-phase-build.md
+strike/customize/user/phase-fix/phase-fix.md
+strike/customize/user/phase-fix/how-to-customize-phase-fix.md
+strike/customize/user/accept/accept.md
+strike/customize/user/accept/how-to-customize-accept.md
 strike/customize/user/retro/retro.md
 strike/customize/user/retro/how-to-customize-retro.md
 strike/customize/user/demo/demo.md
@@ -58,7 +64,8 @@ strike/customize/user/language/how-to-customize-language.md
 - Loaded customization files are created blank. Sidecar
   `how-to-customize-*.md` files contain human guidance and are not loaded.
 - Add `## User Customization` to `brainstorm`, `grill`, `research`, `spec`,
-  `slice`, `phase-research`, `phase-plan`, `retro`, `demo`, and `language`.
+  `slice`, `phase-research`, `phase-plan`, `phase-build`, `phase-fix`,
+  `accept`, `retro`, `demo`, and `language`.
   Each skill requires `strike/customize/system/customize.mjs` to exist and runs
   the repo-local loader from the consuming repo root before material work.
 - Add `docs/customization-reference.md` documenting the rollout,
@@ -126,9 +133,10 @@ npm run validate:publish
 
 - Supported scope is limited to single-file customization for `brainstorm`,
   `grill`, `research`, `spec`, `slice`, `phase-research`, `phase-plan`,
-  `retro`, `demo`, `language`, plus the `init` and `customize` utilities.
-- Review files, custom scripts, phase-build/phase-fix/acceptance customization,
-  and host-specific generated skill builds are future work.
+  `phase-build`, `phase-fix`, `accept`, `retro`, `demo`, and `language`, plus
+  the `init` and `customize` utilities.
+- Review files, custom scripts, and host-specific generated skill builds are
+  future work.
 - Portable Strike skills use the loader directive. Claude `!` injection is
   reconsidered only if Strike later generates host-specific skill builds.
 - Versioned surfaces for the initial rollout were bumped to `0.2.0`; the
@@ -136,7 +144,8 @@ npm run validate:publish
   `customize review` semantic review command is released as `0.4.0`; the
   repo-local `strike/customize/system` runtime, separate `init` skill, and
   renamed `check-setup`, `review-instructions`, and `preview` modes are released
-  as `0.6.0`. Versioned
+  as `0.6.0`; phase-build, phase-fix, and accept customization are released as
+  `0.6.1`. Versioned
   surfaces are root `package.json`, all three plugin manifests,
   `.claude-plugin/marketplace.json`, and `.github/plugin/marketplace.json`. The
   Codex marketplace does not define a plugin version field.

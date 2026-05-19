@@ -597,7 +597,7 @@ skip` or `go <project-slug> verbose`.
 
 You can customize each step in Strike so it works the way you like in this
 repo. Give Strike extra instructions for how to brainstorm, research, write
-specs, plan phases, make demos, or handle project language.
+specs, plan phases, build, fix, accept, make demos, or handle project language.
 
 For example, you can tell Strike:
 
@@ -605,6 +605,7 @@ For example, you can tell Strike:
 - what kind of evidence research should look for
 - how detailed specs should be
 - what planning style you prefer
+- how strict build verification and acceptance should be
 - what tone or terminology to use in this repo
 
 Strike still follows its normal workflow, required files, checks, and stage
