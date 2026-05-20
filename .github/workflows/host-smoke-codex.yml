@@ -12,7 +12,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  smoke:
+  codex-smoke:
+    name: Codex smoke
     runs-on: ubuntu-latest
     timeout-minutes: 20
 

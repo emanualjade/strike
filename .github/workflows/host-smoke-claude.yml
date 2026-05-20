@@ -12,7 +12,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  smoke:
+  claude-smoke:
+    name: Claude Code smoke
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
