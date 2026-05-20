@@ -22,10 +22,10 @@ plugin users; this file tracks release, validation, and setup work.
     skills-ref validate plugins/strike/skills/go
     skills-ref validate plugins/strike/skills/spec
     ```
-- [ ] Run GitHub Actions host smoke workflows from a feature branch and iron
-  out failures.
-  - Owner: user starts the manual workflows in GitHub Actions after the workflow
-    files are on a branch GitHub can run; Codex iterates on failures.
+- [ ] Run PR-triggered GitHub Actions host smoke workflows from a feature
+  branch and iron out failures.
+  - Owner: Codex opens/updates the hardening PR; GitHub Actions starts the
+    checks automatically on the PR; Codex iterates on failures.
   - When it matters: before promoting host smoke workflows to a release gate.
   - Notes: see `docs/host-smoke-tests.md` before implementing or editing the
     workflow files.
@@ -35,7 +35,7 @@ plugin users; this file tracks release, validation, and setup work.
 - [ ] Iron out host smoke workflow failures and decide which checks can become
   release gates.
   - Owner: Codex.
-  - When it matters: after the manual GitHub workflows have real run history.
+  - When it matters: after PR-triggered GitHub workflows have real run history.
   - Notes: keep live model invocation out of required checks until auth and
     cost behavior are explicit.
 - [ ] After the next versioned Strike release, rerun host update checks.

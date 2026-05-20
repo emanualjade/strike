@@ -200,3 +200,11 @@ system temp directory, but exited successfully. `codex plugin marketplace
 upgrade strike` failed for a local marketplace because the source is not
 Git-backed, so local Codex coverage should be add/remove only while GitHub
 coverage can test upgrade from the repository source.
+
+2026-05-19 PR hardening decision: host smoke workflows now keep
+`workflow_dispatch` and add `pull_request`, matching GitHub Actions' documented
+event syntax for workflows that need both manual and PR-triggered execution.
+The first PR-triggered phase intentionally uses no path filters so every PR can
+exercise the fresh target CLI install paths. Each host workflow keeps its own
+job and cancel-in-progress concurrency so Claude Code, Codex, and GitHub
+Copilot CLI failures remain independently diagnosable.

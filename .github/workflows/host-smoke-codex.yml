@@ -2,13 +2,19 @@ name: Host Smoke - Codex
 
 on:
   workflow_dispatch:
+  pull_request:
 
 permissions:
   contents: read
 
+concurrency:
+  group: host-smoke-codex-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   smoke:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - uses: actions/checkout@v6
