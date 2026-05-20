@@ -14,9 +14,11 @@ Terminology:
 
 ## Branch Policy
 
-Develop host smoke-test workflow changes on a separate branch. Start every new
-host workflow as `workflow_dispatch` only, then promote it later only after it
-has passed reliably on GitHub-hosted runners.
+Develop host smoke-test workflow changes on a separate branch. Keep
+`workflow_dispatch` on every host workflow so maintainers can rerun checks on
+demand. During the PR hardening phase, host workflows may also use
+`pull_request` so every proposed change proves the target CLI smoke path before
+merge.
 
 Do not make a host smoke workflow a required PR check or release gate while it
 still depends on uncertain CLI behavior, secrets, UI steps, or live model
@@ -29,6 +31,9 @@ The proposed GitHub workflows should stay inside documented host behavior:
 - GitHub Actions supports manual workflows with `workflow_dispatch`, but the
   workflow file must exist on the default branch before it can be triggered
   manually from the UI/API.
+- GitHub Actions supports combining `workflow_dispatch` and `pull_request` in a
+  workflow's event map. Strike keeps both: manual dispatch for on-demand
+  debugging and PR triggers for normal hardening.
 - GitHub Actions exposes failures through the Actions tab, notifications for
   completed runs triggered by a user, job logs, failed-step logs, annotations,
   debug re-runs, and downloadable artifacts.
@@ -231,16 +236,20 @@ should add the same cache assertions used for Claude/Copilot:
 
 ## Proposed Workflows
 
-The first GitHub Actions pass should be deterministic. It should check host CLI
-installation, marketplace registration, plugin install or refresh behavior where
-documented, and installed package contents. It should not invoke a model or run
-an interactive agent session.
+The GitHub Actions host smoke pass should be deterministic. It should check host
+CLI installation, marketplace registration, plugin install or refresh behavior
+where documented, and installed package contents. It should not invoke a model
+or run an interactive agent session.
 
-| Workflow | Proposed file | Initial trigger | Proposed scope |
+Current workflows run on `pull_request` and remain manually dispatchable. They
+also use cancel-in-progress concurrency per workflow and PR so outdated smoke
+runs do not continue after a new commit lands.
+
+| Workflow | File | Trigger | Scope |
 | --- | --- | --- | --- |
-| Claude Code host smoke | `.github/workflows/host-smoke-claude.yml` | Manual | Install Claude Code, validate the marketplace/plugin, install Strike from the checked-out repo marketplace, check cached skills, update, then uninstall. |
-| GitHub Copilot CLI host smoke | `.github/workflows/host-smoke-copilot.yml` | Manual | Install Copilot CLI, add the checked-out repo marketplace, install Strike, check installed skills, update, then uninstall. |
-| Codex host smoke | `.github/workflows/host-smoke-codex.yml` | Manual | Install Codex CLI and verify Git-backed marketplace add, upgrade, and remove. Keep this partial unless a documented non-interactive install path is confirmed. |
+| Claude Code host smoke | `.github/workflows/host-smoke-claude.yml` | `pull_request`, `workflow_dispatch` | Install Claude Code, validate the marketplace/plugin, install Strike from the checked-out repo marketplace, check cached skills, update, then uninstall. |
+| GitHub Copilot CLI host smoke | `.github/workflows/host-smoke-copilot.yml` | `pull_request`, `workflow_dispatch` | Install Copilot CLI, add the checked-out repo marketplace, install Strike, check installed skills, update, then uninstall. |
+| Codex host smoke | `.github/workflows/host-smoke-codex.yml` | `pull_request`, `workflow_dispatch` | Install Codex CLI and verify Git-backed marketplace add, upgrade, and remove. Keep this partial unless a documented non-interactive install path is confirmed. |
 
 ## Failure Model
 
@@ -292,14 +301,15 @@ handling should be limited to known transient or diagnostic work:
 
 ## Promotion Path
 
-1. Keep the workflow manual while command details are being ironed out.
-2. Run it from the feature branch in GitHub Actions.
-3. Fix CLI install, path, cache, and cleanup failures until the workflow is
+1. Keep `workflow_dispatch` so any host smoke workflow can be rerun manually.
+2. Run host smoke workflows on `pull_request` while command details are being
+   ironed out.
+3. Fix CLI install, path, cache, and cleanup failures until the workflows are
    reliable.
 4. Document any host-specific behavior learned in `docs/research-notes.md` or
    `docs/structure-audit.md`.
-5. Only then decide whether to add `pull_request`, `push`, `schedule`, or
-   release-tag triggers.
+5. Only then decide whether to add `push`, `schedule`, release-tag triggers, or
+   required-check status.
 
 ## What Counts As Passing
 

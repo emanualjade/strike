@@ -72,7 +72,8 @@ This repository publishes Strike as a cross-agent plugin and skills marketplace.
 
 - Use precise terms: `target CLI` means Claude Code, Codex, or GitHub Copilot CLI; `local workstation` means the maintainer's machine; `GitHub runner` means the disposable Actions machine.
 - Develop GitHub Actions host smoke-test changes on a separate branch first.
-- Keep new or experimental host smoke workflows as `workflow_dispatch` until they have passed reliably in GitHub Actions.
+- Keep `workflow_dispatch` on host smoke workflows so maintainers can rerun them on demand.
+- Host smoke workflows may also run on `pull_request` once the team is actively hardening them on PRs. Do not add `push`, `schedule`, release, or required-check behavior until the PR-triggered workflows have passed reliably.
 - Do not make host smoke workflows required PR or release gates until their CLI install, auth, cache, and cleanup behavior is stable.
 - Keep host smoke-test implementation notes in `docs/host-smoke-tests.md`, not the public `README.md`.
 - Never install or update target CLIs from local workstation checks. Local checks may use target CLIs already on `PATH`; if one is missing, ask the user to install it or run the GitHub workflow.
