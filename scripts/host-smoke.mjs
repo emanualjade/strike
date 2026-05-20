@@ -414,6 +414,7 @@ function assertCopilotInstall(ctx) {
     }
   });
   assert(validRoot, `Could not find an installed/copied Copilot strike plugin under ${ctx.env.COPILOT_HOME} or ${ctx.env.COPILOT_CACHE_HOME}.`);
+  assertPluginRoot(validRoot, "plugin.json");
 }
 
 function assertCodexConfig(ctx) {
@@ -427,15 +428,23 @@ function assertCodexConfig(ctx) {
 }
 
 function assertPluginRoot(pluginRoot, manifestRelativePath, options = {}) {
+  const check = (condition, message) => {
+    if (!condition) {
+      if (options.quiet) {
+        throw new Error(message);
+      }
+      assert(condition, message);
+    }
+  };
   const manifestPath = path.join(pluginRoot, manifestRelativePath);
-  assert(existsSync(manifestPath), `Missing plugin manifest: ${manifestPath}`);
+  check(existsSync(manifestPath), `Missing plugin manifest: ${manifestPath}`);
   const manifest = readJson(manifestPath);
-  assert(manifest.name === "strike", `${manifestPath} has name ${manifest.name}, expected strike.`);
-  assert(manifest.version === packageVersion, `${manifestPath} has version ${manifest.version}, expected ${packageVersion}.`);
+  check(manifest.name === "strike", `${manifestPath} has name ${manifest.name}, expected strike.`);
+  check(manifest.version === packageVersion, `${manifestPath} has version ${manifest.version}, expected ${packageVersion}.`);
 
   for (const skillName of skillNames) {
     const skillPath = path.join(pluginRoot, "skills", skillName, "SKILL.md");
-    assert(existsSync(skillPath), `Missing installed skill file: ${skillPath}`);
+    check(existsSync(skillPath), `Missing installed skill file: ${skillPath}`);
   }
   if (!options.quiet) {
     console.log(`Verified strike ${packageVersion} and ${skillNames.length} skills at ${pluginRoot}`);
