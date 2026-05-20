@@ -50,7 +50,18 @@ pnpm run release:check
 This validates the repo, validates the Claude plugin and marketplace manifests,
 and asks Claude to rehearse the tag creation with `--dry-run`.
 
-If the check passes, publish the tag:
+5. Confirm the pushed release commit has green GitHub Actions checks:
+
+- `CI`
+- `Host Smoke - Claude Code`
+- `Host Smoke - GitHub Copilot CLI`
+- `Host Smoke - Codex`
+
+If any host smoke workflow has not run on the release commit, trigger it
+manually with `workflow_dispatch` from the Actions tab and wait for it to pass.
+These host smoke checks are the release gate for fresh install/update confidence.
+
+If the local release check and GitHub host smoke checks pass, publish the tag:
 
 ```bash
 pnpm run release:tag

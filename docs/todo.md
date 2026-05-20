@@ -22,23 +22,16 @@ plugin users; this file tracks release, validation, and setup work.
     skills-ref validate plugins/strike/skills/go
     skills-ref validate plugins/strike/skills/spec
     ```
-- [ ] Run PR-triggered GitHub Actions host smoke workflows after the installed
-  runtime smoke changes land on a feature branch.
-  - Owner: Codex opens/updates the branch or PR; GitHub Actions starts the
-    checks automatically on the PR; Codex iterates on failures.
-  - When it matters: before claiming installed-runtime coverage from GitHub
-    runners.
-  - Notes: Claude, Copilot, and Codex should prove installed `init`,
-    repo-local `customize check-setup`, and `start`.
-
 ### Codex Can Do Later
 
-- [ ] Decide which host smoke checks can become release gates.
+- [x] Decide whether host smoke checks should become release gates.
   - Owner: Codex.
-  - When it matters: after installed-runtime GitHub workflows have real run
-    history.
-  - Notes: keep live model invocation out of required checks until auth and
-    cost behavior are explicit.
+  - Done: host smoke checks are documented as a pre-tag release gate in
+    `docs/release.md`.
+  - Notes: PR-triggered installed-runtime smoke passed on GitHub runners in
+    PR #3 for Claude Code, Codex, and GitHub Copilot CLI. Branch protection can
+    make them required PR checks later after more run history. Keep live model
+    invocation out of required checks until auth and cost behavior are explicit.
 - [ ] After the next versioned Strike release, rerun host update checks.
   - Owner: Codex.
   - When it matters: after a behavior change, skill change, or version bump is
