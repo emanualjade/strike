@@ -3,6 +3,18 @@
 Use this workflow when publishing a Strike version for Claude Code, Codex, and
 GitHub Copilot CLI users.
 
+## Local Prerequisite
+
+Install the Agent Skills reference validator once on maintainer workstations:
+
+```bash
+uv tool install 'git+https://github.com/agentskills/agentskills.git@1f2afe4d5428d12b0f22781b04b81a769b5fa4ce#subdirectory=skills-ref'
+```
+
+This provides the `skills-ref` command used by `pnpm run validate:skills-ref`.
+GitHub Actions installs the same pinned validator in disposable runner
+environments.
+
 ## Normal Work
 
 Before committing ordinary changes, run:
@@ -10,6 +22,7 @@ Before committing ordinary changes, run:
 ```bash
 pnpm run test
 pnpm run validate
+pnpm run validate:skills-ref
 ```
 
 Then commit and push as usual:
@@ -48,20 +61,10 @@ pnpm run release:check
 ```
 
 This validates the repo, validates the Claude plugin and marketplace manifests,
+validates every production skill with the Agent Skills reference validator,
 and asks Claude to rehearse the tag creation with `--dry-run`.
 
-5. If the Agent Skills reference validator is available on this workstation,
-   run:
-
-```bash
-pnpm run validate:skills-ref
-```
-
-This validates every production skill under `plugins/strike/skills/` with the
-reference Agent Skills validator. Skip this only when `skills-ref` is not
-available; do not auto-install it during the release check.
-
-6. Confirm the pushed release commit has green GitHub Actions checks:
+5. Confirm the pushed release commit has green GitHub Actions checks:
 
 - `CI`
 - `Host Smoke - Claude Code`
@@ -83,10 +86,11 @@ That creates and pushes the `strike--v<version>` git tag.
 ## Command Meanings
 
 - `pnpm run release:validate`: safe validation for the package and Claude
-  manifests. It does not check tag availability.
+  manifests, including Agent Skills reference validation. It does not check tag
+  availability.
 - `pnpm run validate:skills-ref`: validates every production skill with the
-  external Agent Skills reference validator when `skills-ref` is already on
-  `PATH`. It does not install that validator.
+  external Agent Skills reference validator. It requires `skills-ref` on
+  `PATH`; GitHub Actions installs the pinned validator automatically.
 - `pnpm run release:check`: pre-release validation. It includes Claude's tag
   dry-run, so it fails if the current version tag already exists.
 - `pnpm run release:tag`: creates and pushes the release tag. Run it only after

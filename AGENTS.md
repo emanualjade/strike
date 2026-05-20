@@ -39,6 +39,10 @@ This repository publishes Strike as a cross-agent plugin and skills marketplace.
 - These are portable repo standards. Some hosts allow looser skill metadata, but this repo keeps a stricter shared subset so the same skill folder works cleanly across hosts.
 - Skill folder names and frontmatter `name` values must be lowercase kebab-case and match each other.
 - Each skill must start with YAML frontmatter containing at least `name` and `description`.
+- Keep shared skill frontmatter within the Agent Skills reference schema:
+  `name`, `description`, `license`, `compatibility`, `metadata`, and
+  `allowed-tools`. Do not put host-specific fields such as `argument-hint` or
+  `disable-model-invocation` in the portable shared skills.
 - Write descriptions as trigger guidance: what the skill does and when an agent should use it.
 - Keep `SKILL.md` concise. Move detailed examples, schemas, and long references into a skill-local `references/` folder.
 - Prefer deterministic scripts in a skill-local `scripts/` folder when repeatable logic is safer than prose.
@@ -57,7 +61,7 @@ This repository publishes Strike as a cross-agent plugin and skills marketplace.
 - Use the normal `pnpm` command so local Socket Firewall aliases or wrappers can apply. Do not bypass wrappers with `command pnpm` or an absolute pnpm binary path.
 - Do not run local package installs unless the user explicitly approves. If pnpm is missing or the version is wrong, ask the user to install or enable pnpm 11.1.3.
 - Never approve pnpm dependency build scripts unilaterally. If pnpm asks for build-script approval, stop and work with the user to validate each package before allowlisting it.
-- Run `pnpm run validate` after moving in skills or editing manifests. Before publishing, run `pnpm run validate:publish`, every available host-native validator, and `pnpm run validate:skills-ref` when the Agent Skills reference validator is available.
+- Run `pnpm run validate` after moving in skills or editing manifests. Before publishing, run `pnpm run validate:publish`, `pnpm run validate:skills-ref`, and every available host-native validator.
 
 ## Release Checklist
 

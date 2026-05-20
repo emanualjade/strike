@@ -1,8 +1,6 @@
 ---
 name: phase-build
 description: Implement exactly one planned phase and record build evidence.
-argument-hint: "[project-slug] phase:<phase-slug>"
-disable-model-invocation: true
 allowed-tools: Read Write Edit MultiEdit Bash Grep Glob WebFetch WebSearch
 ---
 

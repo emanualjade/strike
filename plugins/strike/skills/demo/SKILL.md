@@ -1,8 +1,6 @@
 ---
 name: demo
 description: Create a small self-contained HTML planning demo for a Strike card.
-argument-hint: "[project-slug] \"<what the demo should explore>\""
-disable-model-invocation: true
 allowed-tools: Read Write Edit MultiEdit Bash Grep Glob
 ---
 

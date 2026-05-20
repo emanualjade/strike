@@ -13,6 +13,19 @@ The Strike plugin also keeps shared board/workflow references under
 skills to cite explicitly; they are not treated as a host-discovered component
 directory.
 
+2026-05-20 reference-validation update: the
+[Agent Skills specification](https://agentskills.io/specification) defines the
+portable frontmatter fields as `name`, `description`, `license`,
+`compatibility`, `metadata`, and experimental `allowed-tools`, and documents
+`skills-ref validate` as the reference validator. The
+[Claude Code skills docs](https://code.claude.com/docs/en/skills) separately
+support host-specific fields such as `argument-hint` and
+`disable-model-invocation`, but those fields are outside the open Agent Skills
+reference schema. Strike therefore keeps the shared `plugins/strike/skills`
+frontmatter inside the reference schema and does not put Claude-specific fields
+in the portable skill source unless we later add an explicit host-specific
+packaging path.
+
 ## Customization Imports
 
 2026-05-18 customization audit: do not treat `!strike/customize/...` as a
@@ -123,7 +136,7 @@ frontmatter in that portable form and the repo validator rejects comma-separated
 
 ## Validation
 
-`pnpm run validate` is a repo-shape smoke test for our combined layout. It is not a substitute for host-native validation or current official docs. It intentionally enforces stricter repo policy for portability and release hygiene in a few places, including explicit skill frontmatter, space-separated `allowed-tools`, version alignment, Codex `agents/openai.yaml` metadata, host invocation references, known next-skill handoff targets, balanced Markdown fences, and avoiding Claude-only `/strike:<skill>` or `/clear` instructions inside portable skill docs and shared stage contracts. Use `pnpm run validate:publish` before release so empty skill packages fail, and pair it with available host validators such as `claude plugin validate`.
+`pnpm run validate` is a repo-shape smoke test for our combined layout. It is not a substitute for host-native validation or current official docs. It intentionally enforces stricter repo policy for portability and release hygiene in a few places, including explicit skill frontmatter, reference-schema frontmatter fields only, space-separated `allowed-tools`, version alignment, Codex `agents/openai.yaml` metadata, host invocation references, known next-skill handoff targets, balanced Markdown fences, and avoiding Claude-only `/strike:<skill>` or `/clear` instructions inside portable skill docs and shared stage contracts. Use `pnpm run validate:publish` before release so empty skill packages fail, pair it with `pnpm run validate:skills-ref`, and then run available host validators such as `claude plugin validate`.
 
 ## Package Manager Hardening
 

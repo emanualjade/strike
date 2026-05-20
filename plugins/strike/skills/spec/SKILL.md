@@ -1,8 +1,6 @@
 ---
 name: spec
 description: Write the durable product, technical, and workflow specification for a Strike card.
-argument-hint: "[project-slug]"
-disable-model-invocation: true
 allowed-tools: Read Write Edit MultiEdit Bash Grep Glob WebFetch WebSearch
 ---
 

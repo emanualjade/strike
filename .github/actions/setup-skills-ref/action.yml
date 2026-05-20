@@ -1,0 +1,22 @@
+name: Setup skills-ref
+description: Install the pinned Agent Skills reference validator.
+
+runs:
+  using: composite
+  steps:
+    - name: Install skills-ref
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        venv="${RUNNER_TEMP}/skills-ref"
+        python3 -m venv "$venv"
+        "$venv/bin/python" -m pip install --disable-pip-version-check \
+          --constraint "${GITHUB_ACTION_PATH}/constraints.txt" \
+          "git+https://github.com/agentskills/agentskills.git@1f2afe4d5428d12b0f22781b04b81a769b5fa4ce#subdirectory=skills-ref"
+
+        echo "$venv/bin" >> "$GITHUB_PATH"
+
+    - name: Print skills-ref version
+      shell: bash
+      run: skills-ref --version

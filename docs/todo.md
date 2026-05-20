@@ -13,16 +13,17 @@ plugin users; this file tracks release, validation, and setup work.
 
 ### User Tool Or UI Access Needed, Then Codex Can Continue
 
-- [ ] Run Agent Skills reference validation with `skills-ref`.
-  - Owner: user makes the `skills-ref` command available; Codex runs the check.
-  - When it matters: before claiming reference-validator coverage.
-  - How once available:
-    ```bash
-    pnpm run validate:skills-ref
-    ```
+- None right now.
 
 ### Codex Can Do Later
 
+- [x] Run Agent Skills reference validation with `skills-ref`.
+  - Owner: Codex.
+  - Done: installed the pinned reference validator locally, removed
+    non-reference frontmatter fields from shared skills, and confirmed
+    `pnpm run validate:skills-ref` passes all 20 production skills.
+  - Notes: GitHub Actions now installs the same pinned validator and runs
+    `pnpm run validate:skills-ref` in PR validation.
 - [x] Decide whether host smoke checks should become release gates.
   - Owner: Codex.
   - Done: host smoke checks are documented as a pre-tag release gate in
@@ -74,5 +75,3 @@ pnpm run release:tag
 
 See `docs/release.md` for the difference between normal validation, release
 validation, and publishing a release tag.
-
-Also run `pnpm run validate:skills-ref` when that tool is available.

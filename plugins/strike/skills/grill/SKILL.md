@@ -1,8 +1,6 @@
 ---
 name: grill
 description: Drive focused product, technical, and workflow decisions before spec writing.
-argument-hint: "[project-slug]"
-disable-model-invocation: true
 allowed-tools: Read Write Edit MultiEdit Bash Grep Glob
 ---
 

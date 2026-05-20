@@ -12,6 +12,14 @@ const warnings = [];
 const pluginVersions = new Map();
 const marketplaceVersions = [];
 const knownSkillNames = new Set();
+const allowedSkillFrontmatterFields = new Set([
+  "allowed-tools",
+  "compatibility",
+  "description",
+  "license",
+  "metadata",
+  "name",
+]);
 
 function rel(filePath) {
   return path.relative(root, filePath) || ".";
@@ -328,6 +336,12 @@ function validateSkill(skillPath) {
   if (!frontmatter) {
     fail(`${rel(skillFile)}: missing YAML frontmatter`);
     return;
+  }
+
+  for (const field of Object.keys(frontmatter)) {
+    if (!allowedSkillFrontmatterFields.has(field)) {
+      fail(`${rel(skillFile)}: unsupported frontmatter field ${field}; keep shared skills within the Agent Skills reference schema`);
+    }
   }
 
   if (!isKebabName(frontmatter.name)) {

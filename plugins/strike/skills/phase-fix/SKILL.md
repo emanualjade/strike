@@ -1,8 +1,6 @@
 ---
 name: phase-fix
 description: Fix phase-scoped review or readiness findings and route back to review.
-argument-hint: "[project-slug] phase:<phase-slug>"
-disable-model-invocation: true
 allowed-tools: Read Write Edit MultiEdit Bash Grep Glob WebFetch WebSearch
 ---
 

@@ -1,8 +1,6 @@
 ---
 name: readiness-review
 description: Review whether the assembled project is ready against the Strike spec.
-argument-hint: "[project-slug]"
-disable-model-invocation: true
 allowed-tools: Read Write Edit MultiEdit Bash Grep Glob
 ---
 

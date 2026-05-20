@@ -1,8 +1,6 @@
 ---
 name: slice
 description: Split a completed Strike spec into vertical implementation phases.
-argument-hint: "[project-slug]"
-disable-model-invocation: true
 allowed-tools: Read Write Edit MultiEdit Bash Grep Glob
 ---
 

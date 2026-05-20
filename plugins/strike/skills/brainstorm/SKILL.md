@@ -1,8 +1,6 @@
 ---
 name: brainstorm
 description: Shape a rough project idea into enough context for decision-tree grilling.
-argument-hint: "[project-slug] [\"rough idea or notes\"]"
-disable-model-invocation: true
 allowed-tools: Read Write Edit MultiEdit Bash Grep Glob
 ---
 

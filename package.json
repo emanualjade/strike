@@ -15,7 +15,7 @@
     "host:smoke:claude": "node scripts/host-smoke.mjs --host claude --strict-missing",
     "host:smoke:copilot": "node scripts/host-smoke.mjs --host copilot --strict-missing",
     "host:smoke:codex": "node scripts/host-smoke.mjs --host codex --strict-missing",
-    "release:validate": "pnpm run test && pnpm run validate:publish && claude plugin validate ./plugins/strike && claude plugin validate ./.claude-plugin/marketplace.json",
+    "release:validate": "pnpm run test && pnpm run validate:publish && pnpm run validate:skills-ref && claude plugin validate ./plugins/strike && claude plugin validate ./.claude-plugin/marketplace.json",
     "release:check": "pnpm run release:validate && claude plugin tag --dry-run ./plugins/strike",
     "release:tag": "pnpm run release:check && claude plugin tag --push ./plugins/strike"
   },
