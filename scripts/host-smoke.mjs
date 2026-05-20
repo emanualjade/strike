@@ -276,11 +276,13 @@ async function runCodex(binary, options) {
   }
 
   let marketplaceAdded = false;
+  let pluginInstalled = false;
   try {
     run(ctx, "version", ["--version"]);
     run(ctx, "marketplace-add", addArgs);
     marketplaceAdded = true;
     assertCodexConfig(ctx);
+    run(ctx, "plugin-list", ["plugin", "list", "--marketplace", "strike"]);
 
     if (gitBackedSource) {
       run(ctx, "marketplace-upgrade", ["plugin", "marketplace", "upgrade", "strike"]);
@@ -288,8 +290,17 @@ async function runCodex(binary, options) {
       console.log("[codex] Local workstation source is not Git-backed; upgrade intentionally skipped.");
     }
 
+    const pluginAdd = run(ctx, "plugin-add", ["plugin", "add", "strike@strike"]);
+    pluginInstalled = true;
+    const installPath = assertCodexAdd(pluginAdd.stdout);
+    assertPluginRoot(installPath, ".codex-plugin/plugin.json");
+    assertInstalledRuntime(installPath, ctx, "codex-after-add");
+
     return finishContext(ctx, "passed");
   } finally {
+    if (pluginInstalled) {
+      safeRun(ctx, "plugin-remove", ["plugin", "remove", "strike@strike"]);
+    }
     if (marketplaceAdded) {
       safeRun(ctx, "marketplace-remove", ["plugin", "marketplace", "remove", "strike"]);
     }
@@ -439,6 +450,12 @@ function assertCodexConfig(ctx) {
   assert(configText.includes("strike"), "Codex config did not include the strike marketplace after add.");
 }
 
+function assertCodexAdd(stdout) {
+  const match = stdout.match(/^Installed plugin root:\s*(.+)$/m);
+  assert(match, "Codex plugin add output did not include an installed plugin root.");
+  return match[1].trim();
+}
+
 function assertPluginRoot(pluginRoot, manifestRelativePath, options = {}) {
   const check = (condition, message) => {
     if (!condition) {
@@ -571,6 +588,9 @@ function assertInstalledRuntime(pluginRoot, ctx, label) {
 
 function installedRuntimeRoots(ctx) {
   const roots = [ctx.paths.home, ctx.paths.cache, ctx.paths.config];
+  if (ctx.env.CODEX_HOME) {
+    roots.push(ctx.env.CODEX_HOME);
+  }
   if (ctx.env.CLAUDE_CODE_PLUGIN_CACHE_DIR) {
     roots.push(ctx.env.CLAUDE_CODE_PLUGIN_CACHE_DIR);
   }

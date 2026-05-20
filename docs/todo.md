@@ -28,9 +28,8 @@ plugin users; this file tracks release, validation, and setup work.
     checks automatically on the PR; Codex iterates on failures.
   - When it matters: before claiming installed-runtime coverage from GitHub
     runners.
-  - Notes: Claude and Copilot should prove installed `init`, repo-local
-    `customize check-setup`, and `start`; Codex remains marketplace-lifecycle
-    only until a documented non-interactive install path exists.
+  - Notes: Claude, Copilot, and Codex should prove installed `init`,
+    repo-local `customize check-setup`, and `start`.
 
 ### Codex Can Do Later
 
