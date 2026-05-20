@@ -214,8 +214,9 @@ After installing, run this app prompt inside Claude Code to activate Strike:
 <details>
 <summary>Install in GitHub Copilot CLI</summary>
 
-Copilot CLI support is packaged, but the live Copilot smoke test has not been
-completed yet. If you want to try it, run these terminal commands:
+Copilot CLI support is packaged and covered by the host smoke workflow for
+install, update, and deterministic Strike runtime checks. To try it, run these
+terminal commands:
 
 ```bash
 copilot plugin marketplace add emanualjade/strike

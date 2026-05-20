@@ -1,6 +1,6 @@
 # Host Smoke Tests
 
-Last updated: 2026-05-19.
+Last updated: 2026-05-20.
 
 This is the private maintainer playbook for proposed Strike host install smoke
 tests. Keep user install instructions in `README.md`; keep experimental workflow
@@ -47,9 +47,10 @@ The proposed GitHub workflows should stay inside documented host behavior:
 - Codex documents npm installation with `@openai/codex` in the OpenAI Codex
   CLI repository, and documents `codex plugin marketplace add`, `upgrade`, and
   `remove` in the official Codex plugin docs. Codex docs also say marketplace
-  plugins are installed into `~/.codex/plugins/cache/...`, but they do not
-  currently document a Claude/Copilot-style non-interactive `codex plugin
-  install` command in the same plugin docs.
+  plugins are installed into `~/.codex/plugins/cache/...`. Codex CLI `0.131.0`
+  exposes `codex plugin add` and `codex plugin remove`, so Strike can exercise
+  deterministic installed-plugin runtime checks without opening an interactive
+  Codex session.
 
 ## Best-Practice Use By Target CLI
 
@@ -74,9 +75,9 @@ Use this split:
 | --- | --- | --- |
 | Repo validation | `pnpm run test`, `pnpm run validate`, and `pnpm run validate:publish` before release. Run `skills-ref validate` when the reference validator is available. | Run the same repo checks from a clean checkout with pnpm before every host smoke. |
 | Target CLI availability | Print already-installed target CLI versions only. Do not install target CLIs locally as part of the smoke loop. | Install each target CLI from its documented npm package on a fresh runner and print Node/pnpm/npm/target CLI versions. |
-| Claude Code | Run native validators and the full marketplace install/update/uninstall lifecycle in a temp `HOME` plus temp `CLAUDE_CODE_PLUGIN_CACHE_DIR`. | Run the same lifecycle after installing latest Claude Code, then upload cache/config diagnostics on failure. |
-| GitHub Copilot CLI | When installed, run direct local plugin install/list/uninstall and marketplace install/list/update/uninstall with `COPILOT_HOME` and `COPILOT_CACHE_HOME` pointed at temp directories. | Run the same checks after installing latest Copilot CLI. This is the authoritative Copilot signal because the CLI is not always installed locally. |
-| Codex | Run `codex --version`, local marketplace add/remove, and inspect temp `CODEX_HOME/config.toml`. Do not run `upgrade` against a local marketplace; current CLI rejects that because the source is not Git-backed. | Add the marketplace from the GitHub repo source, run `upgrade`, and remove it. Keep plugin install/enable coverage out until a documented non-interactive command is confirmed. |
+| Claude Code | Run native validators, the marketplace install/update/uninstall lifecycle, and installed runtime checks in a temp `HOME` plus temp `CLAUDE_CODE_PLUGIN_CACHE_DIR`. | Run the same lifecycle after installing latest Claude Code, then upload cache/config/runtime diagnostics on failure. |
+| GitHub Copilot CLI | When installed, run direct local plugin install/list/uninstall, marketplace install/list/update/uninstall, and installed runtime checks with `COPILOT_HOME` and `COPILOT_CACHE_HOME` pointed at temp directories. | Run the same checks after installing latest Copilot CLI. This is the authoritative Copilot signal because the CLI is not always installed locally. |
+| Codex | Run `codex --version`, local marketplace add/list, plugin add/runtime/remove, marketplace remove, and inspect temp `CODEX_HOME/config.toml`. Do not run `upgrade` against a local marketplace; current CLI rejects that because the source is not Git-backed. | Add the marketplace from the GitHub repo source, run `upgrade`, add Strike from that marketplace, run installed runtime checks, remove the plugin, and remove the marketplace. |
 | Auth/model behavior | Do not run live model sessions or commands that require host login. | Keep auth/model checks separate, manual, and secret-gated if they are ever added. They should not be required PR checks. |
 
 The local workstation loop is therefore safe and useful, but intentionally
@@ -164,6 +165,9 @@ marketplace plugins into a versioned cache, so the workflow should assert:
 - cached `.claude-plugin/plugin.json` has `name: strike`
 - cached version matches `package.json`
 - representative skill files exist under the cached plugin root
+- installed runtime support files exist under the cached plugin root
+- installed `init`, repo-local `customize check-setup`, and installed `start`
+  run successfully in a temp consumer repository
 
 ### GitHub Copilot CLI
 
@@ -203,6 +207,9 @@ installed plugins from its own plugin copy/cache:
 - installed `plugin.json` has `name: strike`
 - installed version matches `package.json`
 - representative skill files exist under the installed plugin root
+- installed runtime support files exist under the installed plugin root
+- installed `init`, repo-local `customize check-setup`, and installed `start`
+  run successfully in a temp consumer repository
 
 If a future Copilot CLI release adds a native validator, add it before install
 and record the doc source in `docs/research-notes.md`.
@@ -215,24 +222,26 @@ Use documented marketplace lifecycle commands first:
 - `codex plugin marketplace upgrade strike`
 - `codex plugin marketplace remove strike`
 
+Use the current Codex CLI install lifecycle after the marketplace snapshot is
+available:
+
+- `codex plugin list --marketplace strike`
+- `codex plugin add strike@strike`
+- `codex plugin remove strike@strike`
+
 Use a temp `HOME` so Codex writes any config, marketplace, and cache state into
 the runner's disposable workspace. Also set `CODEX_HOME` inside the temp root
 so a caller's existing Codex config cannot be touched.
 
-Do not invent a `codex plugin install` step until a documented non-interactive
-install/enable command is confirmed. The current Codex docs describe plugin
-directory installation and cache behavior, but the install/enable interaction is
-not documented with the same scriptable command surface as Claude and Copilot.
-
-If a future Codex CLI exposes a non-interactive install path, the workflow
-should add the same cache assertions used for Claude/Copilot:
+After `codex plugin add`, inspect the installed plugin cache, not only command
+output:
 
 - cached `.codex-plugin/plugin.json` has `name: strike`
-- cached version matches `package.json`, or `local` is expected for local
-  marketplace sources
-- representative skill files exist under the cached plugin root
-- plugin enabled state is present in Codex config only when the command
-  officially supports non-interactive enablement
+- cached version matches `package.json`
+- representative skill files and deterministic runtime support files exist
+  under the cached plugin root
+- installed `init`, repo-local `customize check-setup`, and installed `start`
+  run successfully in a temp consumer repository
 
 ## Proposed Workflows
 
@@ -247,9 +256,9 @@ runs do not continue after a new commit lands.
 
 | Workflow | File | Trigger | Scope |
 | --- | --- | --- | --- |
-| Claude Code host smoke | `.github/workflows/host-smoke-claude.yml` | `pull_request`, `workflow_dispatch` | Install Claude Code, validate the marketplace/plugin, install Strike from the checked-out repo marketplace, check cached skills, update, then uninstall. |
-| GitHub Copilot CLI host smoke | `.github/workflows/host-smoke-copilot.yml` | `pull_request`, `workflow_dispatch` | Install Copilot CLI, add the checked-out repo marketplace, install Strike, check installed skills, update, then uninstall. |
-| Codex host smoke | `.github/workflows/host-smoke-codex.yml` | `pull_request`, `workflow_dispatch` | Install Codex CLI and verify Git-backed marketplace add, upgrade, and remove. Keep this partial unless a documented non-interactive install path is confirmed. |
+| Claude Code host smoke | `.github/workflows/host-smoke-claude.yml` | `pull_request`, `workflow_dispatch` | Install Claude Code, validate the marketplace/plugin, install Strike from the checked-out repo marketplace, check cached skills and installed runtime scripts, update, then uninstall. |
+| GitHub Copilot CLI host smoke | `.github/workflows/host-smoke-copilot.yml` | `pull_request`, `workflow_dispatch` | Install Copilot CLI, add the checked-out repo marketplace, install Strike, check installed skills and installed runtime scripts, update, then uninstall. |
+| Codex host smoke | `.github/workflows/host-smoke-codex.yml` | `pull_request`, `workflow_dispatch` | Install Codex CLI, verify Git-backed marketplace add/upgrade, install Strike, check installed skills and installed runtime scripts, remove the plugin, and remove the marketplace. |
 
 ## Failure Model
 
@@ -276,8 +285,8 @@ to repair them:
 - Use a clean temp home/cache so logs show every file the target CLI created.
 - Emit `::error` annotations for missing expected files or skills.
 - Upload diagnostic artifacts on failure: host command outputs, marketplace
-  lists, installed plugin manifests, and a sanitized tree of target CLI config/cache
-  directories.
+  lists, installed plugin manifests, runtime consumer-repo trees, and a
+  sanitized tree of target CLI config/cache directories.
 - Keep command output in step logs and use `gh run view --log-failed` for fast
   inspection.
 - Use debug re-runs for runner-level failures rather than guessing.
@@ -313,27 +322,22 @@ handling should be limited to known transient or diagnostic work:
 
 ## What Counts As Passing
 
-For Claude Code and GitHub Copilot CLI, a passing smoke test should prove:
+For Claude Code, GitHub Copilot CLI, and Codex, a passing smoke test should
+prove:
 
 - the target CLI installs on a GitHub runner
 - a clean temp home/config/cache is used
 - the local Strike marketplace can be registered
 - `strike` can be installed from that marketplace
 - the installed plugin has the expected version from `package.json`
-- representative skills exist in the installed plugin copy
+- representative skills and deterministic runtime support files exist in the
+  installed plugin copy
+- installed `init` creates Strike's repo-local customization runtime in a temp
+  consumer repository
+- the copied repo-local `customize.mjs check-setup` reports `Result: pass`
+- installed `start` creates a `csv-export` card and first brainstorm board
+  pointer in the temp consumer repository
 - update and uninstall commands complete without leaving the workflow broken
-
-For Codex, a passing smoke test should not overclaim. Until a documented
-non-interactive install path is confirmed, it proves only:
-
-- the Codex CLI installs on a GitHub runner
-- a clean temp home is used
-- the Git-backed Strike marketplace can be added
-- marketplace upgrade and remove commands complete
-
-Do not describe Codex as having fully automated plugin install coverage until
-Codex exposes or documents a non-interactive plugin install/enable path we have
-tested.
 
 ## Local Reproduction
 

@@ -172,6 +172,15 @@ Codex GitHub smoke coverage should start as marketplace-lifecycle coverage and
 must not be described as full non-interactive plugin install coverage until a
 documented command path is confirmed and tested.
 
+2026-05-20 update: Codex CLI `0.131.0` exposes `codex plugin add
+<plugin@marketplace>` and `codex plugin remove <plugin@marketplace>` in
+`codex plugin --help`. A disposable temp-home probe with `CODEX_HOME` isolated
+confirmed that `codex plugin add strike@strike` installs Strike into
+`$CODEX_HOME/plugins/cache/strike/strike/0.7.0` with the expected
+`.codex-plugin/plugin.json`, shared references, scripts, and skill files. The
+host smoke workflow can therefore add deterministic installed-runtime coverage
+for Codex without opening an interactive Codex session or invoking a model.
+
 2026-05-19 best-practice note: Claude has the richest native validation and CI
 surface for plugin smoke tests. Use `claude plugin validate`, JSON list output,
 and documented plugin-cache environment variables such as
