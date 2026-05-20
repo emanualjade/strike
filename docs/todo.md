@@ -1,6 +1,6 @@
 # Strike Todo
 
-Last updated: 2026-05-19.
+Last updated: 2026-05-20.
 
 This is the maintainer checklist for Strike. The public `README.md` is for
 plugin users; this file tracks release, validation, and setup work.
@@ -22,20 +22,22 @@ plugin users; this file tracks release, validation, and setup work.
     skills-ref validate plugins/strike/skills/go
     skills-ref validate plugins/strike/skills/spec
     ```
-- [ ] Run PR-triggered GitHub Actions host smoke workflows from a feature
-  branch and iron out failures.
-  - Owner: Codex opens/updates the hardening PR; GitHub Actions starts the
+- [ ] Run PR-triggered GitHub Actions host smoke workflows after the installed
+  runtime smoke changes land on a feature branch.
+  - Owner: Codex opens/updates the branch or PR; GitHub Actions starts the
     checks automatically on the PR; Codex iterates on failures.
-  - When it matters: before promoting host smoke workflows to a release gate.
-  - Notes: see `docs/host-smoke-tests.md` before implementing or editing the
-    workflow files.
+  - When it matters: before claiming installed-runtime coverage from GitHub
+    runners.
+  - Notes: Claude and Copilot should prove installed `init`, repo-local
+    `customize check-setup`, and `start`; Codex remains marketplace-lifecycle
+    only until a documented non-interactive install path exists.
 
 ### Codex Can Do Later
 
-- [ ] Iron out host smoke workflow failures and decide which checks can become
-  release gates.
+- [ ] Decide which host smoke checks can become release gates.
   - Owner: Codex.
-  - When it matters: after PR-triggered GitHub workflows have real run history.
+  - When it matters: after installed-runtime GitHub workflows have real run
+    history.
   - Notes: keep live model invocation out of required checks until auth and
     cost behavior are explicit.
 - [ ] After the next versioned Strike release, rerun host update checks.

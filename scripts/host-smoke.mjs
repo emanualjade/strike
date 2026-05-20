@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { access } from "node:fs/promises";
 import { constants } from "node:fs";
 import { tmpdir } from "node:os";
@@ -186,12 +186,14 @@ async function runClaude(binary, options) {
     const firstList = run(ctx, "plugin-list-after-install", ["plugin", "list", "--json"]);
     const installPath = assertClaudeList(firstList.stdout);
     assertPluginRoot(installPath, ".claude-plugin/plugin.json");
+    assertInstalledRuntime(installPath, ctx, "claude-after-install");
 
     run(ctx, "marketplace-update", ["plugin", "marketplace", "update", "strike"]);
     run(ctx, "plugin-update", ["plugin", "update", "strike@strike", "--scope", "user"]);
     const secondList = run(ctx, "plugin-list-after-update", ["plugin", "list", "--json"]);
     const updatedPath = assertClaudeList(secondList.stdout);
     assertPluginRoot(updatedPath, ".claude-plugin/plugin.json");
+    assertInstalledRuntime(updatedPath, ctx, "claude-after-update");
 
     return finishContext(ctx, "passed");
   } finally {
@@ -224,7 +226,8 @@ async function runCopilot(binary, options) {
     run(ctx, "direct-install", ["plugin", "install", "./plugins/strike"]);
     directInstalled = true;
     run(ctx, "direct-list", ["plugin", "list"]);
-    assertCopilotInstall(ctx);
+    const directRoot = assertCopilotInstall(ctx);
+    assertInstalledRuntime(directRoot, ctx, "copilot-direct-install");
     run(ctx, "direct-uninstall", ["plugin", "uninstall", "strike"]);
     directInstalled = false;
     resetDirectory(ctx.env.COPILOT_HOME);
@@ -237,9 +240,11 @@ async function runCopilot(binary, options) {
     run(ctx, "marketplace-install", ["plugin", "install", "strike@strike"]);
     marketplaceInstalled = true;
     run(ctx, "marketplace-plugin-list", ["plugin", "list"]);
-    assertCopilotInstall(ctx);
+    const marketplaceRoot = assertCopilotInstall(ctx);
+    assertInstalledRuntime(marketplaceRoot, ctx, "copilot-marketplace-install");
     run(ctx, "marketplace-plugin-update", ["plugin", "update", "strike"]);
-    assertCopilotInstall(ctx);
+    const updatedRoot = assertCopilotInstall(ctx);
+    assertInstalledRuntime(updatedRoot, ctx, "copilot-marketplace-update");
 
     return finishContext(ctx, "passed");
   } finally {
@@ -339,15 +344,21 @@ function createContext(host, binary, options, extraEnv = {}) {
 }
 
 function run(ctx, label, args, runOptions = {}) {
+  return runCommand(ctx, label, ctx.binary, args, { cwd: repoRoot, ...runOptions });
+}
+
+function runCommand(ctx, label, binary, args, runOptions = {}) {
   ctx.commandIndex += 1;
   const logName = `${String(ctx.commandIndex).padStart(2, "0")}-${slug(label)}.log`;
   const logPath = path.join(ctx.artifactsDir, logName);
-  const commandText = [ctx.binary, ...args].map(shellQuote).join(" ");
+  const cwd = runOptions.cwd || repoRoot;
+  const env = { ...ctx.env, ...(runOptions.env || {}) };
+  const commandText = [binary, ...args].map(shellQuote).join(" ");
 
   console.log(`\n[${ctx.host}] ${commandText}`);
-  const result = spawnSync(ctx.binary, args, {
-    cwd: repoRoot,
-    env: ctx.env,
+  const result = spawnSync(binary, args, {
+    cwd,
+    env,
     encoding: "utf8",
     maxBuffer: 20 * 1024 * 1024,
   });
@@ -364,7 +375,7 @@ function run(ctx, label, args, runOptions = {}) {
   const exitCode = typeof result.status === "number" ? result.status : 1;
   const log = [
     `host: ${ctx.host}`,
-    `cwd: ${repoRoot}`,
+    `cwd: ${cwd}`,
     `command: ${commandText}`,
     `exitCode: ${exitCode}`,
     "",
@@ -415,6 +426,7 @@ function assertCopilotInstall(ctx) {
   });
   assert(validRoot, `Could not find an installed/copied Copilot strike plugin under ${ctx.env.COPILOT_HOME} or ${ctx.env.COPILOT_CACHE_HOME}.`);
   assertPluginRoot(validRoot, "plugin.json");
+  return validRoot;
 }
 
 function assertCodexConfig(ctx) {
@@ -449,6 +461,141 @@ function assertPluginRoot(pluginRoot, manifestRelativePath, options = {}) {
   if (!options.quiet) {
     console.log(`Verified strike ${packageVersion} and ${skillNames.length} skills at ${pluginRoot}`);
   }
+}
+
+function assertInstalledRuntime(pluginRoot, ctx, label) {
+  const realPluginRoot = realpathSync(pluginRoot);
+  const sourcePluginRoot = realpathSync(path.join(repoRoot, "plugins/strike"));
+  assert(
+    realPluginRoot !== sourcePluginRoot,
+    `${ctx.host} ${label} runtime smoke resolved to the source checkout plugin root: ${realPluginRoot}`,
+  );
+
+  const allowedRoots = installedRuntimeRoots(ctx);
+  assert(
+    allowedRoots.some((allowedRoot) => isPathInside(realPluginRoot, allowedRoot)),
+    `${ctx.host} ${label} runtime smoke root ${realPluginRoot} is not under an isolated host temp home/cache: ${allowedRoots.join(", ")}`,
+  );
+
+  const installedFiles = [
+    "skills/init/scripts/init.mjs",
+    "skills/start/scripts/start-card.sh",
+    "references/scripts/customize.mjs",
+    "references/scripts/slugify.mjs",
+    "references/customization/entry-points.json",
+  ];
+  for (const relativePath of installedFiles) {
+    assertFile(path.join(realPluginRoot, relativePath), `${ctx.host} ${label} installed runtime`);
+  }
+
+  const runtimeLabel = slug(label);
+  const consumerRepo = path.join(ctx.paths.tempRoot, `runtime-consumer-${runtimeLabel}`);
+  mkdirSync(consumerRepo, { recursive: true });
+
+  try {
+    const initScript = path.join(realPluginRoot, "skills/init/scripts/init.mjs");
+    runCommand(ctx, `${label}-runtime-init`, process.execPath, [initScript, "--repo-root", consumerRepo], {
+      cwd: consumerRepo,
+    });
+
+    const initializedFiles = [
+      "strike/customize/system/customize.mjs",
+      "strike/customize/system/manifest.json",
+      "strike/customize/system/references/customization/entry-points.json",
+      "strike/customize/user/global/global.md",
+      "strike/customize/user/brainstorm/brainstorm.md",
+    ];
+    for (const relativePath of initializedFiles) {
+      assertFile(path.join(consumerRepo, relativePath), `${ctx.host} ${label} initialized runtime`);
+    }
+    assertDirectory(
+      path.join(consumerRepo, "strike/customize/user/readiness-review/reviews"),
+      `${ctx.host} ${label} initialized runtime`,
+    );
+
+    const customizeScript = path.join(consumerRepo, "strike/customize/system/customize.mjs");
+    const checkSetup = runCommand(
+      ctx,
+      `${label}-runtime-check-setup`,
+      process.execPath,
+      [customizeScript, "--repo-root", consumerRepo, "check-setup"],
+      { cwd: consumerRepo },
+    );
+    assert(
+      /Result: pass/.test(checkSetup.stdout),
+      `${ctx.host} ${label} customize check-setup did not report Result: pass.`,
+    );
+
+    const startScript = path.join(realPluginRoot, "skills/start/scripts/start-card.sh");
+    const startResult = runCommand(
+      ctx,
+      `${label}-runtime-start`,
+      startScript,
+      [
+        "--repo-root",
+        consumerRepo,
+        "Add CSV export",
+        "--description",
+        "Let users export report data.",
+      ],
+      {
+        cwd: consumerRepo,
+        env: { STRIKE_NODE: process.execPath },
+      },
+    );
+    assertFile(
+      path.join(consumerRepo, "docs/strike/cards/csv-export/card.md"),
+      `${ctx.host} ${label} start card`,
+    );
+    assertFile(
+      path.join(consumerRepo, "docs/strike/board/01-brainstorm/csv-export.md"),
+      `${ctx.host} ${label} start board`,
+    );
+    assert(
+      /^next_args=csv-export$/m.test(startResult.stdout),
+      `${ctx.host} ${label} start output did not include next_args=csv-export.`,
+    );
+    assert(
+      /^next_skill=brainstorm$/m.test(startResult.stdout),
+      `${ctx.host} ${label} start output did not include next_skill=brainstorm.`,
+    );
+  } finally {
+    writeFileSync(
+      path.join(ctx.artifactsDir, `tree-runtime-consumer-${runtimeLabel}.txt`),
+      treeSnapshot(consumerRepo),
+    );
+  }
+
+  console.log(`Verified installed Strike runtime for ${ctx.host} ${label} at ${realPluginRoot}`);
+}
+
+function installedRuntimeRoots(ctx) {
+  const roots = [ctx.paths.home, ctx.paths.cache, ctx.paths.config];
+  if (ctx.env.CLAUDE_CODE_PLUGIN_CACHE_DIR) {
+    roots.push(ctx.env.CLAUDE_CODE_PLUGIN_CACHE_DIR);
+  }
+  if (ctx.env.COPILOT_HOME) {
+    roots.push(ctx.env.COPILOT_HOME);
+  }
+  if (ctx.env.COPILOT_CACHE_HOME) {
+    roots.push(ctx.env.COPILOT_CACHE_HOME);
+  }
+  return roots.filter((root) => root && existsSync(root)).map((root) => realpathSync(root));
+}
+
+function assertFile(filePath, context) {
+  assert(existsSync(filePath), `${context}: missing file ${filePath}`);
+  assert(statSync(filePath).isFile(), `${context}: expected a file at ${filePath}`);
+}
+
+function assertDirectory(filePath, context) {
+  assert(existsSync(filePath), `${context}: missing directory ${filePath}`);
+  assert(statSync(filePath).isDirectory(), `${context}: expected a directory at ${filePath}`);
+}
+
+function isPathInside(childPath, parentPath) {
+  const relativePath = path.relative(parentPath, childPath);
+  return relativePath === "" || (!relativePath.startsWith("..") && !path.isAbsolute(relativePath));
 }
 
 function findPluginRoots(searchRoots, manifestName) {
