@@ -1,6 +1,7 @@
 ---
 name: init
 description: Initialize or refresh Strike repo-local setup, including managed customization runtime and user customization files.
+disable-model-invocation: true
 allowed-tools: Read Bash Grep Glob
 ---
 

@@ -1,6 +1,8 @@
 ---
 name: customize
 description: Run list, check-setup, review-instructions <entry|all>, or preview <skill-name> for repo-local Strike customization files and review lenses.
+argument-hint: "list|check-setup|review-instructions <entry|all>|preview <skill-name>"
+disable-model-invocation: true
 allowed-tools: Read Bash Grep Glob
 ---
 

@@ -1,6 +1,8 @@
 ---
 name: go
 description: Inspect Strike board state and recommend the next explicit workflow step.
+argument-hint: "[project-slug] [verbose]"
+disable-model-invocation: true
 allowed-tools: Read Bash Grep Glob
 ---
 

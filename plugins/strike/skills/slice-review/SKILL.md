@@ -1,6 +1,8 @@
 ---
 name: slice-review
 description: Review and safely repair Strike phase plans before implementation.
+argument-hint: "[project-slug]"
+disable-model-invocation: true
 allowed-tools: Read Write Edit MultiEdit Bash Grep Glob
 ---
 

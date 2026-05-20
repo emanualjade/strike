@@ -1,6 +1,8 @@
 ---
 name: start
 description: Create a new Strike project card and first board pointer in docs/strike.
+argument-hint: "<project name words> [--slug <slug>] [--description <short description words>]"
+disable-model-invocation: true
 allowed-tools: Read Write Edit MultiEdit Bash Grep Glob
 ---
 

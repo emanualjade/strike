@@ -1,6 +1,8 @@
 ---
 name: phase-research
 description: Research one implementation phase before build-brief planning.
+argument-hint: "[project-slug] phase:<phase-slug> [optional focus]"
+disable-model-invocation: true
 allowed-tools: Read Write Edit MultiEdit Bash Grep Glob WebFetch WebSearch Agent
 ---
 

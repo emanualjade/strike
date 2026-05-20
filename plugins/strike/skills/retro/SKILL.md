@@ -1,6 +1,8 @@
 ---
 name: retro
 description: Capture workflow lessons and move accepted Strike work to done.
+argument-hint: "[project-slug]"
+disable-model-invocation: true
 allowed-tools: Read Write Edit MultiEdit Bash Grep Glob
 ---
 

@@ -1,6 +1,8 @@
 ---
 name: phase-review
 description: Review one built phase and route clean or blocking findings.
+argument-hint: "[project-slug] phase:<phase-slug>"
+disable-model-invocation: true
 allowed-tools: Read Write Edit MultiEdit Bash Grep Glob
 ---
 

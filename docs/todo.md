@@ -17,13 +17,14 @@ plugin users; this file tracks release, validation, and setup work.
 
 ### Codex Can Do Later
 
-- [x] Run Agent Skills reference validation with `skills-ref`.
+- [x] Evaluate Agent Skills reference validation with `skills-ref`.
   - Owner: Codex.
-  - Done: installed the pinned reference validator locally, removed
-    non-reference frontmatter fields from shared skills, and confirmed
-    `pnpm run validate:skills-ref` passes all 20 production skills.
-  - Notes: GitHub Actions now installs the same pinned validator and runs
-    `pnpm run validate:skills-ref` in PR validation.
+  - Done: installed the pinned reference validator locally and confirmed it
+    rejects useful Claude Code fields such as `argument-hint` and
+    `disable-model-invocation`.
+  - Notes: popular Claude-oriented skills use host-specific top-level fields
+    for real UX and invocation behavior, so `skills-ref` is not a required
+    validation gate for Strike right now.
 - [x] Decide whether host smoke checks should become release gates.
   - Owner: Codex.
   - Done: host smoke checks are documented as a pre-tag release gate in
@@ -53,6 +54,11 @@ plugin users; this file tracks release, validation, and setup work.
   - Owner: Codex.
   - When it matters: whenever we change plugin structure, skill metadata,
     invocation language, or host manifests.
+- [ ] Reconsider Agent Skills reference validation if it supports host
+  extensions or if Strike adds a reference-only package projection.
+  - Owner: Codex.
+  - When it matters: only if `skills-ref` can validate portability without
+    requiring us to remove useful host behavior from the shipped plugin.
 - [ ] Reconsider host-specific generated skill packages only if the portable
   customization loader becomes insufficient.
   - Owner: Codex.

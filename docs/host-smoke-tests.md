@@ -73,7 +73,7 @@ Use this split:
 
 | Scope | Local workstation tooling | GitHub runner tooling |
 | --- | --- | --- |
-| Repo validation | `pnpm run test`, `pnpm run validate`, `pnpm run validate:publish`, and `pnpm run validate:skills-ref` before release. Install the pinned `skills-ref` validator once with the command in `docs/release.md`. | Install the pinned `skills-ref` validator, then run the same repo checks from a clean checkout with pnpm before every host smoke. |
+| Repo validation | `pnpm run test`, `pnpm run validate`, and `pnpm run validate:publish` before release. | Run the same repo checks from a clean checkout with pnpm before every host smoke. |
 | Target CLI availability | Print already-installed target CLI versions only. Do not install target CLIs locally as part of the smoke loop. | Install each target CLI from its documented npm package on a fresh runner and print Node/pnpm/npm/target CLI versions. |
 | Claude Code | Run native validators, the marketplace install/update/uninstall lifecycle, and installed runtime checks in a temp `HOME` plus temp `CLAUDE_CODE_PLUGIN_CACHE_DIR`. | Run the same lifecycle after installing latest Claude Code, then upload cache/config/runtime diagnostics on failure. |
 | GitHub Copilot CLI | When installed, run direct local plugin install/list/uninstall, marketplace install/list/update/uninstall, and installed runtime checks with `COPILOT_HOME` and `COPILOT_CACHE_HOME` pointed at temp directories. | Run the same checks after installing latest Copilot CLI. This is the authoritative Copilot signal because the CLI is not always installed locally. |

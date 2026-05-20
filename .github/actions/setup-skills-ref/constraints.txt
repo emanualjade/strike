@@ -1,4 +1,0 @@
-click==8.4.0
-python-dateutil==2.9.0.post0
-six==1.17.0
-strictyaml==1.7.3
