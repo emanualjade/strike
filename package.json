@@ -10,6 +10,7 @@
     "test": "node scripts/test-slugify.mjs && node scripts/test-customize.mjs && bash scripts/test-start-card.sh",
     "validate": "node scripts/validate.mjs",
     "validate:publish": "node scripts/validate.mjs --publish",
+    "validate:skills-ref": "node scripts/validate-skills-ref.mjs",
     "host:smoke:local": "node scripts/host-smoke.mjs --host all --skip-missing",
     "host:smoke:claude": "node scripts/host-smoke.mjs --host claude --strict-missing",
     "host:smoke:copilot": "node scripts/host-smoke.mjs --host copilot --strict-missing",

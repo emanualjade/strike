@@ -18,10 +18,9 @@ plugin users; this file tracks release, validation, and setup work.
   - When it matters: before claiming reference-validator coverage.
   - How once available:
     ```bash
-    skills-ref validate plugins/strike/skills/start
-    skills-ref validate plugins/strike/skills/go
-    skills-ref validate plugins/strike/skills/spec
+    pnpm run validate:skills-ref
     ```
+
 ### Codex Can Do Later
 
 - [x] Decide whether host smoke checks should become release gates.
@@ -76,4 +75,4 @@ pnpm run release:tag
 See `docs/release.md` for the difference between normal validation, release
 validation, and publishing a release tag.
 
-Also run `skills-ref validate` when that tool is available.
+Also run `pnpm run validate:skills-ref` when that tool is available.

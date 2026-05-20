@@ -50,7 +50,18 @@ pnpm run release:check
 This validates the repo, validates the Claude plugin and marketplace manifests,
 and asks Claude to rehearse the tag creation with `--dry-run`.
 
-5. Confirm the pushed release commit has green GitHub Actions checks:
+5. If the Agent Skills reference validator is available on this workstation,
+   run:
+
+```bash
+pnpm run validate:skills-ref
+```
+
+This validates every production skill under `plugins/strike/skills/` with the
+reference Agent Skills validator. Skip this only when `skills-ref` is not
+available; do not auto-install it during the release check.
+
+6. Confirm the pushed release commit has green GitHub Actions checks:
 
 - `CI`
 - `Host Smoke - Claude Code`
@@ -73,6 +84,9 @@ That creates and pushes the `strike--v<version>` git tag.
 
 - `pnpm run release:validate`: safe validation for the package and Claude
   manifests. It does not check tag availability.
+- `pnpm run validate:skills-ref`: validates every production skill with the
+  external Agent Skills reference validator when `skills-ref` is already on
+  `PATH`. It does not install that validator.
 - `pnpm run release:check`: pre-release validation. It includes Claude's tag
   dry-run, so it fails if the current version tag already exists.
 - `pnpm run release:tag`: creates and pushes the release tag. Run it only after

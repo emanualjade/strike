@@ -57,7 +57,7 @@ This repository publishes Strike as a cross-agent plugin and skills marketplace.
 - Use the normal `pnpm` command so local Socket Firewall aliases or wrappers can apply. Do not bypass wrappers with `command pnpm` or an absolute pnpm binary path.
 - Do not run local package installs unless the user explicitly approves. If pnpm is missing or the version is wrong, ask the user to install or enable pnpm 11.1.3.
 - Never approve pnpm dependency build scripts unilaterally. If pnpm asks for build-script approval, stop and work with the user to validate each package before allowlisting it.
-- Run `pnpm run validate` after moving in skills or editing manifests. Before publishing, run `pnpm run validate:publish`, every available host-native validator, and `skills-ref validate` when the Agent Skills reference validator is available.
+- Run `pnpm run validate` after moving in skills or editing manifests. Before publishing, run `pnpm run validate:publish`, every available host-native validator, and `pnpm run validate:skills-ref` when the Agent Skills reference validator is available.
 
 ## Release Checklist
 
