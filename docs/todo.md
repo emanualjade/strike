@@ -13,17 +13,18 @@ plugin users; this file tracks release, validation, and setup work.
 
 ### User Tool Or UI Access Needed, Then Codex Can Continue
 
-- [ ] Run Agent Skills reference validation with `skills-ref`.
-  - Owner: user makes the `skills-ref` command available; Codex runs the check.
-  - When it matters: before claiming reference-validator coverage.
-  - How once available:
-    ```bash
-    skills-ref validate plugins/strike/skills/start
-    skills-ref validate plugins/strike/skills/go
-    skills-ref validate plugins/strike/skills/spec
-    ```
+- None right now.
+
 ### Codex Can Do Later
 
+- [x] Evaluate Agent Skills reference validation with `skills-ref`.
+  - Owner: Codex.
+  - Done: installed the pinned reference validator locally and confirmed it
+    rejects useful Claude Code fields such as `argument-hint` and
+    `disable-model-invocation`.
+  - Notes: popular Claude-oriented skills use host-specific top-level fields
+    for real UX and invocation behavior, so `skills-ref` is not a required
+    validation gate for Strike right now.
 - [x] Decide whether host smoke checks should become release gates.
   - Owner: Codex.
   - Done: host smoke checks are documented as a pre-tag release gate in
@@ -53,6 +54,11 @@ plugin users; this file tracks release, validation, and setup work.
   - Owner: Codex.
   - When it matters: whenever we change plugin structure, skill metadata,
     invocation language, or host manifests.
+- [ ] Reconsider Agent Skills reference validation if it supports host
+  extensions or if Strike adds a reference-only package projection.
+  - Owner: Codex.
+  - When it matters: only if `skills-ref` can validate portability without
+    requiring us to remove useful host behavior from the shipped plugin.
 - [ ] Reconsider host-specific generated skill packages only if the portable
   customization loader becomes insufficient.
   - Owner: Codex.
@@ -75,5 +81,3 @@ pnpm run release:tag
 
 See `docs/release.md` for the difference between normal validation, release
 validation, and publishing a release tag.
-
-Also run `skills-ref validate` when that tool is available.

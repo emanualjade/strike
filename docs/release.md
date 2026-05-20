@@ -82,3 +82,9 @@ Do not put `release:check` in normal GitHub Actions. After a release tag exists,
 that command should fail until the next version bump. Normal CI should answer
 "is this commit healthy?"; release checks answer "can this pushed commit become
 a new release?"
+
+`skills-ref` is not a release gate right now. The current reference validator
+rejects useful Claude Code top-level fields such as `argument-hint` and
+`disable-model-invocation`, while Strike intentionally ships those fields for
+Claude behavior. Reconsider it only if the validator gains a host-extension
+configuration or Strike adds an explicit reference-only package projection.
