@@ -103,6 +103,12 @@ generated lockfiles unless the user approves or repo instructions clearly allow
 it. If approval is needed, explain the package, why it is needed, and the
 alternative.
 
+For greenfield MVPs, do not silently turn setup into an architecture decision.
+Use existing repo signals first. If there are no useful signals, recommend a
+small default stack or no-install prototype path, ask before dependency
+installation, and record the chosen setup plus any blocked install step in
+`auto-strike/`.
+
 ## Review Standard
 
 Every review pass should ask:
@@ -123,6 +129,18 @@ Every review pass should ask:
 - For UI work, was the changed behavior inspected in a browser or visual check,
   with skipped checks explained?
 - Are docs, decisions, language, slice evidence, and todo updated?
+
+For meaningful Fast Path code changes, separate review from implementation even
+if the same agent performs both passes. For Large Scope, high-risk surfaces, or
+multi-slice MVPs, prefer an independent subagent or fresh-context review when
+available. Multiple review agents may run in parallel when each has a distinct
+lens, such as edge cases, user stories and happy paths, failure/recovery flows,
+spec coverage, functionality, code quality, accessibility, security/privacy, or
+integration behavior. Review agents should return findings to the main agent for
+synthesis and evaluation. The main agent decides what is blocking, what is
+accepted risk, what belongs in follow-up, and what fixes to make. Record who or
+what reviewed, the main findings, and any accepted residual risk in the slice
+evidence or readiness note.
 
 If review finds blocking issues, write plain checklist items, fix only those
 items, verify again, and re-review. Do not use review as an excuse to redesign

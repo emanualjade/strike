@@ -6,6 +6,13 @@ Auto Strike owns this root workspace in the consuming repo:
 auto-strike/
 ```
 
+Before writing to `auto-strike/`, check whether it already exists. Treat it as
+Auto Strike state only when it contains recognizable Auto Strike files such as
+`index.md`, `todo.md`, `language.md`, `decisions.md`, or a feature layout that
+matches this reference. If the directory exists but appears unrelated, do not
+overwrite or restructure it; ask the user whether to reuse it, choose another
+workspace path, or move the unrelated content.
+
 The user should not need to know which docs to create. On every run, discover
 what exists, decide what is missing, and update or restructure lightly. On a
 cold start, create only files that have real content now; the workspace usually

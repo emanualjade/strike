@@ -243,6 +243,18 @@ For each slice:
 8. Do not add features that were not asked for. Do not remove existing features
    unless asked.
 
+For Fast Path work with meaningful code changes, run a distinct review pass
+after implementation instead of relying only on the build mindset. For Large
+Scope, high-risk surfaces, or multi-slice MVPs, use a subagent or fresh-context
+review when the host supports it. Multiple review agents may run in parallel
+when each has a distinct lens, such as edge cases, user stories and happy paths,
+failure/recovery flows, spec coverage, functionality, code quality,
+accessibility, security/privacy, or integration behavior. Review agents return
+findings to the main agent for synthesis and evaluation; the main agent decides
+what is blocking, what is accepted risk, what needs a follow-up, and what fixes
+to make. Reconcile the result into the slice evidence and fix only blocking
+issues.
+
 Do not fold in unrelated cleanup, speculative abstractions, or future slices.
 If implementation exposes a missing product, model, permission, UX, or
 architecture decision, stop broadening the build, update the docs, and return to

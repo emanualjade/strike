@@ -2,6 +2,16 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.1 - 2026-05-24
+
+- Hardened `auto-strike` for greenfield and thin repositories by requiring
+  stack discovery, explicit dependency approval, and a no-install fallback path.
+- Added collision handling for pre-existing root `auto-strike/` directories
+  before the skill writes workspace state.
+- Strengthened `auto-strike` review guidance so multiple review agents can run
+  in parallel with distinct lenses and return findings to the main agent for
+  synthesis and evaluation.
+
 ## 0.8.0 - 2026-05-24
 
 - Added the user-invoked `auto-strike` utility skill for moving a fuzzy idea

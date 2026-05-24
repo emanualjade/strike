@@ -96,9 +96,11 @@ Drive toward the smallest useful feature or MVP as quickly as quality allows.
 - Keep the workspace resumable. A fresh context should be able to read
   `auto-strike/` and understand the product, current decisions, active feature,
   progress, blockers, next best action, and any docs that need sync.
-- Use subagents only when parallel review or research clearly helps, such as
-  checking a major decision across multiple planning docs or independent code
-  surfaces.
+- Use subagents only when parallel review or research clearly helps. Multiple
+  review agents can run at once when they have distinct lenses such as edge
+  cases, user flows, spec coverage, functionality, code quality, or risky
+  integrations. Review agents return findings to the main agent; the main agent
+  owns synthesis, evaluation, fixes, docs, and the final user-facing answer.
 - The user should not need to understand the workflow mechanics. Give short,
   plain-language progress updates that say what was clarified, what was saved,
   what risk or decision is next, and how it moves the MVP forward. Avoid
@@ -188,6 +190,14 @@ For Fast Path, identify the app stack, package manager, run/test/build scripts,
 main routes or entry points, relevant components/modules, data/auth/integration
 surfaces, existing docs, and likely verification commands.
 
+For greenfield or thin repos, first determine whether the repo already implies a
+stack through files, docs, or package metadata. If it does, follow that stack. If
+it does not, recommend the smallest appropriate default for the requested MVP,
+explain the tradeoff briefly, and ask before installing dependencies or changing
+lockfiles. When dependency approval is unavailable, build the best useful
+no-install prototype or documented scaffold the repo can support, and record the
+approval needed to continue.
+
 For Large Scope, also map major domains, workflows, architecture boundaries,
 shared utilities/adapters, models/schema, permissions, background jobs, external
 services, risky shared surfaces, and current test coverage.
@@ -265,7 +275,9 @@ Required loop:
 5. For each milestone, write only the specs, model notes, architecture notes, and
    slices needed to build without guessing.
 6. Use subagents selectively for independent research, codebase mapping, or
-   review of risky surfaces, then reconcile findings into the main docs.
+   review of risky surfaces. Multiple review agents may run in parallel when
+   they cover different lenses. Have them return findings to the main agent for
+   synthesis and evaluation before changing scope, code, or docs.
 7. After each slice, run verification, review against the code quality checklist,
    fix blockers, and update `index.md`, `todo.md`, decisions, and slice evidence.
 8. Periodically re-cut scope into MVP now, Soon, Later, and Ask first so the work
