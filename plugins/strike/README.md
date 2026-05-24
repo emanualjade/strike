@@ -22,6 +22,7 @@ Strike skills are portable; each host renders the same skill differently.
 Canonical skill names:
 
 ```txt
+auto-strike <idea>
 init
 customize list|check-setup|review-instructions <entry|all>|preview <supported-skill>
 start <project name words> [--slug <slug>] [--description <description words>]
@@ -43,6 +44,10 @@ retro <project-slug>
 demo <project-slug> "<what the demo should explore>"
 language <term|project-slug|path>
 ```
+
+`auto-strike` is a standalone utility skill. It creates and uses a root
+`auto-strike/` workspace in the consuming repo and does not use the normal
+`docs/strike/` board/card workflow.
 
 `start` is the only normal user-facing Strike skill with double-dash options.
 Other skills use positional arguments, plain optional words such as `skip`, or
@@ -73,6 +78,7 @@ per-project or shared, and give a save path. Useful defaults are
 Claude Code examples:
 
 ```txt
+/strike:auto-strike Build an MVP for this idea
 /strike:init
 /strike:customize review-instructions brainstorm
 /strike:start Add user profile page

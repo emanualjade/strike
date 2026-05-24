@@ -2,6 +2,12 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.0 - 2026-05-24
+
+- Added the user-invoked `auto-strike` utility skill for moving a fuzzy idea
+  toward a working MVP with a standalone root `auto-strike/` workspace.
+- Kept `auto-strike` independent from the normal Strike board/card workflow.
+
 ## 0.7.0 - 2026-05-19
 
 - Renamed the final `accept` workflow step to `readiness-review` with no

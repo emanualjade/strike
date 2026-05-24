@@ -19,6 +19,21 @@ docs/strike/board/
 docs/strike/cards/
 ```
 
+## Auto Strike
+
+Strike also includes `auto-strike`, a standalone utility skill for moving a
+fuzzy idea toward a working MVP without the full board/card workflow.
+
+Use it when you want the agent to create a root `auto-strike/` workspace, refine
+the idea, research where useful, write a compact spec, slice the work, build,
+review, fix, and verify toward an MVP.
+
+Example:
+
+```text
+auto-strike Build an MVP web app where a user can upload a video, extract the content, and re-edit it into something funny.
+```
+
 Run Strike from the repo root you want the agent to work on.
 
 ## Before You Install

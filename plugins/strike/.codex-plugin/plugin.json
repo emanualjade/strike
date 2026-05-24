@@ -1,7 +1,7 @@
 {
   "name": "strike",
-  "version": "0.7.0",
-  "description": "Board-and-card workflow skills for turning rough project ideas into scoped implementation, review, readiness, and retro artifacts.",
+  "version": "0.8.0",
+  "description": "Workflow skills and a standalone MVP utility for scoped agent-assisted project delivery.",
   "author": {
     "name": "Emanual Jade"
   },
@@ -17,7 +17,7 @@
   "interface": {
     "displayName": "Strike",
     "shortDescription": "Project workflow skills for durable planning, implementation, review, and readiness",
-    "longDescription": "Strike packages a board-and-card workflow for agent-assisted project delivery. Use it to start project cards, sharpen rough ideas, make decisions, research only where useful, write specs, slice implementation phases, build, review phases, check readiness, and capture retros while keeping runtime state in the consuming repository.",
+    "longDescription": "Strike packages a board-and-card workflow and a standalone Auto Strike MVP utility for agent-assisted project delivery. Use it to start project cards, sharpen rough ideas, make decisions, research only where useful, write specs, slice implementation phases, build, review phases, check readiness, and capture retros while keeping runtime state in the consuming repository.",
     "developerName": "Emanual Jade",
     "category": "Coding",
     "capabilities": [
