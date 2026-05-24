@@ -142,6 +142,10 @@ accepted risk, what belongs in follow-up, and what fixes to make. Record who or
 what reviewed, the main findings, and any accepted residual risk in the slice
 evidence or readiness note.
 
+When available, use the Auto Strike helper's `review-context --lens <lens>` to
+prepare compact reviewer packets. The helper only packages context; it does not
+dispatch subagents or evaluate their findings.
+
 If review finds blocking issues, write plain checklist items, fix only those
 items, verify again, and re-review. Do not use review as an excuse to redesign
 the feature unless the current design cannot meet the spec safely.

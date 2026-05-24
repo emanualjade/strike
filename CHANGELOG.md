@@ -2,6 +2,16 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.2 - 2026-05-24
+
+- Added a read-only `auto-strike` workspace helper with `inspect`, `validate`,
+  and `review-context` commands for agent-internal workspace auditing.
+- Added fixture tests for absent workspaces, unrelated folder collisions, Tiny
+  Path flexibility, Fast/Large Path evidence, repo-level key docs, and review
+  context packets.
+- Documented the helper as an optional guardrail that does not create features,
+  slices, planning docs, next actions, or workflow state.
+
 ## 0.8.1 - 2026-05-24
 
 - Hardened `auto-strike` for greenfield and thin repositories by requiring

@@ -74,6 +74,30 @@ first implementation in a new repo normally needs `workspace.md`,
 `code-quality.md`, and the relevant part of `flow.md`; stack/domain uncertainty
 also needs `research.md`.
 
+## Internal Workspace Helper
+
+When available, use the skill-local read-only helper at
+`scripts/auto-strike.mjs`, resolved relative to this skill folder, to audit
+workspace state. The helper is for agent use; the user should not need to know
+it exists unless it fails or its output matters to a decision.
+
+Use it as a guardrail, not as the workflow engine:
+
+- Run `inspect` on cold start, resume, or before writing Auto Strike workspace
+  state. Use the result to see observed docs, declared mode, active feature,
+  open decisions, evidence locations, and known verification commands.
+- Run `validate` before claiming done, readiness, or a clean handoff. Treat
+  errors as hard facts to resolve or ask about. Treat warnings and notes as
+  prompts for main-agent judgment, not automatic blockers.
+- Run `review-context --lens <lens>` before parallel review when a compact
+  packet would help reviewers focus. The main agent still dispatches reviewers,
+  evaluates findings, decides what is blocking, and owns final synthesis.
+
+Do not use helper output to replace product judgment. The helper must not decide
+scope, create features, create slices, advance modes, choose the next action, or
+force a full document tree. If the helper is unavailable or inconclusive, perform
+the same assessment manually from `auto-strike/`.
+
 ## Operating Contract
 
 Drive toward the smallest useful feature or MVP as quickly as quality allows.

@@ -52,6 +52,22 @@ auto-strike/
         slice-0-[name].md
 ```
 
+## Helper Script
+
+Auto Strike ships a read-only workspace helper at the skill-local
+`scripts/auto-strike.mjs`, resolved relative to the Auto Strike skill folder.
+Use it internally when available:
+
+- `inspect` reports observed workspace state.
+- `validate` reports errors, warnings, and notes based on the docs that exist.
+- `review-context --lens <lens>` creates compact review packets for the main
+  agent to pass to reviewers.
+
+The helper is intentionally not an initializer, scaffolder, or workflow engine.
+It does not create feature folders, specs, slices, readiness docs, or next-action
+decisions. If it cannot run or its output is inconclusive, inspect the workspace
+manually and keep moving.
+
 ## Index
 
 Use `auto-strike/index.md` as the resume map:

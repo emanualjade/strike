@@ -1,13 +1,13 @@
 {
   "name": "strike",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "private": true,
   "packageManager": "pnpm@11.1.3",
   "description": "Cross-agent skills plugin and marketplace for the Strike workflow.",
   "license": "MIT",
   "scripts": {
     "preinstall": "node scripts/only-pnpm.mjs",
-    "test": "node scripts/test-slugify.mjs && node scripts/test-customize.mjs && bash scripts/test-start-card.sh",
+    "test": "node scripts/test-slugify.mjs && node scripts/test-customize.mjs && node scripts/test-auto-strike.mjs && bash scripts/test-start-card.sh",
     "validate": "node scripts/validate.mjs",
     "validate:publish": "node scripts/validate.mjs --publish",
     "host:smoke:local": "node scripts/host-smoke.mjs --host all --skip-missing",
