@@ -14,24 +14,26 @@ Find:
 Explore a few real directions when useful, then converge to a recommendation.
 Challenge vague value, broad audiences, and attractive distractions.
 
-Do light idea research when it can change the MVP target: comparable workflows,
-current product expectations, difficult technical dependencies, content/legal
-constraints, privacy risk, cost, or whether a key assumption is obviously false.
-Save only decision-useful findings.
+Do light idea research when it can change the first-version target: comparable
+workflows, current product expectations, difficult technical dependencies,
+content/legal constraints, privacy risk, cost, or whether a key assumption is
+obviously false. Save only decision-useful findings.
 
-Save useful output in `auto-strike/features/<feature-slug>/idea.md` when the
-idea is stable enough to preserve.
+Save useful output in `auto-strike/initiatives/<initiative-slug>/idea.md` when
+the idea is stable enough to preserve. Starting a new Auto Strike request may
+create a new initiative. During existing initiative work, update the active
+initiative instead of creating another one.
 
 Use `idea.md` as the brainstorm work packet:
 
 ```md
-# [Feature/MVP] Idea
+# [Initiative] Idea
 
 ## Phase Tasks
 - [ ] Capture the target user/system moment.
 - [ ] Name the painful moment, workaround, or workflow drag.
 - [ ] Propose the first useful outcome and first-version non-goals.
-- [ ] Note any idea-level research that can change the MVP target.
+- [ ] Note any idea-level research that can change the first-version target.
 - [ ] Record exit evidence and handoff to grill.
 
 ## Current Shape
@@ -51,7 +53,10 @@ Use `idea.md` as the brainstorm work packet:
 - [What is now clear enough to grill.]
 
 ## Handoff To Grill
-- [Questions or decisions grill should pressure-test.]
+- Suggested grill depth: Lean / Standard / Deep / Unknown.
+- Why:
+- Questions or decisions grill should pressure-test:
+- Feature candidates, if any:
 ```
 
 Exit when the first useful outcome, target user/system moment, constraints, and

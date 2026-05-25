@@ -18,7 +18,10 @@ For each slice:
 5. Use `review.md` for the required review pass when the slice is meaningful,
    risky, UI/user-visible, or ready to claim complete.
 6. Fix blocking findings and re-review.
-7. Do not add features that were not asked for. Do not remove existing features
+7. When the slice is complete, write `## Closeout Summary` in the slice and use
+   it as the final user-facing receipt: built, validation, review,
+   skipped/residual risk, docs, and next.
+8. Do not add features that were not asked for. Do not remove existing features
    unless asked.
 
 Do not fold in unrelated cleanup, speculative abstractions, or future slices.

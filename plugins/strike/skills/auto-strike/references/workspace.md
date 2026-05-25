@@ -8,7 +8,7 @@ auto-strike/
 
 Before writing to `auto-strike/`, check whether it already exists. Treat it as
 Auto Strike state only when it contains recognizable Auto Strike files such as
-`index.md`, `todo.md`, `language.md`, `decisions.md`, or a feature layout that
+`index.md`, `todo.md`, `language.md`, `decisions.md`, or an initiative layout that
 matches this reference. If the directory exists but appears unrelated, do not
 overwrite or restructure it; ask the user whether to reuse it, choose another
 workspace path, or move the unrelated content.
@@ -24,8 +24,8 @@ auto-strike/
   todo.md
   language.md
   decisions.md
-  features/
-    <feature-slug>/
+  initiatives/
+    <initiative-slug>/
       idea.md
 ```
 
@@ -33,35 +33,46 @@ Add more files only when useful:
 
 ```text
 auto-strike/
-  architecture/
-    architecture.md
-    routes.md
-    schema.md
-  models/
-    [concept]-model.md
-  features/
-    <feature-slug>/
+  research/
+  extras/
+  initiatives/
+    <initiative-slug>/
       idea.md
       grill.md
       spec.md
-      research.md
-      mvp-cut.md
-      workflows.md
       readiness.md
-      slices/
-        index.md
-        slice-0-[name].md
+      todo.md
+      research/
+      extras/
+      features/
+        <feature-slug>/
+          feature-spec.md
+          readiness.md
+          research/
+          extras/
+          slices/
+            index.md
+            slice-0-[name].md
 ```
 
-Use `features/<feature-slug>/` as the first grouping unit. Before creating
-slices for broad work, decide whether the request is one coherent
-feature/milestone or a bundle of feature folders. If it is a bundle, record a
-short feature map in `index.md` or `todo.md` with each feature's purpose,
-dependency, status, and readiness target, then keep only one active feature in
-focus unless independent work can safely parallelize.
+Use `initiatives/<initiative-slug>/` as the first grouping unit. An initiative
+represents one Auto Strike user request, session, campaign, MVP, or milestone.
+Create a new initiative only when starting a new Auto Strike run/request that is
+meaningfully separate from existing active work.
 
-For multi-slice work, `features/<feature-slug>/slices/index.md` should carry
-only the useful ordering context:
+Inside an initiative, use `features/<feature-slug>/` for buildable capabilities
+with their own feature spec, slices, and feature readiness. Decomposition inside
+an initiative creates or updates feature folders, not new initiatives. If the
+work appears to require a separate initiative, ask the user before creating it.
+
+Use `research/` for source-backed findings and `extras/` for supporting docs
+such as schema, routes, architecture notes, workflow diagrams, and exploratory
+sketches. Prefer the lowest level that owns the decision. Do not put primary
+workflow state in `extras/`.
+
+For multi-slice feature work,
+`initiatives/<initiative-slug>/features/<feature-slug>/slices/index.md` should
+carry only the useful ordering context:
 
 ```md
 # Slices
@@ -97,16 +108,17 @@ Use it internally when available:
 - `review-context --lens <lens>` creates compact read-only reviewer packets.
 
 The helper is intentionally not an initializer, scaffolder, or workflow engine.
-It does not create feature folders, specs, slices, readiness docs, or next-action
-decisions. If it cannot run or its output is inconclusive, inspect the workspace
-manually and keep moving. Use `review.md` for reviewer behavior, lens selection,
-and helper packet details.
+It does not create initiative folders, feature folders, specs, slices,
+readiness docs, or next-action decisions. If it cannot run or its output is
+inconclusive, inspect the workspace manually and keep moving. Use `review.md`
+for reviewer behavior, lens selection, and helper packet details.
 
 ## Index
 
 Use `auto-strike/index.md` as the resume map:
 
-- active feature, active doc, state, blocker, and next best action
+- active initiative, active feature when relevant, active doc, active slice,
+  state, blocker, and next best action
 - important docs and what they contain
 - current verification commands or checks
 - open human decisions
@@ -118,8 +130,10 @@ Keep it short and scannable:
 # Auto Strike
 
 ## Active Work
-- Feature: `auto-strike/features/[feature-slug]`
-- Doc: `auto-strike/features/[feature-slug]/[active-doc].md`
+- Initiative: `auto-strike/initiatives/[initiative-slug]`
+- Feature: `auto-strike/initiatives/[initiative-slug]/features/[feature-slug]` / None
+- Doc: `auto-strike/initiatives/[initiative-slug]/[active-doc].md`
+- Slice: `auto-strike/initiatives/[initiative-slug]/features/[feature-slug]/slices/[slice].md` / None
 - State: [one short current truth]
 - Next: [one concrete action]
 - Blocked by: [decision/check/dependency, or "None."]
@@ -142,14 +156,15 @@ Use `auto-strike/todo.md` as one flat checklist:
 # Todo
 
 - [ ] Clarify first useful outcome.
-- [ ] Write MVP spec.
+- [ ] Write initiative spec and feature specs.
 - [ ] Slice implementation.
 - [ ] Build and verify slice 1.
 ```
 
 Keep `todo.md` operational, not archival. It should show current work, next
 actions, blockers, and accepted follow-ups. Remove or move stale items when the
-spec, slices, or `mvp-cut.md` already preserve the decision.
+initiative spec, feature specs, slices, or readiness docs already preserve the
+decision.
 
 Use `Active Work` in `index.md` only as a pointer. The active phase or slice doc
 owns the task list, decisions, and exit evidence for that phase. After context
@@ -162,8 +177,8 @@ Record evidence wherever it best fits the scale of the work:
 
 - contained changes: `auto-strike/index.md`, `todo.md`, or the active slice
 - sliced work: the relevant `slices/slice-[n]-[name].md`
-- larger milestones: `features/<feature-slug>/readiness.md` or a nearby build
-  note
+- feature completion: the feature `readiness.md`
+- initiative completion: the initiative `readiness.md`
 
 Use compact evidence, not a diary:
 
@@ -237,10 +252,10 @@ If older planning docs already exist elsewhere, either link to them from
 move or rewrite large user-written docs just for neatness.
 
 When docs disagree, prefer the newest current-truth artifact in this order:
-`decisions.md` for decisions, `language.md` for terms, the active feature
-`spec.md` for product/build scope, slice files for current implementation work,
-and `index.md` for navigation/status. Fix contradictions as soon as they are
-found.
+`decisions.md` for decisions, `language.md` for terms, the active initiative
+`spec.md` for initiative scope and feature map, feature `feature-spec.md` for
+buildable feature scope, slice files for current implementation work, and
+`index.md` for navigation/status. Fix contradictions as soon as they are found.
 
 ## Repeated Runs
 
@@ -248,12 +263,12 @@ Auto Strike should get smarter as the repo gains feature history.
 
 - Start by reading `auto-strike/index.md`, `todo.md`, `language.md`, and
   `decisions.md`.
-- Detect whether the new idea belongs to an existing feature, extends a prior
-  slice, or deserves a new feature folder.
+- Detect whether the new idea belongs to an existing initiative, extends an
+  existing feature or prior slice, or deserves a new initiative.
 - Reuse language, decisions, architecture notes, and verification patterns.
 - Restructure lightly when the current layout is getting in the way: rename a
   vague file, split an overloaded spec, merge duplicate notes, or add an index.
 - Preserve user-written content. Summarize or move current truth only when it
   improves future discovery.
-- Update `auto-strike/index.md` whenever important docs move or a new feature
-  becomes the active focus.
+- Update `auto-strike/index.md` whenever important docs move or a new
+  initiative, feature, or slice becomes the active focus.

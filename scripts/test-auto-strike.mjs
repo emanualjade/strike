@@ -89,8 +89,9 @@ function testSimpleFeatureSlugDoesNotHardFail() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
-## Active Feature
-- tiny-copy-fix
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: tiny-copy-fix
 - Current mode: build
 - Next best action: Edit the button copy.
 
@@ -106,6 +107,7 @@ function testSimpleFeatureSlugDoesNotHardFail() {
 ## Verification
 - Manual copy check.
 `);
+  write(repo, "auto-strike/initiatives/main/features/tiny-copy-fix/feature-spec.md", "# Tiny Copy Fix Spec\n");
   write(repo, "auto-strike/todo.md", `# Todo
 
 - [ ] Update button copy.
@@ -115,28 +117,52 @@ function testSimpleFeatureSlugDoesNotHardFail() {
   assertStatus(result, 0, "simple active feature slug should not hard fail");
   const body = json(result);
   assert.equal(body.activeFeature.raw, "tiny-copy-fix");
-  assert.equal(body.activeFeature.path, null);
-  assert.equal(body.activeFeature.inferredPath, "auto-strike/features/tiny-copy-fix");
+  assert.equal(body.activeFeature.path, "auto-strike/initiatives/main/features/tiny-copy-fix");
+  assert.equal(body.activeFeature.inferredPath, "auto-strike/initiatives/main/features/tiny-copy-fix");
   assert.ok(!body.messages.some((item) => item.code === "missing-active-feature"));
   assert.ok(!body.messages.some((item) => item.code === "missing-key-doc"));
 }
 
-function testFastPathInspectAndValidateWithEvidence() {
+function testValidateRejectsOldTopLevelFeaturePath() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
-## Active Feature
-- auto-strike/features/upload-mvp
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/features/legacy-feature
+- Current mode: slice
+- Next: Fix the feature path.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/idea.md", "# Main Idea\n");
+  write(repo, "auto-strike/features/legacy-feature/spec.md", "# Legacy Spec\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 1, "old top-level feature paths should be rejected");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "invalid-active-feature-path" && item.severity === "error"));
+}
+
+function testInitiativeInspectAndValidateWithEvidence() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/upload-mvp
 - Current mode: review
-- Active slice: auto-strike/features/upload-mvp/slices/slice-0-upload-preview.md
+- Active slice: auto-strike/initiatives/main/features/upload-mvp/slices/slice-0-upload-preview.md
 - Next best action: Review slice 0.
 
 ## Project State
 - Upload preview MVP is implemented.
 
 ## Key Docs
-- \`auto-strike/features/upload-mvp/spec.md\` - product scope.
-- \`auto-strike/features/upload-mvp/slices/slice-0-upload-preview.md\` - build evidence.
+- \`auto-strike/initiatives/main/features/upload-mvp/feature-spec.md\` - product scope.
+- \`auto-strike/initiatives/main/features/upload-mvp/slices/slice-0-upload-preview.md\` - build evidence.
 
 ## Open Decisions
 - None.
@@ -148,9 +174,9 @@ function testFastPathInspectAndValidateWithEvidence() {
 
 - [x] Build upload preview slice.
 `);
-  write(repo, "auto-strike/features/upload-mvp/spec.md", "# Upload MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/upload-mvp/feature-spec.md", "# Upload MVP Spec\n");
   write(repo, "app/upload/page.tsx", "export default function Page() { return null; }\n");
-  write(repo, "auto-strike/features/upload-mvp/slices/slice-0-upload-preview.md", `# Slice 0: Upload Preview
+  write(repo, "auto-strike/initiatives/main/features/upload-mvp/slices/slice-0-upload-preview.md", `# Slice 0: Upload Preview
 
 ## Evidence
 
@@ -162,16 +188,16 @@ Verified:
 `);
 
   const inspect = run(repo, ["inspect"]);
-  assertStatus(inspect, 0, "inspect should succeed for fast path workspace");
+  assertStatus(inspect, 0, "inspect should succeed for initiative workspace");
   const inspectBody = json(inspect);
-  assert.equal(inspectBody.activeFeature.path, "auto-strike/features/upload-mvp");
+  assert.equal(inspectBody.activeFeature.path, "auto-strike/initiatives/main/features/upload-mvp");
   assert.equal(inspectBody.activeFeature.specExists, true);
   assert.equal(inspectBody.activeFeature.sliceFiles.length, 1);
-  assert.deepEqual(inspectBody.evidence.locations, ["auto-strike/features/upload-mvp/slices/slice-0-upload-preview.md"]);
+  assert.deepEqual(inspectBody.evidence.locations, ["auto-strike/initiatives/main/features/upload-mvp/slices/slice-0-upload-preview.md"]);
   assert.deepEqual(inspectBody.evidence.changedPaths, ["app/upload/page.tsx"]);
 
   const validate = run(repo, ["validate"]);
-  assertStatus(validate, 0, "validate should pass complete fast path evidence");
+  assertStatus(validate, 0, "validate should pass complete initiative evidence");
   assert.equal(json(validate).summary.errors, 0);
 }
 
@@ -179,15 +205,16 @@ function testValidateWarnsForMissingEvidence() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
-## Active Feature
-- auto-strike/features/search-mvp
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/search-mvp
 - Current mode: review
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/features/search-mvp/spec.md", "# Search MVP Spec\n");
-  write(repo, "auto-strike/features/search-mvp/slices/slice-0-search.md", "# Slice 0: Search\n");
+  write(repo, "auto-strike/initiatives/main/features/search-mvp/feature-spec.md", "# Search MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/search-mvp/slices/slice-0-search.md", "# Slice 0: Search\n");
 
   const result = run(repo, ["validate"]);
   assertStatus(result, 0, "missing evidence should warn, not hard fail");
@@ -199,17 +226,18 @@ function testValidateBrokenKeyDocReference() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
-## Active Feature
-- auto-strike/features/search-mvp
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/search-mvp
 - Current mode: spec
 
 ## Key Docs
-- \`auto-strike/features/search-mvp/spec.md\` - product scope.
+- \`auto-strike/initiatives/main/features/search-mvp/feature-spec.md\` - product scope.
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/features/search-mvp/idea.md", "# Idea\n");
+  write(repo, "auto-strike/initiatives/main/features/search-mvp/extras/context.md", "# Context\n");
 
   const result = run(repo, ["validate"]);
   assertStatus(result, 1, "explicit missing key docs should hard fail");
@@ -221,15 +249,28 @@ function testKeyDocsCanReferenceRepoDocs() {
   write(repo, "README.md", "# Product Notes\n");
   write(repo, "auto-strike/index.md", `# Auto Strike
 
-## Active Feature
-- search-mvp
-- Current mode: idea
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: None
+- Doc: auto-strike/initiatives/main/idea.md
+- State: Idea is being clarified.
+- Next: Read repo notes before grill.
+- Blocked by: None.
 
 ## Key Docs
 - \`README.md\` - product notes.
 
 ## Open Decisions
 - None.
+`);
+  write(repo, "auto-strike/initiatives/main/idea.md", `# Search Idea
+
+## Phase Tasks
+- [x] Capture repo context.
+- [ ] Clarify first useful outcome.
+
+## Exit Evidence
+- Repo notes are available as context.
 `);
 
   const result = run(repo, ["validate"]);
@@ -249,16 +290,17 @@ function testReviewContextPacket() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
-## Active Feature
-- auto-strike/features/video-mvp
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/video-mvp
 - Current mode: review
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/features/video-mvp/spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
   write(repo, "src/video/upload.ts", "export function upload() {}\n");
-  write(repo, "auto-strike/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
 
 ## Evidence
 
@@ -277,7 +319,7 @@ Verified:
   assert.match(body.instructions.join("\n"), /read-only review agent/);
   assert.match(body.instructions.join("\n"), /Do not edit files/);
   assert.ok(body.focus.some((item) => /hostile inputs/i.test(item)));
-  assert.ok(body.state.docs.includes("auto-strike/features/video-mvp/spec.md"));
+  assert.ok(body.state.docs.includes("auto-strike/initiatives/main/features/video-mvp/feature-spec.md"));
   assert.ok(body.state.evidence.changedPaths.includes("src/video/upload.ts"));
   assert.ok(body.sourcePaths.some((group) => group.title === "Changed Files From Active Evidence"));
 }
@@ -286,20 +328,21 @@ function testImplementationPlanReviewContext() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
-## Active Feature
-- auto-strike/features/video-mvp
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/video-mvp
 - Current mode: slice
-- Active slice: auto-strike/features/video-mvp/slices/slice-0-upload.md
+- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
 
 ## Key Docs
-- \`auto-strike/features/video-mvp/spec.md\` - product scope.
-- \`auto-strike/features/video-mvp/slices/slice-0-upload.md\` - implementation plan.
+- \`auto-strike/initiatives/main/features/video-mvp/feature-spec.md\` - product scope.
+- \`auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md\` - implementation plan.
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/features/video-mvp/spec.md", "# Video MVP Spec\n");
-  write(repo, "auto-strike/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
 
 ## Implementation Research
 - Check current upload API docs before coding.
@@ -317,7 +360,7 @@ function testImplementationPlanReviewContext() {
   assert.equal(body.lens, "implementation-plan");
   assert.ok(body.focus.some((item) => /slice-specific research/i.test(item)));
   const activeDocs = body.sourcePaths.find((group) => group.title === "Active Docs");
-  assert.ok(activeDocs.paths.includes("auto-strike/features/video-mvp/slices/slice-0-upload.md"));
+  assert.ok(activeDocs.paths.includes("auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md"));
 }
 
 function testReviewContextScopesChangedFilesToActiveFeature() {
@@ -325,22 +368,23 @@ function testReviewContextScopesChangedFilesToActiveFeature() {
   write(repo, "README.md", "# Dogfood Repo\n");
   write(repo, "auto-strike/index.md", `# Auto Strike
 
-## Active Feature
-- auto-strike/features/todo-dogfood
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/todo-dogfood
 - Current mode: review
-- Active slice: auto-strike/features/todo-dogfood/slices/slice-0-static-todo.md
+- Active slice: auto-strike/initiatives/main/features/todo-dogfood/slices/slice-0-static-todo.md
 
 ## Key Docs
 - \`README.md\` - repo context.
-- \`auto-strike/features/todo-dogfood/spec.md\` - active spec.
-- \`auto-strike/features/todo-dogfood/slices/slice-0-static-todo.md\` - active evidence.
-- \`auto-strike/features/clip-notes/spec.md\` - completed feature context.
+- \`auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md\` - active spec.
+- \`auto-strike/initiatives/main/features/todo-dogfood/slices/slice-0-static-todo.md\` - active evidence.
+- \`auto-strike/initiatives/main/features/clip-notes/feature-spec.md\` - completed feature context.
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/features/todo-dogfood/spec.md", "# Todo Dogfood Spec\n");
-  write(repo, "auto-strike/features/todo-dogfood/slices/slice-0-static-todo.md", `# Slice 0: Static Todo
+  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-0-static-todo.md", `# Slice 0: Static Todo
 
 ## Evidence
 
@@ -352,8 +396,8 @@ Changed:
 Verified:
 - node scripts/todo-smoke.js - passed
 `);
-  write(repo, "auto-strike/features/clip-notes/spec.md", "# Clip Notes Spec\n");
-  write(repo, "auto-strike/features/clip-notes/slices/slice-1-review-brief.md", `# Slice 1: Review Brief
+  write(repo, "auto-strike/initiatives/main/features/clip-notes/feature-spec.md", "# Clip Notes Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/clip-notes/slices/slice-1-review-brief.md", `# Slice 1: Review Brief
 
 ## Evidence
 
@@ -396,16 +440,17 @@ function testValidateWarnsWhenReviewEvidenceLacksChangedAndVerified() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
-## Active Feature
-- auto-strike/features/search-mvp
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/search-mvp
 - Current mode: review
-- Active slice: auto-strike/features/search-mvp/slices/slice-0-search.md
+- Active slice: auto-strike/initiatives/main/features/search-mvp/slices/slice-0-search.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/features/search-mvp/spec.md", "# Search MVP Spec\n");
-  write(repo, "auto-strike/features/search-mvp/slices/slice-0-search.md", `# Slice 0: Search
+  write(repo, "auto-strike/initiatives/main/features/search-mvp/feature-spec.md", "# Search MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/search-mvp/slices/slice-0-search.md", `# Slice 0: Search
 
 ## Evidence
 
@@ -424,16 +469,17 @@ function testValidateWarnsForWeakPreBuildSlicePrep() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
-## Active Feature
-- auto-strike/features/todo-dogfood
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/todo-dogfood
 - Current mode: build
-- Active slice: auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md
+- Active slice: auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/features/todo-dogfood/spec.md", "# Todo Dogfood Spec\n");
-  write(repo, "auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
 
 ## Outcome
 Edit task labels.
@@ -460,16 +506,17 @@ function testValidateAcceptsConcretePreBuildSlicePrep() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
-## Active Feature
-- auto-strike/features/todo-dogfood
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/todo-dogfood
 - Current mode: build
-- Active slice: auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md
+- Active slice: auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/features/todo-dogfood/spec.md", "# Todo Dogfood Spec\n");
-  write(repo, "auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
 
 ## Outcome
 Edit task labels.
@@ -500,8 +547,9 @@ function testValidateAcceptsActiveWorkPointer() {
   write(repo, "auto-strike/index.md", `# Auto Strike
 
 ## Active Work
-- Feature: auto-strike/features/clip-notes
-- Doc: auto-strike/features/clip-notes/idea.md
+- Initiative: auto-strike/initiatives/main
+- Feature: None
+- Doc: auto-strike/initiatives/main/idea.md
 - State: First-outcome decision is being clarified.
 - Next: Complete the first-outcome decision.
 - Blocked by: None.
@@ -509,7 +557,7 @@ function testValidateAcceptsActiveWorkPointer() {
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/features/clip-notes/idea.md", `# Clip Notes Idea
+  write(repo, "auto-strike/initiatives/main/idea.md", `# Clip Notes Idea
 
 ## Phase Tasks
 - [x] Capture the user, problem, and first useful outcome.
@@ -535,14 +583,15 @@ function testValidateWarnsForMissingActiveWork() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
-## Active Feature
-- auto-strike/features/clip-notes
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: None
 - Current mode: brainstorm
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/features/clip-notes/idea.md", `# Clip Notes Idea
+  write(repo, "auto-strike/initiatives/main/idea.md", `# Clip Notes Idea
 
 ## Phase Tasks
 - [x] Capture the user, problem, and first useful outcome.
@@ -565,8 +614,9 @@ function testValidateWarnsForWeakOrMissingActiveWorkDoc() {
   write(weakRepo, "auto-strike/index.md", `# Auto Strike
 
 ## Active Work
-- Feature: auto-strike/features/clip-notes
-- Doc: auto-strike/features/clip-notes/spec.md
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/clip-notes
+- Doc: auto-strike/initiatives/main/features/clip-notes/feature-spec.md
 - State: Spec acceptance checks are being drafted.
 - Next: Draft acceptance checks.
 - Blocked by: None.
@@ -574,7 +624,7 @@ function testValidateWarnsForWeakOrMissingActiveWorkDoc() {
 ## Open Decisions
 - None.
 `);
-  write(weakRepo, "auto-strike/features/clip-notes/spec.md", `# Clip Notes Spec
+  write(weakRepo, "auto-strike/initiatives/main/features/clip-notes/feature-spec.md", `# Clip Notes Spec
 
 ## Phase Tasks
 - [ ] Draft it later.
@@ -591,8 +641,9 @@ function testValidateWarnsForWeakOrMissingActiveWorkDoc() {
   write(missingRepo, "auto-strike/index.md", `# Auto Strike
 
 ## Active Work
-- Feature: auto-strike/features/clip-notes
-- Doc: auto-strike/features/clip-notes/grill.md
+- Initiative: auto-strike/initiatives/main
+- Feature: None
+- Doc: auto-strike/initiatives/main/grill.md
 - State: Highest-risk user-flow question is unresolved.
 - Next: Resolve the highest-risk user-flow question.
 - Blocked by: None.
@@ -600,27 +651,230 @@ function testValidateWarnsForWeakOrMissingActiveWorkDoc() {
 ## Open Decisions
 - None.
 `);
-  write(missingRepo, "auto-strike/features/clip-notes/idea.md", "# Clip Notes Idea\n");
+  write(missingRepo, "auto-strike/initiatives/main/idea.md", "# Clip Notes Idea\n");
 
   const missing = run(missingRepo, ["validate"]);
   assertStatus(missing, 0, "missing active work doc should warn, not fail");
   assert.ok(json(missing).messages.some((item) => item.code === "missing-active-work-doc" && item.severity === "warning"));
 }
 
-function testValidateAcceptsSliceMapDependenciesAndCheckpoint() {
+function testValidateWarnsForMissingGrillDecisionDepth() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
-## Active Feature
-- auto-strike/features/auth-mvp
-- Current mode: slice
-- Active slice: auto-strike/features/auth-mvp/slices/slice-1-register-user.md
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: None
+- Doc: auto-strike/initiatives/main/grill.md
+- State: Product workflow decisions are being pressure-tested.
+- Next: Resolve the active decision node.
+- Blocked by: None.
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/features/auth-mvp/spec.md", "# Auth MVP Spec\n");
-  write(repo, "auto-strike/features/auth-mvp/slices/index.md", `# Slices
+  write(repo, "auto-strike/initiatives/main/grill.md", `# Bookings Grill
+
+## Phase Tasks
+- [x] Review the brainstorm handoff and repo context.
+- [ ] Resolve the active decision node.
+
+## Pressure Points
+- Scope: booking creation and cancellation.
+
+## Exit Evidence
+- Booking scope is close, but decision depth has not been recorded.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "missing grill decision depth should warn, not fail");
+  const body = json(result);
+  assert.equal(body.index.currentMode, "grill");
+  assert.ok(body.messages.some((item) => item.code === "missing-grill-decision-depth" && item.severity === "warning"));
+}
+
+function testValidateAcceptsStandardGrillDecisionDepth() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: None
+- Doc: auto-strike/initiatives/main/grill.md
+- State: Product workflow decisions are being pressure-tested.
+- Next: Resolve the active decision node.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/grill.md", `# Bookings Grill
+
+## Phase Tasks
+- [x] Review the brainstorm handoff and repo context.
+- [ ] Resolve the active decision node.
+
+## Decision Depth
+Level: Standard
+Why: Default.
+
+Suggested Depth Changes:
+- None.
+
+Active Area Overrides:
+- None.
+
+Assumptions Accepted:
+- None.
+
+## Exit Evidence
+- Booking decisions are being grilled at Standard depth.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "standard grill decision depth should satisfy validation");
+  const body = json(result);
+  assert.ok(!body.messages.some((item) => item.code === "missing-grill-decision-depth"));
+  assert.ok(!body.messages.some((item) => item.code === "unknown-grill-decision-depth"));
+}
+
+function testValidateAcceptsDeepGrillDecisionDepthWithSuggestedChange() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: None
+- Doc: auto-strike/initiatives/main/grill.md
+- State: Payment decisions are being pressure-tested.
+- Next: Resolve payment failure behavior.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/grill.md", `# Payments Grill
+
+## Phase Tasks
+- [x] Review the brainstorm handoff and repo context.
+- [ ] Resolve payment failure behavior.
+
+## Decision Depth
+Level: Deep
+Why: User requested deeper pressure-testing for payments.
+
+Suggested Depth Changes:
+- Refund emails: Standard may be enough because copy is reversible.
+
+Active Area Overrides:
+- None.
+
+Assumptions Accepted:
+- None.
+
+## Exit Evidence
+- Payment decision nodes are being grilled at Deep depth.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "deep grill decision depth with suggestion should satisfy validation");
+  const body = json(result);
+  assert.ok(!body.messages.some((item) => item.code === "missing-grill-decision-depth"));
+  assert.ok(!body.messages.some((item) => item.code === "unknown-grill-decision-depth"));
+}
+
+function testValidateWarnsForUnknownGrillDecisionDepth() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: None
+- Doc: auto-strike/initiatives/main/grill.md
+- State: Product workflow decisions are being pressure-tested.
+- Next: Resolve the active decision node.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/grill.md", `# Bookings Grill
+
+## Phase Tasks
+- [x] Review the brainstorm handoff and repo context.
+- [ ] Resolve the active decision node.
+
+## Decision Depth
+Level: Hand wavy
+Why: User wants speed.
+
+## Exit Evidence
+- Booking decisions are being grilled.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "unknown grill decision depth should warn, not fail");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "unknown-grill-decision-depth" && item.severity === "warning"));
+}
+
+function testValidateDoesNotRequireDecisionDepthOutsideGrillMode() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: None
+- Doc: auto-strike/initiatives/main/spec.md
+- State: Spec is being drafted from grill decisions.
+- Next: Draft acceptance criteria.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/spec.md", `# Bookings Spec
+
+## Phase Tasks
+- [x] Preserve grill decisions.
+- [ ] Draft acceptance criteria.
+
+## Exit Evidence
+- Spec is being drafted.
+`);
+  write(repo, "auto-strike/initiatives/main/grill.md", `# Bookings Grill
+
+## Phase Tasks
+- [x] Review the brainstorm handoff and repo context.
+- [x] Resolve the active decision node.
+
+## Exit Evidence
+- Grill moved to spec before decision depth existed.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "non-grill mode should not require decision depth");
+  const body = json(result);
+  assert.equal(body.index.currentMode, "spec");
+  assert.ok(!body.messages.some((item) => item.code === "missing-grill-decision-depth"));
+  assert.ok(!body.messages.some((item) => item.code === "unknown-grill-decision-depth"));
+}
+
+function testValidateAcceptsSliceMapDependenciesAndCheckpoint() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/auth-mvp
+- Current mode: slice
+- Active slice: auto-strike/initiatives/main/features/auth-mvp/slices/slice-1-register-user.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/auth-mvp/feature-spec.md", "# Auth MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/auth-mvp/slices/index.md", `# Slices
 
 ## Slice Map
 
@@ -637,7 +891,7 @@ function testValidateAcceptsSliceMapDependenciesAndCheckpoint() {
 - [ ] Review findings are resolved or accepted.
 - [ ] Human decision needed? If yes, pause and ask.
 `);
-  write(repo, "auto-strike/features/auth-mvp/slices/slice-0-session-baseline.md", `# Slice 0: Session Baseline
+  write(repo, "auto-strike/initiatives/main/features/auth-mvp/slices/slice-0-session-baseline.md", `# Slice 0: Session Baseline
 
 ## Size
 S
@@ -666,7 +920,7 @@ Session plumbing is ready for user auth flows.
 - Reason: reduces auth/session risk before user-facing registration.
 - Next vertical slice: Slice 1 Register User.
 `);
-  write(repo, "auto-strike/features/auth-mvp/slices/slice-1-register-user.md", `# Slice 1: Register User
+  write(repo, "auto-strike/initiatives/main/features/auth-mvp/slices/slice-1-register-user.md", `# Slice 1: Register User
 
 ## Size
 M
@@ -694,7 +948,7 @@ User can create an account.
 - [ ] Review plan and resolve findings.
 - [ ] Verify acceptance criteria with register flow smoke.
 `);
-  write(repo, "auto-strike/features/auth-mvp/slices/slice-2-login-user.md", `# Slice 2: Login User
+  write(repo, "auto-strike/initiatives/main/features/auth-mvp/slices/slice-2-login-user.md", `# Slice 2: Login User
 
 ## Size
 M
@@ -744,15 +998,16 @@ function testValidateWarnsForMissingSliceMapDependenciesAndCheckpoint() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
-## Active Feature
-- auto-strike/features/auth-mvp
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/auth-mvp
 - Current mode: slice
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/features/auth-mvp/spec.md", "# Auth MVP Spec\n");
-  write(repo, "auto-strike/features/auth-mvp/slices/slice-0-session.md", `# Slice 0: Session
+  write(repo, "auto-strike/initiatives/main/features/auth-mvp/feature-spec.md", "# Auth MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/auth-mvp/slices/slice-0-session.md", `# Slice 0: Session
 
 ## Size
 S
@@ -760,12 +1015,12 @@ S
 ## Depends On
 - None.
 `);
-  write(repo, "auto-strike/features/auth-mvp/slices/slice-1-register.md", `# Slice 1: Register
+  write(repo, "auto-strike/initiatives/main/features/auth-mvp/slices/slice-1-register.md", `# Slice 1: Register
 
 ## Size
 M
 `);
-  write(repo, "auto-strike/features/auth-mvp/slices/slice-2-login.md", `# Slice 2: Login
+  write(repo, "auto-strike/initiatives/main/features/auth-mvp/slices/slice-2-login.md", `# Slice 2: Login
 
 ## Size
 M
@@ -787,15 +1042,16 @@ function testValidateWarnsForOversizedBatchedAndWeakNonVerticalSlice() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
-## Active Feature
-- auto-strike/features/auth-mvp
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/auth-mvp
 - Current mode: slice
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/features/auth-mvp/spec.md", "# Auth MVP Spec\n");
-  write(repo, "auto-strike/features/auth-mvp/slices/slice-0-full-mvp.md", `# Slice 0: Full MVP Setup Frontend and Backend
+  write(repo, "auto-strike/initiatives/main/features/auth-mvp/feature-spec.md", "# Auth MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/auth-mvp/slices/slice-0-full-mvp.md", `# Slice 0: Full MVP Setup Frontend and Backend
 
 ## Size
 XL
@@ -835,16 +1091,17 @@ function testReviewPlanRecommendsUiRegressionForUiChanges() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
-## Active Feature
-- auto-strike/features/todo-dogfood
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/todo-dogfood
 - Current mode: build
-- Active slice: auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md
+- Active slice: auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/features/todo-dogfood/spec.md", "# Todo Dogfood Spec\n");
-  write(repo, "auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
 
 ## Evidence
 
@@ -885,16 +1142,17 @@ function testUiReviewEvidenceSuppressesUiReviewWarning() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
-## Active Feature
-- auto-strike/features/todo-dogfood
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/todo-dogfood
 - Current mode: review
-- Active slice: auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md
+- Active slice: auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/features/todo-dogfood/spec.md", "# Todo Dogfood Spec\n");
-  write(repo, "auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
 
 ## Verification Capability
 - Repo scripts/checks: \`node scripts/todo-smoke.js\`.
@@ -934,16 +1192,17 @@ function testUiRegressionReviewAloneDoesNotSuppressBrowserWarning() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
-## Active Feature
-- auto-strike/features/todo-dogfood
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/todo-dogfood
 - Current mode: review
-- Active slice: auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md
+- Active slice: auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/features/todo-dogfood/spec.md", "# Todo Dogfood Spec\n");
-  write(repo, "auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
 
 ## Evidence
 
@@ -974,16 +1233,17 @@ function testPackageOnlyBrowserSkipDoesNotSuppressBrowserWarning() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
-## Active Feature
-- auto-strike/features/todo-dogfood
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/todo-dogfood
 - Current mode: build
-- Active slice: auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md
+- Active slice: auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/features/todo-dogfood/spec.md", "# Todo Dogfood Spec\n");
-  write(repo, "auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
 
 ## Evidence
 
@@ -1018,16 +1278,17 @@ function testValidateWarnsForMissingVerificationCapabilityOnSkippedUiChecks() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
-## Active Feature
-- auto-strike/features/todo-dogfood
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/todo-dogfood
 - Current mode: review
-- Active slice: auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md
+- Active slice: auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/features/todo-dogfood/spec.md", "# Todo Dogfood Spec\n");
-  write(repo, "auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
 
 ## Evidence
 
@@ -1062,16 +1323,17 @@ function testValidateAcceptsVerificationCapabilityForSkippedUiChecks() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
-## Active Feature
-- auto-strike/features/todo-dogfood
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/todo-dogfood
 - Current mode: review
-- Active slice: auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md
+- Active slice: auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/features/todo-dogfood/spec.md", "# Todo Dogfood Spec\n");
-  write(repo, "auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
 
 ## Verification Capability
 - Repo scripts/checks: \`node scripts/todo-smoke.js\`.
@@ -1109,20 +1371,155 @@ Skipped:
   assert.ok(!body.messages.some((item) => item.code === "missing-ui-browser-review-evidence"));
 }
 
-function testValidateWarnsForMissingRequiredReviewLenses() {
+function testValidateWarnsForMissingSliceCloseoutSummary() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
-## Active Feature
-- auto-strike/features/video-mvp
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/video-mvp
 - Current mode: review
-- Active slice: auto-strike/features/video-mvp/slices/slice-0-upload.md
+- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-caption.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/features/video-mvp/spec.md", "# Video MVP Spec\n");
-  write(repo, "auto-strike/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-caption.md", `# Slice 0: Caption
+
+## Evidence
+
+Changed:
+- src/video/caption.ts
+
+Verified:
+- node scripts/caption-smoke.js - passed
+
+Reviewed:
+- functionality - passed after fixes
+- spec-coverage - passed
+- code-quality - passed
+- final re-review - no remaining blockers
+`);
+  write(repo, "src/video/caption.ts", "export function caption() {}\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "missing slice closeout summary should warn, not fail");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "missing-slice-closeout-summary" && item.severity === "warning"));
+}
+
+function testValidateAcceptsSliceCloseoutSummary() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/video-mvp
+- Current mode: review
+- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-caption.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-caption.md", `# Slice 0: Caption
+
+## Evidence
+
+Changed:
+- src/video/caption.ts
+
+Verified:
+- node scripts/caption-smoke.js - passed
+
+Reviewed:
+- functionality - passed after fixes
+- spec-coverage - passed
+- code-quality - passed
+- final re-review - no remaining blockers
+
+Skipped:
+- None.
+
+## Closeout Summary
+Implemented Slice 0: Caption.
+
+Built:
+- Added caption generation behavior.
+- Added validation for empty transcript input.
+
+Validation passed:
+- node scripts/caption-smoke.js
+
+Review:
+- Functionality/spec/code quality: passed after fixes.
+- Final re-review: no remaining blocking findings.
+
+Skipped / residual risk:
+- None.
+
+Docs:
+- auto-strike/initiatives/main/features/video-mvp/slices/slice-0-caption.md
+
+Next:
+- Slice 1: Caption editing.
+`);
+  write(repo, "src/video/caption.ts", "export function caption() {}\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "recorded slice closeout summary should satisfy validation");
+  const body = json(result);
+  assert.ok(!body.messages.some((item) => item.code === "missing-slice-closeout-summary"));
+}
+
+function testValidateDoesNotRequireCloseoutForInProgressBuildSlice() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/video-mvp
+- Current mode: build
+- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-caption.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-caption.md", `# Slice 0: Caption
+
+## Evidence
+
+Changed:
+- src/video/caption.ts
+
+Verified:
+- node scripts/caption-smoke.js - passed
+`);
+  write(repo, "src/video/caption.ts", "export function caption() {}\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "in-progress build slice should not require closeout yet");
+  const body = json(result);
+  assert.ok(!body.messages.some((item) => item.code === "missing-slice-closeout-summary"));
+}
+
+function testValidateWarnsForMissingRequiredReviewLenses() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/video-mvp
+- Current mode: review
+- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
 
 ## Implementation Research
 - Local precedent: src/video/upload.ts owns upload behavior.
@@ -1160,16 +1557,17 @@ function testValidateAcceptsReviewedAndSkippedRequiredReviewLenses() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
-## Active Feature
-- auto-strike/features/todo-dogfood
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/todo-dogfood
 - Current mode: review
-- Active slice: auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md
+- Active slice: auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/features/todo-dogfood/spec.md", "# Todo Dogfood Spec\n");
-  write(repo, "auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
 
 ## Implementation Research
 - Local precedent: todo/todo.js owns task state changes; plan impact: add updateTask beside addTask/toggleTask.
@@ -1213,16 +1611,17 @@ function testValidateWarnsForMultiSliceWithoutFreshReviewAgentEvidence() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
-## Active Feature
-- auto-strike/features/video-mvp
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/video-mvp
 - Current mode: review
-- Active slice: auto-strike/features/video-mvp/slices/slice-0-upload.md
+- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/features/video-mvp/spec.md", "# Video MVP Spec\n");
-  write(repo, "auto-strike/features/video-mvp/slices/slice-1-caption.md", `# Slice 1: Caption
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-1-caption.md", `# Slice 1: Caption
 
 ## Size
 S
@@ -1236,7 +1635,7 @@ S
 - [ ] Review plan and resolve findings.
 - [ ] Verify caption behavior.
 `);
-  write(repo, "auto-strike/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
 
 ## Implementation Research
 - Local precedent: src/video/upload.ts owns upload behavior.
@@ -1272,16 +1671,17 @@ function testValidateAcceptsMultiSliceFreshReviewAgentEvidence() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
-## Active Feature
-- auto-strike/features/video-mvp
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/video-mvp
 - Current mode: review
-- Active slice: auto-strike/features/video-mvp/slices/slice-0-upload.md
+- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/features/video-mvp/spec.md", "# Video MVP Spec\n");
-  write(repo, "auto-strike/features/video-mvp/slices/slice-1-caption.md", `# Slice 1: Caption
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-1-caption.md", `# Slice 1: Caption
 
 ## Size
 S
@@ -1295,7 +1695,7 @@ S
 - [ ] Review plan and resolve findings.
 - [ ] Verify caption behavior.
 `);
-  write(repo, "auto-strike/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
 
 ## Implementation Research
 - Local precedent: src/video/upload.ts owns upload behavior.
@@ -1332,16 +1732,17 @@ function testValidateWarnsWhenGitChangesMissingFromChangedEvidence() {
   initGit(repo);
   write(repo, "auto-strike/index.md", `# Auto Strike
 
-## Active Feature
-- auto-strike/features/video-mvp
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/video-mvp
 - Current mode: review
-- Active slice: auto-strike/features/video-mvp/slices/slice-0-upload.md
+- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/features/video-mvp/spec.md", "# Video MVP Spec\n");
-  write(repo, "auto-strike/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
 
 ## Implementation Research
 - Local precedent: src/video/upload.ts owns upload behavior.
@@ -1382,16 +1783,17 @@ function testValidateWarnsForStaleChangedEvidencePath() {
   initGit(repo);
   write(repo, "auto-strike/index.md", `# Auto Strike
 
-## Active Feature
-- auto-strike/features/video-mvp
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/video-mvp
 - Current mode: review
-- Active slice: auto-strike/features/video-mvp/slices/slice-0-upload.md
+- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/features/video-mvp/spec.md", "# Video MVP Spec\n");
-  write(repo, "auto-strike/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
 
 ## Implementation Research
 - Local precedent: src/video/upload.ts owns upload behavior.
@@ -1428,16 +1830,17 @@ function testReviewPlanDetectsBrowserScriptUiChanges() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
-## Active Feature
-- auto-strike/features/vanilla-ui
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/vanilla-ui
 - Current mode: review
-- Active slice: auto-strike/features/vanilla-ui/slices/slice-0-click.md
+- Active slice: auto-strike/initiatives/main/features/vanilla-ui/slices/slice-0-click.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/features/vanilla-ui/spec.md", "# Vanilla UI Spec\n");
-  write(repo, "auto-strike/features/vanilla-ui/slices/slice-0-click.md", `# Slice 0: Click
+  write(repo, "auto-strike/initiatives/main/features/vanilla-ui/feature-spec.md", "# Vanilla UI Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/vanilla-ui/slices/slice-0-click.md", `# Slice 0: Click
 
 ## Evidence
 
@@ -1472,7 +1875,8 @@ function testHelpWorksWithoutCommand() {
 testInspectAbsentWorkspace();
 testValidateUnrelatedWorkspaceCollision();
 testSimpleFeatureSlugDoesNotHardFail();
-testFastPathInspectAndValidateWithEvidence();
+testValidateRejectsOldTopLevelFeaturePath();
+testInitiativeInspectAndValidateWithEvidence();
 testValidateWarnsForMissingEvidence();
 testValidateBrokenKeyDocReference();
 testKeyDocsCanReferenceRepoDocs();
@@ -1485,6 +1889,11 @@ testValidateAcceptsConcretePreBuildSlicePrep();
 testValidateAcceptsActiveWorkPointer();
 testValidateWarnsForMissingActiveWork();
 testValidateWarnsForWeakOrMissingActiveWorkDoc();
+testValidateWarnsForMissingGrillDecisionDepth();
+testValidateAcceptsStandardGrillDecisionDepth();
+testValidateAcceptsDeepGrillDecisionDepthWithSuggestedChange();
+testValidateWarnsForUnknownGrillDecisionDepth();
+testValidateDoesNotRequireDecisionDepthOutsideGrillMode();
 testValidateAcceptsSliceMapDependenciesAndCheckpoint();
 testValidateWarnsForMissingSliceMapDependenciesAndCheckpoint();
 testValidateWarnsForOversizedBatchedAndWeakNonVerticalSlice();
@@ -1494,6 +1903,9 @@ testUiRegressionReviewAloneDoesNotSuppressBrowserWarning();
 testPackageOnlyBrowserSkipDoesNotSuppressBrowserWarning();
 testValidateWarnsForMissingVerificationCapabilityOnSkippedUiChecks();
 testValidateAcceptsVerificationCapabilityForSkippedUiChecks();
+testValidateWarnsForMissingSliceCloseoutSummary();
+testValidateAcceptsSliceCloseoutSummary();
+testValidateDoesNotRequireCloseoutForInProgressBuildSlice();
 testValidateWarnsForMissingRequiredReviewLenses();
 testValidateAcceptsReviewedAndSkippedRequiredReviewLenses();
 testValidateWarnsForMultiSliceWithoutFreshReviewAgentEvidence();

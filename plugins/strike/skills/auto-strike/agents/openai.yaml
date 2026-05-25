@@ -1,2 +1,6 @@
 policy:
-  allow_implicit_invocation: false
+  allow_implicit_invocation: true
+interface:
+  display_name: "Auto Strike"
+  short_description: "Use when the user asks for Auto Strike to plan, review, verify, and build an idea."
+  default_prompt: "$auto-strike Build and ship this idea with the Auto Strike workflow."

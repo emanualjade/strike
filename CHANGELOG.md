@@ -2,6 +2,23 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.8 - 2026-05-25
+
+- Added Auto Strike slice closeout summary guidance so completed slices end with
+  a compact user-facing receipt covering built work, validation, review status,
+  skipped/residual risk, docs, and next action.
+- Added helper warnings when active completed slice evidence has Changed,
+  Verified, and Reviewed entries but no substantive `Closeout Summary`.
+- Tightened Auto Strike grill guidance around one-decision-node-at-a-time
+  pressure testing, recommended answers, concise Decision Depth, and helper
+  warnings for missing or unknown grill depth.
+- Reworked Auto Strike workspace structure around deterministic
+  initiative -> feature -> slice directories, with helper parsing, validation,
+  review scoping, and tests updated for the new shape.
+- Fixed Codex metadata so the standalone `auto-strike` skill is discoverable and
+  invocable in dogfood runs, while the smaller Strike workflow skills remain
+  manual-only.
+
 ## 0.8.7 - 2026-05-25
 
 - Added Auto Strike verification-capability guidance so slices record available

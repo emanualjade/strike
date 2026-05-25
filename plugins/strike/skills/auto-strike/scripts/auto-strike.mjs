@@ -13,10 +13,12 @@ const MODES_EXPECTING_SPEC = new Set(["slice", "build", "review", "readiness"]);
 const MODES_EXPECTING_SLICE = new Set(["build", "review", "readiness"]);
 const MODES_EXPECTING_SLICE_PREP = new Set(["build", "review", "readiness"]);
 const MODES_EXPECTING_EVIDENCE = new Set(["review", "readiness"]);
+const VALID_DECISION_DEPTH_LEVELS = new Set(["lean", "standard", "deep"]);
 const ACTIVE_WORK_DOC_FILES = new Set([
   "idea.md",
   "grill.md",
   "spec.md",
+  "feature-spec.md",
   "readiness.md",
 ]);
 const SLICE_DOC_PATTERN = /\/slices\/slice-\d+[^/]*\.md$/i;
@@ -275,8 +277,8 @@ function isRecognizableWorkspace(rootPath) {
   if (directMarkers.some((marker) => inspectPath(path.join(rootPath, marker))?.isFile())) {
     return true;
   }
-  const featuresPath = path.join(rootPath, "features");
-  if (inspectPath(featuresPath)?.isDirectory()) {
+  const initiativesPath = path.join(rootPath, "initiatives");
+  if (inspectPath(initiativesPath)?.isDirectory()) {
     return true;
   }
   return false;
@@ -324,7 +326,7 @@ function workspaceOwnership(repoRoot) {
       status: "recognized",
       path: WORKSPACE_ROOT,
       recognized: true,
-      reason: "Workspace contains recognizable Auto Strike files or feature layout.",
+      reason: "Workspace contains recognizable Auto Strike files or initiative layout.",
     };
   }
   return {
@@ -409,17 +411,25 @@ function usefulValue(value) {
 function parseActiveWork(indexText) {
   const text = extractSection(indexText, "Active Work");
   const items = markdownListItems(text);
+  const initiativeRaw = usefulValue(parseLabeledItem(items, "Initiative"));
   const featureRaw = usefulValue(parseLabeledItem(items, "Feature"));
   const docRaw = usefulValue(parseLabeledItem(items, "Doc"));
+  const sliceRaw = usefulValue(parseLabeledItem(items, "Slice")) ?? parseActiveSlice(items);
+  const currentModeRaw = usefulValue(parseLabeledItem(items, "Current mode")) ?? usefulValue(parseLabeledItem(items, "Mode"));
   const state = usefulValue(parseLabeledItem(items, "State"));
   const next = usefulValue(parseLabeledItem(items, "Next"));
   const blockedBy = usefulValue(parseLabeledItem(items, "Blocked by"));
   return {
     text,
+    initiativeRaw,
+    initiativePath: initiativeRaw ? extractInlinePath(initiativeRaw) : null,
     featureRaw,
     featurePath: featureRaw ? extractInlinePath(featureRaw) : null,
     docRaw,
     docPath: docRaw ? extractInlinePath(docRaw) : null,
+    sliceRaw,
+    slicePath: sliceRaw ? extractInlinePath(sliceRaw) : null,
+    currentModeRaw,
     state,
     next,
     blockedBy,
@@ -435,7 +445,7 @@ function modeFromActiveDoc(docPath) {
   if (basename === "readiness.md") return "readiness";
   if (normalized.endsWith("/slices/index.md")) return "slice";
   if (SLICE_DOC_PATTERN.test(normalized)) return "build";
-  if (basename === "spec.md") return "spec";
+  if (basename === "spec.md" || basename === "feature-spec.md") return "spec";
   return null;
 }
 
@@ -443,16 +453,23 @@ function parseIndex(indexText) {
   if (!indexText) {
     return {
       present: false,
+      activeInitiativeRaw: null,
+      activeInitiativePath: null,
       activeFeatureRaw: null,
       activeFeaturePath: null,
       currentMode: null,
       activeSliceRaw: null,
       activeWork: {
         text: "",
+        initiativeRaw: null,
+        initiativePath: null,
         featureRaw: null,
         featurePath: null,
         docRaw: null,
         docPath: null,
+        sliceRaw: null,
+        slicePath: null,
+        currentModeRaw: null,
         state: null,
         next: null,
         blockedBy: null,
@@ -466,17 +483,12 @@ function parseIndex(indexText) {
   }
 
   const activeWork = parseActiveWork(indexText);
-  const activeItems = markdownListItems(extractSection(indexText, "Active Feature"));
-  const activeFeatureRaw = activeItems.find((item) => {
-    return !/^(current mode|next best action|active slice|current slice|phase objective|phase exit)\s*:/i.test(item);
-  }) ?? null;
-  const currentModeRaw = parseLabeledItem(activeItems, "Current mode");
+  const currentModeRaw = activeWork.currentModeRaw;
   const currentMode = currentModeRaw && !isPlaceholder(currentModeRaw)
     ? currentModeRaw.toLowerCase().split(/\s+/)[0].replace(/[^a-z-]/g, "")
     : modeFromActiveDoc(activeWork.docPath);
-  const activeSliceRaw = parseActiveSlice(activeItems) ??
+  const activeSliceRaw = activeWork.slicePath ??
     (activeWork.docPath && SLICE_DOC_PATTERN.test(activeWork.docPath) ? activeWork.docPath : null);
-  const nextBestAction = parseLabeledItem(activeItems, "Next best action");
 
   const keyDocs = markdownListItems(extractSection(indexText, "Key Docs"))
     .map((item) => ({
@@ -493,15 +505,14 @@ function parseIndex(indexText) {
 
   return {
     present: true,
-    activeFeatureRaw: activeWork.featureRaw ??
-      (activeFeatureRaw && !isPlaceholder(activeFeatureRaw) ? stripMarkdownShell(activeFeatureRaw) : null),
-    activeFeaturePath: activeWork.featurePath ??
-      (activeFeatureRaw && !isPlaceholder(activeFeatureRaw) ? extractInlinePath(activeFeatureRaw) : null),
+    activeInitiativeRaw: activeWork.initiativeRaw,
+    activeInitiativePath: activeWork.initiativePath,
+    activeFeatureRaw: activeWork.featureRaw,
+    activeFeaturePath: activeWork.featurePath,
     currentMode,
     activeSliceRaw: activeSliceRaw && !isPlaceholder(activeSliceRaw) ? activeSliceRaw : null,
     activeWork,
-    nextBestAction: activeWork.next ??
-      (nextBestAction && !isPlaceholder(nextBestAction) ? nextBestAction : null),
+    nextBestAction: activeWork.next,
     keyDocs,
     openDecisions,
     verification,
@@ -646,10 +657,10 @@ function resolveWorkspacePath(repoRoot, rawPath) {
     };
   }
   if (!cleaned.startsWith(`${WORKSPACE_ROOT}/`)) {
-    if (cleaned.startsWith("features/") || cleaned.startsWith("architecture/") || cleaned.startsWith("models/")) {
+    if (cleaned.startsWith("initiatives/") || cleaned.startsWith("research/") || cleaned.startsWith("extras/")) {
       cleaned = `${WORKSPACE_ROOT}/${cleaned}`;
     } else if (!cleaned.includes("/")) {
-      cleaned = `${WORKSPACE_ROOT}/features/${cleaned}`;
+      cleaned = `${WORKSPACE_ROOT}/initiatives/${cleaned}`;
     }
   }
   const absolutePath = path.join(repoRoot, cleaned);
@@ -665,14 +676,117 @@ function resolveWorkspacePath(repoRoot, rawPath) {
 function isExplicitWorkspacePath(rawPath) {
   const value = String(rawPath ?? "").trim().replace(/^`|`$/g, "");
   return value.startsWith(WORKSPACE_ROOT) ||
-    value.startsWith("features/") ||
-    value.startsWith("architecture/") ||
-    value.startsWith("models/") ||
+    value.startsWith("initiatives/") ||
+    value.startsWith("research/") ||
+    value.startsWith("extras/") ||
     value.includes("/");
 }
 
-function activeFeatureState(repoRoot, index) {
-  const resolved = resolveWorkspacePath(repoRoot, index.activeFeaturePath);
+function isInitiativePath(sourcePath) {
+  return new RegExp(`^${escapeRegExp(WORKSPACE_ROOT)}/initiatives/[^/]+$`).test(normalizeEvidencePath(sourcePath));
+}
+
+function isFeaturePath(sourcePath) {
+  return new RegExp(`^${escapeRegExp(WORKSPACE_ROOT)}/initiatives/[^/]+/features/[^/]+$`).test(normalizeEvidencePath(sourcePath));
+}
+
+function isFeatureShorthand(sourcePath) {
+  const value = String(sourcePath ?? "").trim().replace(/^`|`$/g, "");
+  return Boolean(value) && !value.includes("/") && !isPlaceholder(value) && !isNoneItem(value);
+}
+
+function inferInitiativePath(index) {
+  const candidates = [
+    index.activeInitiativePath,
+    index.activeFeaturePath,
+    index.activeWork?.docPath,
+    index.activeSliceRaw,
+  ].filter(Boolean).map(normalizeEvidencePath);
+  for (const candidate of candidates) {
+    const match = candidate.match(new RegExp(`^${escapeRegExp(WORKSPACE_ROOT)}/initiatives/[^/]+`));
+    if (match) return match[0];
+  }
+  return null;
+}
+
+function activeInitiativeState(repoRoot, index) {
+  const resolved = resolveWorkspacePath(repoRoot, index.activeInitiativePath ?? inferInitiativePath(index));
+  if (!resolved || !resolved.safe || !resolved.exists || !inspectPath(resolved.absolutePath)?.isDirectory()) {
+    return {
+      raw: index.activeInitiativePath,
+      path: null,
+      inferredPath: resolved?.safe ? resolved.relativePath : null,
+      exists: Boolean(resolved?.exists),
+      ideaPath: null,
+      ideaExists: false,
+      grillPath: null,
+      grillExists: false,
+      specPath: null,
+      specExists: false,
+      featuresPath: null,
+      featureDirs: [],
+      readinessPath: null,
+      readinessExists: false,
+    };
+  }
+
+  const ideaPath = path.join(resolved.absolutePath, "idea.md");
+  const grillPath = path.join(resolved.absolutePath, "grill.md");
+  const specPath = path.join(resolved.absolutePath, "spec.md");
+  const featuresPath = path.join(resolved.absolutePath, "features");
+  const readinessPath = path.join(resolved.absolutePath, "readiness.md");
+  const featureDirs = inspectPath(featuresPath)?.isDirectory()
+    ? fs.readdirSync(featuresPath, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => posix(path.join(resolved.relativePath, "features", entry.name)))
+      .sort()
+    : [];
+
+  return {
+    raw: index.activeInitiativePath,
+    path: resolved.relativePath,
+    inferredPath: resolved.relativePath,
+    exists: true,
+    ideaPath: displayPath(ideaPath, repoRoot),
+    ideaExists: Boolean(inspectPath(ideaPath)?.isFile()),
+    grillPath: displayPath(grillPath, repoRoot),
+    grillExists: Boolean(inspectPath(grillPath)?.isFile()),
+    specPath: displayPath(specPath, repoRoot),
+    specExists: Boolean(inspectPath(specPath)?.isFile()),
+    featuresPath: displayPath(featuresPath, repoRoot),
+    featureDirs,
+    readinessPath: displayPath(readinessPath, repoRoot),
+    readinessExists: Boolean(inspectPath(readinessPath)?.isFile()),
+  };
+}
+
+function resolveActiveFeaturePath(repoRoot, rawPath, activeInitiative) {
+  if (!rawPath || isPlaceholder(rawPath) || isNoneItem(rawPath)) return null;
+  const cleaned = String(rawPath).trim().replace(/^`|`$/g, "").replace(/^\.\/+/, "");
+  if (path.isAbsolute(cleaned) || cleaned.split(/[\\/]+/).includes("..")) {
+    return {
+      raw: rawPath,
+      safe: false,
+      relativePath: cleaned,
+      absolutePath: null,
+      exists: false,
+    };
+  }
+  if (!cleaned.includes("/") && activeInitiative.path) {
+    const relativePath = posix(path.join(activeInitiative.path, "features", cleaned));
+    return {
+      raw: rawPath,
+      safe: true,
+      relativePath,
+      absolutePath: path.join(repoRoot, relativePath),
+      exists: fs.existsSync(path.join(repoRoot, relativePath)),
+    };
+  }
+  return resolveWorkspacePath(repoRoot, cleaned);
+}
+
+function activeFeatureState(repoRoot, index, activeInitiative) {
+  const resolved = resolveActiveFeaturePath(repoRoot, index.activeFeaturePath, activeInitiative);
   if (!resolved || !resolved.safe || !resolved.exists || !inspectPath(resolved.absolutePath)?.isDirectory()) {
     return {
       raw: index.activeFeaturePath,
@@ -688,7 +802,7 @@ function activeFeatureState(repoRoot, index) {
     };
   }
 
-  const specPath = path.join(resolved.absolutePath, "spec.md");
+  const specPath = path.join(resolved.absolutePath, "feature-spec.md");
   const slicesPath = path.join(resolved.absolutePath, "slices");
   const readinessPath = path.join(resolved.absolutePath, "readiness.md");
   const sliceFiles = inspectPath(slicesPath)?.isDirectory()
@@ -757,7 +871,7 @@ function activeFeatureSliceIndexPath(activeFeature) {
   return activeFeature.path ? `${activeFeature.path}/slices/index.md` : null;
 }
 
-function selectReviewEvidenceLocations(evidenceLocations, activeFeature, activeSlice) {
+function selectReviewEvidenceLocations(evidenceLocations, activeInitiative, activeFeature, activeSlice) {
   if (activeSlice.path && evidenceLocations.includes(activeSlice.path)) {
     return {
       scope: "active-slice",
@@ -776,6 +890,20 @@ function selectReviewEvidenceLocations(evidenceLocations, activeFeature, activeS
         scope: "active-feature",
         usedFallback: Boolean(activeSlice.path),
         locations: featureLocations,
+      };
+    }
+  }
+
+  if (activeInitiative.path) {
+    const initiativePrefix = `${activeInitiative.path}/`;
+    const initiativeLocations = evidenceLocations.filter((relativePath) => {
+      return relativePath === activeInitiative.path || relativePath.startsWith(initiativePrefix);
+    });
+    if (initiativeLocations.length > 0) {
+      return {
+        scope: "active-initiative",
+        usedFallback: Boolean(activeSlice.path || activeFeature.path),
+        locations: initiativeLocations,
       };
     }
   }
@@ -799,11 +927,12 @@ export function inspectAutoStrike(options = {}) {
   const decisionsText = readFileIfPresent(path.join(workspacePath, "decisions.md"));
   const index = parseIndex(indexText);
   const todo = parseTodo(todoText);
-  const activeFeature = activeFeatureState(repoRoot, index);
+  const activeInitiative = activeInitiativeState(repoRoot, index);
+  const activeFeature = activeFeatureState(repoRoot, index, activeInitiative);
   const activeSlice = activeSliceState(repoRoot, index, activeFeature);
   const evidenceLocations = findEvidenceLocations(repoRoot, workspacePath, markdownFiles);
   const changedPaths = evidenceChangedPaths(repoRoot, evidenceLocations);
-  const reviewEvidence = selectReviewEvidenceLocations(evidenceLocations, activeFeature, activeSlice);
+  const reviewEvidence = selectReviewEvidenceLocations(evidenceLocations, activeInitiative, activeFeature, activeSlice);
   const reviewChangedPaths = evidenceChangedPaths(repoRoot, reviewEvidence.locations);
   const reviewVerifiedItems = evidenceVerifiedItems(repoRoot, reviewEvidence.locations);
   const reviewReviewedItems = evidenceReviewedItems(repoRoot, reviewEvidence.locations);
@@ -819,6 +948,7 @@ export function inspectAutoStrike(options = {}) {
       headings: parseDecisionHeadings(decisionsText),
     },
     docs: markdownFiles,
+    activeInitiative,
     activeFeature,
     activeSlice,
     evidence: {
@@ -1181,7 +1311,7 @@ function activeWorkValueHasSubstance(value) {
 function activeWorkPointerIsValid(index) {
   const work = index.activeWork;
   if (!work || !sectionHasSubstance(work.text)) return false;
-  return activeWorkValueHasSubstance(work.featurePath) &&
+  return activeWorkValueHasSubstance(work.initiativePath) &&
     activeWorkValueHasSubstance(work.docPath) &&
     activeWorkValueHasSubstance(work.next);
 }
@@ -1206,7 +1336,7 @@ function activeWorkMessages(state) {
   if (!state.index.present) return messages;
 
   if (!activeWorkPointerIsValid(state.index)) {
-    messages.push(message("warning", "missing-active-work", `${WORKSPACE_ROOT}/index.md`, "Index should include Active Work with a feature, active doc, and next action so fresh context can resume without reading every phase."));
+    messages.push(message("warning", "missing-active-work", `${WORKSPACE_ROOT}/index.md`, "Index should include Active Work with an initiative, active doc, and next action so fresh context can resume without reading every phase."));
   }
 
   const docPath = state.index.activeWork?.docPath;
@@ -1227,6 +1357,58 @@ function activeWorkMessages(state) {
   }
 
   return messages;
+}
+
+function activeGrillDocState(state) {
+  if (state.index.currentMode !== "grill") return null;
+
+  const candidates = [];
+  const activeDoc = state.index.activeWork?.docPath;
+  if (activeDoc && path.posix.basename(normalizeEvidencePath(activeDoc)).toLowerCase() === "grill.md") {
+    candidates.push(activeDoc);
+  }
+  if (state.activeInitiative.path) {
+    candidates.push(`${state.activeInitiative.path}/grill.md`);
+  }
+  candidates.push(...state.docs.filter((sourcePath) => path.posix.basename(sourcePath).toLowerCase() === "grill.md"));
+
+  for (const candidate of [...new Set(candidates)]) {
+    const resolved = resolveRepoReferencePath(state.repoRoot, candidate);
+    if (resolved?.safe && resolved.exists) return resolved;
+  }
+  return null;
+}
+
+function decisionDepthLevel(grillText) {
+  const section = extractSection(grillText, "Decision Depth");
+  const match = section.match(/^Level:\s*(.+)$/im);
+  if (!match) return null;
+  return stripMarkdownShell(match[1])
+    .split(/\s+-\s+|\s+--\s+|\s+:\s+/)[0]
+    .trim()
+    .toLowerCase();
+}
+
+function grillDecisionDepthMessages(state) {
+  const grillDoc = activeGrillDocState(state);
+  if (!grillDoc) return [];
+
+  const grillText = readFileIfPresent(grillDoc.absolutePath);
+  const section = extractSection(grillText, "Decision Depth");
+  if (!sectionHasSubstance(section)) {
+    return [
+      message("warning", "missing-grill-decision-depth", grillDoc.relativePath, "Active grill doc should record Decision Depth so fresh context knows how hard to pressure-test decisions before spec."),
+    ];
+  }
+
+  const level = decisionDepthLevel(grillText);
+  if (!level || !VALID_DECISION_DEPTH_LEVELS.has(level)) {
+    return [
+      message("warning", "unknown-grill-decision-depth", grillDoc.relativePath, "Decision Depth level should be Lean, Standard, or Deep."),
+    ];
+  }
+
+  return [];
 }
 
 function activeSlicePrepMessages(repoRoot, activeSlice, currentMode) {
@@ -1271,7 +1453,7 @@ function resolveRepoReferencePath(repoRoot, rawPath) {
   const candidates = [];
   if (cleaned.startsWith(`${WORKSPACE_ROOT}/`)) {
     candidates.push(cleaned);
-  } else if (cleaned.startsWith("features/") || cleaned.startsWith("architecture/") || cleaned.startsWith("models/")) {
+  } else if (cleaned.startsWith("initiatives/") || cleaned.startsWith("research/") || cleaned.startsWith("extras/")) {
     candidates.push(`${WORKSPACE_ROOT}/${cleaned}`, cleaned);
   } else {
     candidates.push(cleaned);
@@ -1336,18 +1518,44 @@ export function validateAutoStrike(options = {}) {
   }
 
   messages.push(...activeWorkMessages(state));
+  messages.push(...grillDecisionDepthMessages(state));
+
+  if (index.activeInitiativePath && isExplicitWorkspacePath(index.activeInitiativePath)) {
+    const resolved = resolveWorkspacePath(state.repoRoot, index.activeInitiativePath);
+    if (!resolved?.safe) {
+      messages.push(message("error", "unsafe-active-initiative", index.activeInitiativePath, "Active initiative path is unsafe."));
+    } else if (!isInitiativePath(resolved.relativePath)) {
+      messages.push(message("error", "invalid-active-initiative-path", resolved.relativePath, "Active initiative must point to auto-strike/initiatives/<initiative-slug>."));
+    } else if (!resolved.exists) {
+      messages.push(message("error", "missing-active-initiative", resolved.relativePath, "Index declares an active initiative path that does not exist."));
+    }
+  }
 
   if (index.activeFeaturePath && isExplicitWorkspacePath(index.activeFeaturePath)) {
     const resolved = resolveWorkspacePath(state.repoRoot, index.activeFeaturePath);
     if (!resolved?.safe) {
       messages.push(message("error", "unsafe-active-feature", index.activeFeaturePath, "Active feature path is unsafe."));
+    } else if (!isFeaturePath(resolved.relativePath)) {
+      messages.push(message("error", "invalid-active-feature-path", resolved.relativePath, "Active feature must point to auto-strike/initiatives/<initiative-slug>/features/<feature-slug>."));
     } else if (!resolved.exists) {
       messages.push(message("error", "missing-active-feature", resolved.relativePath, "Index declares an active feature path that does not exist."));
     }
   }
 
+  if (index.activeFeaturePath && isFeatureShorthand(index.activeFeaturePath) && !state.activeInitiative.exists) {
+    messages.push(message("warning", "feature-shorthand-without-active-initiative", `${WORKSPACE_ROOT}/index.md`, "Feature shorthand can only resolve when Active Work names an existing active initiative."));
+  }
+
+  if (state.activeSlice.path && activeFeature.exists && !normalizeEvidencePath(state.activeSlice.path).startsWith(`${activeFeature.path}/slices/`)) {
+    messages.push(message("error", "invalid-active-slice-path", state.activeSlice.path, "Active slice must live under the active feature's slices/ directory."));
+  }
+
+  if (index.currentMode && ["slice", "build", "review"].includes(index.currentMode) && !activeFeature.exists) {
+    messages.push(message("warning", "missing-active-feature", activeFeature.inferredPath ?? `${WORKSPACE_ROOT}/index.md`, "Slice/build/review mode should name an existing active feature inside the active initiative."));
+  }
+
   if (index.currentMode && MODES_EXPECTING_SPEC.has(index.currentMode) && activeFeature.exists && !activeFeature.specExists) {
-    messages.push(message("warning", "missing-active-spec", activeFeature.specPath, "Current mode usually expects an active feature spec, but none was found."));
+    messages.push(message("warning", "missing-active-feature-spec", activeFeature.specPath, "Current mode usually expects an active feature-spec.md, but none was found."));
   }
 
   if (index.currentMode && MODES_EXPECTING_SLICE.has(index.currentMode) && activeFeature.exists && activeFeature.sliceFiles.length === 0) {
@@ -1369,8 +1577,8 @@ export function validateAutoStrike(options = {}) {
     if (state.activeSlice.path && !state.evidence.locations.includes(state.activeSlice.path)) {
       messages.push(message("warning", "missing-active-slice-evidence", state.activeSlice.path, "Active slice has reviewable implementation evidence elsewhere but does not contain evidence itself; review context may fall back to broader feature evidence."));
     }
-    if (activeFeature.exists && state.evidence.reviewScope.scope === "workspace") {
-      messages.push(message("warning", "missing-active-feature-evidence", activeFeature.path, "Review context is using workspace-wide evidence because no active feature evidence was found."));
+    if (activeFeature.exists && !["active-slice", "active-feature"].includes(state.evidence.reviewScope.scope)) {
+      messages.push(message("warning", "missing-active-feature-evidence", activeFeature.path, "Review context is using broader initiative/workspace evidence because no active feature evidence was found."));
     }
     if (state.evidence.reviewScope.changedPaths.length === 0) {
       messages.push(message("warning", "missing-review-changed-evidence", state.evidence.reviewScope.locations[0] ?? WORKSPACE_ROOT, "Review context has no active Changed list, so reviewer packets may miss implementation files."));
@@ -1384,6 +1592,7 @@ export function validateAutoStrike(options = {}) {
     }
     messages.push(...requiredReviewLensMessages(state, plan));
     messages.push(...verificationCapabilityMessages(state, plan));
+    messages.push(...sliceCloseoutSummaryMessages(state));
     if (plan.surfaces.ui.length > 0 && !hasUiReviewCoverage(state.evidence.reviewScope)) {
       messages.push(message("warning", "missing-ui-browser-review-evidence", state.evidence.reviewScope.locations[0] ?? WORKSPACE_ROOT, "UI/browser/user-visible files changed but active evidence has no browser or user-flow check evidence, nor a blocked-browser rationale with static fallback."));
     }
@@ -1635,6 +1844,50 @@ function verificationCapabilityMessages(state, plan) {
   ];
 }
 
+function reviewedItemsLookComplete(reviewedItems) {
+  if (!reviewedItems.some(reviewItemHasConcreteOutcome)) return false;
+  return !reviewedItems.some((item) => {
+    const text = String(item ?? "");
+    if (/\b(no remaining blockers?|no blockers?|blockers? resolved|fixed blockers?)\b/i.test(text)) return false;
+    return /\b(blocker|blocking|failed?|unresolved|open finding|open issue)\b/i.test(text);
+  });
+}
+
+function sliceEvidenceLooksComplete(reviewScope) {
+  return reviewScope.scope === "active-slice" &&
+    reviewScope.changedPaths.length > 0 &&
+    reviewScope.verifiedItems.length > 0 &&
+    reviewedItemsLookComplete(reviewScope.reviewedItems);
+}
+
+function closeoutSummarySectionIsValid(sliceText) {
+  if (!hasSection(sliceText, "Closeout Summary")) return false;
+  const section = extractSection(sliceText, "Closeout Summary");
+  if (!sectionHasSubstance(section)) return false;
+  if (/\[[^\]]+\]/.test(section)) return false;
+  if (markdownListItems(section).length < 5) return false;
+  return /\bImplemented\s+Slice\b/i.test(section) &&
+    /^Built:\s*$/im.test(section) &&
+    /^Validation passed:\s*$/im.test(section) &&
+    /^Review:\s*$/im.test(section) &&
+    /^(Skipped \/ residual risk|Skipped|Residual risk):\s*$/im.test(section) &&
+    /^Docs:\s*$/im.test(section) &&
+    /^Next:\s*$/im.test(section);
+}
+
+function sliceCloseoutSummaryMessages(state) {
+  const reviewScope = state.evidence.reviewScope;
+  if (!sliceEvidenceLooksComplete(reviewScope)) return [];
+  if (!state.activeSlice.path || !state.activeSlice.exists) return [];
+
+  const sliceText = readFileIfPresent(path.join(state.repoRoot, state.activeSlice.path));
+  if (closeoutSummarySectionIsValid(sliceText ?? "")) return [];
+
+  return [
+    message("warning", "missing-slice-closeout-summary", state.activeSlice.path, "Active slice has Changed, Verified, and Reviewed evidence but lacks a substantive Closeout Summary. Add a compact user-facing receipt with built work, validation, review status, skipped/residual risk, docs, and next action."),
+  ];
+}
+
 function hasFreshReviewAgentEvidence(reviewScope) {
   const reviewText = [
     ...reviewScope.reviewedItems,
@@ -1686,6 +1939,7 @@ function renderInspectMarkdown(state) {
     `Workspace: ${state.workspace.status} - ${state.workspace.reason}`,
     "",
     "## Active",
+    `- Initiative: ${state.activeInitiative.path ?? state.index.activeInitiativeRaw ?? "None"}`,
     `- Feature: ${state.activeFeature.path ?? state.index.activeFeatureRaw ?? "None"}`,
     `- Mode: ${state.index.currentMode ?? "Unknown"}`,
     `- Active doc: ${state.index.activeWork.docPath ?? "Unknown"}`,
@@ -1766,6 +2020,7 @@ function renderReviewContextMarkdown(packet) {
     "",
     "## Current State",
     `- Workspace: ${state.workspace.status} - ${state.workspace.reason}`,
+    `- Active initiative: ${state.activeInitiative.path ?? state.index.activeInitiativeRaw ?? "None"}`,
     `- Active feature: ${state.activeFeature.path ?? state.index.activeFeatureRaw ?? "None"}`,
     `- Current mode: ${state.index.currentMode ?? "Unknown"}`,
     `- Active doc: ${state.index.activeWork.docPath ?? "Unknown"}`,
@@ -1823,9 +2078,13 @@ function renderSurfaceTriggers(surfaces) {
 function reviewSourcePathGroups(state) {
   const activeDocs = filterExistingSourcePaths(state, [
     `${WORKSPACE_ROOT}/index.md`,
+    state.activeInitiative.ideaExists ? state.activeInitiative.ideaPath : null,
+    state.activeInitiative.grillExists ? state.activeInitiative.grillPath : null,
+    state.activeInitiative.specExists ? state.activeInitiative.specPath : null,
     state.activeFeature.specExists ? state.activeFeature.specPath : null,
     state.activeSlice.exists ? state.activeSlice.path : null,
     state.activeFeature.readinessExists ? state.activeFeature.readinessPath : null,
+    state.activeInitiative.readinessExists ? state.activeInitiative.readinessPath : null,
   ]);
   const usedPaths = new Set(activeDocs);
 

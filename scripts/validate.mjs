@@ -392,7 +392,17 @@ function validateSkill(skillPath) {
     fail(`${rel(skillPath)}: missing agents/openai.yaml`);
   } else {
     const openaiMetadata = fs.readFileSync(openaiMetadataPath, "utf8");
-    if (!/allow_implicit_invocation:\s*false/.test(openaiMetadata)) {
+    if (skillName === "auto-strike") {
+      if (/disable-model-invocation:\s*true/.test(skillText)) {
+        fail(`${rel(skillFile)}: auto-strike must stay Codex-invocable; do not disable model invocation`);
+      }
+      if (!/allow_implicit_invocation:\s*true/.test(openaiMetadata)) {
+        fail(`${rel(openaiMetadataPath)}: auto-strike must allow Codex invocation`);
+      }
+      if (!/display_name:\s*["']?Auto Strike["']?/.test(openaiMetadata)) {
+        fail(`${rel(openaiMetadataPath)}: auto-strike must provide Codex interface metadata`);
+      }
+    } else if (!/allow_implicit_invocation:\s*false/.test(openaiMetadata)) {
       fail(`${rel(openaiMetadataPath)}: expected allow_implicit_invocation: false`);
     }
   }

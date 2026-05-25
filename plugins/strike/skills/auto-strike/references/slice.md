@@ -5,18 +5,19 @@ reviewable behavior. Avoid horizontal layers unless a foundation phase genuinely
 reduces risk or unlocks later behavior. Try to slice across the full range of the
 stack in small slices rather than all the APIs at once then all the UI at once.
 
-Before slicing, do a feature decomposition gate. Decide whether the request is
-one coherent feature/milestone folder or a bundle of feature folders.
+Before slicing, confirm the initiative feature map. Slices always belong to one
+feature folder inside the active initiative.
 
 Use one feature folder when the work has one primary user/system outcome, one
-readiness target, and slices that mostly depend on each other. Split into
-multiple feature folders or milestones when the request combines independent
-outcomes, workflows, roles, domains, readiness targets, or subsystems that can be
-planned, reviewed, shipped, or paused separately.
+readiness target, and slices that mostly depend on each other. Split the
+initiative into multiple feature folders when it combines independent outcomes,
+workflows, roles, domains, readiness targets, or subsystems that can be planned,
+reviewed, shipped, or paused separately.
 
-If the request is a bundle, record the feature split in `auto-strike/index.md`
-or `todo.md`, choose one active feature, and slice only that feature. Do not hide
-multiple features inside one large slice map.
+Decomposition creates or updates feature folders inside the active initiative;
+it does not create new initiatives. If the work appears to need a separate
+initiative, ask the user before creating it. Choose one active feature and slice
+only that feature. Do not hide multiple features inside one large slice map.
 
 Use this sizing guide:
 
@@ -62,9 +63,9 @@ vertical slice is worse first, and name the next vertical slice they unblock.
 
 Default path:
 
-- `auto-strike/features/<feature-slug>/slices/index.md`
-- `auto-strike/features/<feature-slug>/slices/slice-0-[name].md`
-- `auto-strike/features/<feature-slug>/slices/slice-1-[name].md`
+- `auto-strike/initiatives/<initiative-slug>/features/<feature-slug>/slices/index.md`
+- `auto-strike/initiatives/<initiative-slug>/features/<feature-slug>/slices/slice-0-[name].md`
+- `auto-strike/initiatives/<initiative-slug>/features/<feature-slug>/slices/slice-1-[name].md`
 
 Slice template:
 
@@ -110,6 +111,7 @@ Slice template:
       evidence.
 - [ ] Verify the acceptance criteria and any required browser/user-flow checks.
 - [ ] Record Changed, Verified, Reviewed, Skipped, and Review Findings evidence.
+- [ ] Write the Closeout Summary and use it as the final user-facing receipt.
 
 ## Implementation Research
 [Docs, versions, local precedent, or why no extra research is needed.]
@@ -132,6 +134,29 @@ Slice template:
 
 ## Watchouts
 [Risks, blast radius, rollback/recovery notes, accepted limits.]
+
+## Closeout Summary
+Implemented Slice [N]: [Name].
+
+Built:
+- [User-facing/code-facing result.]
+- [Important behavior, permission, state, or integration result.]
+
+Validation passed:
+- [command/check/browser flow]
+
+Review:
+- [lens/group]: passed / passed after fixes / skipped with reason.
+- Final re-review: no remaining blocking findings.
+
+Skipped / residual risk:
+- [None / skipped check, reason, replacement evidence, residual risk.]
+
+Docs:
+- [primary Auto Strike docs updated]
+
+Next:
+- [next natural slice/action]
 ```
 
 Add `## Non-Vertical Justification` only for a non-vertical slice.

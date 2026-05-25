@@ -239,3 +239,15 @@ The first PR-triggered phase intentionally uses no path filters so every PR can
 exercise the fresh target CLI install paths. Each host workflow keeps its own
 job and cancel-in-progress concurrency so Claude Code, Codex, and GitHub
 Copilot CLI failures remain independently diagnosable.
+
+## Codex Skill Invocation
+
+2026-05-25 dogfood note: OpenAI's Codex skills documentation describes explicit
+skill invocation with `$skill-name` and says `agents/openai.yaml` can set
+`policy.allow_implicit_invocation`. A pre-release Codex CLI dogfood run
+installed Strike `0.8.8` successfully, but `auto-strike` was not advertised to
+the model while every Strike skill used `allow_implicit_invocation: false`.
+Auto Strike is the primary user-invoked standalone workflow, so its Codex
+metadata now keeps it visible with `allow_implicit_invocation: true` plus
+`interface` display metadata, while the smaller board/card step skills remain
+manual-only. Source checked: https://developers.openai.com/codex/skills

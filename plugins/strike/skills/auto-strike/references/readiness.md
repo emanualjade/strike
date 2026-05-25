@@ -1,7 +1,7 @@
 # Readiness
 
-When all slices pass review, use `verification.md` and `review.md` to check the
-assembled feature against the spec:
+When all slices for a feature pass review, use `verification.md` and `review.md`
+to check the assembled feature against its `feature-spec.md`:
 
 - every planned slice is built or intentionally removed
 - repo-verifiable success checks pass or have explicit gaps
@@ -13,14 +13,23 @@ assembled feature against the spec:
   written as readiness fixes
 - docs, language, decisions, and todo reflect the final state
 
-Use `auto-strike/features/<feature-slug>/readiness.md` as the readiness work
-packet:
+Use feature readiness for one feature and initiative readiness for the whole
+request:
+
+- `auto-strike/initiatives/<initiative-slug>/features/<feature-slug>/readiness.md`
+- `auto-strike/initiatives/<initiative-slug>/readiness.md`
+
+Feature readiness proves the feature's slices satisfy the feature spec.
+Initiative readiness proves cross-feature flows, dependencies, docs, accepted
+residual risk, and the initiative readiness target.
+
+Use this readiness work packet:
 
 ```md
-# [Feature/MVP] Readiness
+# [Feature/Initiative] Readiness
 
 ## Phase Tasks
-- [ ] Compare built slices against the spec and accepted scope.
+- [ ] Compare built slices or feature readiness docs against the accepted scope.
 - [ ] Run or confirm repo-verifiable success checks.
 - [ ] Check representative user/system flows end to end.
 - [ ] Confirm review findings are fixed, accepted, or moved to follow-up.
@@ -41,12 +50,15 @@ packet:
 - [Gap] - [reason, risk, follow-up]
 
 ## Exit Evidence
-- [Why the feature/MVP is ready or what blocks readiness.]
+- [Why the feature/initiative is ready or what blocks readiness.]
 ```
 
 If readiness finds fixable issues, assign them to the smallest affected slice
-and loop through fix and review. When ready, mark the relevant `todo.md` items
-complete and leave a concise final note with changed files and checks.
+or feature and loop through fix and review. When ready, mark the relevant
+`todo.md` items complete and leave a concise final note with changed files,
+checks, review status, skipped/residual risk, docs, and next action. For
+completed slices, use the slice's `Closeout Summary` as that final user-facing
+note.
 
 ## User Control
 

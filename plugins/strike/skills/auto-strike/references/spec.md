@@ -1,17 +1,52 @@
 # Spec
 
-Write one or more specs only when they are useful. A spec is the durable source
-of truth for what is being built, not an implementation script.
+Write specs only when they are useful. Specs are durable source-of-truth
+artifacts, not implementation scripts.
 
-Default path:
+Default paths:
 
-- `auto-strike/features/<feature-slug>/spec.md`
-- additional specs only for genuinely separate capabilities or audiences
+- `auto-strike/initiatives/<initiative-slug>/spec.md` for the initiative
+  overview, feature map, readiness target, cross-feature flows, constraints, and
+  sequencing.
+- `auto-strike/initiatives/<initiative-slug>/features/<feature-slug>/feature-spec.md`
+  for each buildable feature that will be sliced.
 
-Useful spec shape:
+Use one feature folder when the initiative has one buildable capability. Split
+into multiple feature folders when the initiative combines independent outcomes,
+domains, roles, workflows, readiness targets, or releaseable capabilities.
+
+Useful initiative spec shape:
 
 ```md
-# [Feature/MVP] Spec
+# [Initiative] Spec
+
+## Summary
+## Who Or What This Serves
+## Initiative Outcome
+## Feature Map
+| Feature | Purpose | Depends On | Readiness Target | Status |
+| --- | --- | --- | --- | --- |
+## Cross-Feature Flows
+## Scope And Non-Goals
+## Product Rules And Constraints
+## Domain Language
+## Security, Privacy, Permissions, And Data Integrity
+## Technical Constraints
+## Success Checks
+### Repo-Verifiable
+### Live / Human
+## Risks And Assumptions
+## Open Questions
+## Feature Spec Handoff
+## Phase Tasks
+## Spec Review
+## Exit Evidence
+```
+
+Useful feature spec shape:
+
+```md
+# [Feature] Spec
 
 ## Summary
 ## Who Or What This Serves
@@ -43,6 +78,8 @@ During active spec work, keep the process sections concise:
 ```md
 ## Phase Tasks
 - [ ] Pull current truth from idea, grill, language, and decisions.
+- [ ] Write or update the initiative feature map.
+- [ ] Write feature specs for buildable capabilities.
 - [ ] Write product behavior, scope, non-goals, rules, and flows.
 - [ ] Define repo-verifiable and live/human success checks.
 - [ ] Record risky surfaces, constraints, assumptions, and open questions.
@@ -57,17 +94,21 @@ During active spec work, keep the process sections concise:
 
 Do focused research before or during spec when current docs, codebase precedent,
 domain pitfalls, or architecture tradeoffs can change the decision. Use primary
-sources for unstable or external facts.
+sources for unstable or external facts. Put initiative-wide findings in the
+initiative `research/` directory and feature-specific findings in the feature
+`research/` directory.
 
 Before calling the spec ready, check it against the research discipline,
 dependency discipline when packages or setup are involved, and code quality
-checklist. The spec should name the expected code organization,
-architecture boundaries, risky shared surfaces, and blast radius where those
-choices matter. If the repo is greenfield, be more explicit: the first structure
-will anchor future agents and should be clean from slice one.
+checklist. Initiative specs should make the feature split, readiness target,
+dependencies, and cross-feature constraints clear. Feature specs should name the
+expected code organization, architecture boundaries, risky shared surfaces, and
+blast radius where those choices matter. If the repo is greenfield, be more
+explicit: the first structure will anchor future agents and should be clean from
+slice one.
 
 Before moving from spec to slices, do a quick spec review. Check that scope,
 non-goals, success checks, domain language, data/state rules, permissions,
-failure paths, research implications, and code organization are clear enough to
-slice without guessing. Fix obvious gaps in the spec; ask only for decisions
-that would change the product or risk.
+failure paths, research implications, feature boundaries, and code organization
+are clear enough to slice without guessing. Fix obvious gaps in the specs; ask
+only for decisions that would change the product or risk.

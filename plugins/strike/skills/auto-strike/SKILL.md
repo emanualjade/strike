@@ -1,8 +1,7 @@
 ---
 name: auto-strike
-description: Turn an idea into a working MVP with a standalone Auto Strike workspace.
+description: Use when the user asks for Auto Strike to turn an idea into a shipped feature or MVP with a standalone workspace.
 argument-hint: "[idea]"
-disable-model-invocation: true
 allowed-tools: Read Write Edit MultiEdit Bash Grep Glob WebFetch WebSearch Agent
 ---
 
@@ -88,8 +87,9 @@ At the start of every run, route deliberately:
    Use the helper's `inspect` command when available.
 2. Identify the current mode from user intent and the active artifact:
    brainstorm, grill, spec, slice, build, review, or readiness.
-3. Keep `auto-strike/index.md` as a small front door: active feature, active
-   work doc, short state, next action, and blocker if any.
+3. Keep `auto-strike/index.md` as a small front door: active initiative, active
+   feature when relevant, active doc or slice, short state, next action, and
+   blocker if any.
 4. Load the reference files for that mode, then do that mode's work until its
    purpose is satisfied or a better mode is needed.
 5. Before claiming done, run the helper's `validate` command when available and
@@ -122,11 +122,11 @@ intended result.
 | --- | --- | --- |
 | brainstorm | `brainstorm.md` | First useful outcome, target moment, constraints, and first-version non-goals are clear. |
 | grill | `grill.md` | Consequential product, domain, workflow, permission, data, integration, and success-check decisions are clear. |
-| spec | `spec.md`, `code-quality.md` | Durable spec is sliceable without guessing. |
-| slice | `slice.md`, `code-quality.md`, `verification.md` | Feature/milestone split is explicit; slices have size, dependencies, acceptance criteria, execution tasks, surfaces, checks, and checkpoints when needed. |
+| spec | `spec.md`, `code-quality.md` | Initiative overview and feature specs are clear enough to slice without guessing. |
+| slice | `slice.md`, `code-quality.md`, `verification.md` | Initiative feature split is explicit; active feature slices have size, dependencies, acceptance criteria, execution tasks, surfaces, checks, and checkpoints when needed. |
 | build | `build.md`, `code-quality.md`, `verification.md` | One slice is implemented and evidence is recorded. |
 | review | `review.md`, `code-quality.md`, `verification.md` | Findings are returned to the main agent, evaluated, fixed or accepted, and recorded. |
-| readiness | `readiness.md`, `code-quality.md`, `verification.md`, `review.md` | The assembled MVP/feature passes spec, checks, representative flows, docs, and accepted residual-risk review. |
+| readiness | `readiness.md`, `code-quality.md`, `verification.md`, `review.md` | The active feature or initiative passes spec, checks, representative flows, docs, and accepted residual-risk review. |
 
 ## Helper Use
 
@@ -149,8 +149,8 @@ checks, not only planning docs.
 - Drive toward the smallest useful feature or MVP as quickly as quality allows.
 - Inspect code and docs before asking questions the repo can answer.
 - Ask one consequential question at a time.
-- Make and record local, reversible, repo-pattern, docs-backed, or obvious MVP
-  decisions without waiting on the user.
+- Make and record local, reversible, repo-pattern, docs-backed, or obvious
+  first-version decisions without waiting on the user.
 - Ask for user input on core domain language, schema/model shape, lifecycle
   states, ownership, permissions, business rules, privacy/legal posture,
   destructive behavior, or hard-to-reverse architecture.
@@ -179,6 +179,8 @@ Keep responses short and user-facing. Report:
 - what changed or was clarified
 - which Auto Strike docs were created or updated
 - what was built or verified, when code changed
+- for completed slices, the slice `Closeout Summary`: built, validation, review,
+  skipped/residual risk, docs, and next
 - blockers, human/live checks, or skipped checks with reasons
 - the next best action
 
