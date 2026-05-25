@@ -85,13 +85,12 @@ function testValidateUnrelatedWorkspaceCollision() {
   assert.ok(body.messages.some((item) => item.code === "workspace-unrelated" && item.severity === "error"));
 }
 
-function testTinyPathDoesNotRequireSpecOrSlices() {
+function testSimpleFeatureSlugDoesNotHardFail() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
 ## Active Feature
 - tiny-copy-fix
-- Current path: Tiny Change Path
 - Current mode: build
 - Next best action: Edit the button copy.
 
@@ -113,15 +112,13 @@ function testTinyPathDoesNotRequireSpecOrSlices() {
 `);
 
   const result = run(repo, ["validate"]);
-  assertStatus(result, 0, "tiny path should not require feature docs for a simple active feature slug");
+  assertStatus(result, 0, "simple active feature slug should not hard fail");
   const body = json(result);
   assert.equal(body.activeFeature.raw, "tiny-copy-fix");
   assert.equal(body.activeFeature.path, null);
   assert.equal(body.activeFeature.inferredPath, "auto-strike/features/tiny-copy-fix");
   assert.ok(!body.messages.some((item) => item.code === "missing-active-feature"));
   assert.ok(!body.messages.some((item) => item.code === "missing-key-doc"));
-  assert.ok(!body.messages.some((item) => item.code === "missing-active-spec"));
-  assert.ok(!body.messages.some((item) => item.code === "missing-active-slice"));
 }
 
 function testFastPathInspectAndValidateWithEvidence() {
@@ -130,7 +127,6 @@ function testFastPathInspectAndValidateWithEvidence() {
 
 ## Active Feature
 - auto-strike/features/upload-mvp
-- Current path: Fast Path
 - Current mode: review
 - Active slice: auto-strike/features/upload-mvp/slices/slice-0-upload-preview.md
 - Next best action: Review slice 0.
@@ -185,7 +181,6 @@ function testValidateWarnsForMissingEvidence() {
 
 ## Active Feature
 - auto-strike/features/search-mvp
-- Current path: Fast Path
 - Current mode: review
 
 ## Open Decisions
@@ -206,7 +201,6 @@ function testValidateBrokenKeyDocReference() {
 
 ## Active Feature
 - auto-strike/features/search-mvp
-- Current path: Fast Path
 - Current mode: spec
 
 ## Key Docs
@@ -229,7 +223,6 @@ function testKeyDocsCanReferenceRepoDocs() {
 
 ## Active Feature
 - search-mvp
-- Current path: Fast Path
 - Current mode: idea
 
 ## Key Docs
@@ -258,7 +251,6 @@ function testReviewContextPacket() {
 
 ## Active Feature
 - auto-strike/features/video-mvp
-- Current path: Large Scope Path
 - Current mode: review
 
 ## Open Decisions
@@ -282,6 +274,8 @@ Verified:
   const body = json(result);
   assert.equal(body.lens, "edge-cases");
   assert.match(body.instructions.join("\n"), /Return findings to the main agent/);
+  assert.match(body.instructions.join("\n"), /read-only review agent/);
+  assert.match(body.instructions.join("\n"), /Do not edit files/);
   assert.ok(body.focus.some((item) => /hostile inputs/i.test(item)));
   assert.ok(body.state.docs.includes("auto-strike/features/video-mvp/spec.md"));
   assert.ok(body.state.evidence.changedPaths.includes("src/video/upload.ts"));
@@ -294,7 +288,6 @@ function testImplementationPlanReviewContext() {
 
 ## Active Feature
 - auto-strike/features/video-mvp
-- Current path: Fast Path
 - Current mode: slice
 - Active slice: auto-strike/features/video-mvp/slices/slice-0-upload.md
 
@@ -334,7 +327,6 @@ function testReviewContextScopesChangedFilesToActiveFeature() {
 
 ## Active Feature
 - auto-strike/features/todo-dogfood
-- Current path: Fast Path
 - Current mode: review
 - Active slice: auto-strike/features/todo-dogfood/slices/slice-0-static-todo.md
 
@@ -406,7 +398,6 @@ function testValidateWarnsWhenReviewEvidenceLacksChangedAndVerified() {
 
 ## Active Feature
 - auto-strike/features/search-mvp
-- Current path: Fast Path
 - Current mode: review
 - Active slice: auto-strike/features/search-mvp/slices/slice-0-search.md
 
@@ -435,7 +426,6 @@ function testValidateWarnsForWeakPreBuildSlicePrep() {
 
 ## Active Feature
 - auto-strike/features/todo-dogfood
-- Current path: Fast Path
 - Current mode: build
 - Active slice: auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md
 
@@ -472,7 +462,6 @@ function testValidateAcceptsConcretePreBuildSlicePrep() {
 
 ## Active Feature
 - auto-strike/features/todo-dogfood
-- Current path: Fast Path
 - Current mode: build
 - Active slice: auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md
 
@@ -506,14 +495,349 @@ Edit task labels.
   assert.ok(!body.messages.some((item) => item.code === "weak-slice-plan-review"));
 }
 
+function testValidateAcceptsActiveWorkPointer() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Feature: auto-strike/features/clip-notes
+- Doc: auto-strike/features/clip-notes/idea.md
+- State: First-outcome decision is being clarified.
+- Next: Complete the first-outcome decision.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/features/clip-notes/idea.md", `# Clip Notes Idea
+
+## Phase Tasks
+- [x] Capture the user, problem, and first useful outcome.
+- [ ] Confirm constraints and first-version non-goals.
+
+## First Useful Outcome
+User can save a short note for a selected clip.
+
+## Exit Evidence
+- Target moment, constraints, and first-version non-goals are recorded.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "valid active work pointer should pass validation");
+  const body = json(result);
+  assert.equal(body.index.currentMode, "brainstorm");
+  assert.ok(!body.messages.some((item) => item.code === "missing-active-work"));
+  assert.ok(!body.messages.some((item) => item.code === "missing-active-work-doc"));
+  assert.ok(!body.messages.some((item) => item.code === "weak-active-work-doc"));
+}
+
+function testValidateWarnsForMissingActiveWork() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Feature
+- auto-strike/features/clip-notes
+- Current mode: brainstorm
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/features/clip-notes/idea.md", `# Clip Notes Idea
+
+## Phase Tasks
+- [x] Capture the user, problem, and first useful outcome.
+- [ ] Confirm constraints and first-version non-goals.
+
+## Exit Evidence
+- Target moment, constraints, and first-version non-goals are recorded.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "missing active work should warn, not fail");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "missing-active-work" && item.severity === "warning"));
+  assert.ok(!body.messages.some((item) => item.code === "missing-active-work-doc"));
+  assert.ok(!body.messages.some((item) => item.code === "weak-active-work-doc"));
+}
+
+function testValidateWarnsForWeakOrMissingActiveWorkDoc() {
+  const weakRepo = tempRepo();
+  write(weakRepo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Feature: auto-strike/features/clip-notes
+- Doc: auto-strike/features/clip-notes/spec.md
+- State: Spec acceptance checks are being drafted.
+- Next: Draft acceptance checks.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(weakRepo, "auto-strike/features/clip-notes/spec.md", `# Clip Notes Spec
+
+## Phase Tasks
+- [ ] Draft it later.
+
+## Exit Evidence
+- Pending.
+`);
+
+  const weak = run(weakRepo, ["validate"]);
+  assertStatus(weak, 0, "weak active work doc should warn, not fail");
+  assert.ok(json(weak).messages.some((item) => item.code === "weak-active-work-doc" && item.severity === "warning"));
+
+  const missingRepo = tempRepo();
+  write(missingRepo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Feature: auto-strike/features/clip-notes
+- Doc: auto-strike/features/clip-notes/grill.md
+- State: Highest-risk user-flow question is unresolved.
+- Next: Resolve the highest-risk user-flow question.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(missingRepo, "auto-strike/features/clip-notes/idea.md", "# Clip Notes Idea\n");
+
+  const missing = run(missingRepo, ["validate"]);
+  assertStatus(missing, 0, "missing active work doc should warn, not fail");
+  assert.ok(json(missing).messages.some((item) => item.code === "missing-active-work-doc" && item.severity === "warning"));
+}
+
+function testValidateAcceptsSliceMapDependenciesAndCheckpoint() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Feature
+- auto-strike/features/auth-mvp
+- Current mode: slice
+- Active slice: auto-strike/features/auth-mvp/slices/slice-1-register-user.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/features/auth-mvp/spec.md", "# Auth MVP Spec\n");
+  write(repo, "auto-strike/features/auth-mvp/slices/index.md", `# Slices
+
+## Slice Map
+
+| Slice | Size | Depends On | Unblocks | Risk | Verification |
+| --- | --- | --- | --- | --- | --- |
+| 0. Session Baseline | S | None | Register User | High | App starts; auth route smoke |
+| 1. Register User | M | 0 | Login User | Medium | Register flow smoke |
+| 2. Login User | M | 0, 1 | Org creation | High | Login/session browser check |
+
+## Checkpoint: After Slices 1-3
+- [ ] App builds or starts without errors.
+- [ ] Focused tests or checks pass.
+- [ ] Core user/system flow works end to end.
+- [ ] Review findings are resolved or accepted.
+- [ ] Human decision needed? If yes, pause and ask.
+`);
+  write(repo, "auto-strike/features/auth-mvp/slices/slice-0-session-baseline.md", `# Slice 0: Session Baseline
+
+## Size
+S
+
+## Outcome
+Session plumbing is ready for user auth flows.
+
+## Acceptance Criteria
+- Server starts with session middleware configured.
+- Auth smoke route returns a stable response.
+
+## Depends On
+- None.
+
+## Likely Surfaces
+- \`server.js\`
+- \`auth/session.js\`
+
+## Execution Tasks
+- [x] Research local session precedent before coding.
+- [x] Write plan with exact surfaces and checks.
+- [x] Review plan and resolve findings.
+- [ ] Verify acceptance criteria with auth smoke check.
+
+## Non-Vertical Justification
+- Reason: reduces auth/session risk before user-facing registration.
+- Next vertical slice: Slice 1 Register User.
+`);
+  write(repo, "auto-strike/features/auth-mvp/slices/slice-1-register-user.md", `# Slice 1: Register User
+
+## Size
+M
+
+## Outcome
+User can create an account.
+
+## Acceptance Criteria
+- Valid user can register.
+- Duplicate email shows a visible error.
+- Registered user has a session.
+
+## Depends On
+- Slice 0: Session Baseline.
+
+## Likely Surfaces
+- \`server.js\`
+- \`auth/routes.js\`
+- \`public/register.html\`
+- \`public/app.js\`
+
+## Execution Tasks
+- [ ] Research registration docs and local auth routes.
+- [ ] Write plan with exact surfaces and checks.
+- [ ] Review plan and resolve findings.
+- [ ] Verify acceptance criteria with register flow smoke.
+`);
+  write(repo, "auto-strike/features/auth-mvp/slices/slice-2-login-user.md", `# Slice 2: Login User
+
+## Size
+M
+
+## Outcome
+User can log in with an existing account.
+
+## Acceptance Criteria
+- Existing user can log in.
+- Invalid credentials show a visible error.
+
+## Depends On
+- Slice 0: Session Baseline.
+- Slice 1: Register User.
+
+## Likely Surfaces
+- \`server.js\`
+- \`auth/routes.js\`
+- \`public/login.html\`
+- \`public/app.js\`
+
+## Execution Tasks
+- [ ] Research login/session behavior before coding.
+- [ ] Write plan with exact surfaces and checks.
+- [ ] Review plan and resolve findings.
+- [ ] Verify acceptance criteria with login/session browser check.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "clean slice map, dependencies, and checkpoint should pass");
+  const body = json(result);
+  const newWarningCodes = new Set([
+    "missing-slice-map",
+    "missing-slice-checkpoint",
+    "missing-slice-dependency",
+    "missing-slice-execution-tasks",
+    "oversized-slice",
+    "too-many-slice-acceptance-criteria",
+    "too-many-slice-surfaces",
+    "batched-slice-title",
+    "weak-non-vertical-slice-justification",
+  ]);
+  assert.ok(!body.messages.some((item) => newWarningCodes.has(item.code)));
+}
+
+function testValidateWarnsForMissingSliceMapDependenciesAndCheckpoint() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Feature
+- auto-strike/features/auth-mvp
+- Current mode: slice
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/features/auth-mvp/spec.md", "# Auth MVP Spec\n");
+  write(repo, "auto-strike/features/auth-mvp/slices/slice-0-session.md", `# Slice 0: Session
+
+## Size
+S
+
+## Depends On
+- None.
+`);
+  write(repo, "auto-strike/features/auth-mvp/slices/slice-1-register.md", `# Slice 1: Register
+
+## Size
+M
+`);
+  write(repo, "auto-strike/features/auth-mvp/slices/slice-2-login.md", `# Slice 2: Login
+
+## Size
+M
+
+## Depends On
+- Slice 1: Register.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "missing slice map/dependency/checkpoint should warn, not fail");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "missing-slice-map" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "missing-slice-checkpoint" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "missing-slice-dependency" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "missing-slice-execution-tasks" && item.severity === "warning"));
+}
+
+function testValidateWarnsForOversizedBatchedAndWeakNonVerticalSlice() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Feature
+- auto-strike/features/auth-mvp
+- Current mode: slice
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/features/auth-mvp/spec.md", "# Auth MVP Spec\n");
+  write(repo, "auto-strike/features/auth-mvp/slices/slice-0-full-mvp.md", `# Slice 0: Full MVP Setup Frontend and Backend
+
+## Size
+XL
+
+## Outcome
+Build the whole auth MVP.
+
+## Acceptance Criteria
+- Repo is configured.
+- Packages are installed.
+- Registration works.
+- Login works.
+
+## Depends On
+- None.
+
+## Likely Surfaces
+- \`package.json\`
+- \`server.js\`
+- \`auth/client.js\`
+- \`auth/routes.js\`
+- \`public/index.html\`
+- \`public/app.js\`
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "oversized batched non-vertical slice should warn, not fail");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "oversized-slice" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "too-many-slice-acceptance-criteria" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "too-many-slice-surfaces" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "batched-slice-title" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "weak-non-vertical-slice-justification" && item.severity === "warning"));
+}
+
 function testReviewPlanRecommendsUiRegressionForUiChanges() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
 ## Active Feature
 - auto-strike/features/todo-dogfood
-- Current path: Fast Path
-- Current mode: review
+- Current mode: build
 - Active slice: auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md
 
 ## Open Decisions
@@ -549,7 +873,7 @@ Verified:
   assertStatus(validate, 0, "UI review gaps should warn, not fail");
   const body = json(validate);
   assert.ok(body.messages.some((item) => item.code === "missing-reviewed-lens-evidence" && item.severity === "warning"));
-  assert.ok(body.messages.some((item) => item.code === "missing-ui-review-evidence" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "missing-ui-browser-review-evidence" && item.severity === "warning"));
 
   const alias = run(repo, ["review-context", "--lens", "frontend"]);
   assertStatus(alias, 0, "frontend alias should resolve to the UI regression lens");
@@ -562,7 +886,6 @@ function testUiReviewEvidenceSuppressesUiReviewWarning() {
 
 ## Active Feature
 - auto-strike/features/todo-dogfood
-- Current path: Fast Path
 - Current mode: review
 - Active slice: auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md
 
@@ -595,7 +918,90 @@ Skipped:
   assertStatus(result, 0, "recorded UI review evidence should satisfy UI review validation");
   const body = json(result);
   assert.ok(!body.messages.some((item) => item.code === "missing-reviewed-lens-evidence"));
-  assert.ok(!body.messages.some((item) => item.code === "missing-ui-review-evidence"));
+  assert.ok(!body.messages.some((item) => item.code === "missing-ui-browser-review-evidence"));
+}
+
+function testUiRegressionReviewAloneDoesNotSuppressBrowserWarning() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Feature
+- auto-strike/features/todo-dogfood
+- Current mode: review
+- Active slice: auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/features/todo-dogfood/spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+
+## Evidence
+
+Changed:
+- todo/index.html
+- todo/todo.js
+
+Verified:
+- node scripts/todo-smoke.js - passed
+
+Reviewed:
+- functionality - pass
+- spec-coverage - pass
+- code-quality - pass
+- ui-regression - pass; static selector review checked edit input against checkbox selectors
+- user-flows - pass
+`);
+  write(repo, "todo/index.html", "<!doctype html>\n<input>\n");
+  write(repo, "todo/todo.js", "export function todo() {}\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "static UI review without browser evidence should warn");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "missing-ui-browser-review-evidence" && item.severity === "warning"));
+}
+
+function testPackageOnlyBrowserSkipDoesNotSuppressBrowserWarning() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Feature
+- auto-strike/features/todo-dogfood
+- Current mode: build
+- Active slice: auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/features/todo-dogfood/spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+
+## Evidence
+
+Changed:
+- todo/index.html
+- todo/todo.js
+
+Verified:
+- node scripts/todo-smoke.js - passed
+
+Reviewed:
+- functionality - pass
+- spec-coverage - pass
+- code-quality - pass
+- ui-regression - pass by static review plus syntax checks
+- user-flows - pass
+
+Skipped:
+- Automated browser screenshot/click automation - no browser automation dependency exists in this repo and package installs are out of scope; replaced with API flow checks and static UI review
+`);
+  write(repo, "todo/index.html", "<!doctype html>\n<input>\n");
+  write(repo, "todo/todo.js", "export function todo() {}\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "package-only browser skip should warn, not fail");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "missing-ui-browser-review-evidence" && item.severity === "warning"));
 }
 
 function testValidateWarnsForMissingRequiredReviewLenses() {
@@ -604,7 +1010,6 @@ function testValidateWarnsForMissingRequiredReviewLenses() {
 
 ## Active Feature
 - auto-strike/features/video-mvp
-- Current path: Fast Path
 - Current mode: review
 - Active slice: auto-strike/features/video-mvp/slices/slice-0-upload.md
 
@@ -652,7 +1057,6 @@ function testValidateAcceptsReviewedAndSkippedRequiredReviewLenses() {
 
 ## Active Feature
 - auto-strike/features/todo-dogfood
-- Current path: Fast Path
 - Current mode: review
 - Active slice: auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md
 
@@ -700,6 +1104,124 @@ Skipped:
   assert.ok(!body.messages.some((item) => item.code === "missing-required-review-lens"));
 }
 
+function testValidateWarnsForMultiSliceWithoutFreshReviewAgentEvidence() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Feature
+- auto-strike/features/video-mvp
+- Current mode: review
+- Active slice: auto-strike/features/video-mvp/slices/slice-0-upload.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/features/video-mvp/spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/features/video-mvp/slices/slice-1-caption.md", `# Slice 1: Caption
+
+## Size
+S
+
+## Depends On
+- Slice 0: Upload.
+
+## Execution Tasks
+- [ ] Research local caption behavior.
+- [ ] Write plan with surfaces and checks.
+- [ ] Review plan and resolve findings.
+- [ ] Verify caption behavior.
+`);
+  write(repo, "auto-strike/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+
+## Implementation Research
+- Local precedent: src/video/upload.ts owns upload behavior.
+
+## Plan
+- Update \`src/video/upload.ts\` and verify with \`node scripts/video-smoke.js\`.
+
+## Plan Review
+- read-only review agent - pass; files and verification are named.
+
+## Evidence
+
+Changed:
+- src/video/upload.ts
+
+Verified:
+- node scripts/video-smoke.js - passed
+
+Reviewed:
+- functionality - pass
+- spec-coverage - pass
+- code-quality - pass
+`);
+  write(repo, "src/video/upload.ts", "export function upload() {}\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "multi-slice review without fresh reviewer evidence should warn");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "missing-fresh-review-agent-evidence" && item.severity === "warning"));
+}
+
+function testValidateAcceptsMultiSliceFreshReviewAgentEvidence() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Feature
+- auto-strike/features/video-mvp
+- Current mode: review
+- Active slice: auto-strike/features/video-mvp/slices/slice-0-upload.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/features/video-mvp/spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/features/video-mvp/slices/slice-1-caption.md", `# Slice 1: Caption
+
+## Size
+S
+
+## Depends On
+- Slice 0: Upload.
+
+## Execution Tasks
+- [ ] Research local caption behavior.
+- [ ] Write plan with surfaces and checks.
+- [ ] Review plan and resolve findings.
+- [ ] Verify caption behavior.
+`);
+  write(repo, "auto-strike/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+
+## Implementation Research
+- Local precedent: src/video/upload.ts owns upload behavior.
+
+## Plan
+- Update \`src/video/upload.ts\` and verify with \`node scripts/video-smoke.js\`.
+
+## Plan Review
+- read-only review agent - pass; files and verification are named.
+
+## Evidence
+
+Changed:
+- src/video/upload.ts
+
+Verified:
+- node scripts/video-smoke.js - passed
+
+Reviewed:
+- read-only review agent, functionality - pass
+- fresh-context review, spec-coverage - pass
+- independent reviewer, code-quality - pass
+`);
+  write(repo, "src/video/upload.ts", "export function upload() {}\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "multi-slice review with fresh reviewer evidence should not warn");
+  const body = json(result);
+  assert.ok(!body.messages.some((item) => item.code === "missing-fresh-review-agent-evidence"));
+}
+
 function testValidateWarnsWhenGitChangesMissingFromChangedEvidence() {
   const repo = tempRepo();
   initGit(repo);
@@ -707,7 +1229,6 @@ function testValidateWarnsWhenGitChangesMissingFromChangedEvidence() {
 
 ## Active Feature
 - auto-strike/features/video-mvp
-- Current path: Fast Path
 - Current mode: review
 - Active slice: auto-strike/features/video-mvp/slices/slice-0-upload.md
 
@@ -758,7 +1279,6 @@ function testValidateWarnsForStaleChangedEvidencePath() {
 
 ## Active Feature
 - auto-strike/features/video-mvp
-- Current path: Fast Path
 - Current mode: review
 - Active slice: auto-strike/features/video-mvp/slices/slice-0-upload.md
 
@@ -805,7 +1325,6 @@ function testReviewPlanDetectsBrowserScriptUiChanges() {
 
 ## Active Feature
 - auto-strike/features/vanilla-ui
-- Current path: Fast Path
 - Current mode: review
 - Active slice: auto-strike/features/vanilla-ui/slices/slice-0-click.md
 
@@ -847,7 +1366,7 @@ function testHelpWorksWithoutCommand() {
 
 testInspectAbsentWorkspace();
 testValidateUnrelatedWorkspaceCollision();
-testTinyPathDoesNotRequireSpecOrSlices();
+testSimpleFeatureSlugDoesNotHardFail();
 testFastPathInspectAndValidateWithEvidence();
 testValidateWarnsForMissingEvidence();
 testValidateBrokenKeyDocReference();
@@ -858,10 +1377,20 @@ testReviewContextScopesChangedFilesToActiveFeature();
 testValidateWarnsWhenReviewEvidenceLacksChangedAndVerified();
 testValidateWarnsForWeakPreBuildSlicePrep();
 testValidateAcceptsConcretePreBuildSlicePrep();
+testValidateAcceptsActiveWorkPointer();
+testValidateWarnsForMissingActiveWork();
+testValidateWarnsForWeakOrMissingActiveWorkDoc();
+testValidateAcceptsSliceMapDependenciesAndCheckpoint();
+testValidateWarnsForMissingSliceMapDependenciesAndCheckpoint();
+testValidateWarnsForOversizedBatchedAndWeakNonVerticalSlice();
 testReviewPlanRecommendsUiRegressionForUiChanges();
 testUiReviewEvidenceSuppressesUiReviewWarning();
+testUiRegressionReviewAloneDoesNotSuppressBrowserWarning();
+testPackageOnlyBrowserSkipDoesNotSuppressBrowserWarning();
 testValidateWarnsForMissingRequiredReviewLenses();
 testValidateAcceptsReviewedAndSkippedRequiredReviewLenses();
+testValidateWarnsForMultiSliceWithoutFreshReviewAgentEvidence();
+testValidateAcceptsMultiSliceFreshReviewAgentEvidence();
 testValidateWarnsWhenGitChangesMissingFromChangedEvidence();
 testValidateWarnsForStaleChangedEvidencePath();
 testReviewPlanDetectsBrowserScriptUiChanges();

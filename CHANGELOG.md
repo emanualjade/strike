@@ -2,6 +2,45 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.6 - 2026-05-25
+
+- Removed Tiny/Fast/Full paths as first-class workflow routes. Auto Strike now
+  uses one phase workflow with judgment inside each phase.
+- Replaced index-level phase ceremony with an artifact-led `Active Work` resume
+  pointer. Phase docs now own tasks, decisions, and exit evidence.
+- Strengthened review guidance so meaningful, high-risk, or multi-slice work
+  uses fresh read-only review agents when supported, with findings returned to
+  the main agent for synthesis before fixes.
+- Tightened UI/browser review expectations so UI, auth/session, routing, forms,
+  responsive layout, and user-visible state changes require browser/user-flow
+  evidence or an explicit blocked-browser fallback.
+- Clarified that missing repo browser dependencies are not enough to skip
+  browser checks when host or manual browser tooling is available.
+- Added helper warnings for missing or weak active-work pointers, missing or
+  weak active phase docs, multi-slice review evidence without a fresh reviewer,
+  and UI changes without browser/user-flow review evidence.
+- Added slice sizing, dependency-map, checkpoint, execution-task checklist, and
+  non-vertical justification guidance plus helper warnings for oversized or
+  batched slice plans.
+- Added an explicit feature-decomposition gate before slicing so broad work is
+  grouped into feature/milestone folders before slice maps are created.
+- Replaced MVP/happy-path done wording with broader production-shaped completion
+  criteria for code changes, features, MVPs, plans, specs, research, and review.
+- Consolidated duplicated review guidance into `review.md` so reviewer behavior,
+  evidence shape, lens selection, and helper packet usage have one source of
+  truth.
+- Split verification and dependency/install guidance out of `code-quality.md`
+  into focused `verification.md` and `dependencies.md` references.
+- Shortened the main completion standard and left detailed completion criteria
+  in `readiness.md`.
+- Condensed the Auto Strike main skill into the routing contract, split detailed
+  behavior into phase-specific files, and removed the redundant `flow.md` phase
+  map.
+- Clarified that phase order is the ideal default workflow, not a mandated
+  waterfall, while preserving mode commitment.
+- Reframed research guidance as just-in-time source-backed recommendation work
+  that keeps momentum unless a real product/risk blocker appears.
+
 ## 0.8.5 - 2026-05-25
 
 - Added Auto Strike `review-plan` to recommend review lenses from active

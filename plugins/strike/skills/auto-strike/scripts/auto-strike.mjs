@@ -8,12 +8,21 @@ import { fileURLToPath } from "node:url";
 
 const SCRIPT_FILE = fileURLToPath(import.meta.url);
 const WORKSPACE_ROOT = "auto-strike";
-const VALID_MODES = new Set(["idea", "decisions", "spec", "slice", "build", "review", "readiness"]);
+const VALID_MODES = new Set(["brainstorm", "grill", "idea", "decisions", "spec", "slice", "build", "review", "readiness"]);
 const MODES_EXPECTING_SPEC = new Set(["slice", "build", "review", "readiness"]);
 const MODES_EXPECTING_SLICE = new Set(["build", "review", "readiness"]);
 const MODES_EXPECTING_SLICE_PREP = new Set(["build", "review", "readiness"]);
 const MODES_EXPECTING_EVIDENCE = new Set(["review", "readiness"]);
-const TINY_PATH_PATTERN = /\btiny(?:\s+change)?\b/i;
+const ACTIVE_WORK_DOC_FILES = new Set([
+  "idea.md",
+  "grill.md",
+  "spec.md",
+  "readiness.md",
+]);
+const SLICE_DOC_PATTERN = /\/slices\/slice-\d+[^/]*\.md$/i;
+const SLICE_SIZE_PATTERN = /^(XS|S|M|L|XL)$/i;
+const BROAD_SLICE_TITLE_PATTERN = /\b(and|full|complete|mvp)\b|setup\s+(front[- ]?end|back[- ]?end|backend|frontend)|front[- ]?end\s+(and|\/|\+|&)\s+back[- ]?end|back[- ]?end\s+(and|\/|\+|&)\s+front[- ]?end/i;
+const NON_VERTICAL_SLICE_PATTERN = /\b(non[- ]vertical|foundation|migration|spike|refactor|baseline|harness|scaffold|setup)\b/i;
 
 const LENSES = {
   "edge-cases": {
@@ -48,7 +57,7 @@ const LENSES = {
     focus: [
       "Whether slice-specific research used official docs, current repo versions, and nearby codebase precedent where needed.",
       "Whether the plan names exact files/surfaces, concern boundaries, verification commands, and rollback or recovery notes.",
-      "Whether the plan is the smallest complete vertical implementation path and avoids scope drift or speculative abstractions.",
+      "Whether the plan is the smallest complete vertical implementation path with clear size, dependency order, working-state guarantee, and non-vertical justification when needed.",
       "Missing edge cases, UI states, data/state risks, dependencies, or integration details that should be resolved before coding.",
     ],
   },
@@ -76,7 +85,7 @@ const LENSES = {
       "New DOM or component structure against existing CSS selectors, inherited styles, and layout constraints.",
       "Desktop/mobile layout, long text, small containers, overflow, spacing, hit targets, and controls that collapse or overlap.",
       "Changed interaction states such as editing, disabled, loading, empty, error, success, hover, focus, and keyboard flows.",
-      "Browser or visual evidence when feasible; explicit static fallback review when browser checks are blocked.",
+      "Browser or user-flow evidence for UI behavior; explicit static fallback review only when host/browser access is actually blocked.",
     ],
   },
   accessibility: {
@@ -236,11 +245,11 @@ function inspectPath(filePath) {
 
 function walkMarkdownFiles(rootPath, repoRoot, limit = 300) {
   const files = [];
-  function walk(currentPath) {
+  function walk(currentDir) {
     if (files.length >= limit) return;
-    for (const entry of fs.readdirSync(currentPath, { withFileTypes: true })) {
+    for (const entry of fs.readdirSync(currentDir, { withFileTypes: true })) {
       if (entry.name.startsWith(".")) continue;
-      const absolutePath = path.join(currentPath, entry.name);
+      const absolutePath = path.join(currentDir, entry.name);
       if (entry.isSymbolicLink()) continue;
       if (entry.isDirectory()) {
         walk(absolutePath);
@@ -337,6 +346,11 @@ function extractSection(text, heading) {
   return (nextHeading === -1 ? rest : rest.slice(0, nextHeading)).trim();
 }
 
+function hasSection(text, heading) {
+  const pattern = new RegExp(`^##\\s+${escapeRegExp(heading)}\\s*$`, "im");
+  return pattern.test(normalizeText(text));
+}
+
 function escapeRegExp(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -373,10 +387,6 @@ function parseLabeledItem(items, label) {
   return stripMarkdownShell(match?.[1] ?? "");
 }
 
-function parseCurrentPath(items) {
-  return parseLabeledItem(items, "Current path") ?? parseLabeledItem(items, "Path");
-}
-
 function parseActiveSlice(items) {
   return parseLabeledItem(items, "Active slice") ?? parseLabeledItem(items, "Current slice");
 }
@@ -391,15 +401,62 @@ function extractInlinePath(value) {
   return stripMarkdownShell(leading);
 }
 
+function usefulValue(value) {
+  if (!value || isPlaceholder(value) || isNoneItem(value)) return null;
+  return value;
+}
+
+function parseActiveWork(indexText) {
+  const text = extractSection(indexText, "Active Work");
+  const items = markdownListItems(text);
+  const featureRaw = usefulValue(parseLabeledItem(items, "Feature"));
+  const docRaw = usefulValue(parseLabeledItem(items, "Doc"));
+  const state = usefulValue(parseLabeledItem(items, "State"));
+  const next = usefulValue(parseLabeledItem(items, "Next"));
+  const blockedBy = usefulValue(parseLabeledItem(items, "Blocked by"));
+  return {
+    text,
+    featureRaw,
+    featurePath: featureRaw ? extractInlinePath(featureRaw) : null,
+    docRaw,
+    docPath: docRaw ? extractInlinePath(docRaw) : null,
+    state,
+    next,
+    blockedBy,
+  };
+}
+
+function modeFromActiveDoc(docPath) {
+  if (!docPath || isPlaceholder(docPath)) return null;
+  const normalized = normalizeEvidencePath(docPath);
+  const basename = path.posix.basename(normalized).toLowerCase();
+  if (basename === "idea.md") return "brainstorm";
+  if (basename === "grill.md") return "grill";
+  if (basename === "readiness.md") return "readiness";
+  if (normalized.endsWith("/slices/index.md")) return "slice";
+  if (SLICE_DOC_PATTERN.test(normalized)) return "build";
+  if (basename === "spec.md") return "spec";
+  return null;
+}
+
 function parseIndex(indexText) {
   if (!indexText) {
     return {
       present: false,
       activeFeatureRaw: null,
       activeFeaturePath: null,
-      currentPath: null,
       currentMode: null,
       activeSliceRaw: null,
+      activeWork: {
+        text: "",
+        featureRaw: null,
+        featurePath: null,
+        docRaw: null,
+        docPath: null,
+        state: null,
+        next: null,
+        blockedBy: null,
+      },
       nextBestAction: null,
       keyDocs: [],
       openDecisions: [],
@@ -408,16 +465,17 @@ function parseIndex(indexText) {
     };
   }
 
+  const activeWork = parseActiveWork(indexText);
   const activeItems = markdownListItems(extractSection(indexText, "Active Feature"));
   const activeFeatureRaw = activeItems.find((item) => {
-    return !/^(current mode|next best action|current path|path|active slice|current slice)\s*:/i.test(item);
+    return !/^(current mode|next best action|active slice|current slice|phase objective|phase exit)\s*:/i.test(item);
   }) ?? null;
   const currentModeRaw = parseLabeledItem(activeItems, "Current mode");
   const currentMode = currentModeRaw && !isPlaceholder(currentModeRaw)
     ? currentModeRaw.toLowerCase().split(/\s+/)[0].replace(/[^a-z-]/g, "")
-    : null;
-  const currentPath = parseCurrentPath(activeItems);
-  const activeSliceRaw = parseActiveSlice(activeItems);
+    : modeFromActiveDoc(activeWork.docPath);
+  const activeSliceRaw = parseActiveSlice(activeItems) ??
+    (activeWork.docPath && SLICE_DOC_PATTERN.test(activeWork.docPath) ? activeWork.docPath : null);
   const nextBestAction = parseLabeledItem(activeItems, "Next best action");
 
   const keyDocs = markdownListItems(extractSection(indexText, "Key Docs"))
@@ -435,16 +493,15 @@ function parseIndex(indexText) {
 
   return {
     present: true,
-    activeFeatureRaw: activeFeatureRaw && !isPlaceholder(activeFeatureRaw)
-      ? stripMarkdownShell(activeFeatureRaw)
-      : null,
-    activeFeaturePath: activeFeatureRaw && !isPlaceholder(activeFeatureRaw)
-      ? extractInlinePath(activeFeatureRaw)
-      : null,
-    currentPath: currentPath && !isPlaceholder(currentPath) ? currentPath : null,
+    activeFeatureRaw: activeWork.featureRaw ??
+      (activeFeatureRaw && !isPlaceholder(activeFeatureRaw) ? stripMarkdownShell(activeFeatureRaw) : null),
+    activeFeaturePath: activeWork.featurePath ??
+      (activeFeatureRaw && !isPlaceholder(activeFeatureRaw) ? extractInlinePath(activeFeatureRaw) : null),
     currentMode,
     activeSliceRaw: activeSliceRaw && !isPlaceholder(activeSliceRaw) ? activeSliceRaw : null,
-    nextBestAction: nextBestAction && !isPlaceholder(nextBestAction) ? nextBestAction : null,
+    activeWork,
+    nextBestAction: activeWork.next ??
+      (nextBestAction && !isPlaceholder(nextBestAction) ? nextBestAction : null),
     keyDocs,
     openDecisions,
     verification,
@@ -692,6 +749,14 @@ function activeSliceState(repoRoot, index, activeFeature) {
   };
 }
 
+function activeFeatureSliceDocs(activeFeature) {
+  return activeFeature.sliceFiles.filter((sourcePath) => SLICE_DOC_PATTERN.test(sourcePath));
+}
+
+function activeFeatureSliceIndexPath(activeFeature) {
+  return activeFeature.path ? `${activeFeature.path}/slices/index.md` : null;
+}
+
 function selectReviewEvidenceLocations(evidenceLocations, activeFeature, activeSlice) {
   if (activeSlice.path && evidenceLocations.includes(activeSlice.path)) {
     return {
@@ -931,6 +996,239 @@ function planReviewHasOutcome(planReviewText) {
   return /\b(pass|passed|blocker|blockers|warning|warnings|finding|findings|accepted|approved|skip|skipped|review|reviewed|reviewer|no blockers?|fixed|resolved)\b/i.test(planReviewText);
 }
 
+function sliceTitle(sliceText) {
+  const match = normalizeText(sliceText).match(/^#\s+(.+)$/m);
+  return match ? match[1].trim() : "";
+}
+
+function firstMeaningfulLine(sectionText) {
+  return normalizeText(sectionText)
+    .split("\n")
+    .map((line) => line
+      .replace(/^[-*]\s+/, "")
+      .replace(/^\[[ xX]\]\s+/, "")
+      .replace(/^Size\s*:\s*/i, "")
+      .trim())
+    .find(Boolean) ?? "";
+}
+
+function sliceSize(sliceText) {
+  const sizeSection = extractSection(sliceText, "Size");
+  const fromSection = firstMeaningfulLine(sizeSection).match(SLICE_SIZE_PATTERN);
+  if (fromSection) return fromSection[1].toUpperCase();
+  const inline = normalizeText(sliceText).match(/^[-*]\s+Size\s*:\s*(XS|S|M|L|XL)\b/im);
+  return inline ? inline[1].toUpperCase() : null;
+}
+
+function countSectionItems(sectionText) {
+  const items = markdownListItems(sectionText);
+  if (items.length > 0) return items.length;
+  return normalizeText(sectionText)
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line && !isPlaceholder(line) && !isNoneItem(line)).length;
+}
+
+function acceptanceCriteriaCount(sliceText) {
+  if (!hasSection(sliceText, "Acceptance Criteria")) return 0;
+  return countSectionItems(extractSection(sliceText, "Acceptance Criteria"));
+}
+
+function checkboxCount(sectionText) {
+  return normalizeText(sectionText)
+    .split("\n")
+    .filter((line) => /^[-*]\s+\[[ xX]\]\s+/.test(line.trim()))
+    .length;
+}
+
+function executionTasksAreValid(sliceText) {
+  if (!hasSection(sliceText, "Execution Tasks")) return false;
+  const tasks = extractSection(sliceText, "Execution Tasks");
+  return checkboxCount(tasks) >= 4 &&
+    /\b(research|docs?|precedent|patterns?)\b/i.test(tasks) &&
+    /\bplan\b/i.test(tasks) &&
+    /\breview(?:er|ed|ing)?\b/i.test(tasks) &&
+    /\b(verify|verification|test|tests|checks?|browser|user-flow)\b/i.test(tasks);
+}
+
+function likelySurfaceCount(sliceText) {
+  if (!hasSection(sliceText, "Likely Surfaces")) return 0;
+  const section = extractSection(sliceText, "Likely Surfaces");
+  const itemCount = countSectionItems(section);
+  const backtickPathCount = new Set(
+    [...section.matchAll(/`([^`]+\.[A-Za-z0-9]+)`/g)]
+      .map((match) => match[1])
+      .filter((sourcePath) => !isPlaceholder(sourcePath) && !isNoneItem(sourcePath)),
+  ).size;
+  return Math.max(itemCount, backtickPathCount);
+}
+
+function sectionHasExplicitNone(sectionText) {
+  return normalizeText(sectionText)
+    .split(/\n|,/)
+    .map((item) => item.replace(/^[-*]\s+/, "").replace(/^\[[ xX]\]\s+/, "").trim())
+    .some(isNoneItem);
+}
+
+function sectionHasWeakPlanningText(sectionText) {
+  const text = normalizeText(sectionText);
+  return !text ||
+    isPlaceholder(text) ||
+    /\b(todo|tbd|pending|not yet|not started|placeholder|fill in|unknown|unclear)\b/i.test(text);
+}
+
+function dependencySectionIsValid(sliceText) {
+  if (!hasSection(sliceText, "Depends On")) return false;
+  const dependsOn = extractSection(sliceText, "Depends On");
+  if (sectionHasExplicitNone(dependsOn)) return true;
+  return sectionHasSubstance(dependsOn) && !sectionHasWeakPlanningText(dependsOn);
+}
+
+function needsNonVerticalJustification(sliceText, title) {
+  return hasSection(sliceText, "Non-Vertical Justification") ||
+    /\bnon[- ]vertical\b/i.test(sliceText) ||
+    NON_VERTICAL_SLICE_PATTERN.test(title);
+}
+
+function nonVerticalJustificationIsValid(sliceText) {
+  if (!hasSection(sliceText, "Non-Vertical Justification")) return false;
+  const justification = extractSection(sliceText, "Non-Vertical Justification");
+  return sectionHasSubstance(justification) &&
+    !sectionHasWeakPlanningText(justification) &&
+    /\b(unblocks?|enables?|next\s+vertical|vertical\s+slice|follow[- ]up|slice\s*\d+|slice-\d+)\b/i.test(justification);
+}
+
+function hasSliceMap(sliceIndexText) {
+  if (!hasSection(sliceIndexText, "Slice Map")) return false;
+  const sliceMap = extractSection(sliceIndexText, "Slice Map");
+  return sectionHasSubstance(sliceMap) &&
+    /\bDepends On\b/i.test(sliceMap) &&
+    /\bUnblocks\b/i.test(sliceMap) &&
+    /\bVerification\b/i.test(sliceMap);
+}
+
+function hasSliceCheckpoint(sliceIndexText) {
+  const normalized = normalizeText(sliceIndexText);
+  const match = normalized.match(/^##\s+Checkpoint\b.*$/im);
+  if (!match || match.index === undefined) return false;
+  const rest = normalized.slice(match.index + match[0].length);
+  const nextHeading = rest.search(/^##\s+/m);
+  const checkpoint = (nextHeading === -1 ? rest : rest.slice(0, nextHeading)).trim();
+  return sectionHasSubstance(checkpoint);
+}
+
+function slicePlanningMessages(state) {
+  const messages = [];
+  if (!state.activeFeature.exists) return messages;
+  if (!state.index.currentMode || !["slice", "build", "review", "readiness"].includes(state.index.currentMode)) return messages;
+
+  const sliceDocs = activeFeatureSliceDocs(state.activeFeature);
+  const sliceIndexPath = activeFeatureSliceIndexPath(state.activeFeature);
+  const sliceIndexText = sliceIndexPath ? readFileIfPresent(path.join(state.repoRoot, sliceIndexPath)) : null;
+
+  if (sliceDocs.length > 1 && !hasSliceMap(sliceIndexText ?? "")) {
+    messages.push(message("warning", "missing-slice-map", sliceIndexPath ?? state.activeFeature.slicesPath, "Multi-slice work should include a lightweight Slice Map with Slice, Size, Depends On, Unblocks, Risk, and Verification."));
+  }
+
+  if (sliceDocs.length > 2 && !hasSliceCheckpoint(sliceIndexText ?? "")) {
+    messages.push(message("warning", "missing-slice-checkpoint", sliceIndexPath ?? state.activeFeature.slicesPath, "Multi-slice work should add a checkpoint after 2-3 slices or at a milestone boundary."));
+  }
+
+  for (const slicePath of sliceDocs) {
+    const sliceText = readFileIfPresent(path.join(state.repoRoot, slicePath));
+    if (!sliceText) continue;
+    const title = sliceTitle(sliceText);
+    const size = sliceSize(sliceText);
+    const criteriaCount = acceptanceCriteriaCount(sliceText);
+    const surfaceCount = likelySurfaceCount(sliceText);
+
+    if (!dependencySectionIsValid(sliceText)) {
+      messages.push(message("warning", "missing-slice-dependency", slicePath, "Slice should include a concrete Depends On section; use None when it has no prerequisite."));
+    }
+
+    if (!executionTasksAreValid(sliceText)) {
+      messages.push(message("warning", "missing-slice-execution-tasks", slicePath, "Slice should include Execution Tasks as a checkbox work packet covering research, plan, plan review, and verification."));
+    }
+
+    if (size === "L" || size === "XL") {
+      messages.push(message("warning", "oversized-slice", slicePath, `Slice size is ${size}; challenge and split it unless a recorded rationale proves this is the smallest safe slice.`));
+    }
+
+    if (criteriaCount > 3) {
+      messages.push(message("warning", "too-many-slice-acceptance-criteria", slicePath, `Slice has ${criteriaCount} acceptance criteria; split it unless they describe one small behavior path.`));
+    }
+
+    if (surfaceCount > 5) {
+      messages.push(message("warning", "too-many-slice-surfaces", slicePath, `Slice lists ${surfaceCount} likely surfaces; split it or record why the larger blast radius is necessary.`));
+    }
+
+    if (BROAD_SLICE_TITLE_PATTERN.test(title)) {
+      messages.push(message("warning", "batched-slice-title", slicePath, "Slice title looks batched or MVP-sized; split it if the title hides multiple tasks or independent subsystems."));
+    }
+
+    if (needsNonVerticalJustification(sliceText, title) && !nonVerticalJustificationIsValid(sliceText)) {
+      messages.push(message("warning", "weak-non-vertical-slice-justification", slicePath, "Possible non-vertical slice should explain why vertical-first is worse and name the next vertical slice it unlocks."));
+    }
+  }
+
+  return messages;
+}
+
+function activeWorkValueHasSubstance(value) {
+  return sectionHasSubstance(value) && !sectionHasWeakPlanningText(value);
+}
+
+function activeWorkPointerIsValid(index) {
+  const work = index.activeWork;
+  if (!work || !sectionHasSubstance(work.text)) return false;
+  return activeWorkValueHasSubstance(work.featurePath) &&
+    activeWorkValueHasSubstance(work.docPath) &&
+    activeWorkValueHasSubstance(work.next);
+}
+
+function activeWorkDocIsValid(text) {
+  if (!text) return false;
+  const phaseTasks = extractSection(text, "Phase Tasks");
+  const exitEvidence = extractSection(text, "Exit Evidence");
+  return checkboxCount(phaseTasks) >= 2 &&
+    sectionHasSubstance(exitEvidence) &&
+    !sectionHasWeakPlanningText(exitEvidence);
+}
+
+function activeWorkDocNeedsTaskPacket(docPath) {
+  if (!docPath || isPlaceholder(docPath)) return false;
+  const basename = path.posix.basename(normalizeEvidencePath(docPath)).toLowerCase();
+  return ACTIVE_WORK_DOC_FILES.has(basename);
+}
+
+function activeWorkMessages(state) {
+  const messages = [];
+  if (!state.index.present) return messages;
+
+  if (!activeWorkPointerIsValid(state.index)) {
+    messages.push(message("warning", "missing-active-work", `${WORKSPACE_ROOT}/index.md`, "Index should include Active Work with a feature, active doc, and next action so fresh context can resume without reading every phase."));
+  }
+
+  const docPath = state.index.activeWork?.docPath;
+  if (!docPath || isPlaceholder(docPath)) {
+    return messages;
+  }
+
+  const resolved = resolveRepoReferencePath(state.repoRoot, docPath);
+  if (!resolved?.safe) {
+    messages.push(message("error", "unsafe-active-work-doc", docPath, "Active Work doc path is unsafe."));
+  } else if (!resolved.exists) {
+    messages.push(message("warning", "missing-active-work-doc", resolved.relativePath, "Active Work points to a doc that does not exist."));
+  } else if (activeWorkDocNeedsTaskPacket(resolved.relativePath)) {
+    const activeDocText = readFileIfPresent(resolved.absolutePath);
+    if (!activeWorkDocIsValid(activeDocText)) {
+      messages.push(message("warning", "weak-active-work-doc", resolved.relativePath, "Active phase doc should include checkbox Phase Tasks and concrete Exit Evidence."));
+    }
+  }
+
+  return messages;
+}
+
 function activeSlicePrepMessages(repoRoot, activeSlice, currentMode) {
   if (!activeSlice.path || !activeSlice.exists) return [];
   const sliceText = readFileIfPresent(path.join(repoRoot, activeSlice.path));
@@ -1006,8 +1304,10 @@ export function validateAutoStrike(options = {}) {
   const state = inspectAutoStrike(options);
   const messages = [];
   const { workspace, index, activeFeature } = state;
-  const tinyPath = TINY_PATH_PATTERN.test(index.currentPath ?? "");
-  const reviewLikeMode = ["review", "readiness"].includes(index.currentMode ?? "");
+  const explicitReviewMode = ["review", "readiness"].includes(index.currentMode ?? "");
+  const reviewScope = state.evidence.reviewScope;
+  const hasImplementationReviewEvidence = reviewScope.changedPaths.some(isImplementationPath) ||
+    reviewScope.reviewedItems.length > 0;
 
   if (workspace.status === "absent") {
     messages.push(message("note", "workspace-absent", WORKSPACE_ROOT, "Auto Strike workspace does not exist yet."));
@@ -1035,6 +1335,8 @@ export function validateAutoStrike(options = {}) {
     messages.push(message("warning", "unknown-mode", `${WORKSPACE_ROOT}/index.md`, `Current mode is not one of: ${[...VALID_MODES].join(", ")}.`));
   }
 
+  messages.push(...activeWorkMessages(state));
+
   if (index.activeFeaturePath && isExplicitWorkspacePath(index.activeFeaturePath)) {
     const resolved = resolveWorkspacePath(state.repoRoot, index.activeFeaturePath);
     if (!resolved?.safe) {
@@ -1044,26 +1346,28 @@ export function validateAutoStrike(options = {}) {
     }
   }
 
-  if (!tinyPath && index.currentMode && MODES_EXPECTING_SPEC.has(index.currentMode) && activeFeature.exists && !activeFeature.specExists) {
+  if (index.currentMode && MODES_EXPECTING_SPEC.has(index.currentMode) && activeFeature.exists && !activeFeature.specExists) {
     messages.push(message("warning", "missing-active-spec", activeFeature.specPath, "Current mode usually expects an active feature spec, but none was found."));
   }
 
-  if (!tinyPath && index.currentMode && MODES_EXPECTING_SLICE.has(index.currentMode) && activeFeature.exists && activeFeature.sliceFiles.length === 0) {
+  if (index.currentMode && MODES_EXPECTING_SLICE.has(index.currentMode) && activeFeature.exists && activeFeature.sliceFiles.length === 0) {
     messages.push(message("warning", "missing-active-slice", activeFeature.slicesPath, "Current mode usually expects active slice docs, but none were found."));
   }
 
-  if (!tinyPath && index.currentMode && MODES_EXPECTING_SLICE_PREP.has(index.currentMode)) {
+  messages.push(...slicePlanningMessages(state));
+
+  if (index.currentMode && MODES_EXPECTING_SLICE_PREP.has(index.currentMode)) {
     messages.push(...activeSlicePrepMessages(state.repoRoot, state.activeSlice, index.currentMode));
   }
 
-  if (!tinyPath && index.currentMode && MODES_EXPECTING_EVIDENCE.has(index.currentMode) && state.evidence.locations.length === 0) {
+  if (index.currentMode && MODES_EXPECTING_EVIDENCE.has(index.currentMode) && state.evidence.locations.length === 0) {
     messages.push(message("warning", "missing-evidence", WORKSPACE_ROOT, "Review/readiness mode should have evidence or skipped-check rationale, but none was found."));
   }
 
-  if (!tinyPath && reviewLikeMode && state.evidence.locations.length > 0) {
+  if ((explicitReviewMode || hasImplementationReviewEvidence) && state.evidence.locations.length > 0) {
     const plan = recommendedReviewPlan(state);
     if (state.activeSlice.path && !state.evidence.locations.includes(state.activeSlice.path)) {
-      messages.push(message("warning", "missing-active-slice-evidence", state.activeSlice.path, "Active slice is in review/readiness mode but does not contain evidence; review context may fall back to broader feature evidence."));
+      messages.push(message("warning", "missing-active-slice-evidence", state.activeSlice.path, "Active slice has reviewable implementation evidence elsewhere but does not contain evidence itself; review context may fall back to broader feature evidence."));
     }
     if (activeFeature.exists && state.evidence.reviewScope.scope === "workspace") {
       messages.push(message("warning", "missing-active-feature-evidence", activeFeature.path, "Review context is using workspace-wide evidence because no active feature evidence was found."));
@@ -1080,7 +1384,11 @@ export function validateAutoStrike(options = {}) {
     }
     messages.push(...requiredReviewLensMessages(state, plan));
     if (plan.surfaces.ui.length > 0 && !hasUiReviewCoverage(state.evidence.reviewScope)) {
-      messages.push(message("warning", "missing-ui-review-evidence", state.evidence.reviewScope.locations[0] ?? WORKSPACE_ROOT, "UI files changed but active evidence has no browser/visual check, skipped-check rationale, or UI regression review."));
+      messages.push(message("warning", "missing-ui-browser-review-evidence", state.evidence.reviewScope.locations[0] ?? WORKSPACE_ROOT, "UI/browser/user-visible files changed but active evidence has no browser or user-flow check evidence, nor a blocked-browser rationale with static fallback."));
+    }
+    const needsFreshReview = activeFeatureSliceDocs(state.activeFeature).length > 1;
+    if (needsFreshReview && state.evidence.reviewScope.changedPaths.length > 0 && state.evidence.reviewScope.verifiedItems.length > 0 && !hasFreshReviewAgentEvidence(state.evidence.reviewScope)) {
+      messages.push(message("warning", "missing-fresh-review-agent-evidence", state.evidence.reviewScope.locations[0] ?? WORKSPACE_ROOT, "Multi-slice review evidence should show a fresh read-only review agent/fresh-context review, or an explicit rationale that review agents were unavailable."));
     }
   }
 
@@ -1211,7 +1519,7 @@ function recommendedReviewPlan(state) {
     notes.push("No active Changed list was found; review-context may miss implementation files until slice evidence is updated.");
   }
   if (surfaces.ui.length > 0) {
-    notes.push("For UI changes, include browser or visual evidence when feasible. If blocked, record the blocker and a static UI regression review.");
+    notes.push("For UI/browser/user-visible changes, include browser or user-flow evidence. Use host/manual browser tooling when available; if browser access is actually blocked, record the blocker and a static UI regression fallback.");
   }
 
   return {
@@ -1269,19 +1577,31 @@ function requiredReviewLensMessages(state, plan = recommendedReviewPlan(state)) 
   return messages;
 }
 
-function hasVisualVerificationItem(item) {
-  return /\b(browser|visual|screenshot|viewport|responsive|mobile|desktop|rendered|layout|playwright|chrom(e|ium)|safari|firefox|localhost|static ui|ui regression)\b/i.test(String(item ?? ""));
+function hasBrowserReviewEvidenceItem(item) {
+  return /\b(browser|visual|screenshot|viewport|responsive|mobile|desktop|rendered|playwright|chrom(e|ium)|safari|firefox|localhost)\b/i.test(String(item ?? ""));
 }
 
-function hasVisualSkippedItem(item) {
-  return /\b(browser|visual|screenshot|viewport|responsive|mobile|desktop|rendered|layout|playwright|chrom(e|ium)|safari|firefox)\b/i.test(String(item ?? ""));
+function hasBlockedBrowserFallback(item) {
+  const text = String(item ?? "");
+  const mentionsBrowserSurface = /\b(browser|visual|screenshot|viewport|responsive|mobile|desktop|rendered|layout|playwright|chrom(e|ium)|safari|firefox)\b/i.test(text);
+  if (!mentionsBrowserSurface) return false;
+  const hasRealBlocker = /\b(blocked|unavailable|not available|cannot|can't|could not|unable|no access|no host browser|no browser tool|browser tool unavailable|browser access unavailable|gui unavailable|headless unavailable|server could not start|auth blocked|environment restriction)\b/i.test(text);
+  if (!hasRealBlocker) return false;
+  return !/\b(no browser automation dependency|no playwright|no browser dependency|package installs? (?:are|is) out of scope|no .*dependency exists in this repo)\b/i.test(text);
 }
 
 function hasUiReviewCoverage(reviewScope) {
-  return hasReviewedLens(reviewScope, "ui-regression") ||
-    hasReviewedLens(reviewScope, "accessibility") ||
-    reviewScope.verifiedItems.some(hasVisualVerificationItem) ||
-    reviewScope.skippedItems.some(hasVisualSkippedItem);
+  return reviewScope.verifiedItems.some(hasBrowserReviewEvidenceItem) ||
+    reviewScope.reviewedItems.some(hasBrowserReviewEvidenceItem) ||
+    reviewScope.skippedItems.some(hasBlockedBrowserFallback);
+}
+
+function hasFreshReviewAgentEvidence(reviewScope) {
+  const reviewText = [
+    ...reviewScope.reviewedItems,
+    ...reviewScope.skippedItems,
+  ].join("\n");
+  return /\b(subagent|sub-agent|review agent|fresh[- ]context|fresh eyes|fresh reviewer|independent reviewer|read-only reviewer|read-only review)\b/i.test(reviewText);
 }
 
 function resolveLens(lens) {
@@ -1300,9 +1620,10 @@ export function reviewContext(options = {}) {
     lens,
     title: LENSES[lens].title,
     instructions: [
-      "You are a review agent. Return findings to the main agent for synthesis and evaluation.",
-      "Do not edit files, change scope, commit, or present conclusions directly to the user.",
+      "You are a read-only review agent. Return findings to the main agent for synthesis and evaluation.",
+      "Do not edit files, fix issues, change docs, change package files, run formatters that write files, commit, change scope, or present conclusions directly to the user.",
       "Read the source paths before judging when they are available.",
+      "For UI, browser behavior, auth/session, routing, forms, responsive layout, or user-visible state, perform or request browser/user-flow checks and report what was actually verified. A repo missing Playwright or another browser package is not, by itself, a browser-check blocker.",
     ],
     focus: LENSES[lens].focus,
     sourcePaths: reviewSourcePathGroups(validation),
@@ -1327,8 +1648,9 @@ function renderInspectMarkdown(state) {
     "",
     "## Active",
     `- Feature: ${state.activeFeature.path ?? state.index.activeFeatureRaw ?? "None"}`,
-    `- Path: ${state.index.currentPath ?? "Unknown"}`,
     `- Mode: ${state.index.currentMode ?? "Unknown"}`,
+    `- Active doc: ${state.index.activeWork.docPath ?? "Unknown"}`,
+    `- Active state: ${state.index.activeWork.state ?? "Unknown"}`,
     `- Slice: ${state.index.activeSliceRaw ?? (state.activeFeature.sliceFiles[0] ?? "None")}`,
     `- Next best action declared: ${state.index.nextBestAction ?? "None"}`,
     "",
@@ -1406,8 +1728,9 @@ function renderReviewContextMarkdown(packet) {
     "## Current State",
     `- Workspace: ${state.workspace.status} - ${state.workspace.reason}`,
     `- Active feature: ${state.activeFeature.path ?? state.index.activeFeatureRaw ?? "None"}`,
-    `- Current path: ${state.index.currentPath ?? "Unknown"}`,
     `- Current mode: ${state.index.currentMode ?? "Unknown"}`,
+    `- Active doc: ${state.index.activeWork.docPath ?? "Unknown"}`,
+    `- Active state: ${state.index.activeWork.state ?? "Unknown"}`,
     `- Declared next best action: ${state.index.nextBestAction ?? "None"}`,
     `- Evidence scope: ${state.evidence.reviewScope.scope}${state.evidence.reviewScope.usedFallback ? " (fallback)" : ""}`,
     "",
@@ -1423,6 +1746,7 @@ function renderReviewContextMarkdown(packet) {
     "## Return Format",
     "- Findings first, ordered by severity.",
     "- Include file/path evidence when available.",
+    "- Include browser-observed behavior for UI/user-flow findings when relevant.",
     "- Mark non-blocking suggestions separately from blockers.",
     "- Return results to the main agent for synthesis and evaluation.",
   ];

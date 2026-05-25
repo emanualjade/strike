@@ -1,9 +1,15 @@
 # Research And Planning
 
 Research when the answer can change scope, architecture, implementation
-strategy, verification, cost, UX, security, privacy, or blast radius. Use the
-smallest research pass that can produce a defensible recommendation, reveal a
-standard or idiomatic pattern, name the risk, or identify the blocker.
+strategy, verification, cost, UX, security, privacy, or blast radius. Treat
+research as a momentum tool: do the smallest source-backed check that can
+produce a defensible recommendation, reveal a standard or idiomatic pattern,
+name the risk, or identify a real blocker.
+
+Do not turn research into a separate stage by default. Keep moving with a
+recommendation unless the missing fact changes product behavior, safety,
+security/privacy, cost, dependency approval, data shape, or another hard-to-
+reverse choice.
 
 For third-party frameworks, APIs, SDKs, CLIs, auth, payments, uploads, video,
 AI services, databases, queues, deployment platforms, accessibility, security,
@@ -21,20 +27,19 @@ standard path.
 ## Standards Before Bespoke
 
 When a feature touches a domain with established operational, financial,
-security, legal, platform, or industry patterns, do not invent rules from
-intuition. Do a standards check before locking the model, workflow, or code
-approach.
+security, legal, platform, or industry patterns, do not rely on intuition alone.
+Do a quick standards check before locking the model, workflow, or code approach.
 
 Common trigger domains include money movement, accounting, refunds, carts,
 checkout, subscriptions, invoices, taxes, credits, permissions, auth, privacy,
 data retention, scheduling, uploads, media processing, AI usage, background jobs,
 notifications, and audit trails.
 
-Ask and research:
+Useful research prompt:
 
 - What would Stripe do? What would Shopify do? What would Amazon do? What would
-  a bank, mature SaaS product, or trusted platform likely do here? Do not answer
-  these questions from intuition. Research this.
+  a bank, mature SaaS product, or trusted platform likely do here? Answer from
+  current source-backed evidence, not intuition alone.
 
 Use current public docs, API models, help docs, standards, or reputable
 engineering/product references before locking the model, workflow, or code

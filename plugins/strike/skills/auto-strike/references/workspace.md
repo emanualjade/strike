@@ -42,6 +42,7 @@ auto-strike/
   features/
     <feature-slug>/
       idea.md
+      grill.md
       spec.md
       research.md
       mvp-cut.md
@@ -52,6 +53,38 @@ auto-strike/
         slice-0-[name].md
 ```
 
+Use `features/<feature-slug>/` as the first grouping unit. Before creating
+slices for broad work, decide whether the request is one coherent
+feature/milestone or a bundle of feature folders. If it is a bundle, record a
+short feature map in `index.md` or `todo.md` with each feature's purpose,
+dependency, status, and readiness target, then keep only one active feature in
+focus unless independent work can safely parallelize.
+
+For multi-slice work, `features/<feature-slug>/slices/index.md` should carry
+only the useful ordering context:
+
+```md
+# Slices
+
+## Slice Map
+
+| Slice | Size | Depends On | Unblocks | Risk | Verification |
+| --- | --- | --- | --- | --- | --- |
+| 0. [name] | S/M | None | [next slice] | High/Med/Low | [check] |
+
+## Checkpoint: After Slices 1-3
+- [ ] App builds or starts without errors.
+- [ ] Focused tests or checks pass.
+- [ ] Core user/system flow works end to end.
+- [ ] Review findings are resolved or accepted.
+- [ ] Human decision needed? If yes, pause and ask.
+```
+
+For each `slices/slice-[n]-[name].md`, use the slice template in
+`references/slice.md`. The key live sections are `Acceptance Criteria`,
+`Depends On`, `Likely Surfaces`, and `Execution Tasks`; they turn the slice into
+a small work packet instead of a general concept.
+
 ## Helper Script
 
 Auto Strike ships a read-only workspace helper at the skill-local
@@ -61,20 +94,19 @@ Use it internally when available:
 - `inspect` reports observed workspace state.
 - `validate` reports errors, warnings, and notes based on the docs that exist.
 - `review-plan` recommends review lenses from active `Changed:` evidence.
-- `review-context --lens <lens>` creates compact review packets for the main
-  agent to pass to reviewers. Review packets scope evidence to the active slice
-  first, the active feature second, and the whole workspace only as a fallback.
+- `review-context --lens <lens>` creates compact read-only reviewer packets.
 
 The helper is intentionally not an initializer, scaffolder, or workflow engine.
 It does not create feature folders, specs, slices, readiness docs, or next-action
 decisions. If it cannot run or its output is inconclusive, inspect the workspace
-manually and keep moving.
+manually and keep moving. Use `review.md` for reviewer behavior, lens selection,
+and helper packet details.
 
 ## Index
 
 Use `auto-strike/index.md` as the resume map:
 
-- active feature and next best action
+- active feature, active doc, state, blocker, and next best action
 - important docs and what they contain
 - current verification commands or checks
 - open human decisions
@@ -85,13 +117,12 @@ Keep it short and scannable:
 ```md
 # Auto Strike
 
-## Active Feature
-- [Feature slug/path]
-- Current mode: [idea / decisions / spec / slice / build / review / readiness]
-- Next best action: [one sentence]
-
-## Project State
-- [One-paragraph current truth.]
+## Active Work
+- Feature: `auto-strike/features/[feature-slug]`
+- Doc: `auto-strike/features/[feature-slug]/[active-doc].md`
+- State: [one short current truth]
+- Next: [one concrete action]
+- Blocked by: [decision/check/dependency, or "None."]
 
 ## Key Docs
 - `[path]` - [what to read it for.]
@@ -120,11 +151,16 @@ Keep `todo.md` operational, not archival. It should show current work, next
 actions, blockers, and accepted follow-ups. Remove or move stale items when the
 spec, slices, or `mvp-cut.md` already preserve the decision.
 
+Use `Active Work` in `index.md` only as a pointer. The active phase or slice doc
+owns the task list, decisions, and exit evidence for that phase. After context
+compression, the agent should be able to read `index.md`, open the active doc,
+and continue one small task without reloading unrelated phase detail.
+
 ## Evidence
 
 Record evidence wherever it best fits the scale of the work:
 
-- tiny changes: `auto-strike/index.md` or `todo.md`
+- contained changes: `auto-strike/index.md`, `todo.md`, or the active slice
 - sliced work: the relevant `slices/slice-[n]-[name].md`
 - larger milestones: `features/<feature-slug>/readiness.md` or a nearby build
   note
@@ -155,20 +191,8 @@ Review Findings:
 ```
 
 A claim that work is done should be backed by evidence or a clear skipped-check
-reason.
-
-Record evidence before asking for focused review or generating
-`review-plan` or `review-context` packets. The helper can recommend review
-lenses and include implementation files in review packets when slice evidence
-has an explicit `Changed:` list; without that, it can still package workspace
-docs but cannot reliably infer what changed. Keep `Changed:` aligned with the
-actual implementation files changed in the worktree; if Git reports extra
-changed files, confirm they are unrelated user work or update the evidence
-before review. Record the lenses that actually ran under `Reviewed:` and any
-intentionally skipped required lenses under `Skipped:` so future validation can
-tell whether review was general, surface-specific, or consciously downgraded. In
-multi-feature workspaces, keep active feature evidence current so reviewers are
-not distracted by older completed features.
+reason. Record `Changed:` and `Verified:` before review so helper packets can
+scope changed files; use `review.md` for review evidence and lens details.
 
 ## Language
 
