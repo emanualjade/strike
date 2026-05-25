@@ -277,6 +277,109 @@ Verified:
   assert.ok(body.focus.some((item) => /hostile inputs/i.test(item)));
   assert.ok(body.state.docs.includes("auto-strike/features/video-mvp/spec.md"));
   assert.ok(body.state.evidence.changedPaths.includes("src/video/upload.ts"));
+  assert.ok(body.sourcePaths.some((group) => group.title === "Changed Files From Active Evidence"));
+}
+
+function testReviewContextScopesChangedFilesToActiveFeature() {
+  const repo = tempRepo();
+  write(repo, "README.md", "# Dogfood Repo\n");
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Feature
+- auto-strike/features/todo-dogfood
+- Current path: Fast Path
+- Current mode: review
+- Active slice: auto-strike/features/todo-dogfood/slices/slice-0-static-todo.md
+
+## Key Docs
+- \`README.md\` - repo context.
+- \`auto-strike/features/todo-dogfood/spec.md\` - active spec.
+- \`auto-strike/features/todo-dogfood/slices/slice-0-static-todo.md\` - active evidence.
+- \`auto-strike/features/clip-notes/spec.md\` - completed feature context.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/features/todo-dogfood/spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/features/todo-dogfood/slices/slice-0-static-todo.md", `# Slice 0: Static Todo
+
+## Evidence
+
+Changed:
+- todo/index.html
+- todo/todo.js
+- scripts/todo-smoke.js
+
+Verified:
+- node scripts/todo-smoke.js - passed
+`);
+  write(repo, "auto-strike/features/clip-notes/spec.md", "# Clip Notes Spec\n");
+  write(repo, "auto-strike/features/clip-notes/slices/slice-1-review-brief.md", `# Slice 1: Review Brief
+
+## Evidence
+
+Changed:
+- app/index.html
+- app/clip-notes.js
+- scripts/clip-notes-smoke.js
+
+Verified:
+- node scripts/clip-notes-smoke.js - passed
+`);
+  write(repo, "todo/index.html", "<!doctype html>\n");
+  write(repo, "todo/todo.js", "export function todo() {}\n");
+  write(repo, "scripts/todo-smoke.js", "console.log('todo');\n");
+  write(repo, "app/index.html", "<!doctype html>\n");
+  write(repo, "app/clip-notes.js", "export function clip() {}\n");
+  write(repo, "scripts/clip-notes-smoke.js", "console.log('clip');\n");
+
+  const result = run(repo, ["review-context", "--lens", "code-quality"]);
+  assertStatus(result, 0, "review-context should scope changed files to the active feature");
+  const body = json(result);
+  assert.equal(body.state.evidence.reviewScope.scope, "active-slice");
+  assert.deepEqual(body.state.evidence.reviewScope.changedPaths, [
+    "todo/index.html",
+    "todo/todo.js",
+    "scripts/todo-smoke.js",
+  ]);
+  const allSourcePaths = body.sourcePaths.flatMap((group) => group.paths);
+  assert.ok(allSourcePaths.includes("todo/todo.js"));
+  assert.ok(!allSourcePaths.includes("app/clip-notes.js"));
+  const changedGroup = body.sourcePaths.find((group) => group.title === "Changed Files From Active Evidence");
+  assert.deepEqual(changedGroup.paths, [
+    "todo/index.html",
+    "todo/todo.js",
+    "scripts/todo-smoke.js",
+  ]);
+}
+
+function testValidateWarnsWhenReviewEvidenceLacksChangedAndVerified() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Feature
+- auto-strike/features/search-mvp
+- Current path: Fast Path
+- Current mode: review
+- Active slice: auto-strike/features/search-mvp/slices/slice-0-search.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/features/search-mvp/spec.md", "# Search MVP Spec\n");
+  write(repo, "auto-strike/features/search-mvp/slices/slice-0-search.md", `# Slice 0: Search
+
+## Evidence
+
+Review Findings:
+- Pending.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "review evidence without changed/verified should warn, not fail");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "missing-review-changed-evidence" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "missing-review-verified-evidence" && item.severity === "warning"));
 }
 
 function testReviewContextRejectsUnknownLens() {
@@ -300,6 +403,8 @@ testValidateWarnsForMissingEvidence();
 testValidateBrokenKeyDocReference();
 testKeyDocsCanReferenceRepoDocs();
 testReviewContextPacket();
+testReviewContextScopesChangedFilesToActiveFeature();
+testValidateWarnsWhenReviewEvidenceLacksChangedAndVerified();
 testReviewContextRejectsUnknownLens();
 testHelpWorksWithoutCommand();
 

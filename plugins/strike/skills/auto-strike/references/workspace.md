@@ -61,7 +61,8 @@ Use it internally when available:
 - `inspect` reports observed workspace state.
 - `validate` reports errors, warnings, and notes based on the docs that exist.
 - `review-context --lens <lens>` creates compact review packets for the main
-  agent to pass to reviewers.
+  agent to pass to reviewers. Review packets scope evidence to the active slice
+  first, the active feature second, and the whole workspace only as a fallback.
 
 The helper is intentionally not an initializer, scaffolder, or workflow engine.
 It does not create feature folders, specs, slices, readiness docs, or next-action
@@ -150,6 +151,13 @@ Review Findings:
 
 A claim that work is done should be backed by evidence or a clear skipped-check
 reason.
+
+Record evidence before asking for focused review or generating
+`review-context` packets. The helper can include implementation files in review
+packets when slice evidence has an explicit `Changed:` list; without that, it
+can still package workspace docs but cannot reliably infer what changed. In
+multi-feature workspaces, keep active feature evidence current so reviewers are
+not distracted by older completed features.
 
 ## Language
 

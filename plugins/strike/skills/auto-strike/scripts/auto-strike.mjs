@@ -438,36 +438,53 @@ function findEvidenceLocations(repoRoot, workspacePath, markdownFiles) {
   return locations;
 }
 
-function evidenceChangedPaths(repoRoot, evidenceLocations) {
-  const changedPaths = [];
+function evidenceSectionLines(repoRoot, relativePath) {
+  const text = readFileIfPresent(path.join(repoRoot, relativePath));
+  if (!text) return [];
+  const evidence = extractSection(text, "Evidence");
+  return normalizeText(evidence || text).split("\n");
+}
+
+function evidenceListItems(repoRoot, evidenceLocations, labels) {
+  const items = [];
+  const labelPattern = new RegExp(`^(${labels.map(escapeRegExp).join("|")})\\s*:\\s*(.*)$`, "i");
   for (const relativePath of evidenceLocations) {
-    const text = readFileIfPresent(path.join(repoRoot, relativePath));
-    if (!text) continue;
-    const evidence = extractSection(text, "Evidence");
-    const lines = normalizeText(evidence || text).split("\n");
-    let inChangedList = false;
-    for (const line of lines) {
+    let inList = false;
+    for (const line of evidenceSectionLines(repoRoot, relativePath)) {
       const trimmed = line.trim();
-      const changedLabel = trimmed.match(/^(changed|files changed|modified|touched)\s*:\s*(.*)$/i);
-      if (changedLabel) {
-        inChangedList = true;
-        for (const value of changedLabel[2].split(",")) {
-          addChangedPath(repoRoot, changedPaths, value);
+      const label = trimmed.match(labelPattern);
+      if (label) {
+        inList = true;
+        for (const value of label[2].split(",")) {
+          const item = value.trim();
+          if (item) items.push(item);
         }
         continue;
       }
       if (/^[A-Z][A-Za-z /-]{0,40}:\s*$/.test(trimmed)) {
-        inChangedList = false;
+        inList = false;
         continue;
       }
-      if (!inChangedList) continue;
+      if (!inList) continue;
       const bullet = trimmed.match(/^[-*]\s+(.+)$/);
       if (bullet) {
-        addChangedPath(repoRoot, changedPaths, bullet[1]);
+        items.push(bullet[1].trim());
       }
     }
   }
+  return [...new Set(items)];
+}
+
+function evidenceChangedPaths(repoRoot, evidenceLocations) {
+  const changedPaths = [];
+  for (const item of evidenceListItems(repoRoot, evidenceLocations, ["changed", "files changed", "modified", "touched"])) {
+    addChangedPath(repoRoot, changedPaths, item);
+  }
   return [...new Set(changedPaths)];
+}
+
+function evidenceVerifiedItems(repoRoot, evidenceLocations) {
+  return evidenceListItems(repoRoot, evidenceLocations, ["verified", "verification", "checks"]);
 }
 
 function addChangedPath(repoRoot, changedPaths, value) {
@@ -559,6 +576,73 @@ function activeFeatureState(repoRoot, index) {
   };
 }
 
+function activeSliceState(repoRoot, index, activeFeature) {
+  const raw = index.activeSliceRaw;
+  if (!raw || isPlaceholder(raw)) {
+    return {
+      raw: null,
+      path: null,
+      exists: false,
+    };
+  }
+
+  const direct = resolveRepoReferencePath(repoRoot, extractInlinePath(raw));
+  if (direct?.safe && inspectPath(direct.absolutePath)?.isFile()) {
+    return {
+      raw,
+      path: direct.relativePath,
+      exists: true,
+    };
+  }
+
+  const cleaned = String(raw).trim().replace(/^`|`$/g, "").replace(/^\.\/+/, "");
+  if (activeFeature.path && !cleaned.includes("/")) {
+    const relativePath = posix(path.join(activeFeature.path, "slices", cleaned));
+    const absolutePath = path.join(repoRoot, relativePath);
+    return {
+      raw,
+      path: relativePath,
+      exists: Boolean(inspectPath(absolutePath)?.isFile()),
+    };
+  }
+
+  return {
+    raw,
+    path: direct?.safe ? direct.relativePath : cleaned,
+    exists: Boolean(direct?.exists),
+  };
+}
+
+function selectReviewEvidenceLocations(evidenceLocations, activeFeature, activeSlice) {
+  if (activeSlice.path && evidenceLocations.includes(activeSlice.path)) {
+    return {
+      scope: "active-slice",
+      usedFallback: false,
+      locations: [activeSlice.path],
+    };
+  }
+
+  if (activeFeature.path) {
+    const featurePrefix = `${activeFeature.path}/`;
+    const featureLocations = evidenceLocations.filter((relativePath) => {
+      return relativePath === activeFeature.path || relativePath.startsWith(featurePrefix);
+    });
+    if (featureLocations.length > 0) {
+      return {
+        scope: "active-feature",
+        usedFallback: Boolean(activeSlice.path),
+        locations: featureLocations,
+      };
+    }
+  }
+
+  return {
+    scope: "workspace",
+    usedFallback: true,
+    locations: evidenceLocations,
+  };
+}
+
 export function inspectAutoStrike(options = {}) {
   const repoRoot = resolveRepoRoot(options.repoRoot);
   const workspacePath = path.join(repoRoot, WORKSPACE_ROOT);
@@ -572,8 +656,12 @@ export function inspectAutoStrike(options = {}) {
   const index = parseIndex(indexText);
   const todo = parseTodo(todoText);
   const activeFeature = activeFeatureState(repoRoot, index);
+  const activeSlice = activeSliceState(repoRoot, index, activeFeature);
   const evidenceLocations = findEvidenceLocations(repoRoot, workspacePath, markdownFiles);
   const changedPaths = evidenceChangedPaths(repoRoot, evidenceLocations);
+  const reviewEvidence = selectReviewEvidenceLocations(evidenceLocations, activeFeature, activeSlice);
+  const reviewChangedPaths = evidenceChangedPaths(repoRoot, reviewEvidence.locations);
+  const reviewVerifiedItems = evidenceVerifiedItems(repoRoot, reviewEvidence.locations);
 
   return {
     repoRoot,
@@ -586,9 +674,16 @@ export function inspectAutoStrike(options = {}) {
     },
     docs: markdownFiles,
     activeFeature,
+    activeSlice,
     evidence: {
       locations: evidenceLocations,
       changedPaths,
+      verifiedItems: evidenceVerifiedItems(repoRoot, evidenceLocations),
+      reviewScope: {
+        ...reviewEvidence,
+        changedPaths: reviewChangedPaths,
+        verifiedItems: reviewVerifiedItems,
+      },
     },
   };
 }
@@ -665,6 +760,7 @@ export function validateAutoStrike(options = {}) {
   const messages = [];
   const { workspace, index, activeFeature } = state;
   const tinyPath = TINY_PATH_PATTERN.test(index.currentPath ?? "");
+  const reviewLikeMode = ["review", "readiness"].includes(index.currentMode ?? "");
 
   if (workspace.status === "absent") {
     messages.push(message("note", "workspace-absent", WORKSPACE_ROOT, "Auto Strike workspace does not exist yet."));
@@ -713,6 +809,21 @@ export function validateAutoStrike(options = {}) {
     messages.push(message("warning", "missing-evidence", WORKSPACE_ROOT, "Review/readiness mode should have evidence or skipped-check rationale, but none was found."));
   }
 
+  if (!tinyPath && reviewLikeMode && state.evidence.locations.length > 0) {
+    if (state.activeSlice.path && !state.evidence.locations.includes(state.activeSlice.path)) {
+      messages.push(message("warning", "missing-active-slice-evidence", state.activeSlice.path, "Active slice is in review/readiness mode but does not contain evidence; review context may fall back to broader feature evidence."));
+    }
+    if (activeFeature.exists && state.evidence.reviewScope.scope === "workspace") {
+      messages.push(message("warning", "missing-active-feature-evidence", activeFeature.path, "Review context is using workspace-wide evidence because no active feature evidence was found."));
+    }
+    if (state.evidence.reviewScope.changedPaths.length === 0) {
+      messages.push(message("warning", "missing-review-changed-evidence", state.evidence.reviewScope.locations[0] ?? WORKSPACE_ROOT, "Review context has no active Changed list, so reviewer packets may miss implementation files."));
+    }
+    if (state.evidence.reviewScope.verifiedItems.length === 0) {
+      messages.push(message("warning", "missing-review-verified-evidence", state.evidence.reviewScope.locations[0] ?? WORKSPACE_ROOT, "Review context has no active Verified list, so reviewer packets may miss verification evidence."));
+    }
+  }
+
   if (index.currentMode && ["build", "review", "readiness"].includes(index.currentMode) && index.openDecisions.length > 0) {
     messages.push(message("warning", "open-decisions-during-build", `${WORKSPACE_ROOT}/index.md`, "Open decisions remain while work is in build/review/readiness mode."));
   }
@@ -753,6 +864,7 @@ export function reviewContext(options = {}) {
       "Read the source paths before judging when they are available.",
     ],
     focus: LENSES[lens].focus,
+    sourcePaths: reviewSourcePathGroups(validation),
     state: validation,
   };
 }
@@ -823,9 +935,10 @@ function renderReviewContextMarkdown(packet) {
     `- Current path: ${state.index.currentPath ?? "Unknown"}`,
     `- Current mode: ${state.index.currentMode ?? "Unknown"}`,
     `- Declared next best action: ${state.index.nextBestAction ?? "None"}`,
+    `- Evidence scope: ${state.evidence.reviewScope.scope}${state.evidence.reviewScope.usedFallback ? " (fallback)" : ""}`,
     "",
     "## Source Paths",
-    ...bulletLines(compactSourcePaths(state)),
+    ...renderSourcePathGroups(packet.sourcePaths),
     "",
     "## Validation Findings",
     ...bulletLines(state.messages.map((item) => `${item.severity.toUpperCase()} ${item.code} (${item.path}): ${item.message}`)),
@@ -842,20 +955,59 @@ function renderReviewContextMarkdown(packet) {
   return `${lines.join("\n").trimEnd()}\n`;
 }
 
-function compactSourcePaths(state) {
-  const paths = [
+function renderSourcePathGroups(groups) {
+  const lines = [];
+  for (const group of groups) {
+    if (!group.paths || group.paths.length === 0) continue;
+    lines.push(`### ${group.title}`);
+    lines.push(...bulletLines(group.paths));
+    lines.push("");
+  }
+  return lines.length > 0 ? lines.slice(0, -1) : ["- None"];
+}
+
+function reviewSourcePathGroups(state) {
+  const activeDocs = filterExistingSourcePaths(state, [
     `${WORKSPACE_ROOT}/index.md`,
+    state.activeFeature.specExists ? state.activeFeature.specPath : null,
+    state.activeSlice.exists ? state.activeSlice.path : null,
+    state.activeFeature.readinessExists ? state.activeFeature.readinessPath : null,
+  ]);
+  const usedPaths = new Set(activeDocs);
+
+  const changedFiles = filterExistingSourcePaths(state, state.evidence.reviewScope.changedPaths.filter((sourcePath) => {
+    return !sourcePath.startsWith(`${WORKSPACE_ROOT}/`);
+  })).filter((sourcePath) => !usedPaths.has(sourcePath));
+  for (const sourcePath of changedFiles) usedPaths.add(sourcePath);
+
+  const workspaceDocs = filterExistingSourcePaths(state, [
+    `${WORKSPACE_ROOT}/todo.md`,
+    `${WORKSPACE_ROOT}/language.md`,
+    `${WORKSPACE_ROOT}/decisions.md`,
+    ...state.evidence.reviewScope.changedPaths.filter((sourcePath) => sourcePath.startsWith(`${WORKSPACE_ROOT}/`)),
+  ]).filter((sourcePath) => !usedPaths.has(sourcePath));
+  for (const sourcePath of workspaceDocs) usedPaths.add(sourcePath);
+
+  const contextDocs = filterExistingSourcePaths(state, [
     ...state.index.keyDocs.map((item) => resolveRepoReferencePath(state.repoRoot, item.path))
       .filter((item) => item?.exists)
       .map((item) => item.relativePath),
-    state.activeFeature.specExists ? state.activeFeature.specPath : null,
-    ...state.activeFeature.sliceFiles,
-    ...state.evidence.changedPaths,
-    state.activeFeature.readinessExists ? state.activeFeature.readinessPath : null,
-    `${WORKSPACE_ROOT}/decisions.md`,
-    `${WORKSPACE_ROOT}/language.md`,
-  ].filter(Boolean);
-  return [...new Set(paths)].filter((sourcePath) => {
+    ...state.activeFeature.sliceFiles.filter((sourcePath) => sourcePath !== state.activeSlice.path),
+  ]).filter((sourcePath) => !usedPaths.has(sourcePath));
+
+  return [
+    { title: "Active Docs", paths: activeDocs },
+    { title: "Changed Files From Active Evidence", paths: changedFiles },
+    { title: "Workspace Docs", paths: workspaceDocs },
+    { title: "Context Docs", paths: contextDocs },
+  ].map((group) => ({
+    ...group,
+    paths: [...new Set(group.paths)],
+  }));
+}
+
+function filterExistingSourcePaths(state, paths) {
+  return paths.filter(Boolean).filter((sourcePath) => {
     return state.docs.includes(sourcePath) || fs.existsSync(path.join(state.repoRoot, sourcePath));
   });
 }

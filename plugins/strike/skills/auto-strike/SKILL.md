@@ -90,8 +90,13 @@ Use it as a guardrail, not as the workflow engine:
   errors as hard facts to resolve or ask about. Treat warnings and notes as
   prompts for main-agent judgment, not automatic blockers.
 - Run `review-context --lens <lens>` before parallel review when a compact
-  packet would help reviewers focus. The main agent still dispatches reviewers,
-  evaluates findings, decides what is blocking, and owns final synthesis.
+  packet would help reviewers focus. Before generating reviewer packets, record
+  compact slice evidence with `Changed:` and `Verified:` sections so reviewers
+  get the implementation files and checks, not only planning docs. The main
+  agent still dispatches reviewers, evaluates findings, decides what is
+  blocking, and owns final synthesis. Review packets prefer active-slice
+  evidence, then active-feature evidence, and use broader workspace evidence
+  only as a fallback.
 
 Do not use helper output to replace product judgment. The helper must not decide
 scope, create features, create slices, advance modes, choose the next action, or

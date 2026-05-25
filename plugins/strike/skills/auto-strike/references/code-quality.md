@@ -142,9 +142,18 @@ accepted risk, what belongs in follow-up, and what fixes to make. Record who or
 what reviewed, the main findings, and any accepted residual risk in the slice
 evidence or readiness note.
 
+Before starting focused review, write compact evidence for the current slice:
+`Changed:`, `Verified:`, any important skipped checks, and known review focus.
+This keeps review grounded in the real implementation and lets
+`review-context` include source files directly instead of making reviewers infer
+them from prose.
+
 When available, use the Auto Strike helper's `review-context --lens <lens>` to
 prepare compact reviewer packets. The helper only packages context; it does not
-dispatch subagents or evaluate their findings.
+dispatch subagents or evaluate their findings. Its source paths are grouped as
+active docs, changed files from active evidence, workspace docs, and context
+docs so reviewers can prioritize the changed implementation before background
+material.
 
 If review finds blocking issues, write plain checklist items, fix only those
 items, verify again, and re-review. Do not use review as an excuse to redesign

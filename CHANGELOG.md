@@ -2,6 +2,17 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.4 - 2026-05-25
+
+- Scoped Auto Strike `review-context` evidence to the active slice first, then
+  the active feature, and only falls back to workspace-wide evidence when needed.
+- Grouped review packet source paths into active docs, changed files, workspace
+  docs, and context docs so reviewers can prioritize implementation changes.
+- Added review-readiness warnings when active evidence lacks `Changed:` or
+  `Verified:` sections.
+- Added multi-feature tests that prevent stale feature evidence from leaking
+  into active review packets.
+
 ## 0.8.3 - 2026-05-24
 
 - Improved Auto Strike review packets so `review-context` includes changed
