@@ -145,6 +145,7 @@ function testFastPathInspectAndValidateWithEvidence() {
 - [x] Build upload preview slice.
 `);
   write(repo, "auto-strike/features/upload-mvp/spec.md", "# Upload MVP Spec\n");
+  write(repo, "app/upload/page.tsx", "export default function Page() { return null; }\n");
   write(repo, "auto-strike/features/upload-mvp/slices/slice-0-upload-preview.md", `# Slice 0: Upload Preview
 
 ## Evidence
@@ -163,6 +164,7 @@ Verified:
   assert.equal(inspectBody.activeFeature.specExists, true);
   assert.equal(inspectBody.activeFeature.sliceFiles.length, 1);
   assert.deepEqual(inspectBody.evidence.locations, ["auto-strike/features/upload-mvp/slices/slice-0-upload-preview.md"]);
+  assert.deepEqual(inspectBody.evidence.changedPaths, ["app/upload/page.tsx"]);
 
   const validate = run(repo, ["validate"]);
   assertStatus(validate, 0, "validate should pass complete fast path evidence");
@@ -255,9 +257,13 @@ function testReviewContextPacket() {
 - None.
 `);
   write(repo, "auto-strike/features/video-mvp/spec.md", "# Video MVP Spec\n");
+  write(repo, "src/video/upload.ts", "export function upload() {}\n");
   write(repo, "auto-strike/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
 
 ## Evidence
+
+Changed:
+- src/video/upload.ts
 
 Verified:
 - pnpm run test - passed
@@ -270,6 +276,7 @@ Verified:
   assert.match(body.instructions.join("\n"), /Return findings to the main agent/);
   assert.ok(body.focus.some((item) => /hostile inputs/i.test(item)));
   assert.ok(body.state.docs.includes("auto-strike/features/video-mvp/spec.md"));
+  assert.ok(body.state.evidence.changedPaths.includes("src/video/upload.ts"));
 }
 
 function testReviewContextRejectsUnknownLens() {

@@ -2,6 +2,13 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.3 - 2026-05-24
+
+- Improved Auto Strike review packets so `review-context` includes changed
+  implementation files parsed from slice evidence `Changed:` sections.
+- Added tests that verify changed-path extraction and review packet source
+  paths for focused reviewer agents.
+
 ## 0.8.2 - 2026-05-24
 
 - Added a read-only `auto-strike` workspace helper with `inspect`, `validate`,

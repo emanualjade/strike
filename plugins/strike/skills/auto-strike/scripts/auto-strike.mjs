@@ -438,6 +438,47 @@ function findEvidenceLocations(repoRoot, workspacePath, markdownFiles) {
   return locations;
 }
 
+function evidenceChangedPaths(repoRoot, evidenceLocations) {
+  const changedPaths = [];
+  for (const relativePath of evidenceLocations) {
+    const text = readFileIfPresent(path.join(repoRoot, relativePath));
+    if (!text) continue;
+    const evidence = extractSection(text, "Evidence");
+    const lines = normalizeText(evidence || text).split("\n");
+    let inChangedList = false;
+    for (const line of lines) {
+      const trimmed = line.trim();
+      const changedLabel = trimmed.match(/^(changed|files changed|modified|touched)\s*:\s*(.*)$/i);
+      if (changedLabel) {
+        inChangedList = true;
+        for (const value of changedLabel[2].split(",")) {
+          addChangedPath(repoRoot, changedPaths, value);
+        }
+        continue;
+      }
+      if (/^[A-Z][A-Za-z /-]{0,40}:\s*$/.test(trimmed)) {
+        inChangedList = false;
+        continue;
+      }
+      if (!inChangedList) continue;
+      const bullet = trimmed.match(/^[-*]\s+(.+)$/);
+      if (bullet) {
+        addChangedPath(repoRoot, changedPaths, bullet[1]);
+      }
+    }
+  }
+  return [...new Set(changedPaths)];
+}
+
+function addChangedPath(repoRoot, changedPaths, value) {
+  const candidate = extractInlinePath(value);
+  if (!candidate || isPlaceholder(candidate) || isNoneItem(candidate)) return;
+  const resolved = resolveRepoReferencePath(repoRoot, candidate);
+  if (resolved?.safe) {
+    changedPaths.push(resolved.relativePath);
+  }
+}
+
 function resolveWorkspacePath(repoRoot, rawPath) {
   if (!rawPath || isPlaceholder(rawPath)) return null;
   let cleaned = String(rawPath).trim().replace(/^`|`$/g, "");
@@ -532,6 +573,7 @@ export function inspectAutoStrike(options = {}) {
   const todo = parseTodo(todoText);
   const activeFeature = activeFeatureState(repoRoot, index);
   const evidenceLocations = findEvidenceLocations(repoRoot, workspacePath, markdownFiles);
+  const changedPaths = evidenceChangedPaths(repoRoot, evidenceLocations);
 
   return {
     repoRoot,
@@ -546,6 +588,7 @@ export function inspectAutoStrike(options = {}) {
     activeFeature,
     evidence: {
       locations: evidenceLocations,
+      changedPaths,
     },
   };
 }
@@ -807,6 +850,7 @@ function compactSourcePaths(state) {
       .map((item) => item.relativePath),
     state.activeFeature.specExists ? state.activeFeature.specPath : null,
     ...state.activeFeature.sliceFiles,
+    ...state.evidence.changedPaths,
     state.activeFeature.readinessExists ? state.activeFeature.readinessPath : null,
     `${WORKSPACE_ROOT}/decisions.md`,
     `${WORKSPACE_ROOT}/language.md`,
