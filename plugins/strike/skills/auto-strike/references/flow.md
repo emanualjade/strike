@@ -131,13 +131,42 @@ Slice shape:
 ## In Scope
 ## Out Of Scope
 ## Likely Surfaces
+## Implementation Research
 ## Plan
+## Plan Review
 ## Verification
 ## Watchouts
 ```
 
 Each slice should be small enough to plan, build, review, and fix in one focused
 loop. If it is too broad, split it.
+
+Before coding a meaningful slice, do slice execution prep. This is the quality
+gate between a slice existing and a slice being safe to build:
+
+1. Research the slice-specific implementation details that can change the
+   solution. Check current official docs for third-party APIs, framework
+   behavior, browser/platform behavior, dependency versions, and any external
+   standard the slice relies on. If using a third-party package, research the
+   latest docs and understand the idiomatic, recommended way to implement the
+   behavior you are about to build. Do not guess. If the slice appears to need a
+   non-recommended approach, consider why and whether that signals a larger
+   problem to discuss with the user before coding. Research nearby repo code so
+   the plan follows local patterns instead of inventing a parallel style.
+2. Write or update the implementation plan from that research. Name the exact
+   repo surfaces likely to change, concern boundaries, verification commands,
+   UI/state/error cases, data or integration risks, and any rollback or recovery
+   notes.
+3. Review the implementation plan before coding. Use the main agent for tiny
+   low-risk work; use a critical review subagent or fresh-context pass for
+   meaningful, risky, UI-heavy, data-heavy, integration-heavy, or large-scope
+   slices. The reviewer returns findings to the main agent for synthesis and
+   evaluation; the main agent fixes the plan before build.
+
+If the plan cannot name the likely files/surfaces, verification checks,
+important edge cases, and unresolved assumptions, do not build yet. Return to
+research, update the spec/slice, or ask the user if the gap changes product
+behavior or risk.
 
 Each slice plan should include the slice-specific research and organization
 guidance needed for a fresh build session:
@@ -151,10 +180,11 @@ guidance needed for a fresh build session:
 - edge cases to handle, verify, defer, or ask about
 - code quality checklist items the reviewer should pay special attention to
 
-Before building, do a quick slice review. Check that each slice is vertical,
-small enough, has clear verification, names likely surfaces, calls out blast
-radius, and includes any research or code-quality focus needed for the build.
-Fix obvious slice-plan gaps before coding.
+Before building, do a critical implementation-plan review. Check that the slice
+is vertical, small enough, grounded in relevant research and local precedent,
+has clear verification, names likely surfaces, calls out blast radius, and
+includes the edge cases and code-quality focus needed for the build. Fix
+obvious slice-plan gaps before coding.
 
 ## Edge Case Pass
 
@@ -227,20 +257,19 @@ If a generated flow reveals missing behavior, choose one outcome:
 
 For each slice:
 
-1. Research only the phase-specific facts that can change the build.
-   Research the latest official docs for third party software and the idiomatic
-   way of doing things for the repo's actual version. Do not guess.
-2. Write or update the slice plan.
-3. Implement the smallest complete behavior inside the slice.
-4. Run the verification from the spec/slice and any focused checks the code
+1. Confirm slice execution prep is done: implementation research is captured,
+   the plan is concrete, and plan review findings are fixed or consciously
+   accepted before coding.
+2. Implement the smallest complete behavior inside the slice.
+3. Run the verification from the spec/slice and any focused checks the code
    makes necessary.
-5. Record build evidence in the slice file or a nearby build note: files
+4. Record build evidence in the slice file or a nearby build note: files
    changed, checks run, results, skipped checks with reasons, important
    implementation choices, rollback notes, and review focus.
-6. Review against the spec, slice, current diff, verification, and code quality
+5. Review against the spec, slice, current diff, verification, and code quality
    checklist.
-7. Fix blocking findings and re-review.
-8. Do not add features that were not asked for. Do not remove existing features
+6. Fix blocking findings and re-review.
+7. Do not add features that were not asked for. Do not remove existing features
    unless asked.
 
 For Fast Path work with meaningful code changes, run a distinct review pass
@@ -249,11 +278,11 @@ Scope, high-risk surfaces, or multi-slice MVPs, use a subagent or fresh-context
 review when the host supports it. Multiple review agents may run in parallel
 when each has a distinct lens, such as edge cases, user stories and happy paths,
 failure/recovery flows, spec coverage, functionality, code quality,
-accessibility, security/privacy, or integration behavior. Review agents return
-findings to the main agent for synthesis and evaluation; the main agent decides
-what is blocking, what is accepted risk, what needs a follow-up, and what fixes
-to make. Reconcile the result into the slice evidence and fix only blocking
-issues.
+implementation plan, UI regression, accessibility, security/privacy,
+state/data integrity, or integration behavior. Review agents return findings to
+the main agent for synthesis and evaluation; the main agent decides what is
+blocking, what is accepted risk, what needs a follow-up, and what fixes to make.
+Reconcile the result into the slice evidence and fix only blocking issues.
 
 Do not fold in unrelated cleanup, speculative abstractions, or future slices.
 If implementation exposes a missing product, model, permission, UX, or

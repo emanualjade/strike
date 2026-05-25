@@ -111,6 +111,15 @@ installation, and record the chosen setup plus any blocked install step in
 
 ## Review Standard
 
+Before meaningful implementation, review the slice execution plan. The plan
+review should be grounded in slice-specific research, local codebase precedent,
+and the active spec. It should challenge whether the plan names the right
+files/surfaces, keeps concern boundaries clean, includes the right verification,
+handles likely edge cases, and avoids avoidable scope drift. Use a critical
+review subagent or fresh-context pass when the slice is risky, UI-heavy,
+data-heavy, integration-heavy, or large enough that the build agent may be
+anchored on its own plan.
+
 Every review pass should ask:
 
 - Does the work match the idea, decisions, spec, slice, and current plan?
@@ -135,25 +144,61 @@ if the same agent performs both passes. For Large Scope, high-risk surfaces, or
 multi-slice MVPs, prefer an independent subagent or fresh-context review when
 available. Multiple review agents may run in parallel when each has a distinct
 lens, such as edge cases, user stories and happy paths, failure/recovery flows,
-spec coverage, functionality, code quality, accessibility, security/privacy, or
-integration behavior. Review agents should return findings to the main agent for
-synthesis and evaluation. The main agent decides what is blocking, what is
-accepted risk, what belongs in follow-up, and what fixes to make. Record who or
-what reviewed, the main findings, and any accepted residual risk in the slice
+spec coverage, implementation plan, functionality, code quality, UI regression,
+accessibility, security/privacy, state/data integrity, or integration behavior.
+Review agents should return findings to the main agent for synthesis and
+evaluation. The main agent decides what is blocking, what is accepted risk, what
+belongs in follow-up, and what fixes to make. Record who or what reviewed, the
+lens used, the main findings, and any accepted residual risk in the slice
 evidence or readiness note.
 
 Before starting focused review, write compact evidence for the current slice:
 `Changed:`, `Verified:`, any important skipped checks, and known review focus.
-This keeps review grounded in the real implementation and lets
-`review-context` include source files directly instead of making reviewers infer
-them from prose.
+Then run `review-plan` when implementation files changed and apply the required
+lenses unless there is a clear reason to downgrade one. Record each required
+lens under `Reviewed:` with a concrete outcome, or under `Skipped:` with the
+rationale for not running it. This keeps review grounded in the real
+implementation and lets `review-context` include source files directly instead
+of making reviewers infer them from prose.
 
-When available, use the Auto Strike helper's `review-context --lens <lens>` to
-prepare compact reviewer packets. The helper only packages context; it does not
-dispatch subagents or evaluate their findings. Its source paths are grouped as
-active docs, changed files from active evidence, workspace docs, and context
-docs so reviewers can prioritize the changed implementation before background
-material.
+Use the required baseline lenses for meaningful slice work:
+
+- `implementation-plan`: before coding, whether slice research, local precedent,
+  exact surfaces, sequencing, verification, and risk handling are strong enough
+  to build from.
+- `functionality`: whether the behavior works end to end.
+- `spec-coverage`: whether the work matches the active spec, slice, success
+  checks, non-goals, and accepted scope.
+- `code-quality`: whether the implementation is maintainable, scoped, tested,
+  and placed in the right boundaries.
+
+Add surface-specific lenses when the changed files justify them:
+
+- `ui-regression` for HTML/CSS/component/front-end changes. This review checks
+  new DOM or component structure against existing CSS selectors, inherited
+  styles, layout constraints, interaction states, and responsive behavior. It
+  should use browser or visual evidence when feasible; if blocked, record a
+  static fallback review that explicitly checks selector scope and layout risk.
+- `user-flows` for UI/workflow changes.
+- `state-data-integrity` and often `edge-cases` for state, storage, schema,
+  persistence, model, migration, or data-boundary changes.
+- `security-privacy` for auth, permissions, ownership, payment, token, secret,
+  PII, retention, or compliance-sensitive changes.
+- `integration-risk` for API, provider, webhook, queue, upload, media, AI,
+  email, payment, or other external-service boundaries.
+
+When available, use the Auto Strike helper's `review-plan` to recommend lenses
+from the active `Changed:` evidence, then use `review-context --lens <lens>` to
+prepare compact reviewer packets. The helper only packages context and suggests
+lenses; it does not dispatch subagents, evaluate findings, or decide which risks
+are acceptable. Its source paths are grouped as active docs, changed files from
+active evidence, workspace docs, and context docs so reviewers can prioritize
+the changed implementation before background material.
+
+Before review or readiness, keep `Changed:` aligned with the real worktree. The
+helper may compare active `Changed:` evidence with Git's changed, staged, and
+untracked implementation files. If it reports drift, confirm the extra files are
+unrelated user work or update `Changed:` before trusting reviewer packets.
 
 If review finds blocking issues, write plain checklist items, fix only those
 items, verify again, and re-review. Do not use review as an excuse to redesign

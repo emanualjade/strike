@@ -43,6 +43,14 @@ function runRaw(args) {
   });
 }
 
+function initGit(repoRoot) {
+  const result = spawnSync("git", ["-C", repoRoot, "init"], {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  assert.equal(result.status, 0, `git init should succeed\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`);
+}
+
 function assertStatus(result, status, message) {
   assert.equal(result.status, status, `${message}\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`);
 }
@@ -280,6 +288,45 @@ Verified:
   assert.ok(body.sourcePaths.some((group) => group.title === "Changed Files From Active Evidence"));
 }
 
+function testImplementationPlanReviewContext() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Feature
+- auto-strike/features/video-mvp
+- Current path: Fast Path
+- Current mode: slice
+- Active slice: auto-strike/features/video-mvp/slices/slice-0-upload.md
+
+## Key Docs
+- \`auto-strike/features/video-mvp/spec.md\` - product scope.
+- \`auto-strike/features/video-mvp/slices/slice-0-upload.md\` - implementation plan.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/features/video-mvp/spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+
+## Implementation Research
+- Check current upload API docs before coding.
+
+## Plan
+- Add the upload control.
+
+## Plan Review
+- Pending.
+`);
+
+  const result = run(repo, ["review-context", "--lens", "plan-review"]);
+  assertStatus(result, 0, "implementation plan review lens should support pre-build review");
+  const body = json(result);
+  assert.equal(body.lens, "implementation-plan");
+  assert.ok(body.focus.some((item) => /slice-specific research/i.test(item)));
+  const activeDocs = body.sourcePaths.find((group) => group.title === "Active Docs");
+  assert.ok(activeDocs.paths.includes("auto-strike/features/video-mvp/slices/slice-0-upload.md"));
+}
+
 function testReviewContextScopesChangedFilesToActiveFeature() {
   const repo = tempRepo();
   write(repo, "README.md", "# Dogfood Repo\n");
@@ -382,6 +429,409 @@ Review Findings:
   assert.ok(body.messages.some((item) => item.code === "missing-review-verified-evidence" && item.severity === "warning"));
 }
 
+function testValidateWarnsForWeakPreBuildSlicePrep() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Feature
+- auto-strike/features/todo-dogfood
+- Current path: Fast Path
+- Current mode: build
+- Active slice: auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/features/todo-dogfood/spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+
+## Outcome
+Edit task labels.
+
+## Implementation Research
+- Pending.
+
+## Plan
+- Build it.
+
+## Plan Review
+- Pending review.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "weak pre-build slice prep should warn, not fail");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "weak-slice-implementation-research" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "weak-slice-plan" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "weak-slice-plan-review" && item.severity === "warning"));
+}
+
+function testValidateAcceptsConcretePreBuildSlicePrep() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Feature
+- auto-strike/features/todo-dogfood
+- Current path: Fast Path
+- Current mode: build
+- Active slice: auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/features/todo-dogfood/spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+
+## Outcome
+Edit task labels.
+
+## Implementation Research
+- Local precedent: todo/todo.js owns task state changes; plan impact: add updateTask beside addTask/toggleTask.
+- No third-party package is involved, so no external package docs are needed for this slice.
+
+## Plan
+- Update \`todo/todo.js\` with updateTask validation and persistence.
+- Update \`todo/index.html\` with edit controls that preserve checkbox behavior.
+- Verify with \`node scripts/todo-smoke.js\` and a static UI selector review.
+
+## Plan Review
+- main-agent review - pass; files, verification, UI selector risk, and no-blocker edge cases are named before build.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "concrete pre-build slice prep should pass validation");
+  const body = json(result);
+  assert.ok(!body.messages.some((item) => item.code === "weak-slice-implementation-research"));
+  assert.ok(!body.messages.some((item) => item.code === "weak-slice-plan"));
+  assert.ok(!body.messages.some((item) => item.code === "weak-slice-plan-review"));
+}
+
+function testReviewPlanRecommendsUiRegressionForUiChanges() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Feature
+- auto-strike/features/todo-dogfood
+- Current path: Fast Path
+- Current mode: review
+- Active slice: auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/features/todo-dogfood/spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+
+## Evidence
+
+Changed:
+- todo/index.html
+- todo/todo.js
+
+Verified:
+- node scripts/todo-smoke.js - passed
+`);
+  write(repo, "todo/index.html", "<!doctype html>\n<input>\n");
+  write(repo, "todo/todo.js", "export function todo() {}\n");
+
+  const planResult = run(repo, ["review-plan"]);
+  assertStatus(planResult, 0, "review-plan should succeed for UI changes");
+  const plan = json(planResult);
+  const requiredLenses = plan.required.map((item) => item.lens);
+  assert.ok(requiredLenses.includes("functionality"));
+  assert.ok(requiredLenses.includes("spec-coverage"));
+  assert.ok(requiredLenses.includes("code-quality"));
+  assert.ok(requiredLenses.includes("ui-regression"));
+  assert.ok(requiredLenses.includes("user-flows"));
+  assert.ok(plan.surfaces.ui.includes("todo/index.html"));
+
+  const validate = run(repo, ["validate"]);
+  assertStatus(validate, 0, "UI review gaps should warn, not fail");
+  const body = json(validate);
+  assert.ok(body.messages.some((item) => item.code === "missing-reviewed-lens-evidence" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "missing-ui-review-evidence" && item.severity === "warning"));
+
+  const alias = run(repo, ["review-context", "--lens", "frontend"]);
+  assertStatus(alias, 0, "frontend alias should resolve to the UI regression lens");
+  assert.equal(json(alias).lens, "ui-regression");
+}
+
+function testUiReviewEvidenceSuppressesUiReviewWarning() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Feature
+- auto-strike/features/todo-dogfood
+- Current path: Fast Path
+- Current mode: review
+- Active slice: auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/features/todo-dogfood/spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+
+## Evidence
+
+Changed:
+- todo/index.html
+- todo/todo.js
+
+Verified:
+- node scripts/todo-smoke.js - passed
+
+Reviewed:
+- ui-regression - pass; static CSS selector review checked new edit input against existing selectors
+- functionality - pass
+
+Skipped:
+- Browser check - browser backend unavailable; static UI regression review was used as replacement evidence
+`);
+  write(repo, "todo/index.html", "<!doctype html>\n<input>\n");
+  write(repo, "todo/todo.js", "export function todo() {}\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "recorded UI review evidence should satisfy UI review validation");
+  const body = json(result);
+  assert.ok(!body.messages.some((item) => item.code === "missing-reviewed-lens-evidence"));
+  assert.ok(!body.messages.some((item) => item.code === "missing-ui-review-evidence"));
+}
+
+function testValidateWarnsForMissingRequiredReviewLenses() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Feature
+- auto-strike/features/video-mvp
+- Current path: Fast Path
+- Current mode: review
+- Active slice: auto-strike/features/video-mvp/slices/slice-0-upload.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/features/video-mvp/spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+
+## Implementation Research
+- Local precedent: src/video/upload.ts owns upload behavior.
+
+## Plan
+- Update \`src/video/upload.ts\` and verify with \`node scripts/video-smoke.js\`.
+
+## Plan Review
+- main-agent review - pass; files and verification are named.
+
+## Evidence
+
+Changed:
+- src/video/upload.ts
+
+Verified:
+- node scripts/video-smoke.js - passed
+
+Reviewed:
+- code-quality - pass
+`);
+  write(repo, "src/video/upload.ts", "export function upload() {}\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "missing required review lenses should warn, not fail");
+  const body = json(result);
+  const missing = body.messages.filter((item) => item.code === "missing-required-review-lens");
+  assert.equal(missing.length, 2);
+  assert.ok(missing.some((item) => /functionality/.test(item.message)));
+  assert.ok(missing.some((item) => /spec-coverage/.test(item.message)));
+  assert.ok(!missing.some((item) => /code-quality/.test(item.message)));
+}
+
+function testValidateAcceptsReviewedAndSkippedRequiredReviewLenses() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Feature
+- auto-strike/features/todo-dogfood
+- Current path: Fast Path
+- Current mode: review
+- Active slice: auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/features/todo-dogfood/spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+
+## Implementation Research
+- Local precedent: todo/todo.js owns task state changes; plan impact: add updateTask beside addTask/toggleTask.
+
+## Plan
+- Update \`todo/todo.js\` with updateTask validation and persistence.
+- Update \`todo/index.html\` with edit controls.
+- Verify with \`node scripts/todo-smoke.js\` and static UI selector review.
+
+## Plan Review
+- main-agent review - pass; files, verification, and UI selector risks are named.
+
+## Evidence
+
+Changed:
+- todo/index.html
+- todo/todo.js
+
+Verified:
+- node scripts/todo-smoke.js - passed
+
+Reviewed:
+- functionality - pass
+- spec-coverage - pass
+- code-quality - pass
+- ui-regression - pass; static selector review checked edit input against checkbox selectors
+
+Skipped:
+- user-flows - accepted skip; edit/save/cancel flows were already covered by the smoke script for this narrow slice
+`);
+  write(repo, "todo/index.html", "<!doctype html>\n<input>\n");
+  write(repo, "todo/todo.js", "document.querySelector('button').addEventListener('click', () => {});\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "reviewed and skipped required lenses should satisfy validation");
+  const body = json(result);
+  assert.ok(!body.messages.some((item) => item.code === "missing-required-review-lens"));
+}
+
+function testValidateWarnsWhenGitChangesMissingFromChangedEvidence() {
+  const repo = tempRepo();
+  initGit(repo);
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Feature
+- auto-strike/features/video-mvp
+- Current path: Fast Path
+- Current mode: review
+- Active slice: auto-strike/features/video-mvp/slices/slice-0-upload.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/features/video-mvp/spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+
+## Implementation Research
+- Local precedent: src/video/upload.ts owns upload behavior.
+
+## Plan
+- Update \`src/video/upload.ts\` and verify with \`node scripts/video-smoke.js\`.
+
+## Plan Review
+- main-agent review - pass; files and verification are named.
+
+## Evidence
+
+Changed:
+- src/video/upload.ts
+
+Verified:
+- node scripts/video-smoke.js - passed
+
+Reviewed:
+- functionality - pass
+- spec-coverage - pass
+- code-quality - pass
+`);
+  write(repo, "src/video/upload.ts", "export function upload() {}\n");
+  write(repo, "src/video/preview.ts", "export function preview() {}\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "git changed files missing from Changed evidence should warn, not fail");
+  const body = json(result);
+  const warning = body.messages.find((item) => item.code === "changed-evidence-may-be-stale");
+  assert.ok(warning);
+  assert.match(warning.message, /src\/video\/preview\.ts/);
+  assert.doesNotMatch(warning.message, /auto-strike/);
+}
+
+function testValidateWarnsForStaleChangedEvidencePath() {
+  const repo = tempRepo();
+  initGit(repo);
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Feature
+- auto-strike/features/video-mvp
+- Current path: Fast Path
+- Current mode: review
+- Active slice: auto-strike/features/video-mvp/slices/slice-0-upload.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/features/video-mvp/spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+
+## Implementation Research
+- Local precedent: src/video/upload.ts owns upload behavior.
+
+## Plan
+- Update \`src/video/upload.ts\` and verify with \`node scripts/video-smoke.js\`.
+
+## Plan Review
+- main-agent review - pass; files and verification are named.
+
+## Evidence
+
+Changed:
+- src/video/missing.ts
+
+Verified:
+- node scripts/video-smoke.js - passed
+
+Reviewed:
+- functionality - pass
+- spec-coverage - pass
+- code-quality - pass
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "stale Changed evidence paths should warn, not fail");
+  const body = json(result);
+  const warning = body.messages.find((item) => item.code === "stale-changed-evidence-path");
+  assert.ok(warning);
+  assert.match(warning.message, /src\/video\/missing\.ts/);
+}
+
+function testReviewPlanDetectsBrowserScriptUiChanges() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Feature
+- auto-strike/features/vanilla-ui
+- Current path: Fast Path
+- Current mode: review
+- Active slice: auto-strike/features/vanilla-ui/slices/slice-0-click.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/features/vanilla-ui/spec.md", "# Vanilla UI Spec\n");
+  write(repo, "auto-strike/features/vanilla-ui/slices/slice-0-click.md", `# Slice 0: Click
+
+## Evidence
+
+Changed:
+- todo/todo.js
+
+Verified:
+- node scripts/todo-smoke.js - passed
+`);
+  write(repo, "todo/todo.js", "document.querySelector('button').addEventListener('click', () => {});\n");
+
+  const result = run(repo, ["review-plan"]);
+  assertStatus(result, 0, "review-plan should detect browser-facing JavaScript UI changes");
+  const plan = json(result);
+  assert.ok(plan.surfaces.ui.includes("todo/todo.js"));
+  assert.ok(plan.required.map((item) => item.lens).includes("ui-regression"));
+}
+
 function testReviewContextRejectsUnknownLens() {
   const repo = tempRepo();
   const result = run(repo, ["review-context", "--lens", "unknown-lens"]);
@@ -403,8 +853,18 @@ testValidateWarnsForMissingEvidence();
 testValidateBrokenKeyDocReference();
 testKeyDocsCanReferenceRepoDocs();
 testReviewContextPacket();
+testImplementationPlanReviewContext();
 testReviewContextScopesChangedFilesToActiveFeature();
 testValidateWarnsWhenReviewEvidenceLacksChangedAndVerified();
+testValidateWarnsForWeakPreBuildSlicePrep();
+testValidateAcceptsConcretePreBuildSlicePrep();
+testReviewPlanRecommendsUiRegressionForUiChanges();
+testUiReviewEvidenceSuppressesUiReviewWarning();
+testValidateWarnsForMissingRequiredReviewLenses();
+testValidateAcceptsReviewedAndSkippedRequiredReviewLenses();
+testValidateWarnsWhenGitChangesMissingFromChangedEvidence();
+testValidateWarnsForStaleChangedEvidencePath();
+testReviewPlanDetectsBrowserScriptUiChanges();
 testReviewContextRejectsUnknownLens();
 testHelpWorksWithoutCommand();
 

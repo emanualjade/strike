@@ -60,6 +60,7 @@ Use it internally when available:
 
 - `inspect` reports observed workspace state.
 - `validate` reports errors, warnings, and notes based on the docs that exist.
+- `review-plan` recommends review lenses from active `Changed:` evidence.
 - `review-context --lens <lens>` creates compact review packets for the main
   agent to pass to reviewers. Review packets scope evidence to the active slice
   first, the active feature second, and the whole workspace only as a fallback.
@@ -142,8 +143,12 @@ Verified:
 Edge / Flow Coverage:
 - [important edge case or user flow] - [handled/tested/deferred/accepted]
 
+Reviewed:
+- [lens] - [pass / blocker / warning and short finding]
+
 Skipped:
 - [check] - [reason, risk, replacement evidence]
+- [required review lens] - [reason it was not run or was downgraded]
 
 Review Findings:
 - [open blocker or "None"]
@@ -153,9 +158,15 @@ A claim that work is done should be backed by evidence or a clear skipped-check
 reason.
 
 Record evidence before asking for focused review or generating
-`review-context` packets. The helper can include implementation files in review
-packets when slice evidence has an explicit `Changed:` list; without that, it
-can still package workspace docs but cannot reliably infer what changed. In
+`review-plan` or `review-context` packets. The helper can recommend review
+lenses and include implementation files in review packets when slice evidence
+has an explicit `Changed:` list; without that, it can still package workspace
+docs but cannot reliably infer what changed. Keep `Changed:` aligned with the
+actual implementation files changed in the worktree; if Git reports extra
+changed files, confirm they are unrelated user work or update the evidence
+before review. Record the lenses that actually ran under `Reviewed:` and any
+intentionally skipped required lenses under `Skipped:` so future validation can
+tell whether review was general, surface-specific, or consciously downgraded. In
 multi-feature workspaces, keep active feature evidence current so reviewers are
 not distracted by older completed features.
 

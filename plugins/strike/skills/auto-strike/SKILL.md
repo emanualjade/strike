@@ -89,11 +89,16 @@ Use it as a guardrail, not as the workflow engine:
 - Run `validate` before claiming done, readiness, or a clean handoff. Treat
   errors as hard facts to resolve or ask about. Treat warnings and notes as
   prompts for main-agent judgment, not automatic blockers.
+- Run `review-plan` after recording slice evidence and before focused review
+  when implementation files changed. The plan recommends review lenses from the
+  active `Changed:` list; use it to choose reviewers, not to replace judgment.
 - Run `review-context --lens <lens>` before parallel review when a compact
-  packet would help reviewers focus. Before generating reviewer packets, record
-  compact slice evidence with `Changed:` and `Verified:` sections so reviewers
-  get the implementation files and checks, not only planning docs. The main
-  agent still dispatches reviewers, evaluates findings, decides what is
+  packet would help reviewers focus. For pre-build plan review, use
+  `review-context --lens implementation-plan` after the active slice has
+  implementation research and a concrete plan. For post-build review, first
+  record compact slice evidence with `Changed:` and `Verified:` sections so
+  reviewers get the implementation files and checks, not only planning docs. The
+  main agent still dispatches reviewers, evaluates findings, decides what is
   blocking, and owns final synthesis. Review packets prefer active-slice
   evidence, then active-feature evidence, and use broader workspace evidence
   only as a fallback.
@@ -252,11 +257,18 @@ blocking question.
    or prevent a bad build.
 5. Write one compact spec.
 6. Create 1-3 vertical slices.
-7. Build the first complete, production-shaped behavior path before expanding:
+7. Before building the active slice, do slice execution prep: research the
+   slice-specific implementation details and nearby repo patterns, check latest
+   docs and idiomatic usage for third-party packages instead of guessing, write
+   a concrete plan from that research, and run a critical implementation-plan
+   review when the slice is meaningful or risky.
+8. Build the first complete, production-shaped behavior path before expanding:
    real UI, real validation, real state handling, real errors, and the simplest
    safe persistence or integration path the MVP requires.
-8. Review against the spec, slice, verification, and code quality checklist.
-9. Fix blockers, update docs, and continue until the MVP works or a named
+9. Record evidence, use `review-plan` when implementation files changed, and
+   review against the required lenses, spec, slice, verification, and code
+   quality checklist.
+10. Fix blockers, update docs, and continue until the MVP works or a named
    decision blocks progress.
 
 ## Tiny Change Path
@@ -278,7 +290,9 @@ Required loop:
    when feasible. Run focused tests/build/lint when risk or repo norms call for
    them.
 6. Review against user intent, changed surfaces, edge cases, accessibility or
-   responsive behavior when relevant, and the code quality checklist.
+   responsive behavior when relevant, and the code quality checklist. For UI
+   files, include a browser/visual check or an explicit static UI regression
+   review if browser checks are blocked.
 7. Fix blocking findings, rerun affected checks, and record changed files,
    evidence, skipped checks with reasons, and next action.
 
@@ -303,13 +317,18 @@ Required loop:
    safely parallelized.
 5. For each milestone, write only the specs, model notes, architecture notes, and
    slices needed to build without guessing.
-6. Use subagents selectively for independent research, codebase mapping, or
+6. Before building each meaningful slice, do slice execution prep: use focused
+   research or codebase-mapping subagents when useful, write the concrete plan,
+   and have a critical implementation-plan reviewer return findings to the main
+   agent for synthesis before code changes.
+7. Use subagents selectively for independent research, codebase mapping, or
    review of risky surfaces. Multiple review agents may run in parallel when
    they cover different lenses. Have them return findings to the main agent for
    synthesis and evaluation before changing scope, code, or docs.
-7. After each slice, run verification, review against the code quality checklist,
-   fix blockers, and update `index.md`, `todo.md`, decisions, and slice evidence.
-8. Periodically re-cut scope into MVP now, Soon, Later, and Ask first so the work
+8. After each slice, run verification, review against the code quality checklist,
+   use `review-plan` to choose any required surface-specific review lenses, fix
+   blockers, and update `index.md`, `todo.md`, decisions, and slice evidence.
+9. Periodically re-cut scope into MVP now, Soon, Later, and Ask first so the work
    does not expand silently.
 
 Do not let a large scope become a large batch. Keep implementation moving through
@@ -339,6 +358,8 @@ Use `references/flow.md` for details. The short version:
 - Spec writes the durable source of truth for product behavior, boundaries,
   success checks, risks, and build constraints.
 - Slice splits the spec into small vertical implementation paths.
+- Slice Execution Prep researches the active slice, writes the concrete
+  implementation plan, and gets the plan critically reviewed before coding.
 - Edge Case Pass identifies important inputs, states, permissions, data,
   integration, UI, and operational cases to build, verify, defer, or ask about.
 - User Flow Validation checks representative normal, resumed, invalid, recovery,

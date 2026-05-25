@@ -2,6 +2,20 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.5 - 2026-05-25
+
+- Added Auto Strike `review-plan` to recommend review lenses from active
+  `Changed:` evidence.
+- Added `implementation-plan`, `ui-regression`, and `state-data-integrity`
+  review lenses for pre-build planning, frontend regressions, and state/data
+  integrity risks.
+- Added validation warnings for weak pre-build slice prep, missing required
+  review lens evidence, UI work without visual/static UI review evidence, and
+  drift between active `Changed:` evidence and the Git worktree.
+- Updated Auto Strike workflow docs to require slice execution research,
+  concrete implementation plans, critical plan review, `Reviewed:` evidence, and
+  explicit skipped-review rationales before trusting a slice.
+
 ## 0.8.4 - 2026-05-25
 
 - Scoped Auto Strike `review-context` evidence to the active slice first, then

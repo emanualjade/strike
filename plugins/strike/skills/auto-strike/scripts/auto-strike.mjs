@@ -11,6 +11,7 @@ const WORKSPACE_ROOT = "auto-strike";
 const VALID_MODES = new Set(["idea", "decisions", "spec", "slice", "build", "review", "readiness"]);
 const MODES_EXPECTING_SPEC = new Set(["slice", "build", "review", "readiness"]);
 const MODES_EXPECTING_SLICE = new Set(["build", "review", "readiness"]);
+const MODES_EXPECTING_SLICE_PREP = new Set(["build", "review", "readiness"]);
 const MODES_EXPECTING_EVIDENCE = new Set(["review", "readiness"]);
 const TINY_PATH_PATTERN = /\btiny(?:\s+change)?\b/i;
 
@@ -42,6 +43,15 @@ const LENSES = {
       "Repo-verifiable and live/human checks that still need evidence.",
     ],
   },
+  "implementation-plan": {
+    title: "Implementation Plan",
+    focus: [
+      "Whether slice-specific research used official docs, current repo versions, and nearby codebase precedent where needed.",
+      "Whether the plan names exact files/surfaces, concern boundaries, verification commands, and rollback or recovery notes.",
+      "Whether the plan is the smallest complete vertical implementation path and avoids scope drift or speculative abstractions.",
+      "Missing edge cases, UI states, data/state risks, dependencies, or integration details that should be resolved before coding.",
+    ],
+  },
   functionality: {
     title: "Functionality",
     focus: [
@@ -58,6 +68,15 @@ const LENSES = {
       "Names, module size, duplication, side effects, dependency choices, and blast radius.",
       "Environment variables, secrets, logging, observability, and maintainability.",
       "Focused tests/checks appropriate to the surfaces changed.",
+    ],
+  },
+  "ui-regression": {
+    title: "UI Regression",
+    focus: [
+      "New DOM or component structure against existing CSS selectors, inherited styles, and layout constraints.",
+      "Desktop/mobile layout, long text, small containers, overflow, spacing, hit targets, and controls that collapse or overlap.",
+      "Changed interaction states such as editing, disabled, loading, empty, error, success, hover, focus, and keyboard flows.",
+      "Browser or visual evidence when feasible; explicit static fallback review when browser checks are blocked.",
     ],
   },
   accessibility: {
@@ -87,6 +106,15 @@ const LENSES = {
       "Sandbox/mock/live checks and skipped-check risk.",
     ],
   },
+  "state-data-integrity": {
+    title: "State And Data Integrity",
+    focus: [
+      "State transitions, persistence, serialization, migrations, schema/model changes, and rollback safety.",
+      "Duplicate, stale, partial, missing, concurrent, destructive, and recovery cases.",
+      "Boundary validation, ownership rules, data retention, and user-visible errors for invalid state.",
+      "Focused tests or checks that prove important state and data cases, not only the happy path.",
+    ],
+  },
 };
 
 const LENS_ALIASES = {
@@ -96,13 +124,56 @@ const LENS_ALIASES = {
   "failure-recovery": "user-flows",
   "spec": "spec-coverage",
   "coverage": "spec-coverage",
+  "implementation": "implementation-plan",
+  "plan": "implementation-plan",
+  "plan-review": "implementation-plan",
+  "slice-plan": "implementation-plan",
   "quality": "code-quality",
+  "visual": "ui-regression",
+  "visual-regression": "ui-regression",
+  "frontend": "ui-regression",
+  "frontend-visual": "ui-regression",
   "a11y": "accessibility",
   "ui": "accessibility",
   "security": "security-privacy",
   "privacy": "security-privacy",
   "integrations": "integration-risk",
+  "data": "state-data-integrity",
+  "state": "state-data-integrity",
+  "persistence": "state-data-integrity",
 };
+
+const UI_EXTENSIONS = new Set([
+  ".astro",
+  ".css",
+  ".html",
+  ".jsx",
+  ".less",
+  ".mdx",
+  ".sass",
+  ".scss",
+  ".svelte",
+  ".tsx",
+  ".vue",
+]);
+
+const UI_PATH_SEGMENTS = new Set([
+  "app",
+  "components",
+  "layouts",
+  "pages",
+  "routes",
+  "screens",
+  "ui",
+  "views",
+]);
+
+const UI_SCRIPT_EXTENSIONS = new Set([".js", ".ts"]);
+const DATA_EXTENSIONS = new Set([".prisma", ".sql"]);
+const DATA_PATH_PATTERN = /(^|\/)(data|database|db|migrations?|models?|repositories|schema|state|stores?|storage)(\/|$)/i;
+const SECURITY_PATH_PATTERN = /(^|\/)(auth|billing|payments?|permissions?|privacy|roles?|secrets?|sessions?|stripe|tokens?)(\/|$)|(^|\/)\.env(\.|$)|(^|\/)(\.env|env)(\/|$)/i;
+const INTEGRATION_PATH_PATTERN = /(^|\/)(adapters?|ai|api|clients?|email|integrations?|llm|media|payments?|providers?|queues?|server|services?|uploads?|webhooks?)(\/|$)/i;
+const ROUTE_HANDLER_PATTERN = /(^|\/)(api|routes?|server|actions)(\/|$)|(^|\/)(route|handler|controller)\.[cm]?[jt]s$/i;
 
 function normalizeText(value) {
   return String(value ?? "")
@@ -487,6 +558,14 @@ function evidenceVerifiedItems(repoRoot, evidenceLocations) {
   return evidenceListItems(repoRoot, evidenceLocations, ["verified", "verification", "checks"]);
 }
 
+function evidenceReviewedItems(repoRoot, evidenceLocations) {
+  return evidenceListItems(repoRoot, evidenceLocations, ["reviewed", "review lenses", "reviews"]);
+}
+
+function evidenceSkippedItems(repoRoot, evidenceLocations) {
+  return evidenceListItems(repoRoot, evidenceLocations, ["skipped", "skipped checks", "not run"]);
+}
+
 function addChangedPath(repoRoot, changedPaths, value) {
   const candidate = extractInlinePath(value);
   if (!candidate || isPlaceholder(candidate) || isNoneItem(candidate)) return;
@@ -662,6 +741,8 @@ export function inspectAutoStrike(options = {}) {
   const reviewEvidence = selectReviewEvidenceLocations(evidenceLocations, activeFeature, activeSlice);
   const reviewChangedPaths = evidenceChangedPaths(repoRoot, reviewEvidence.locations);
   const reviewVerifiedItems = evidenceVerifiedItems(repoRoot, reviewEvidence.locations);
+  const reviewReviewedItems = evidenceReviewedItems(repoRoot, reviewEvidence.locations);
+  const reviewSkippedItems = evidenceSkippedItems(repoRoot, reviewEvidence.locations);
 
   return {
     repoRoot,
@@ -679,10 +760,14 @@ export function inspectAutoStrike(options = {}) {
       locations: evidenceLocations,
       changedPaths,
       verifiedItems: evidenceVerifiedItems(repoRoot, evidenceLocations),
+      reviewedItems: evidenceReviewedItems(repoRoot, evidenceLocations),
+      skippedItems: evidenceSkippedItems(repoRoot, evidenceLocations),
       reviewScope: {
         ...reviewEvidence,
         changedPaths: reviewChangedPaths,
         verifiedItems: reviewVerifiedItems,
+        reviewedItems: reviewReviewedItems,
+        skippedItems: reviewSkippedItems,
       },
     },
   };
@@ -707,6 +792,168 @@ function keyDocMessages(repoRoot, keyDocs) {
       messages.push(message("error", "missing-key-doc", resolved.relativePath, "Key Docs references a path that does not exist."));
     }
   }
+  return messages;
+}
+
+function runGitLines(repoRoot, args) {
+  try {
+    const output = execFileSync("git", ["-C", repoRoot, ...args], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    });
+    return output
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+  } catch {
+    return null;
+  }
+}
+
+function gitRoot(repoRoot) {
+  const lines = runGitLines(repoRoot, ["rev-parse", "--show-toplevel"]);
+  if (!lines || lines.length === 0) return null;
+  return fs.realpathSync(lines[0]);
+}
+
+function repoRelativeGitPath(repoRoot, gitRootPath, gitRelativePath) {
+  const absolutePath = path.resolve(gitRootPath, gitRelativePath);
+  const relativePath = path.relative(repoRoot, absolutePath);
+  if (!relativePath || relativePath.startsWith("..") || path.isAbsolute(relativePath)) return null;
+  return posix(relativePath);
+}
+
+function gitChangedPaths(repoRoot) {
+  const rootPath = gitRoot(repoRoot);
+  if (!rootPath) {
+    return {
+      available: false,
+      paths: [],
+    };
+  }
+
+  const paths = new Set();
+  const commands = [
+    ["diff", "--name-only", "--diff-filter=ACDMRTUXB"],
+    ["diff", "--cached", "--name-only", "--diff-filter=ACDMRTUXB"],
+    ["ls-files", "--others", "--exclude-standard"],
+  ];
+
+  for (const args of commands) {
+    const lines = runGitLines(rootPath, args) ?? [];
+    for (const line of lines) {
+      const relativePath = repoRelativeGitPath(repoRoot, rootPath, line);
+      if (relativePath && isImplementationPath(relativePath)) {
+        paths.add(relativePath);
+      }
+    }
+  }
+
+  return {
+    available: true,
+    paths: [...paths].sort(),
+  };
+}
+
+function normalizeEvidencePath(sourcePath) {
+  return posix(String(sourcePath ?? "").replace(/^\.\/+/, "").replace(/\/+$/, ""));
+}
+
+function evidenceCoversGitPath(evidencePath, gitPath) {
+  const normalizedEvidence = normalizeEvidencePath(evidencePath);
+  const normalizedGit = normalizeEvidencePath(gitPath);
+  return normalizedEvidence === normalizedGit || normalizedGit.startsWith(`${normalizedEvidence}/`);
+}
+
+function changedEvidenceDriftMessages(state) {
+  const reviewScope = state.evidence.reviewScope;
+  if (reviewScope.changedPaths.length === 0) return [];
+
+  const gitState = gitChangedPaths(state.repoRoot);
+  if (!gitState.available) return [];
+
+  const evidencePaths = reviewScope.changedPaths
+    .filter(isImplementationPath)
+    .map(normalizeEvidencePath);
+  const messagePath = reviewScope.locations[0] ?? WORKSPACE_ROOT;
+  const messages = [];
+  const missingFromEvidence = gitState.paths.filter((gitPath) => {
+    return !evidencePaths.some((evidencePath) => evidenceCoversGitPath(evidencePath, gitPath));
+  });
+  if (missingFromEvidence.length > 0) {
+    messages.push(message("warning", "changed-evidence-may-be-stale", messagePath, `Git reports changed implementation files not listed in active Changed evidence. Confirm they are unrelated user work or update Changed before review: ${missingFromEvidence.slice(0, 8).join(", ")}${missingFromEvidence.length > 8 ? ", ..." : ""}`));
+  }
+
+  const gitPathSet = new Set(gitState.paths);
+  const unresolvedEvidence = evidencePaths.filter((sourcePath) => {
+    return !fs.existsSync(path.join(state.repoRoot, sourcePath)) &&
+      !gitPathSet.has(sourcePath);
+  });
+  if (unresolvedEvidence.length > 0) {
+    messages.push(message("warning", "stale-changed-evidence-path", messagePath, `Active Changed evidence references implementation paths that do not exist and are not reported by Git as changed: ${unresolvedEvidence.slice(0, 8).join(", ")}${unresolvedEvidence.length > 8 ? ", ..." : ""}`));
+  }
+
+  return messages;
+}
+
+function sectionHasSubstance(sectionText) {
+  const lines = normalizeText(sectionText)
+    .split("\n")
+    .map((line) => line
+      .replace(/^[-*]\s+/, "")
+      .replace(/^\d+\.\s+/, "")
+      .replace(/^\[[ xX]\]\s+/, "")
+      .replace(/^`|`$/g, "")
+      .trim())
+    .filter(Boolean);
+
+  if (lines.length === 0) return false;
+  return lines.some((line) => {
+    const stripped = line
+      .replace(/[.[\]()`*_:-]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!stripped) return false;
+    return !/^(todo|tbd|pending|pending review|none|n\/a|na|not yet|not started|placeholder|fill in|to be added|draft)$/i.test(stripped);
+  });
+}
+
+function planNamesSurface(planText) {
+  return /`?[\w.-]+\/[\w./-]+\.[A-Za-z0-9]+`?/.test(planText) ||
+    /\b(file|files|surface|surfaces|route|routes|component|components|module|modules|script|scripts|page|pages|handler|handlers|endpoint|endpoints|schema|model|models)\b/i.test(planText);
+}
+
+function planNamesVerification(planText) {
+  return /\b(verify|verified|verification|test|tests|check|checks|smoke|lint|build|browser|visual|run|pnpm|node|pytest|cargo|go test)\b/i.test(planText);
+}
+
+function planReviewHasOutcome(planReviewText) {
+  return /\b(pass|passed|blocker|blockers|warning|warnings|finding|findings|accepted|approved|skip|skipped|review|reviewed|reviewer|no blockers?|fixed|resolved)\b/i.test(planReviewText);
+}
+
+function activeSlicePrepMessages(repoRoot, activeSlice, currentMode) {
+  if (!activeSlice.path || !activeSlice.exists) return [];
+  const sliceText = readFileIfPresent(path.join(repoRoot, activeSlice.path));
+  if (!sliceText) return [];
+
+  const messages = [];
+  const implementationResearch = extractSection(sliceText, "Implementation Research");
+  const plan = extractSection(sliceText, "Plan");
+  const planReview = extractSection(sliceText, "Plan Review");
+  const modeText = currentMode ? ` in ${currentMode} mode` : "";
+
+  if (!sectionHasSubstance(implementationResearch)) {
+    messages.push(message("warning", "weak-slice-implementation-research", activeSlice.path, `Active slice is${modeText} but Implementation Research is missing or placeholder-only. Record relevant docs, local precedent, or why no extra research was needed.`));
+  }
+
+  if (!sectionHasSubstance(plan) || !planNamesSurface(plan) || !planNamesVerification(plan)) {
+    messages.push(message("warning", "weak-slice-plan", activeSlice.path, `Active slice is${modeText} but Plan is missing, placeholder-only, or does not name likely files/surfaces and verification checks.`));
+  }
+
+  if (!sectionHasSubstance(planReview) || !planReviewHasOutcome(planReview)) {
+    messages.push(message("warning", "weak-slice-plan-review", activeSlice.path, `Active slice is${modeText} but Plan Review is missing, pending, or lacks a concrete review outcome. Record main-agent review, critical reviewer findings, or accepted skip rationale.`));
+  }
+
   return messages;
 }
 
@@ -805,11 +1052,16 @@ export function validateAutoStrike(options = {}) {
     messages.push(message("warning", "missing-active-slice", activeFeature.slicesPath, "Current mode usually expects active slice docs, but none were found."));
   }
 
+  if (!tinyPath && index.currentMode && MODES_EXPECTING_SLICE_PREP.has(index.currentMode)) {
+    messages.push(...activeSlicePrepMessages(state.repoRoot, state.activeSlice, index.currentMode));
+  }
+
   if (!tinyPath && index.currentMode && MODES_EXPECTING_EVIDENCE.has(index.currentMode) && state.evidence.locations.length === 0) {
     messages.push(message("warning", "missing-evidence", WORKSPACE_ROOT, "Review/readiness mode should have evidence or skipped-check rationale, but none was found."));
   }
 
   if (!tinyPath && reviewLikeMode && state.evidence.locations.length > 0) {
+    const plan = recommendedReviewPlan(state);
     if (state.activeSlice.path && !state.evidence.locations.includes(state.activeSlice.path)) {
       messages.push(message("warning", "missing-active-slice-evidence", state.activeSlice.path, "Active slice is in review/readiness mode but does not contain evidence; review context may fall back to broader feature evidence."));
     }
@@ -819,8 +1071,16 @@ export function validateAutoStrike(options = {}) {
     if (state.evidence.reviewScope.changedPaths.length === 0) {
       messages.push(message("warning", "missing-review-changed-evidence", state.evidence.reviewScope.locations[0] ?? WORKSPACE_ROOT, "Review context has no active Changed list, so reviewer packets may miss implementation files."));
     }
+    messages.push(...changedEvidenceDriftMessages(state));
     if (state.evidence.reviewScope.verifiedItems.length === 0) {
       messages.push(message("warning", "missing-review-verified-evidence", state.evidence.reviewScope.locations[0] ?? WORKSPACE_ROOT, "Review context has no active Verified list, so reviewer packets may miss verification evidence."));
+    }
+    if (state.evidence.reviewScope.changedPaths.length > 0 && state.evidence.reviewScope.verifiedItems.length > 0 && state.evidence.reviewScope.reviewedItems.length === 0) {
+      messages.push(message("warning", "missing-reviewed-lens-evidence", state.evidence.reviewScope.locations[0] ?? WORKSPACE_ROOT, "Review/readiness evidence has Changed and Verified lists but no Reviewed list, so it is unclear which review lenses were applied."));
+    }
+    messages.push(...requiredReviewLensMessages(state, plan));
+    if (plan.surfaces.ui.length > 0 && !hasUiReviewCoverage(state.evidence.reviewScope)) {
+      messages.push(message("warning", "missing-ui-review-evidence", state.evidence.reviewScope.locations[0] ?? WORKSPACE_ROOT, "UI files changed but active evidence has no browser/visual check, skipped-check rationale, or UI regression review."));
     }
   }
 
@@ -841,6 +1101,187 @@ function summarizeMessages(messages) {
     warnings: messages.filter((item) => item.severity === "warning").length,
     notes: messages.filter((item) => item.severity === "note").length,
   };
+}
+
+function pathExtension(sourcePath) {
+  return path.posix.extname(String(sourcePath ?? "").toLowerCase());
+}
+
+function pathSegments(sourcePath) {
+  return String(sourcePath ?? "")
+    .toLowerCase()
+    .split("/")
+    .filter(Boolean);
+}
+
+function readRepoText(repoRoot, sourcePath) {
+  if (!repoRoot || !sourcePath || path.isAbsolute(sourcePath) || String(sourcePath).split(/[\\/]+/).includes("..")) {
+    return "";
+  }
+  return readFileIfPresent(path.join(repoRoot, sourcePath)) ?? "";
+}
+
+function isUiChangedPath(sourcePath, repoRoot) {
+  const extension = pathExtension(sourcePath);
+  if (UI_EXTENSIONS.has(extension)) return true;
+  if (!UI_SCRIPT_EXTENSIONS.has(extension)) return false;
+  if (pathSegments(sourcePath).some((segment) => UI_PATH_SEGMENTS.has(segment))) return true;
+  const text = readRepoText(repoRoot, sourcePath);
+  return /\b(document|window)\s*\.|\b(querySelector|addEventListener|classList|innerHTML|localStorage|sessionStorage|customElements)\b|from\s+["']react["']|React\.createElement|return\s*\(?\s*<[A-Za-z]/.test(text);
+}
+
+function isDataChangedPath(sourcePath) {
+  return DATA_EXTENSIONS.has(pathExtension(sourcePath)) || DATA_PATH_PATTERN.test(String(sourcePath ?? ""));
+}
+
+function isSecurityChangedPath(sourcePath) {
+  return SECURITY_PATH_PATTERN.test(String(sourcePath ?? ""));
+}
+
+function isIntegrationChangedPath(sourcePath) {
+  return INTEGRATION_PATH_PATTERN.test(String(sourcePath ?? "")) || ROUTE_HANDLER_PATTERN.test(String(sourcePath ?? ""));
+}
+
+function isImplementationPath(sourcePath) {
+  return !String(sourcePath ?? "").startsWith(`${WORKSPACE_ROOT}/`);
+}
+
+function classifyChangedPaths(changedPaths, repoRoot) {
+  const implementation = changedPaths.filter(isImplementationPath);
+  return {
+    implementation,
+    ui: implementation.filter((sourcePath) => isUiChangedPath(sourcePath, repoRoot)),
+    data: implementation.filter(isDataChangedPath),
+    security: implementation.filter(isSecurityChangedPath),
+    integration: implementation.filter(isIntegrationChangedPath),
+  };
+}
+
+function lensEntry(lens, reason) {
+  return {
+    lens,
+    title: LENSES[lens].title,
+    reason,
+  };
+}
+
+function addLens(target, seen, lens, reason) {
+  if (seen.has(lens)) return;
+  seen.add(lens);
+  target.push(lensEntry(lens, reason));
+}
+
+function recommendedReviewPlan(state) {
+  const changedPaths = state.evidence.reviewScope.changedPaths;
+  const surfaces = classifyChangedPaths(changedPaths, state.repoRoot);
+  const required = [];
+  const optional = [];
+  const requiredSeen = new Set();
+  const optionalSeen = new Set();
+
+  addLens(required, requiredSeen, "functionality", "Baseline slice review: prove the changed behavior works end to end.");
+  addLens(required, requiredSeen, "spec-coverage", "Baseline slice review: compare implementation against the active spec, slice, and non-goals.");
+  addLens(required, requiredSeen, "code-quality", "Baseline slice review: check maintainability, blast radius, naming, tests, and boundaries.");
+
+  if (surfaces.ui.length > 0) {
+    addLens(required, requiredSeen, "ui-regression", "UI files changed; check visual/layout regressions, selector scope, responsive states, and interaction states.");
+    addLens(required, requiredSeen, "user-flows", "UI files changed; check happy, invalid, cancel, retry, keyboard, mobile, and recovery flows.");
+    addLens(optional, optionalSeen, "accessibility", "UI changed; run this separately when accessibility risk is meaningful or browser evidence is available.");
+  }
+
+  if (surfaces.data.length > 0) {
+    addLens(required, requiredSeen, "state-data-integrity", "Data, state, schema, storage, or persistence paths changed.");
+    addLens(required, requiredSeen, "edge-cases", "State/data changes need duplicate, stale, missing, invalid, concurrent, and destructive cases checked.");
+  }
+
+  if (surfaces.security.length > 0) {
+    addLens(required, requiredSeen, "security-privacy", "Security, privacy, auth, permissions, payments, tokens, or secrets paths changed.");
+  }
+
+  if (surfaces.integration.length > 0) {
+    addLens(required, requiredSeen, "integration-risk", "API, external service, upload, provider, webhook, queue, or server boundary paths changed.");
+  }
+
+  if (surfaces.implementation.length > 0 && surfaces.data.length === 0) {
+    addLens(optional, optionalSeen, "edge-cases", "Implementation changed; use when inputs, states, destructive actions, or failure paths carry risk.");
+  }
+
+  const notes = [];
+  if (changedPaths.length === 0) {
+    notes.push("No active Changed list was found; review-context may miss implementation files until slice evidence is updated.");
+  }
+  if (surfaces.ui.length > 0) {
+    notes.push("For UI changes, include browser or visual evidence when feasible. If blocked, record the blocker and a static UI regression review.");
+  }
+
+  return {
+    evidenceScope: state.evidence.reviewScope.scope,
+    changedPaths,
+    surfaces,
+    required,
+    optional: optional.filter((item) => !requiredSeen.has(item.lens)),
+    notes,
+  };
+}
+
+function normalizedEvidenceText(value) {
+  return String(value ?? "").toLowerCase();
+}
+
+function reviewItemMentionsLens(value, lens) {
+  const text = normalizedEvidenceText(value);
+  if (text.includes(lens)) return true;
+  return Object.entries(LENS_ALIASES).some(([alias, canonical]) => canonical === lens && text.includes(alias));
+}
+
+function reviewItemHasConcreteOutcome(value) {
+  const text = String(value ?? "");
+  if (!sectionHasSubstance(text)) return false;
+  if (/\b(todo|tbd|pending|not yet|not started|placeholder|fill in)\b/i.test(text)) return false;
+  return /\b(pass(?:ed)?|fail(?:ed)?|blockers?|warnings?|findings?|accepted|approved|defer(?:red)?|skip(?:ped)?|no\s+blockers?|fixed|resolved)\b/i.test(text);
+}
+
+function skippedItemHasConcreteReason(value) {
+  const text = String(value ?? "");
+  if (!sectionHasSubstance(text)) return false;
+  if (/\b(todo|tbd|pending|not yet|not started|placeholder|fill in)\b/i.test(text)) return false;
+  return /\s[-:;]\s+\S+/.test(text) && text.trim().length >= 20;
+}
+
+function hasReviewedLens(reviewScope, lens) {
+  return reviewScope.reviewedItems.some((item) => reviewItemMentionsLens(item, lens) && reviewItemHasConcreteOutcome(item));
+}
+
+function hasSkippedLensRationale(reviewScope, lens) {
+  return reviewScope.skippedItems.some((item) => reviewItemMentionsLens(item, lens) && skippedItemHasConcreteReason(item));
+}
+
+function requiredReviewLensMessages(state, plan = recommendedReviewPlan(state)) {
+  const reviewScope = state.evidence.reviewScope;
+  if (reviewScope.changedPaths.length === 0 || reviewScope.verifiedItems.length === 0) return [];
+
+  const messages = [];
+  const messagePath = reviewScope.locations[0] ?? WORKSPACE_ROOT;
+  for (const item of plan.required) {
+    if (hasReviewedLens(reviewScope, item.lens) || hasSkippedLensRationale(reviewScope, item.lens)) continue;
+    messages.push(message("warning", "missing-required-review-lens", messagePath, `Review plan requires ${item.lens}, but active evidence does not include a concrete Reviewed outcome or Skipped rationale for that lens.`));
+  }
+  return messages;
+}
+
+function hasVisualVerificationItem(item) {
+  return /\b(browser|visual|screenshot|viewport|responsive|mobile|desktop|rendered|layout|playwright|chrom(e|ium)|safari|firefox|localhost|static ui|ui regression)\b/i.test(String(item ?? ""));
+}
+
+function hasVisualSkippedItem(item) {
+  return /\b(browser|visual|screenshot|viewport|responsive|mobile|desktop|rendered|layout|playwright|chrom(e|ium)|safari|firefox)\b/i.test(String(item ?? ""));
+}
+
+function hasUiReviewCoverage(reviewScope) {
+  return hasReviewedLens(reviewScope, "ui-regression") ||
+    hasReviewedLens(reviewScope, "accessibility") ||
+    reviewScope.verifiedItems.some(hasVisualVerificationItem) ||
+    reviewScope.skippedItems.some(hasVisualSkippedItem);
 }
 
 function resolveLens(lens) {
@@ -865,6 +1306,14 @@ export function reviewContext(options = {}) {
     ],
     focus: LENSES[lens].focus,
     sourcePaths: reviewSourcePathGroups(validation),
+    state: validation,
+  };
+}
+
+export function reviewPlan(options = {}) {
+  const validation = validateAutoStrike(options);
+  return {
+    ...recommendedReviewPlan(validation),
     state: validation,
   };
 }
@@ -922,6 +1371,31 @@ function renderValidateMarkdown(result) {
   return `${lines.join("\n").trimEnd()}\n`;
 }
 
+function renderReviewPlanMarkdown(plan) {
+  const lines = [
+    "# Auto Strike Review Plan",
+    "",
+    `- Evidence scope: ${plan.evidenceScope}`,
+    `- Changed paths: ${plan.changedPaths.length}`,
+    "",
+    "## Required Lenses",
+    ...plan.required.map((item) => `- ${item.lens} - ${item.reason}`),
+    "",
+    "## Optional Lenses",
+    ...(plan.optional.length > 0 ? plan.optional.map((item) => `- ${item.lens} - ${item.reason}`) : ["- None"]),
+    "",
+    "## Surface Triggers",
+    ...renderSurfaceTriggers(plan.surfaces),
+    "",
+    "## Notes",
+    ...bulletLines(plan.notes),
+    "",
+    "## Suggested Review Packets",
+    ...plan.required.map((item) => `- review-context --lens ${item.lens}`),
+  ];
+  return `${lines.join("\n").trimEnd()}\n`;
+}
+
 function renderReviewContextMarkdown(packet) {
   const state = packet.state;
   const lines = [
@@ -961,6 +1435,23 @@ function renderSourcePathGroups(groups) {
     if (!group.paths || group.paths.length === 0) continue;
     lines.push(`### ${group.title}`);
     lines.push(...bulletLines(group.paths));
+    lines.push("");
+  }
+  return lines.length > 0 ? lines.slice(0, -1) : ["- None"];
+}
+
+function renderSurfaceTriggers(surfaces) {
+  const labels = [
+    ["ui", "UI"],
+    ["data", "State/Data"],
+    ["security", "Security/Privacy"],
+    ["integration", "Integration/API"],
+  ];
+  const lines = [];
+  for (const [key, label] of labels) {
+    if (!surfaces[key] || surfaces[key].length === 0) continue;
+    lines.push(`### ${label}`);
+    lines.push(...bulletLines(surfaces[key]));
     lines.push("");
   }
   return lines.length > 0 ? lines.slice(0, -1) : ["- None"];
@@ -1064,11 +1555,12 @@ function parseCliArgs(argv) {
 
 function usage() {
   return [
-    "Usage: auto-strike.mjs <inspect|validate|review-context> [--repo-root <path>] [--json]",
+    "Usage: auto-strike.mjs <inspect|validate|review-plan|review-context> [--repo-root <path>] [--json]",
     "",
     "Commands:",
     "  inspect                         Report observed Auto Strike workspace state.",
     "  validate                        Warn about contradictions and missing evidence.",
+    "  review-plan                     Recommend review lenses from active Changed evidence.",
     "  review-context --lens <lens>    Produce a focused review packet.",
     "",
     `Review lenses: ${Object.keys(LENSES).join(", ")}`,
@@ -1092,6 +1584,12 @@ export function runCli(argv = process.argv.slice(2)) {
     const result = validateAutoStrike(options);
     printResult(options, result, renderValidateMarkdown);
     return result.summary.errors > 0 ? 1 : 0;
+  }
+
+  if (command === "review-plan") {
+    const result = reviewPlan(options);
+    printResult(options, result, renderReviewPlanMarkdown);
+    return result.state.summary.errors > 0 ? 1 : 0;
   }
 
   if (command === "review-context") {
