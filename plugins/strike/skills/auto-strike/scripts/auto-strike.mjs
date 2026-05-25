@@ -1383,6 +1383,7 @@ export function validateAutoStrike(options = {}) {
       messages.push(message("warning", "missing-reviewed-lens-evidence", state.evidence.reviewScope.locations[0] ?? WORKSPACE_ROOT, "Review/readiness evidence has Changed and Verified lists but no Reviewed list, so it is unclear which review lenses were applied."));
     }
     messages.push(...requiredReviewLensMessages(state, plan));
+    messages.push(...verificationCapabilityMessages(state, plan));
     if (plan.surfaces.ui.length > 0 && !hasUiReviewCoverage(state.evidence.reviewScope)) {
       messages.push(message("warning", "missing-ui-browser-review-evidence", state.evidence.reviewScope.locations[0] ?? WORKSPACE_ROOT, "UI/browser/user-visible files changed but active evidence has no browser or user-flow check evidence, nor a blocked-browser rationale with static fallback."));
     }
@@ -1521,6 +1522,9 @@ function recommendedReviewPlan(state) {
   if (surfaces.ui.length > 0) {
     notes.push("For UI/browser/user-visible changes, include browser or user-flow evidence. Use host/manual browser tooling when available; if browser access is actually blocked, record the blocker and a static UI regression fallback.");
   }
+  if (reviewScopeNeedsCapabilityRecord(state.evidence.reviewScope, surfaces)) {
+    notes.push("Record Verification Capability for skipped checks or UI/auth/integration work: repo checks, host/manual browser or user-flow options, install constraints, blockers, replacement evidence, and residual risk.");
+  }
 
   return {
     evidenceScope: state.evidence.reviewScope.scope,
@@ -1530,6 +1534,13 @@ function recommendedReviewPlan(state) {
     optional: optional.filter((item) => !requiredSeen.has(item.lens)),
     notes,
   };
+}
+
+function reviewScopeNeedsCapabilityRecord(reviewScope, surfaces) {
+  return reviewScope.skippedItems.length > 0 ||
+    surfaces.ui.length > 0 ||
+    surfaces.security.length > 0 ||
+    surfaces.integration.length > 0;
 }
 
 function normalizedEvidenceText(value) {
@@ -1594,6 +1605,34 @@ function hasUiReviewCoverage(reviewScope) {
   return reviewScope.verifiedItems.some(hasBrowserReviewEvidenceItem) ||
     reviewScope.reviewedItems.some(hasBrowserReviewEvidenceItem) ||
     reviewScope.skippedItems.some(hasBlockedBrowserFallback);
+}
+
+function verificationCapabilitySectionIsValid(sliceText) {
+  if (!hasSection(sliceText, "Verification Capability")) return false;
+  const section = extractSection(sliceText, "Verification Capability");
+  if (!sectionHasSubstance(section)) return false;
+  const text = normalizeText(section);
+  const namesRepoChecks = /\b(repo|script|scripts|command|commands|check|checks|test|tests|lint|build|typecheck|node|pnpm|curl|api)\b/i.test(text);
+  const namesHostOrManualChecks = /\b(host|manual|browser|chrome|chromium|safari|firefox|computer use|codex browser|playwright|cypress|viewport|responsive|user[- ]flow|api|curl)\b/i.test(text);
+  const namesConstraintsOrFallback = /\b(blocked|blocker|available|unavailable|not available|allowed|not allowed|constraint|constraints|install|package|fallback|replacement|residual risk|skipped|none|n\/a)\b/i.test(text);
+  return namesRepoChecks && namesHostOrManualChecks && namesConstraintsOrFallback;
+}
+
+function needsVerificationCapability(reviewScope, plan) {
+  return reviewScopeNeedsCapabilityRecord(reviewScope, plan.surfaces);
+}
+
+function verificationCapabilityMessages(state, plan) {
+  const reviewScope = state.evidence.reviewScope;
+  if (!needsVerificationCapability(reviewScope, plan)) return [];
+  if (!state.activeSlice.path || !state.activeSlice.exists) return [];
+
+  const sliceText = readFileIfPresent(path.join(state.repoRoot, state.activeSlice.path));
+  if (verificationCapabilitySectionIsValid(sliceText ?? "")) return [];
+
+  return [
+    message("warning", "missing-verification-capability", state.activeSlice.path, "Active review evidence has skipped checks or UI/auth/integration surfaces, but the slice lacks concrete Verification Capability. Record repo checks, host/manual browser or user-flow options, install constraints, blocked checks, and replacement evidence before accepting fallback verification."),
+  ];
 }
 
 function hasFreshReviewAgentEvidence(reviewScope) {

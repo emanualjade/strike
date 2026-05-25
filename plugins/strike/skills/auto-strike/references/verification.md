@@ -3,6 +3,22 @@
 Choose checks based on the risk and surfaces changed. Do the smallest set that
 gives real confidence; do not run broad suites only to look busy.
 
+## Capability Preflight
+
+Before accepting fallback evidence, identify the verification that is actually
+available:
+
+- repo scripts/checks
+- host, browser, manual, API, or user-flow checks
+- package/install constraints
+- blocked checks and why they are blocked
+- replacement evidence and residual risk
+
+For UI, auth/session, routing, forms, responsive layout, user-visible state,
+integrations, or skipped checks, missing Playwright, Cypress, or another repo
+browser dependency is not enough to skip browser/user-flow checks when host or
+manual browser tooling is available.
+
 ## Check Matrix
 
 - Copy/content/docs: spelling, links, rendered page if visible, and no unrelated

@@ -2,6 +2,15 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.7 - 2026-05-25
+
+- Added Auto Strike verification-capability guidance so slices record available
+  repo checks, host/manual browser or user-flow options, install constraints,
+  blocked checks, replacement evidence, and residual risk before accepting
+  skipped verification.
+- Added helper warnings when reviewable UI/auth/integration evidence or skipped
+  checks lack a concrete verification-capability record.
+
 ## 0.8.6 - 2026-05-25
 
 - Removed Tiny/Fast/Full paths as first-class workflow routes. Auto Strike now

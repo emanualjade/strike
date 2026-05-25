@@ -106,6 +106,8 @@ Slice template:
       explicitly accept findings before coding.
 - [ ] Build only the in-scope behavior path for this slice.
 - [ ] Add or update focused tests/checks for the acceptance criteria.
+- [ ] Record verification capability before accepting skipped checks or fallback
+      evidence.
 - [ ] Verify the acceptance criteria and any required browser/user-flow checks.
 - [ ] Record Changed, Verified, Reviewed, Skipped, and Review Findings evidence.
 
@@ -117,6 +119,13 @@ Slice template:
 
 ## Plan Review
 [Reviewer/main-agent outcome, findings, and fixes before coding.]
+
+## Verification Capability
+- Repo scripts/checks:
+- Host/browser/manual checks:
+- Package installs allowed:
+- Blocked checks:
+- Replacement evidence:
 
 ## Verification
 [Commands, browser/user-flow checks, expected result.]
@@ -152,6 +161,10 @@ momentum, not a reason to stall:
    notes.
 3. Review the implementation plan before coding. Use `review.md` for when to
    use the main agent, a read-only reviewer, or a fresh-context pass.
+4. Before verification, record what can actually be checked. For UI,
+   auth/session, routing, forms, responsive layout, user-visible state,
+   integrations, or skipped checks, do not treat missing repo browser packages
+   as browser unavailable; use host/manual browser tooling when available.
 
 If the plan cannot name the likely files/surfaces, verification checks,
 important edge cases, and unresolved assumptions, tighten the plan before broad

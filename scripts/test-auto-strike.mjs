@@ -868,6 +868,7 @@ Verified:
   assert.ok(requiredLenses.includes("ui-regression"));
   assert.ok(requiredLenses.includes("user-flows"));
   assert.ok(plan.surfaces.ui.includes("todo/index.html"));
+  assert.ok(plan.notes.some((item) => /Verification Capability/.test(item)));
 
   const validate = run(repo, ["validate"]);
   assertStatus(validate, 0, "UI review gaps should warn, not fail");
@@ -895,6 +896,13 @@ function testUiReviewEvidenceSuppressesUiReviewWarning() {
   write(repo, "auto-strike/features/todo-dogfood/spec.md", "# Todo Dogfood Spec\n");
   write(repo, "auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
 
+## Verification Capability
+- Repo scripts/checks: \`node scripts/todo-smoke.js\`.
+- Host/browser/manual checks: browser backend unavailable in this session.
+- Package installs allowed: none.
+- Blocked checks: browser screenshot/click check blocked by no browser backend.
+- Replacement evidence: smoke script plus static UI regression review; residual risk is visual layout.
+
 ## Evidence
 
 Changed:
@@ -919,6 +927,7 @@ Skipped:
   const body = json(result);
   assert.ok(!body.messages.some((item) => item.code === "missing-reviewed-lens-evidence"));
   assert.ok(!body.messages.some((item) => item.code === "missing-ui-browser-review-evidence"));
+  assert.ok(!body.messages.some((item) => item.code === "missing-verification-capability"));
 }
 
 function testUiRegressionReviewAloneDoesNotSuppressBrowserWarning() {
@@ -1002,6 +1011,102 @@ Skipped:
   assertStatus(result, 0, "package-only browser skip should warn, not fail");
   const body = json(result);
   assert.ok(body.messages.some((item) => item.code === "missing-ui-browser-review-evidence" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "missing-verification-capability" && item.severity === "warning"));
+}
+
+function testValidateWarnsForMissingVerificationCapabilityOnSkippedUiChecks() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Feature
+- auto-strike/features/todo-dogfood
+- Current mode: review
+- Active slice: auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/features/todo-dogfood/spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+
+## Evidence
+
+Changed:
+- todo/index.html
+- todo/todo.js
+
+Verified:
+- node scripts/todo-smoke.js - passed
+
+Reviewed:
+- functionality - pass
+- spec-coverage - pass
+- code-quality - pass
+- ui-regression - pass; static selector review checked edit input against checkbox selectors
+- user-flows - pass
+
+Skipped:
+- Browser screenshot/click check - browser backend unavailable; static UI regression review was used as replacement evidence
+`);
+  write(repo, "todo/index.html", "<!doctype html>\n<input>\n");
+  write(repo, "todo/todo.js", "document.querySelector('button').addEventListener('click', () => {});\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "missing verification capability should warn, not fail");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "missing-verification-capability" && item.severity === "warning"));
+  assert.ok(!body.messages.some((item) => item.code === "missing-ui-browser-review-evidence"));
+}
+
+function testValidateAcceptsVerificationCapabilityForSkippedUiChecks() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Feature
+- auto-strike/features/todo-dogfood
+- Current mode: review
+- Active slice: auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/features/todo-dogfood/spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+
+## Verification Capability
+- Repo scripts/checks: \`node scripts/todo-smoke.js\`.
+- Host/browser/manual checks: browser backend unavailable in this session; manual browser check blocked by no GUI access.
+- Package installs allowed: none.
+- Blocked checks: browser screenshot/click check blocked by no host browser access.
+- Replacement evidence: smoke script plus static UI regression review; residual risk is visual layout.
+
+## Evidence
+
+Changed:
+- todo/index.html
+- todo/todo.js
+
+Verified:
+- node scripts/todo-smoke.js - passed
+
+Reviewed:
+- functionality - pass
+- spec-coverage - pass
+- code-quality - pass
+- ui-regression - pass; static selector review checked edit input against checkbox selectors
+- user-flows - pass
+
+Skipped:
+- Browser screenshot/click check - browser backend unavailable; static UI regression review was used as replacement evidence
+`);
+  write(repo, "todo/index.html", "<!doctype html>\n<input>\n");
+  write(repo, "todo/todo.js", "document.querySelector('button').addEventListener('click', () => {});\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "recorded verification capability should satisfy validation");
+  const body = json(result);
+  assert.ok(!body.messages.some((item) => item.code === "missing-verification-capability"));
+  assert.ok(!body.messages.some((item) => item.code === "missing-ui-browser-review-evidence"));
 }
 
 function testValidateWarnsForMissingRequiredReviewLenses() {
@@ -1387,6 +1492,8 @@ testReviewPlanRecommendsUiRegressionForUiChanges();
 testUiReviewEvidenceSuppressesUiReviewWarning();
 testUiRegressionReviewAloneDoesNotSuppressBrowserWarning();
 testPackageOnlyBrowserSkipDoesNotSuppressBrowserWarning();
+testValidateWarnsForMissingVerificationCapabilityOnSkippedUiChecks();
+testValidateAcceptsVerificationCapabilityForSkippedUiChecks();
 testValidateWarnsForMissingRequiredReviewLenses();
 testValidateAcceptsReviewedAndSkippedRequiredReviewLenses();
 testValidateWarnsForMultiSliceWithoutFreshReviewAgentEvidence();
