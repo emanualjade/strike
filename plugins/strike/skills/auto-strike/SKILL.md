@@ -160,6 +160,9 @@ checks, not only planning docs.
   destructive behavior, or hard-to-reverse architecture.
 - Keep docs current as source of truth, not ceremony. Add files only when the
   work needs them.
+- Keep `index.md` current as the resume pointer. Once feature/slice/build
+  evidence exists, do not leave it pointing at brainstorm, stale open decisions,
+  no active feature/slice, or no verification.
 - Keep root `language.md` plus the active initiative's `decisions.md` and
   `spec.md` current, even when they are minimal.
 - Build, verify, review, and fix in loops until the stopping condition is met or

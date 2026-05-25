@@ -781,6 +781,145 @@ function testValidateAcceptsPhaseLedgerAfterSlicing() {
   assert.ok(!body.messages.some((item) => item.code === "weak-phase-ledger"));
 }
 
+function testValidateWarnsForStaleActiveWorkAfterImplementationEvidence() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/tool-library
+- Feature: None yet
+- Doc: auto-strike/initiatives/tool-library/idea.md
+- State: Brainstorm in progress.
+- Next: Resolve identity model.
+- Blocked by: User decision on identity model.
+
+## Open Decisions
+- Identity model.
+
+## Verification
+- None yet - no code written.
+`);
+  write(repo, "auto-strike/language.md", "# Language\n\n## Tool Library\n- Member: Neighbor using the app.\n");
+  write(repo, "auto-strike/initiatives/tool-library/decisions.md", "# Decisions\n\n## Identity\n- Persona switcher.\n");
+  write(repo, "auto-strike/initiatives/tool-library/spec.md", "# Spec\n\n## Overview\n- Build a local tool library.\n");
+  write(repo, "auto-strike/initiatives/tool-library/idea.md", `# Idea
+
+## Phase Ledger
+
+| Phase | Status | Artifact | Reason |
+| --- | --- | --- | --- |
+| Brainstorm | done | \`idea.md\` | Useful outcome captured. |
+| Grill | compressed | \`decisions.md\` | Core decisions are recorded. |
+| Spec | done | \`spec.md\` | Scope is sliceable. |
+| Slice | in progress | \`features/lending-workflow/slices/index.md\` | Slice map exists. |
+| Build | pending |  |  |
+| Review | pending |  |  |
+| Validate | pending |  |  |
+`);
+  write(repo, "auto-strike/initiatives/tool-library/features/lending-workflow/feature-spec.md", "# Feature Spec\n");
+  write(repo, "auto-strike/initiatives/tool-library/features/lending-workflow/slices/slice-0-foundation.md", `# Slice 0
+
+## Execution Tasks
+- [ ] Build the server.
+
+## Evidence
+
+Changed:
+- server.js
+
+Verified:
+- node --check server.js - passed
+`);
+  write(repo, "server.js", "console.log('ok');\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "stale active work should warn, not fail");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "stale-active-work-mode" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "stale-active-feature-pointer" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "stale-active-slice-pointer" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "stale-index-verification" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "open-decisions-after-implementation" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "weak-phase-ledger" && /build/i.test(item.message)));
+}
+
+function testValidateWarnsForMissingReferencedAutoStrikeDoc() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/checklist
+- Current mode: review
+- Active slice: auto-strike/initiatives/main/features/checklist/slices/slice-0-static-app.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/language.md", "# Language\n\n## Checklist\n- Item: A task.\n");
+  write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Scope\n- Local checklist.\n");
+  write(repo, "auto-strike/initiatives/main/spec.md", "# Spec\n\n## Overview\n- Local checklist.\n");
+  write(repo, "auto-strike/initiatives/main/features/checklist/feature-spec.md", "# Checklist Feature Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/checklist/slices/slice-0-static-app.md", `# Slice 0
+
+## Evidence
+
+Changed:
+- app.js
+
+Verified:
+- node --check app.js - passed
+
+Reviewed:
+- See auto-strike/initiatives/main/readiness.md review findings.
+`);
+  write(repo, "app.js", "console.log('ok');\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "missing referenced Auto Strike docs should warn, not fail");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "missing-referenced-auto-strike-doc" && item.message.includes("auto-strike/initiatives/main/readiness.md")));
+}
+
+function testValidateWarnsForStaleSliceTaskChecklist() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/checklist
+- Current mode: review
+- Active slice: auto-strike/initiatives/main/features/checklist/slices/slice-0-static-app.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/language.md", "# Language\n\n## Checklist\n- Item: A task.\n");
+  write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Scope\n- Local checklist.\n");
+  write(repo, "auto-strike/initiatives/main/spec.md", "# Spec\n\n## Overview\n- Local checklist.\n");
+  write(repo, "auto-strike/initiatives/main/features/checklist/feature-spec.md", "# Checklist Feature Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/checklist/slices/slice-0-static-app.md", `# Slice 0
+
+## Execution Tasks
+- [ ] Build the server.
+- [ ] Verify the server.
+
+## Evidence
+
+Changed:
+- server.js
+
+Verified:
+- node --check server.js - passed
+`);
+  write(repo, "server.js", "console.log('ok');\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "stale slice task checklists should warn, not fail");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "stale-slice-task-checklist" && item.severity === "warning"));
+}
+
 function testValidateWarnsForMissingCurrentTruthDocs() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
@@ -1468,6 +1607,47 @@ Reviewed:
 
   const result = run(repo, ["validate"]);
   assertStatus(result, 0, "static UI review without browser evidence should warn");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "missing-ui-browser-review-evidence" && item.severity === "warning"));
+}
+
+function testCurlLocalhostDoesNotSuppressBrowserWarning() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/todo-dogfood
+- Current mode: review
+- Active slice: auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+
+## Evidence
+
+Changed:
+- todo/index.html
+- todo/todo.js
+
+Verified:
+- curl http://localhost:3000/ - passed
+
+Reviewed:
+- functionality - pass
+- spec-coverage - pass
+- code-quality - pass
+- ui-regression - pass by static selector review
+- user-flows - pass by curl route checks
+`);
+  write(repo, "todo/index.html", "<!doctype html>\n<input>\n");
+  write(repo, "todo/todo.js", "document.querySelector('button').addEventListener('click', () => {});\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "curl localhost checks should not count as browser evidence");
   const body = json(result);
   assert.ok(body.messages.some((item) => item.code === "missing-ui-browser-review-evidence" && item.severity === "warning"));
 }
@@ -2230,6 +2410,9 @@ testValidateWarnsForWeakOrMissingActiveWorkDoc();
 testValidateWarnsForMissingPhaseLedgerAfterSlicing();
 testValidateWarnsForWeakPhaseLedgerAfterSlicing();
 testValidateAcceptsPhaseLedgerAfterSlicing();
+testValidateWarnsForStaleActiveWorkAfterImplementationEvidence();
+testValidateWarnsForMissingReferencedAutoStrikeDoc();
+testValidateWarnsForStaleSliceTaskChecklist();
 testValidateWarnsForMissingCurrentTruthDocs();
 testValidateWarnsForWeakCurrentTruthDocs();
 testValidateAcceptsMinimalCurrentTruthDocs();
@@ -2244,6 +2427,7 @@ testValidateWarnsForOversizedBatchedAndWeakNonVerticalSlice();
 testReviewPlanRecommendsUiRegressionForUiChanges();
 testUiReviewEvidenceSuppressesUiReviewWarning();
 testUiRegressionReviewAloneDoesNotSuppressBrowserWarning();
+testCurlLocalhostDoesNotSuppressBrowserWarning();
 testPackageOnlyBrowserSkipDoesNotSuppressBrowserWarning();
 testValidateWarnsForMissingVerificationCapabilityOnSkippedUiChecks();
 testValidateAcceptsVerificationCapabilityForSkippedUiChecks();

@@ -2,6 +2,18 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.10 - 2026-05-25
+
+- Tightened Auto Strike validation after dogfood so implementation evidence now
+  warns when `index.md` still points at early phases, missing active
+  feature/slice pointers, stale open decisions, or "no code written".
+- Added helper warnings for missing referenced Auto Strike docs, stale slice
+  task/checkpoint checklists after build evidence, and curl/localhost checks
+  being mistaken for browser/user-flow evidence.
+- Clarified build closeout guidance so agents do not leave long-running local
+  servers blocking the final response, and added runtime-version guidance for
+  built-in platform APIs such as `node:sqlite`.
+
 ## 0.8.9 - 2026-05-25
 
 - Added an Auto Strike initiative Phase Ledger so brainstorm, grill, spec,

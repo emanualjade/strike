@@ -95,6 +95,10 @@ actually blocked by the host or environment, record that blocker and perform a
 static UI regression fallback. Do not silently treat static review as equivalent
 to a browser check.
 
+`curl`, route status checks, server logs, and localhost API checks are useful
+supporting evidence, but they are not browser/user-flow review evidence unless a
+browser or manual UI inspection actually happened and is recorded.
+
 Skipped browser/user-flow evidence must name the host/manual browser option
 checked, the blocker, replacement evidence, and residual risk. Missing
 Playwright, Cypress, or another repo package is not a valid browser blocker by

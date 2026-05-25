@@ -17,16 +17,25 @@ For each slice:
 5. Record build evidence in the slice file or a nearby build note: files
    changed, checks run, results, skipped checks with reasons, important
    implementation choices, rollback notes, and review focus.
-6. Use `review.md` for the required review pass when the slice is meaningful,
+6. Keep `index.md`, the Phase Ledger, and slice checkboxes current as the build
+   advances. Once code exists, do not leave Active Work pointing at brainstorm,
+   stale open decisions, no active feature/slice, or "no code written".
+7. Use `review.md` for the required review pass when the slice is meaningful,
    risky, UI/user-visible, or ready to claim complete. Completed meaningful
    slices should use a fresh read-only reviewer when the host supports it, or
    record why that review surface is unavailable.
-7. Fix blocking findings and re-review.
-8. When the slice is complete, write `## Closeout Summary` in the slice and use
+8. Fix blocking findings and re-review.
+9. When the slice is complete, write `## Closeout Summary` in the slice and use
    it as the final user-facing receipt: built, validation, review,
    skipped/residual risk, docs, and next.
-9. Do not add features that were not asked for. Do not remove existing features
+10. Do not add features that were not asked for. Do not remove existing features
    unless asked.
+
+For local servers, avoid blocking the final response on a long-running command.
+Start the server only as needed for checks, record the URL/log, run the checks,
+and stop any server you started before closeout unless the user explicitly wants
+it left running. If a server should remain running for the user, say that in the
+Closeout Summary with the URL and process/stop details.
 
 Do not fold in unrelated cleanup, speculative abstractions, or future slices.
 If implementation exposes a missing product, model, permission, UX, or

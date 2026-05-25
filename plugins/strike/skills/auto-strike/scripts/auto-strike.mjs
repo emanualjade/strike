@@ -1499,7 +1499,10 @@ function activeWorkMessages(state) {
 function phaseLedgerRequiredPhases(state) {
   const mode = state.index.currentMode;
   if (mode && PHASE_LEDGER_BY_MODE[mode]) return PHASE_LEDGER_BY_MODE[mode];
-  if (state.activeSlice.path || state.evidence.reviewScope.changedPaths.length > 0) {
+  if (state.evidence.reviewScope.reviewedItems.length > 0) {
+    return PHASE_LEDGER_BY_MODE.review;
+  }
+  if (state.activeSlice.path || state.evidence.reviewScope.changedPaths.length > 0 || state.evidence.reviewScope.verifiedItems.length > 0) {
     return PHASE_LEDGER_BY_MODE.build;
   }
   if (state.activeFeature.exists || state.activeFeature.sliceFiles.length > 0) {
@@ -1547,6 +1550,47 @@ function phaseLedgerMessages(state) {
   return [
     message("warning", "weak-phase-ledger", state.phaseLedger.path, `Phase Ledger should show completed or intentionally compressed/skipped prior phases with artifact and reason. Weak entries: ${weak.slice(0, 8).join("; ")}${weak.length > 8 ? "; ..." : ""}.`),
   ];
+}
+
+function hasImplementationEvidence(state) {
+  return state.evidence.reviewScope.changedPaths.some(isImplementationPath) ||
+    state.evidence.reviewScope.verifiedItems.length > 0 ||
+    state.evidence.reviewScope.reviewedItems.length > 0;
+}
+
+function activeWorkFreshnessMessages(state) {
+  const messages = [];
+  if (!state.index.present || !hasImplementationEvidence(state)) return messages;
+
+  const mode = state.index.currentMode;
+  const activeText = normalizeText([
+    state.index.activeWork?.state,
+    state.index.activeWork?.next,
+    state.index.activeWork?.blockedBy,
+  ].filter(Boolean).join("\n"));
+
+  if (["brainstorm", "grill", "spec"].includes(mode) || /\b(brainstorm|grill|spec)\b/i.test(activeText)) {
+    messages.push(message("warning", "stale-active-work-mode", `${WORKSPACE_ROOT}/index.md`, "Implementation evidence exists, but Active Work still points at an early phase. Update index.md to the real active mode, feature, slice, state, and next action before claiming progress."));
+  }
+
+  if (!state.activeFeature.exists && state.activeInitiative.featureDirs.length > 0) {
+    messages.push(message("warning", "stale-active-feature-pointer", `${WORKSPACE_ROOT}/index.md`, "Implementation evidence exists and feature folders exist, but Active Work does not point to an existing active feature."));
+  }
+
+  const sliceDocs = state.docs.filter((sourcePath) => SLICE_DOC_PATTERN.test(sourcePath));
+  if (!state.activeSlice.path && sliceDocs.length > 0) {
+    messages.push(message("warning", "stale-active-slice-pointer", `${WORKSPACE_ROOT}/index.md`, "Implementation evidence exists and slice docs exist, but Active Work does not name the active slice."));
+  }
+
+  if (state.index.verification.some((item) => /\b(no code written|none yet|not run|pending)\b/i.test(item))) {
+    messages.push(message("warning", "stale-index-verification", `${WORKSPACE_ROOT}/index.md`, "Implementation evidence exists, but index.md Verification still says no checks or no code. Update it to the current verification truth."));
+  }
+
+  if (state.index.openDecisions.length > 0) {
+    messages.push(message("warning", "open-decisions-after-implementation", `${WORKSPACE_ROOT}/index.md`, "Implementation evidence exists while index.md still lists open decisions. Resolve them, record accepted assumptions, or move back to grill/spec before continuing build."));
+  }
+
+  return messages;
 }
 
 function currentTruthMessages(state) {
@@ -1629,6 +1673,84 @@ function grillDecisionDepthMessages(state) {
   }
 
   return [];
+}
+
+function autoStrikeDocReferences(text) {
+  return [...new Set([...normalizeText(text).matchAll(/\bauto-strike\/[A-Za-z0-9._~/-]+\.md\b/g)]
+    .map((match) => match[0])
+    .filter((sourcePath) => !isPlaceholder(sourcePath) && !isNoneItem(sourcePath)))];
+}
+
+function referencedAutoStrikeDocMessages(state) {
+  const messages = [];
+  const seen = new Set();
+  for (const sourcePath of state.docs) {
+    const text = readFileIfPresent(path.join(state.repoRoot, sourcePath));
+    if (!text) continue;
+    for (const referencePath of autoStrikeDocReferences(text)) {
+      const key = `${sourcePath}\0${referencePath}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const resolved = resolveRepoReferencePath(state.repoRoot, referencePath);
+      if (resolved?.safe && !resolved.exists) {
+        messages.push(message("warning", "missing-referenced-auto-strike-doc", sourcePath, `Auto Strike doc references ${resolved.relativePath}, but that file does not exist. Create it, update the reference, or record that it is intentionally not part of this run.`));
+      }
+    }
+  }
+  return messages;
+}
+
+function uncheckedCheckboxItems(sectionText) {
+  return normalizeText(sectionText)
+    .split("\n")
+    .map((line) => line.trim())
+    .map((line) => line.match(/^[-*]\s+\[\s\]\s+(.+)$/)?.[1]?.trim())
+    .filter(Boolean);
+}
+
+function sliceDocHasBuildEvidence(repoRoot, sourcePath) {
+  const changed = evidenceListItems(repoRoot, [sourcePath], ["changed", "files changed", "modified", "touched"]);
+  const verified = evidenceListItems(repoRoot, [sourcePath], ["verified", "verification", "checks"]);
+  return changed.length > 0 && verified.length > 0;
+}
+
+function staleSliceTaskChecklistMessages(state) {
+  const messages = [];
+  for (const sourcePath of state.evidence.locations.filter((location) => SLICE_DOC_PATTERN.test(location))) {
+    if (!sliceDocHasBuildEvidence(state.repoRoot, sourcePath)) continue;
+    const text = readFileIfPresent(path.join(state.repoRoot, sourcePath));
+    const tasks = extractSection(text ?? "", "Execution Tasks");
+    const unchecked = uncheckedCheckboxItems(tasks);
+    if (unchecked.length === 0) continue;
+    messages.push(message("warning", "stale-slice-task-checklist", sourcePath, `Slice has Changed and Verified evidence but unfinished Execution Tasks: ${unchecked.slice(0, 5).join("; ")}${unchecked.length > 5 ? "; ..." : ""}. Mark completed work or move remaining tasks to follow-up/blocker evidence.`));
+  }
+  return messages;
+}
+
+function checkpointText(text) {
+  const normalized = normalizeText(text);
+  const match = normalized.match(/^##\s+Checkpoint\b.*$/im);
+  if (!match || match.index === undefined) return "";
+  return normalized.slice(match.index);
+}
+
+function staleFeatureCheckpointMessages(state) {
+  const messages = [];
+  const evidenceByFeature = new Set(
+    state.evidence.locations
+      .map((sourcePath) => sourcePath.match(new RegExp(`^(${escapeRegExp(WORKSPACE_ROOT)}/initiatives/[^/]+/features/[^/]+)/slices/`))?.[1])
+      .filter(Boolean)
+  );
+
+  for (const sourcePath of state.docs.filter((docPath) => docPath.endsWith("/slices/index.md"))) {
+    const featurePath = sourcePath.replace(/\/slices\/index\.md$/, "");
+    if (!evidenceByFeature.has(featurePath)) continue;
+    const text = readFileIfPresent(path.join(state.repoRoot, sourcePath));
+    const unchecked = uncheckedCheckboxItems(checkpointText(text ?? ""));
+    if (unchecked.length === 0) continue;
+    messages.push(message("warning", "stale-slice-checkpoint-checklist", sourcePath, `Feature has slice evidence but unfinished checkpoint items: ${unchecked.slice(0, 5).join("; ")}${unchecked.length > 5 ? "; ..." : ""}. Update the checkpoint or record why it remains open.`));
+  }
+  return messages;
 }
 
 function activeSlicePrepMessages(repoRoot, activeSlice, currentMode) {
@@ -1738,9 +1860,11 @@ export function validateAutoStrike(options = {}) {
   }
 
   messages.push(...activeWorkMessages(state));
+  messages.push(...activeWorkFreshnessMessages(state));
   messages.push(...currentTruthMessages(state));
   messages.push(...phaseLedgerMessages(state));
   messages.push(...grillDecisionDepthMessages(state));
+  messages.push(...referencedAutoStrikeDocMessages(state));
 
   if (index.activeInitiativePath && isExplicitWorkspacePath(index.activeInitiativePath)) {
     const resolved = resolveWorkspacePath(state.repoRoot, index.activeInitiativePath);
@@ -1785,6 +1909,8 @@ export function validateAutoStrike(options = {}) {
   }
 
   messages.push(...slicePlanningMessages(state));
+  messages.push(...staleSliceTaskChecklistMessages(state));
+  messages.push(...staleFeatureCheckpointMessages(state));
 
   if (index.currentMode && MODES_EXPECTING_SLICE_PREP.has(index.currentMode)) {
     messages.push(...activeSlicePrepMessages(state.repoRoot, state.activeSlice, index.currentMode));
@@ -2019,7 +2145,11 @@ function requiredReviewLensMessages(state, plan = recommendedReviewPlan(state)) 
 }
 
 function hasBrowserReviewEvidenceItem(item) {
-  return /\b(browser|visual|screenshot|viewport|responsive|mobile|desktop|rendered|playwright|chrom(e|ium)|safari|firefox|localhost)\b/i.test(String(item ?? ""));
+  const text = String(item ?? "");
+  if (/\b(curl|httpie|wget|api|GET|POST|PUT|PATCH|DELETE)\b/i.test(text) && !/\b(browser|visual|screenshot|viewport|responsive|mobile|desktop|playwright|chrom(e|ium)|safari|firefox)\b/i.test(text)) {
+    return false;
+  }
+  return /\b(browser|visual|screenshot|viewport|responsive|mobile|desktop|playwright|chrom(e|ium)|safari|firefox)\b/i.test(text);
 }
 
 function hasBlockedBrowserFallback(item) {

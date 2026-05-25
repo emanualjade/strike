@@ -134,6 +134,11 @@ Allowed statuses: `in progress`, `done`, `compressed`, `skipped`, `blocked`,
 `compressed` only when the prompt, repo, or prior artifacts already provide
 enough detail; use `skipped` only when the phase truly does not apply.
 
+After implementation evidence exists, the ledger and `index.md` must not still
+look like brainstorm/planning. Build evidence means the build row needs a real
+artifact and reason; review evidence means the review row needs a real artifact
+and reason. If a phase was compressed, say what artifact carries the work.
+
 ## Helper Script
 
 Auto Strike ships a read-only workspace helper at the skill-local
@@ -186,6 +191,15 @@ Keep it short and scannable:
 - [Commands/checks known so far.]
 ```
 
+Refresh `index.md` whenever the active feature, active slice, mode, blocker, or
+next action changes. As soon as a feature folder or slice exists, point to it.
+Do not leave `Feature: None`, `Slice: None`, stale open decisions, or "no code
+written" after build evidence exists.
+
+Every concrete `auto-strike/.../*.md` path referenced in Auto Strike docs should
+exist. If a future doc is not needed yet, say that in prose without linking to a
+missing path.
+
 ## Todo
 
 Use `auto-strike/todo.md` as one flat checklist:
@@ -203,6 +217,10 @@ Keep `todo.md` operational, not archival. It should show current work, next
 actions, blockers, and accepted follow-ups. Remove or move stale items when the
 initiative spec, feature specs, slices, or readiness docs already preserve the
 decision.
+
+Keep task checkboxes current. If a slice records `Changed:` and `Verified:`,
+mark completed execution tasks or move remaining unchecked work into explicit
+follow-up, blocker, or skipped/residual-risk evidence.
 
 Use `Active Work` in `index.md` only as a pointer. The active phase or slice doc
 owns the task list, decisions, and exit evidence for that phase. After context

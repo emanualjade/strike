@@ -44,6 +44,11 @@ component, or state in a browser when feasible. Check relevant desktop/mobile
 widths, loading/empty/error/success states, accessibility basics, console/runtime
 errors when feasible, and visible regressions.
 
+`curl`, API checks, localhost status checks, and server logs can support
+verification, but they are not browser/user-flow evidence by themselves. Browser
+evidence should name the actual browser/host/manual UI check and what was seen
+or interacted with.
+
 If a normally expected check cannot run, record the blocker, the risk left open,
 and the replacement evidence. Do not skip browser checks only because the repo
 lacks Playwright or another browser package; use host/manual browser tooling

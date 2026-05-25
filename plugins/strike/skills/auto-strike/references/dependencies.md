@@ -10,6 +10,10 @@ Before adding or upgrading a dependency, confirm:
 - the dependency solves real complexity or risk for the active slice
 - current official docs support the intended usage
 - the version fits the repo runtime, framework, bundler, and deployment target
+- built-in runtime APIs also fit the declared runtime. If using APIs such as
+  `node:sqlite`, Web APIs, or platform features with version constraints,
+  update `engines`, docs, and verification to the actual minimum version, or
+  choose a more compatible approach.
 - security, maintenance, license, bundle/runtime impact, and vendor lock-in are
   acceptable
 - vendor-specific code is isolated behind a purpose-named adapter when the
