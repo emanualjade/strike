@@ -11,7 +11,7 @@ to check the assembled feature against its `feature-spec.md`:
 - tests/checks cover the important risks, or missing coverage is justified
 - the code quality checklist is satisfied, or remaining quality issues are
   written as readiness fixes
-- docs, language, decisions, and todo reflect the final state
+- docs, root language, initiative decisions, and todo reflect the final state
 
 Use feature readiness for one feature and initiative readiness for the whole
 request:
@@ -90,7 +90,7 @@ For code changes, features, and MVPs, completion means:
   relevant
 - review blockers are fixed, and non-blocking findings are accepted with clear
   rationale or moved to follow-up only when outside the current scope
-- docs, decisions, evidence, todo, and next action reflect the final state
+- docs, root language, initiative decisions, evidence, todo, and next action reflect the final state
 
 For planning, spec, research, or review-only work, completion means the artifact
 is decision-ready for its purpose: reviewed at the right depth, grounded in

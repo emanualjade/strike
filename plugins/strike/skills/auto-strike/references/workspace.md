@@ -8,25 +8,27 @@ auto-strike/
 
 Before writing to `auto-strike/`, check whether it already exists. Treat it as
 Auto Strike state only when it contains recognizable Auto Strike files such as
-`index.md`, `todo.md`, `language.md`, `decisions.md`, or an initiative layout that
-matches this reference. If the directory exists but appears unrelated, do not
-overwrite or restructure it; ask the user whether to reuse it, choose another
-workspace path, or move the unrelated content.
+`index.md`, `todo.md`, `language.md`, or an initiative layout that matches this
+reference. If the directory exists but appears unrelated, do not overwrite or
+restructure it; ask the user whether to reuse it, choose another workspace path,
+or move the unrelated content.
 
 The user should not need to know which docs to create. On every run, discover
-what exists, decide what is missing, and update or restructure lightly. On a
-cold start, create only files that have real content now; the workspace usually
-grows toward this shape:
+what exists, decide what is missing, and update or restructure lightly. On cold
+start, create root `language.md` plus the active initiative's `idea.md`,
+`decisions.md`, and `spec.md`. Keep them minimal if the truth is still emerging,
+but do not leave them absent.
 
 ```text
 auto-strike/
   index.md
   todo.md
   language.md
-  decisions.md
   initiatives/
     <initiative-slug>/
       idea.md
+      decisions.md
+      spec.md
 ```
 
 Add more files only when useful:
@@ -38,6 +40,7 @@ auto-strike/
   initiatives/
     <initiative-slug>/
       idea.md
+      decisions.md
       grill.md
       spec.md
       readiness.md
@@ -59,6 +62,13 @@ Use `initiatives/<initiative-slug>/` as the first grouping unit. An initiative
 represents one Auto Strike user request, session, campaign, MVP, or milestone.
 Create a new initiative only when starting a new Auto Strike run/request that is
 meaningfully separate from existing active work.
+
+Every active initiative owns `decisions.md` and `spec.md`, even when they are
+brief. `decisions.md` may say no consequential decisions have been made yet, but
+it must become the current truth once brainstorm or grill resolves product,
+model, workflow, permission, architecture, dependency, or validation decisions.
+`spec.md` may start as a thin initiative overview, but it must exist before
+feature specs, slices, or build work proceed.
 
 Inside an initiative, use `features/<feature-slug>/` for buildable capabilities
 with their own feature spec, slices, and feature readiness. Decomposition inside
@@ -95,6 +105,34 @@ For each `slices/slice-[n]-[name].md`, use the slice template in
 `references/slice.md`. The key live sections are `Acceptance Criteria`,
 `Depends On`, `Likely Surfaces`, and `Execution Tasks`; they turn the slice into
 a small work packet instead of a general concept.
+
+## Phase Ledger
+
+Each initiative keeps a small `## Phase Ledger`, usually in its `idea.md`. This
+is not ceremony; it makes phase compression visible so brainstorm, grill, spec,
+slice, build, review, and validation are not silently skipped.
+
+Update it when entering or leaving a phase:
+
+```md
+## Phase Ledger
+
+| Phase | Status | Artifact | Reason |
+| --- | --- | --- | --- |
+| Brainstorm | done | `idea.md` | First useful outcome, user, constraints, and non-goals are recorded. |
+| Grill | compressed | `grill.md` | Prompt already answered core decisions; no consequential blockers found. |
+| Spec | done | `spec.md`, `features/[feature]/feature-spec.md` | Single-feature initiative is sliceable. |
+| Slice | in progress | `features/[feature]/slices/index.md` | Slices are being sized and ordered. |
+| Build | pending |  |  |
+| Review | pending |  |  |
+| Validate | pending |  |  |
+```
+
+Allowed statuses: `in progress`, `done`, `compressed`, `skipped`, `blocked`,
+`paused`, or `replaced`. Before slicing or building, earlier phases should be
+`done`, `compressed`, or `skipped` with a real artifact and reason. Use
+`compressed` only when the prompt, repo, or prior artifacts already provide
+enough detail; use `skipped` only when the phase truly does not apply.
 
 ## Helper Script
 
@@ -211,7 +249,8 @@ scope changed files; use `review.md` for review evidence and lens details.
 
 ## Language
 
-Use `auto-strike/language.md` as the shared glossary:
+Create `auto-strike/language.md` on every Auto Strike initiative. It is the
+shared glossary and domain-model language across initiatives:
 
 ```md
 # Language
@@ -226,12 +265,18 @@ names, data models, permissions, integrations, or future planning. Do not add
 every casual phrase. Merge aliases into one canonical term when possible, and
 flag unresolved ambiguity instead of pretending it is settled.
 
-## Decisions
+## Initiative Decisions
 
-Use `auto-strike/decisions.md` only for decisions that affect scope, model
-shape, user behavior, data, permissions, architecture, or validation:
+Use `auto-strike/initiatives/<initiative-slug>/decisions.md` for decisions that
+affect scope, model shape, user behavior, data, permissions, architecture,
+dependencies, validation, or risk:
 
 ```md
+# [Initiative] Decisions
+
+## Status
+- No consequential decisions recorded yet.
+
 ## [Decision]
 
 Decision: [What we chose.]
@@ -252,17 +297,18 @@ If older planning docs already exist elsewhere, either link to them from
 move or rewrite large user-written docs just for neatness.
 
 When docs disagree, prefer the newest current-truth artifact in this order:
-`decisions.md` for decisions, `language.md` for terms, the active initiative
-`spec.md` for initiative scope and feature map, feature `feature-spec.md` for
-buildable feature scope, slice files for current implementation work, and
-`index.md` for navigation/status. Fix contradictions as soon as they are found.
+the active initiative `decisions.md` for decisions, root `language.md` for
+terms, the active initiative `spec.md` for initiative scope and feature map,
+feature `feature-spec.md` for buildable feature scope, slice files for current
+implementation work, and `index.md` for navigation/status. Fix contradictions
+as soon as they are found.
 
 ## Repeated Runs
 
 Auto Strike should get smarter as the repo gains feature history.
 
-- Start by reading `auto-strike/index.md`, `todo.md`, `language.md`, and
-  `decisions.md`.
+- Start by reading `auto-strike/index.md`, `todo.md`, root `language.md`, and
+  the active initiative's `decisions.md` and `spec.md`.
 - Detect whether the new idea belongs to an existing initiative, extends an
   existing feature or prior slice, or deserves a new initiative.
 - Reuse language, decisions, architecture notes, and verification patterns.

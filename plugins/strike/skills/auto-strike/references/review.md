@@ -21,9 +21,13 @@ feature or initiative readiness pass needs `readiness.md`.
   risk handling.
 - After meaningful code changes, run a distinct review pass instead of relying
   only on the build mindset.
-- For high-risk surfaces, UI/data/integration-heavy work, or new/multi-slice
-  features, use a read-only subagent or fresh-context review when the host
-  supports it.
+- For a completed meaningful slice, use a read-only subagent or fresh-context
+  review when the host supports it. Main-agent review alone is a fallback, not
+  full review.
+- If fresh review agents are unavailable, record that in `Skipped:` with the
+  host/tooling reason and the replacement review evidence used.
+- For high-risk surfaces or UI/data/integration-heavy work, use separate fresh
+  reviewers for distinct lenses when the host supports parallel agents.
 - Multiple review agents may run in parallel when each has a distinct lens.
 
 ## Evidence
@@ -90,6 +94,11 @@ not need a browser automation dependency for this to count. If browser access is
 actually blocked by the host or environment, record that blocker and perform a
 static UI regression fallback. Do not silently treat static review as equivalent
 to a browser check.
+
+Skipped browser/user-flow evidence must name the host/manual browser option
+checked, the blocker, replacement evidence, and residual risk. Missing
+Playwright, Cypress, or another repo package is not a valid browser blocker by
+itself.
 
 ## Reviewer Contract
 

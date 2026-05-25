@@ -49,3 +49,8 @@ and the replacement evidence. Do not skip browser checks only because the repo
 lacks Playwright or another browser package; use host/manual browser tooling
 when available. Static review is a fallback for blocked browser access, not an
 equivalent replacement.
+
+For skipped browser/user-flow checks, evidence must name the host/manual browser
+option checked, the specific blocker, the replacement evidence, and the residual
+risk. "No Playwright", "no browser package", or "package install not approved"
+is not enough by itself.

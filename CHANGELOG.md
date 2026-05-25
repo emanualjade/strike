@@ -2,6 +2,23 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.9 - 2026-05-25
+
+- Added an Auto Strike initiative Phase Ledger so brainstorm, grill, spec,
+  slice, build, review, and validation are visibly done, compressed, skipped, or
+  pending instead of silently blurred.
+- Added helper warnings for later-phase work that lacks a substantive Phase
+  Ledger, plus tests for missing, weak, and accepted ledger examples.
+- Required root `language.md` plus per-initiative `decisions.md` and `spec.md`
+  as mandatory current-truth docs, with helper warnings and tests for missing or
+  weak artifacts.
+- Strengthened Auto Strike review expectations so completed meaningful slice
+  reviews need fresh read-only reviewer evidence or an explicit unavailable-host
+  rationale, not only main-agent self-review.
+- Tightened blocked browser/user-flow fallback evidence so skipped browser
+  checks must name the host/manual option checked, blocker, replacement
+  evidence, and residual risk.
+
 ## 0.8.8 - 2026-05-25
 
 - Added Auto Strike slice closeout summary guidance so completed slices end with

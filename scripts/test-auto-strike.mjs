@@ -658,6 +658,249 @@ function testValidateWarnsForWeakOrMissingActiveWorkDoc() {
   assert.ok(json(missing).messages.some((item) => item.code === "missing-active-work-doc" && item.severity === "warning"));
 }
 
+function writeBuildPhaseFixture(repo, ideaContent) {
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/checklist
+- Doc: auto-strike/initiatives/main/features/checklist/slices/slice-0-static-app.md
+- State: Slice build is in progress.
+- Next: Implement the checklist behavior.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/idea.md", ideaContent);
+  write(repo, "auto-strike/initiatives/main/spec.md", "# Checklist Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/checklist/feature-spec.md", "# Checklist Feature Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/checklist/slices/index.md", `# Slices
+
+## Slice Map
+
+| Slice | Size | Depends On | Unblocks | Risk | Verification |
+| --- | --- | --- | --- | --- | --- |
+| 0. Static app | S | None | First usable checklist | Low | node --check app.js |
+`);
+  write(repo, "auto-strike/initiatives/main/features/checklist/slices/slice-0-static-app.md", `# Slice 0: Static App
+
+## Size
+S
+
+## Acceptance Criteria
+- User can add a checklist item.
+- User can mark an item done.
+
+## Depends On
+- None.
+
+## Likely Surfaces
+- \`app.js\`
+
+## Execution Tasks
+- [x] Research local app patterns.
+- [x] Write plan with files and checks.
+- [x] Review plan before coding.
+- [ ] Verify checklist behavior.
+
+## Implementation Research
+- Empty repo; no local precedent exists.
+
+## Plan
+- Update the \`app.js\` file with checklist state and render behavior.
+- Verify with \`node --check app.js\`.
+
+## Plan Review
+- main-agent review - pass; file surface and verification are named.
+`);
+}
+
+function testValidateWarnsForMissingPhaseLedgerAfterSlicing() {
+  const repo = tempRepo();
+  writeBuildPhaseFixture(repo, `# Checklist Idea
+
+## Current Shape
+- First useful outcome: local checklist.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "missing phase ledger should warn, not fail");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "missing-phase-ledger" && item.severity === "warning"));
+}
+
+function testValidateWarnsForWeakPhaseLedgerAfterSlicing() {
+  const repo = tempRepo();
+  writeBuildPhaseFixture(repo, `# Checklist Idea
+
+## Phase Ledger
+
+| Phase | Status | Artifact | Reason |
+| --- | --- | --- | --- |
+| Brainstorm | done | \`idea.md\` | First useful outcome is recorded. |
+| Grill | pending |  |  |
+| Spec | done | \`spec.md\`, \`features/checklist/feature-spec.md\` | Single feature is sliceable. |
+| Slice | done | \`features/checklist/slices/index.md\` | Slice 0 is selected. |
+| Build | in progress | \`features/checklist/slices/slice-0-static-app.md\` | Active slice is being implemented. |
+
+## Current Shape
+- First useful outcome: local checklist.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "weak phase ledger should warn, not fail");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "weak-phase-ledger" && item.severity === "warning"));
+}
+
+function testValidateAcceptsPhaseLedgerAfterSlicing() {
+  const repo = tempRepo();
+  writeBuildPhaseFixture(repo, `# Checklist Idea
+
+## Phase Ledger
+
+| Phase | Status | Artifact | Reason |
+| --- | --- | --- | --- |
+| Brainstorm | done | \`idea.md\` | First useful outcome, user, constraints, and non-goals are recorded. |
+| Grill | compressed | \`idea.md\` | Prompt already answered core decisions; no consequential blockers were found. |
+| Spec | done | \`spec.md\`, \`features/checklist/feature-spec.md\` | Single feature is sliceable. |
+| Slice | done | \`features/checklist/slices/index.md\` | Slice 0 is sized, ordered, and dependency-free. |
+| Build | in progress | \`features/checklist/slices/slice-0-static-app.md\` | Active slice is being implemented. |
+| Review | pending |  |  |
+| Validate | pending |  |  |
+
+## Current Shape
+- First useful outcome: local checklist.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "substantive phase ledger should pass validation");
+  const body = json(result);
+  assert.ok(!body.messages.some((item) => item.code === "missing-phase-ledger"));
+  assert.ok(!body.messages.some((item) => item.code === "weak-phase-ledger"));
+}
+
+function testValidateWarnsForMissingCurrentTruthDocs() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: None
+- Doc: auto-strike/initiatives/main/idea.md
+- State: Brainstorm is starting.
+- Next: Capture the first useful outcome.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/idea.md", `# Main Idea
+
+## Phase Tasks
+- [x] Capture first useful outcome.
+- [ ] Record current truth.
+
+## Exit Evidence
+- First useful outcome is clear enough to continue.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "missing current-truth docs should warn, not fail");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "missing-root-language" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "missing-initiative-decisions" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "missing-initiative-spec" && item.severity === "warning"));
+}
+
+function testValidateWarnsForWeakCurrentTruthDocs() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: None
+- Doc: auto-strike/initiatives/main/idea.md
+- State: Brainstorm is starting.
+- Next: Capture the first useful outcome.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/language.md", "# Language\n");
+  write(repo, "auto-strike/initiatives/main/decisions.md", "# Main Decisions\n");
+  write(repo, "auto-strike/initiatives/main/spec.md", "# Main Spec\n");
+  write(repo, "auto-strike/initiatives/main/idea.md", `# Main Idea
+
+## Phase Tasks
+- [x] Capture first useful outcome.
+- [ ] Record current truth.
+
+## Exit Evidence
+- First useful outcome is clear enough to continue.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "weak current-truth docs should warn, not fail");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "weak-root-language" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "weak-initiative-decisions" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "weak-initiative-spec" && item.severity === "warning"));
+}
+
+function testValidateAcceptsMinimalCurrentTruthDocs() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: None
+- Doc: auto-strike/initiatives/main/idea.md
+- State: Brainstorm is starting.
+- Next: Capture the first useful outcome.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/language.md", `# Language
+
+## Current Terms
+- No durable domain terms recorded yet.
+`);
+  write(repo, "auto-strike/initiatives/main/decisions.md", `# Main Decisions
+
+## Status
+- No consequential decisions recorded yet.
+`);
+  write(repo, "auto-strike/initiatives/main/spec.md", `# Main Spec
+
+## Status
+- Draft initiative spec exists; current product truth is still being gathered.
+`);
+  write(repo, "auto-strike/initiatives/main/idea.md", `# Main Idea
+
+## Phase Tasks
+- [x] Capture first useful outcome.
+- [ ] Record current truth.
+
+## Exit Evidence
+- First useful outcome is clear enough to continue.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "minimal current-truth docs should satisfy validation");
+  const body = json(result);
+  assert.ok(!body.messages.some((item) => item.code === "missing-root-language"));
+  assert.ok(!body.messages.some((item) => item.code === "weak-root-language"));
+  assert.ok(!body.messages.some((item) => item.code === "missing-initiative-decisions"));
+  assert.ok(!body.messages.some((item) => item.code === "weak-initiative-decisions"));
+  assert.ok(!body.messages.some((item) => item.code === "missing-initiative-spec"));
+  assert.ok(!body.messages.some((item) => item.code === "weak-initiative-spec"));
+}
+
 function testValidateWarnsForMissingGrillDecisionDepth() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
@@ -1156,9 +1399,9 @@ function testUiReviewEvidenceSuppressesUiReviewWarning() {
 
 ## Verification Capability
 - Repo scripts/checks: \`node scripts/todo-smoke.js\`.
-- Host/browser/manual checks: browser backend unavailable in this session.
+  - Host/browser/manual checks: checked host browser tool and manual browser option; both unavailable in this session because GUI access is blocked.
 - Package installs allowed: none.
-- Blocked checks: browser screenshot/click check blocked by no browser backend.
+  - Blocked checks: browser screenshot/click check blocked by no host browser or manual browser access.
 - Replacement evidence: smoke script plus static UI regression review; residual risk is visual layout.
 
 ## Evidence
@@ -1175,7 +1418,7 @@ Reviewed:
 - functionality - pass
 
 Skipped:
-- Browser check - browser backend unavailable; static UI regression review was used as replacement evidence
+- Browser check - checked host browser tool and manual browser option; both blocked by no GUI/browser access, so smoke script plus static UI regression review were used as replacement evidence; residual risk is visual layout.
 `);
   write(repo, "todo/index.html", "<!doctype html>\n<input>\n");
   write(repo, "todo/todo.js", "export function todo() {}\n");
@@ -1316,7 +1559,7 @@ Skipped:
   assertStatus(result, 0, "missing verification capability should warn, not fail");
   const body = json(result);
   assert.ok(body.messages.some((item) => item.code === "missing-verification-capability" && item.severity === "warning"));
-  assert.ok(!body.messages.some((item) => item.code === "missing-ui-browser-review-evidence"));
+  assert.ok(body.messages.some((item) => item.code === "missing-ui-browser-review-evidence" && item.severity === "warning"));
 }
 
 function testValidateAcceptsVerificationCapabilityForSkippedUiChecks() {
@@ -1337,7 +1580,7 @@ function testValidateAcceptsVerificationCapabilityForSkippedUiChecks() {
 
 ## Verification Capability
 - Repo scripts/checks: \`node scripts/todo-smoke.js\`.
-- Host/browser/manual checks: browser backend unavailable in this session; manual browser check blocked by no GUI access.
+  - Host/browser/manual checks: checked host browser tool and manual browser option; browser backend unavailable in this session and manual browser check blocked by no GUI access.
 - Package installs allowed: none.
 - Blocked checks: browser screenshot/click check blocked by no host browser access.
 - Replacement evidence: smoke script plus static UI regression review; residual risk is visual layout.
@@ -1359,7 +1602,7 @@ Reviewed:
 - user-flows - pass
 
 Skipped:
-- Browser screenshot/click check - browser backend unavailable; static UI regression review was used as replacement evidence
+- Browser screenshot/click check - checked host browser tool and manual browser option; both blocked by no GUI/browser access, so smoke script plus static UI regression review were used as replacement evidence; residual risk is visual layout.
 `);
   write(repo, "todo/index.html", "<!doctype html>\n<input>\n");
   write(repo, "todo/todo.js", "document.querySelector('button').addEventListener('click', () => {});\n");
@@ -1605,6 +1848,101 @@ Skipped:
   assertStatus(result, 0, "reviewed and skipped required lenses should satisfy validation");
   const body = json(result);
   assert.ok(!body.messages.some((item) => item.code === "missing-required-review-lens"));
+}
+
+function testValidateWarnsForSingleSliceWithoutFreshReviewAgentEvidence() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/video-mvp
+- Current mode: review
+- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+
+## Implementation Research
+- Local precedent: src/video/upload.ts owns upload behavior.
+
+## Plan
+- Update \`src/video/upload.ts\` and verify with \`node scripts/video-smoke.js\`.
+
+## Plan Review
+- main-agent review - pass; files and verification are named.
+
+## Evidence
+
+Changed:
+- src/video/upload.ts
+
+Verified:
+- node scripts/video-smoke.js - passed
+
+Reviewed:
+- functionality - pass
+- spec-coverage - pass
+- code-quality - pass
+`);
+  write(repo, "src/video/upload.ts", "export function upload() {}\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "single-slice completed review without fresh reviewer evidence should warn");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "missing-fresh-review-agent-evidence" && item.severity === "warning"));
+}
+
+function testValidateAcceptsFreshReviewAgentUnavailableRationale() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/video-mvp
+- Current mode: review
+- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+
+## Implementation Research
+- Local precedent: src/video/upload.ts owns upload behavior.
+
+## Plan
+- Update \`src/video/upload.ts\` and verify with \`node scripts/video-smoke.js\`.
+
+## Plan Review
+- main-agent review - pass; files and verification are named.
+
+## Evidence
+
+Changed:
+- src/video/upload.ts
+
+Verified:
+- node scripts/video-smoke.js - passed
+
+Reviewed:
+- functionality - pass
+- spec-coverage - pass
+- code-quality - pass
+
+Skipped:
+- fresh read-only review agent - host does not expose subagents in this run; main-agent review used as replacement evidence.
+`);
+  write(repo, "src/video/upload.ts", "export function upload() {}\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "explicit unavailable-host fresh-review rationale should satisfy validation");
+  const body = json(result);
+  assert.ok(!body.messages.some((item) => item.code === "missing-fresh-review-agent-evidence"));
 }
 
 function testValidateWarnsForMultiSliceWithoutFreshReviewAgentEvidence() {
@@ -1889,6 +2227,12 @@ testValidateAcceptsConcretePreBuildSlicePrep();
 testValidateAcceptsActiveWorkPointer();
 testValidateWarnsForMissingActiveWork();
 testValidateWarnsForWeakOrMissingActiveWorkDoc();
+testValidateWarnsForMissingPhaseLedgerAfterSlicing();
+testValidateWarnsForWeakPhaseLedgerAfterSlicing();
+testValidateAcceptsPhaseLedgerAfterSlicing();
+testValidateWarnsForMissingCurrentTruthDocs();
+testValidateWarnsForWeakCurrentTruthDocs();
+testValidateAcceptsMinimalCurrentTruthDocs();
 testValidateWarnsForMissingGrillDecisionDepth();
 testValidateAcceptsStandardGrillDecisionDepth();
 testValidateAcceptsDeepGrillDecisionDepthWithSuggestedChange();
@@ -1908,6 +2252,8 @@ testValidateAcceptsSliceCloseoutSummary();
 testValidateDoesNotRequireCloseoutForInProgressBuildSlice();
 testValidateWarnsForMissingRequiredReviewLenses();
 testValidateAcceptsReviewedAndSkippedRequiredReviewLenses();
+testValidateWarnsForSingleSliceWithoutFreshReviewAgentEvidence();
+testValidateAcceptsFreshReviewAgentUnavailableRationale();
 testValidateWarnsForMultiSliceWithoutFreshReviewAgentEvidence();
 testValidateAcceptsMultiSliceFreshReviewAgentEvidence();
 testValidateWarnsWhenGitChangesMissingFromChangedEvidence();

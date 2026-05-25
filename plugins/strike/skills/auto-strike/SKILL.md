@@ -118,6 +118,10 @@ what changed, what is still open, and why moving modes is the right next step.
 Do not claim a mode is complete after a shallow pass that did not produce its
 intended result.
 
+For initiative work that reaches slice, build, review, or validation, keep the
+initiative `Phase Ledger` from `workspace.md` current. Earlier phases may be
+compressed or skipped, but only with an artifact and reason.
+
 | Mode | Load | Exit Evidence |
 | --- | --- | --- |
 | brainstorm | `brainstorm.md` | First useful outcome, target moment, constraints, and first-version non-goals are clear. |
@@ -156,10 +160,13 @@ checks, not only planning docs.
   destructive behavior, or hard-to-reverse architecture.
 - Keep docs current as source of truth, not ceremony. Add files only when the
   work needs them.
+- Keep root `language.md` plus the active initiative's `decisions.md` and
+  `spec.md` current, even when they are minimal.
 - Build, verify, review, and fix in loops until the stopping condition is met or
   a real blocker needs the user.
-- Use subagents only when independent research or review clearly helps; use
-  `review.md` for reviewer behavior and synthesis rules.
+- For completed meaningful slice reviews, use fresh read-only review subagents
+  when the host supports them; otherwise record the unavailable-host rationale.
+  Use `review.md` for reviewer behavior and synthesis rules.
 
 ## Completion Standard
 

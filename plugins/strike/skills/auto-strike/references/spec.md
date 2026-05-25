@@ -1,7 +1,7 @@
 # Spec
 
-Write specs only when they are useful. Specs are durable source-of-truth
-artifacts, not implementation scripts.
+Every initiative has a `spec.md`, even when minimal. Specs are durable
+source-of-truth artifacts, not implementation scripts.
 
 Default paths:
 
@@ -77,7 +77,7 @@ During active spec work, keep the process sections concise:
 
 ```md
 ## Phase Tasks
-- [ ] Pull current truth from idea, grill, language, and decisions.
+- [ ] Pull current truth from idea, grill, root language, and initiative decisions.
 - [ ] Write or update the initiative feature map.
 - [ ] Write feature specs for buildable capabilities.
 - [ ] Write product behavior, scope, non-goals, rules, and flows.
@@ -112,3 +112,6 @@ non-goals, success checks, domain language, data/state rules, permissions,
 failure paths, research implications, feature boundaries, and code organization
 are clear enough to slice without guessing. Fix obvious gaps in the specs; ask
 only for decisions that would change the product or risk.
+Update the initiative Phase Ledger before slicing. Brainstorm, grill, and spec
+should be `done`, `compressed`, or `skipped` with artifact and reason; do not
+let a direct jump to slicing hide missing thinking.

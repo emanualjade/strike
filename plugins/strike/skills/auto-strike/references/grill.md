@@ -60,11 +60,15 @@ language starts creating sibling nouns like `ManualReport` and
 `ScheduledReport`, ask whether the qualifier is better as a field, enum, state,
 permission, relationship, configuration, placement, ownership, or usage context.
 
-Update `language.md` and `decisions.md` as decisions crystallize. Do not keep
-contradictory history unless it explains the current choice.
+Update root `language.md` and the initiative `decisions.md` as language and
+decisions crystallize. Do not keep contradictory history unless it explains the
+current choice.
 Grill happens at the initiative level. It may discover feature candidates, but
 it does not create new initiatives. If the work looks like a separate
 initiative, ask the user before splitting it out.
+Update the initiative Phase Ledger when entering and leaving grill. If grill is
+compressed because the prompt or repo already answered the consequential
+decisions, record that as `compressed` with the artifact and reason.
 
 Use `grill.md` as the grill work packet:
 
@@ -78,7 +82,7 @@ Use `grill.md` as the grill work packet:
 - [ ] Capture consequential new branches as they appear.
 - [ ] Suggest deeper or lighter area depth only when risk/profile justifies it.
 - [ ] Ask or answer only decisions that change product behavior or risk.
-- [ ] Update `language.md` and `decisions.md` with current truth.
+- [ ] Update root `language.md` and initiative `decisions.md` with current truth.
 - [ ] Record exit evidence and handoff to spec.
 
 ## Decision Depth

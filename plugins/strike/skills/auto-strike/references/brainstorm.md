@@ -29,11 +29,23 @@ Use `idea.md` as the brainstorm work packet:
 ```md
 # [Initiative] Idea
 
+## Phase Ledger
+| Phase | Status | Artifact | Reason |
+| --- | --- | --- | --- |
+| Brainstorm | in progress | `idea.md` | First useful outcome is being clarified. |
+| Grill | pending |  |  |
+| Spec | pending |  |  |
+| Slice | pending |  |  |
+| Build | pending |  |  |
+| Review | pending |  |  |
+| Validate | pending |  |  |
+
 ## Phase Tasks
 - [ ] Capture the target user/system moment.
 - [ ] Name the painful moment, workaround, or workflow drag.
 - [ ] Propose the first useful outcome and first-version non-goals.
 - [ ] Note any idea-level research that can change the first-version target.
+- [ ] Create or update root `language.md` and initiative `decisions.md` / `spec.md`.
 - [ ] Record exit evidence and handoff to grill.
 
 ## Current Shape

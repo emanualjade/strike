@@ -7,6 +7,9 @@ stack in small slices rather than all the APIs at once then all the UI at once.
 
 Before slicing, confirm the initiative feature map. Slices always belong to one
 feature folder inside the active initiative.
+Also check the initiative Phase Ledger. If brainstorm, grill, or spec were
+compressed, the ledger must say why and point to the artifact that contains the
+current truth.
 
 Use one feature folder when the work has one primary user/system outcome, one
 readiness target, and slices that mostly depend on each other. Split the
@@ -190,6 +193,8 @@ momentum, not a reason to stall:
    auth/session, routing, forms, responsive layout, user-visible state,
    integrations, or skipped checks, do not treat missing repo browser packages
    as browser unavailable; use host/manual browser tooling when available.
+   If browser/user-flow checks are skipped, record the host/manual browser
+   option checked, the blocker, replacement evidence, and residual risk.
 
 If the plan cannot name the likely files/surfaces, verification checks,
 important edge cases, and unresolved assumptions, tighten the plan before broad

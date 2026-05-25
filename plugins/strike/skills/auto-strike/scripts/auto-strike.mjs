@@ -14,6 +14,15 @@ const MODES_EXPECTING_SLICE = new Set(["build", "review", "readiness"]);
 const MODES_EXPECTING_SLICE_PREP = new Set(["build", "review", "readiness"]);
 const MODES_EXPECTING_EVIDENCE = new Set(["review", "readiness"]);
 const VALID_DECISION_DEPTH_LEVELS = new Set(["lean", "standard", "deep"]);
+const PHASE_LEDGER_ORDER = ["brainstorm", "grill", "spec", "slice", "build", "review", "validate"];
+const PHASE_LEDGER_BY_MODE = {
+  slice: ["brainstorm", "grill", "spec", "slice"],
+  build: ["brainstorm", "grill", "spec", "slice", "build"],
+  review: ["brainstorm", "grill", "spec", "slice", "build", "review"],
+  readiness: ["brainstorm", "grill", "spec", "slice", "build", "review", "validate"],
+};
+const PHASE_LEDGER_COMPLETE_STATUSES = new Set(["done", "complete", "completed", "compressed", "skipped", "replaced"]);
+const PHASE_LEDGER_ACTIVE_STATUSES = new Set([...PHASE_LEDGER_COMPLETE_STATUSES, "in-progress", "active", "blocked", "paused"]);
 const ACTIVE_WORK_DOC_FILES = new Set([
   "idea.md",
   "grill.md",
@@ -273,7 +282,7 @@ function listWorkspaceEntries(rootPath) {
 }
 
 function isRecognizableWorkspace(rootPath) {
-  const directMarkers = ["index.md", "todo.md", "language.md", "decisions.md"];
+  const directMarkers = ["index.md", "todo.md", "language.md"];
   if (directMarkers.some((marker) => inspectPath(path.join(rootPath, marker))?.isFile())) {
     return true;
   }
@@ -520,6 +529,106 @@ function parseIndex(indexText) {
   };
 }
 
+function parseTableCells(line) {
+  const trimmed = line.trim();
+  if (!trimmed.startsWith("|") || !trimmed.endsWith("|")) return null;
+  const cells = trimmed
+    .replace(/^\|/, "")
+    .replace(/\|$/, "")
+    .split("|")
+    .map((cell) => stripMarkdownShell(cell.trim()));
+  if (cells.length < 4) return null;
+  if (cells.every((cell) => /^:?-{3,}:?$/.test(cell))) return null;
+  if (/^phase$/i.test(cells[0])) return null;
+  return cells;
+}
+
+function normalizeLedgerPhase(value) {
+  const text = stripMarkdownShell(value)
+    .toLowerCase()
+    .replace(/[^a-z]+/g, " ")
+    .trim();
+  if (!text) return null;
+  if (/\bbrainstorm\b|\bidea\b/.test(text)) return "brainstorm";
+  if (/\bgrill\b|\bpressure test\b/.test(text)) return "grill";
+  if (/\bspec\b|\bspecification\b/.test(text)) return "spec";
+  if (/\bslice\b|\bslicing\b/.test(text)) return "slice";
+  if (/\bbuild\b|\bimplement\b|\bimplementation\b/.test(text)) return "build";
+  if (/\breview\b|\breviewer\b/.test(text)) return "review";
+  if (/\bvalidate\b|\bvalidation\b|\bverify\b|\bverification\b|\breadiness\b/.test(text)) return "validate";
+  return null;
+}
+
+function normalizeLedgerStatus(value) {
+  const text = stripMarkdownShell(value)
+    .toLowerCase()
+    .replace(/[–—]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!text) return null;
+  if (/^(in[- ]?progress|active|doing|started|current)\b/.test(text)) return "in-progress";
+  if (/^(done|complete|completed|passed)\b/.test(text)) return "done";
+  if (/^compress(?:ed)?\b/.test(text)) return "compressed";
+  if (/^skipp?ed\b/.test(text)) return "skipped";
+  if (/^replaced\b/.test(text)) return "replaced";
+  if (/^block(?:ed)?\b/.test(text)) return "blocked";
+  if (/^paus(?:ed)?\b/.test(text)) return "paused";
+  if (/^pending\b/.test(text)) return "pending";
+  return text;
+}
+
+function parsePhaseLedgerRows(sectionText) {
+  const rows = new Map();
+  for (const line of normalizeText(sectionText).split("\n")) {
+    const cells = parseTableCells(line);
+    if (!cells) continue;
+    const phase = normalizeLedgerPhase(cells[0]);
+    if (!phase || !PHASE_LEDGER_ORDER.includes(phase)) continue;
+    rows.set(phase, {
+      phase,
+      statusRaw: cells[1] ?? "",
+      status: normalizeLedgerStatus(cells[1] ?? ""),
+      artifact: cells[2] ?? "",
+      reason: cells.slice(3).join(" | "),
+      raw: line.trim(),
+    });
+  }
+  return rows;
+}
+
+function findPhaseLedger(repoRoot, indexText, markdownFiles, activeInitiative) {
+  const candidates = [];
+  if (activeInitiative.path) {
+    candidates.push(`${activeInitiative.path}/idea.md`);
+    candidates.push(`${activeInitiative.path}/spec.md`);
+    candidates.push(`${activeInitiative.path}/grill.md`);
+  }
+  candidates.push(`${WORKSPACE_ROOT}/index.md`);
+  if (activeInitiative.path) {
+    candidates.push(...markdownFiles.filter((sourcePath) => sourcePath.startsWith(`${activeInitiative.path}/`)));
+  }
+
+  for (const candidate of [...new Set(candidates)]) {
+    const text = candidate === `${WORKSPACE_ROOT}/index.md`
+      ? indexText
+      : readFileIfPresent(path.join(repoRoot, candidate));
+    if (!text) continue;
+    const section = extractSection(text, "Phase Ledger");
+    if (!sectionHasSubstance(section)) continue;
+    return {
+      present: true,
+      path: candidate,
+      rows: Object.fromEntries(parsePhaseLedgerRows(section)),
+    };
+  }
+
+  return {
+    present: false,
+    path: activeInitiative.ideaPath ?? activeInitiative.path ?? `${WORKSPACE_ROOT}/index.md`,
+    rows: {},
+  };
+}
+
 function parseTodo(todoText) {
   if (!todoText) {
     return {
@@ -719,6 +828,8 @@ function activeInitiativeState(repoRoot, index) {
       exists: Boolean(resolved?.exists),
       ideaPath: null,
       ideaExists: false,
+      decisionsPath: null,
+      decisionsExists: false,
       grillPath: null,
       grillExists: false,
       specPath: null,
@@ -731,6 +842,7 @@ function activeInitiativeState(repoRoot, index) {
   }
 
   const ideaPath = path.join(resolved.absolutePath, "idea.md");
+  const decisionsPath = path.join(resolved.absolutePath, "decisions.md");
   const grillPath = path.join(resolved.absolutePath, "grill.md");
   const specPath = path.join(resolved.absolutePath, "spec.md");
   const featuresPath = path.join(resolved.absolutePath, "features");
@@ -749,6 +861,8 @@ function activeInitiativeState(repoRoot, index) {
     exists: true,
     ideaPath: displayPath(ideaPath, repoRoot),
     ideaExists: Boolean(inspectPath(ideaPath)?.isFile()),
+    decisionsPath: displayPath(decisionsPath, repoRoot),
+    decisionsExists: Boolean(inspectPath(decisionsPath)?.isFile()),
     grillPath: displayPath(grillPath, repoRoot),
     grillExists: Boolean(inspectPath(grillPath)?.isFile()),
     specPath: displayPath(specPath, repoRoot),
@@ -924,12 +1038,17 @@ export function inspectAutoStrike(options = {}) {
     : [];
   const indexText = readFileIfPresent(path.join(workspacePath, "index.md"));
   const todoText = readFileIfPresent(path.join(workspacePath, "todo.md"));
-  const decisionsText = readFileIfPresent(path.join(workspacePath, "decisions.md"));
+  const languagePath = path.join(workspacePath, "language.md");
+  const languageText = readFileIfPresent(languagePath);
   const index = parseIndex(indexText);
   const todo = parseTodo(todoText);
   const activeInitiative = activeInitiativeState(repoRoot, index);
   const activeFeature = activeFeatureState(repoRoot, index, activeInitiative);
   const activeSlice = activeSliceState(repoRoot, index, activeFeature);
+  const phaseLedger = findPhaseLedger(repoRoot, indexText, markdownFiles, activeInitiative);
+  const initiativeDecisionsText = activeInitiative.decisionsPath
+    ? readFileIfPresent(path.join(repoRoot, activeInitiative.decisionsPath))
+    : null;
   const evidenceLocations = findEvidenceLocations(repoRoot, workspacePath, markdownFiles);
   const changedPaths = evidenceChangedPaths(repoRoot, evidenceLocations);
   const reviewEvidence = selectReviewEvidenceLocations(evidenceLocations, activeInitiative, activeFeature, activeSlice);
@@ -943,14 +1062,23 @@ export function inspectAutoStrike(options = {}) {
     workspace: ownership,
     index,
     todo,
+    language: {
+      present: Boolean(languageText),
+      path: `${WORKSPACE_ROOT}/language.md`,
+      headings: parseDecisionHeadings(languageText),
+      substantive: markdownDocHasSubstance(languageText),
+    },
     decisions: {
-      present: Boolean(decisionsText),
-      headings: parseDecisionHeadings(decisionsText),
+      present: Boolean(initiativeDecisionsText),
+      path: activeInitiative.decisionsPath,
+      headings: parseDecisionHeadings(initiativeDecisionsText),
+      substantive: markdownDocHasSubstance(initiativeDecisionsText),
     },
     docs: markdownFiles,
     activeInitiative,
     activeFeature,
     activeSlice,
+    phaseLedger,
     evidence: {
       locations: evidenceLocations,
       changedPaths,
@@ -1111,6 +1239,15 @@ function sectionHasSubstance(sectionText) {
     if (!stripped) return false;
     return !/^(todo|tbd|pending|pending review|none|n\/a|na|not yet|not started|placeholder|fill in|to be added|draft)$/i.test(stripped);
   });
+}
+
+function markdownDocHasSubstance(markdownText) {
+  const body = normalizeText(markdownText)
+    .split("\n")
+    .filter((line) => !/^\s*#{1,6}\s+/.test(line))
+    .filter((line) => !/^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$/.test(line))
+    .join("\n");
+  return sectionHasSubstance(body);
 }
 
 function planNamesSurface(planText) {
@@ -1359,6 +1496,89 @@ function activeWorkMessages(state) {
   return messages;
 }
 
+function phaseLedgerRequiredPhases(state) {
+  const mode = state.index.currentMode;
+  if (mode && PHASE_LEDGER_BY_MODE[mode]) return PHASE_LEDGER_BY_MODE[mode];
+  if (state.activeSlice.path || state.evidence.reviewScope.changedPaths.length > 0) {
+    return PHASE_LEDGER_BY_MODE.build;
+  }
+  if (state.activeFeature.exists || state.activeFeature.sliceFiles.length > 0) {
+    return PHASE_LEDGER_BY_MODE.slice;
+  }
+  return [];
+}
+
+function phaseLedgerValueIsWeak(value) {
+  return !sectionHasSubstance(value) || sectionHasWeakPlanningText(value);
+}
+
+function phaseLedgerMessages(state) {
+  const requiredPhases = phaseLedgerRequiredPhases(state);
+  if (requiredPhases.length === 0) return [];
+
+  const ledgerPath = state.phaseLedger.path ?? state.activeInitiative.ideaPath ?? `${WORKSPACE_ROOT}/index.md`;
+  if (!state.phaseLedger.present) {
+    return [
+      message("warning", "missing-phase-ledger", ledgerPath, "Active initiative has reached slice/build/review work without a Phase Ledger. Record each phase as done, compressed, or skipped with artifact and reason so phases are not silently skipped."),
+    ];
+  }
+
+  const weak = [];
+  const currentPhase = requiredPhases.at(-1);
+  for (const phase of requiredPhases) {
+    const row = state.phaseLedger.rows[phase];
+    if (!row) {
+      weak.push(`${phase}: missing row`);
+      continue;
+    }
+    const validStatuses = phase === currentPhase ? PHASE_LEDGER_ACTIVE_STATUSES : PHASE_LEDGER_COMPLETE_STATUSES;
+    if (!row.status || !validStatuses.has(row.status)) {
+      weak.push(`${phase}: weak status`);
+    }
+    if (phaseLedgerValueIsWeak(row.artifact)) {
+      weak.push(`${phase}: weak artifact`);
+    }
+    if (phaseLedgerValueIsWeak(row.reason)) {
+      weak.push(`${phase}: weak reason`);
+    }
+  }
+
+  if (weak.length === 0) return [];
+  return [
+    message("warning", "weak-phase-ledger", state.phaseLedger.path, `Phase Ledger should show completed or intentionally compressed/skipped prior phases with artifact and reason. Weak entries: ${weak.slice(0, 8).join("; ")}${weak.length > 8 ? "; ..." : ""}.`),
+  ];
+}
+
+function currentTruthMessages(state) {
+  const messages = [];
+  if (!["recognized", "empty"].includes(state.workspace.status)) return messages;
+
+  if (!state.language.present) {
+    messages.push(message("warning", "missing-root-language", `${WORKSPACE_ROOT}/language.md`, "Root language.md is mandatory. Create it as the shared glossary/domain model, even if it starts with no durable terms recorded yet."));
+  } else if (!state.language.substantive) {
+    messages.push(message("warning", "weak-root-language", state.language.path, "Root language.md exists but has no substantive glossary/domain-model content or explicit empty-state note."));
+  }
+
+  if (!state.activeInitiative.exists) return messages;
+
+  if (!state.activeInitiative.decisionsExists) {
+    messages.push(message("warning", "missing-initiative-decisions", state.activeInitiative.decisionsPath, "Each active initiative needs decisions.md, even if it starts with an explicit no-consequential-decisions-yet note."));
+  } else if (!state.decisions.substantive) {
+    messages.push(message("warning", "weak-initiative-decisions", state.activeInitiative.decisionsPath, "Initiative decisions.md exists but has no substantive current-truth decision content or explicit empty-state note."));
+  }
+
+  if (!state.activeInitiative.specExists) {
+    messages.push(message("warning", "missing-initiative-spec", state.activeInitiative.specPath, "Each active initiative needs spec.md, even when minimal, before feature specs, slicing, or build work proceed."));
+  } else {
+    const specText = readFileIfPresent(path.join(state.repoRoot, state.activeInitiative.specPath));
+    if (!markdownDocHasSubstance(specText)) {
+      messages.push(message("warning", "weak-initiative-spec", state.activeInitiative.specPath, "Initiative spec.md exists but has no substantive current-truth overview, feature map, scope, or explicit draft note."));
+    }
+  }
+
+  return messages;
+}
+
 function activeGrillDocState(state) {
   if (state.index.currentMode !== "grill") return null;
 
@@ -1518,6 +1738,8 @@ export function validateAutoStrike(options = {}) {
   }
 
   messages.push(...activeWorkMessages(state));
+  messages.push(...currentTruthMessages(state));
+  messages.push(...phaseLedgerMessages(state));
   messages.push(...grillDecisionDepthMessages(state));
 
   if (index.activeInitiativePath && isExplicitWorkspacePath(index.activeInitiativePath)) {
@@ -1594,11 +1816,10 @@ export function validateAutoStrike(options = {}) {
     messages.push(...verificationCapabilityMessages(state, plan));
     messages.push(...sliceCloseoutSummaryMessages(state));
     if (plan.surfaces.ui.length > 0 && !hasUiReviewCoverage(state.evidence.reviewScope)) {
-      messages.push(message("warning", "missing-ui-browser-review-evidence", state.evidence.reviewScope.locations[0] ?? WORKSPACE_ROOT, "UI/browser/user-visible files changed but active evidence has no browser or user-flow check evidence, nor a blocked-browser rationale with static fallback."));
+      messages.push(message("warning", "missing-ui-browser-review-evidence", state.evidence.reviewScope.locations[0] ?? WORKSPACE_ROOT, "UI/browser/user-visible files changed but active evidence has no browser or user-flow check evidence, nor a blocked-browser rationale showing host/manual browser options checked, blocker, replacement evidence, and residual risk."));
     }
-    const needsFreshReview = activeFeatureSliceDocs(state.activeFeature).length > 1;
-    if (needsFreshReview && state.evidence.reviewScope.changedPaths.length > 0 && state.evidence.reviewScope.verifiedItems.length > 0 && !hasFreshReviewAgentEvidence(state.evidence.reviewScope)) {
-      messages.push(message("warning", "missing-fresh-review-agent-evidence", state.evidence.reviewScope.locations[0] ?? WORKSPACE_ROOT, "Multi-slice review evidence should show a fresh read-only review agent/fresh-context review, or an explicit rationale that review agents were unavailable."));
+    if (needsFreshReviewAgentEvidence(state.evidence.reviewScope) && !hasFreshReviewAgentEvidence(state.evidence.reviewScope)) {
+      messages.push(message("warning", "missing-fresh-review-agent-evidence", state.evidence.reviewScope.locations[0] ?? WORKSPACE_ROOT, "Completed meaningful slice review should show a fresh read-only review agent/fresh-context review, or an explicit rationale that review agents were unavailable."));
     }
   }
 
@@ -1807,6 +2028,12 @@ function hasBlockedBrowserFallback(item) {
   if (!mentionsBrowserSurface) return false;
   const hasRealBlocker = /\b(blocked|unavailable|not available|cannot|can't|could not|unable|no access|no host browser|no browser tool|browser tool unavailable|browser access unavailable|gui unavailable|headless unavailable|server could not start|auth blocked|environment restriction)\b/i.test(text);
   if (!hasRealBlocker) return false;
+  const checkedHostOrManualOption = /\b(host browser|host\/manual|manual browser|browser tool|codex browser|chrome|computer use|gui access|checked host|checked manual|checked browser|inspected host|looked for host|looked for manual)\b/i.test(text);
+  if (!checkedHostOrManualOption) return false;
+  const namesReplacementEvidence = /\b(replacement evidence|replacement|fallback|static review|static ui|smoke|syntax|api flow|manual code review)\b/i.test(text);
+  if (!namesReplacementEvidence) return false;
+  const namesResidualRisk = /\b(residual risk|risk left open|remaining risk|open risk)\b/i.test(text);
+  if (!namesResidualRisk) return false;
   return !/\b(no browser automation dependency|no playwright|no browser dependency|package installs? (?:are|is) out of scope|no .*dependency exists in this repo)\b/i.test(text);
 }
 
@@ -1896,6 +2123,12 @@ function hasFreshReviewAgentEvidence(reviewScope) {
   return /\b(subagent|sub-agent|review agent|fresh[- ]context|fresh eyes|fresh reviewer|independent reviewer|read-only reviewer|read-only review)\b/i.test(reviewText);
 }
 
+function needsFreshReviewAgentEvidence(reviewScope) {
+  return reviewScope.changedPaths.some(isImplementationPath) &&
+    reviewScope.verifiedItems.length > 0 &&
+    reviewScope.reviewedItems.length > 0;
+}
+
 function resolveLens(lens) {
   const normalized = String(lens ?? "").trim().toLowerCase();
   const canonical = LENSES[normalized] ? normalized : LENS_ALIASES[normalized];
@@ -1945,6 +2178,9 @@ function renderInspectMarkdown(state) {
     `- Active doc: ${state.index.activeWork.docPath ?? "Unknown"}`,
     `- Active state: ${state.index.activeWork.state ?? "Unknown"}`,
     `- Slice: ${state.index.activeSliceRaw ?? (state.activeFeature.sliceFiles[0] ?? "None")}`,
+    `- Phase ledger: ${state.phaseLedger.present ? state.phaseLedger.path : "Missing"}`,
+    `- Language: ${state.language.present ? state.language.path : "Missing"}`,
+    `- Initiative decisions: ${state.activeInitiative.decisionsExists ? state.activeInitiative.decisionsPath : "Missing"}`,
     `- Next best action declared: ${state.index.nextBestAction ?? "None"}`,
     "",
     "## Docs",
@@ -2079,6 +2315,7 @@ function reviewSourcePathGroups(state) {
   const activeDocs = filterExistingSourcePaths(state, [
     `${WORKSPACE_ROOT}/index.md`,
     state.activeInitiative.ideaExists ? state.activeInitiative.ideaPath : null,
+    state.activeInitiative.decisionsExists ? state.activeInitiative.decisionsPath : null,
     state.activeInitiative.grillExists ? state.activeInitiative.grillPath : null,
     state.activeInitiative.specExists ? state.activeInitiative.specPath : null,
     state.activeFeature.specExists ? state.activeFeature.specPath : null,
@@ -2096,7 +2333,6 @@ function reviewSourcePathGroups(state) {
   const workspaceDocs = filterExistingSourcePaths(state, [
     `${WORKSPACE_ROOT}/todo.md`,
     `${WORKSPACE_ROOT}/language.md`,
-    `${WORKSPACE_ROOT}/decisions.md`,
     ...state.evidence.reviewScope.changedPaths.filter((sourcePath) => sourcePath.startsWith(`${WORKSPACE_ROOT}/`)),
   ]).filter((sourcePath) => !usedPaths.has(sourcePath));
   for (const sourcePath of workspaceDocs) usedPaths.add(sourcePath);
