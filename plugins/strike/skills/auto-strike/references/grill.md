@@ -54,6 +54,11 @@ How hard should I grill decisions before spec?
 Default is Standard. You can change this as we go if you want more or less detail.
 ```
 
+If the user does not answer the depth question but grill can otherwise continue,
+use `Standard` and record `Why: Default.` Do not silently choose `Lean`; use
+Lean only when the user clearly asks to move quickly or the prior artifact
+explicitly says lean depth is acceptable.
+
 Decision Depth applies only to Grill. It controls how deeply each decision node
 is examined, not whether new branches are noticed. Capture consequential new
 branches at every level. It does not lower spec, slice, build, review,
@@ -89,6 +94,9 @@ initiative, ask the user before splitting it out.
 Update the initiative Phase Ledger when entering and leaving grill. If grill is
 compressed because the prompt or repo already answered the consequential
 decisions, record that as `compressed` with the artifact and reason.
+After recording the Decision Checkpoint and Exit Evidence, stop with spec as the
+next action. Do not continue into spec in the same work unit unless the user
+explicitly asked to skip that boundary.
 
 Use `grill.md` as the grill work packet:
 

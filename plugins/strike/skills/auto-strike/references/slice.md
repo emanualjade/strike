@@ -12,8 +12,8 @@ compressed, the ledger must say why and point to the artifact that contains the
 current truth.
 Do not begin slice artifacts while spec is still in progress. The spec may leave
 a concise `Slice Handoff`, but `slices/index.md`, Slice Maps, and
-`slices/slice-*.md` belong to this slice mode after spec exit evidence is
-recorded.
+`slices/slice-*.md` belong to this slice mode after spec review and exit
+evidence are recorded.
 
 Use one feature folder when the work has one primary user/system outcome, one
 readiness target, and slices that mostly depend on each other. Split the
@@ -51,6 +51,21 @@ For multi-slice work, keep a lightweight dependency map in `slices/index.md`:
 - [ ] Core user/system flow works end to end.
 - [ ] Review findings are resolved or accepted.
 - [ ] Human decision needed? If yes, pause and ask.
+
+## Phase Tasks
+- [ ] Confirm spec review and exit evidence exist.
+- [ ] Confirm the active feature and feature spec.
+- [ ] Draft the Slice Map and dependency order.
+- [ ] Split or justify any L/XL, batched, or non-vertical slice.
+- [ ] Create the slice docs with execution tasks.
+- [ ] Review slice size, order, risk placement, and verification coverage.
+- [ ] Record exit evidence and handoff to build.
+
+## Slice Review
+- [pass/blocker/warning] - [size, dependency, risk, working-state, or verification finding]
+
+## Exit Evidence
+- [Why this feature can enter build one slice at a time without guessing.]
 ```
 
 Order slices so dependencies are satisfied, high-risk assumptions happen early,
@@ -174,6 +189,12 @@ Each slice should be small enough to plan, build, review, and fix in one focused
 loop. If it is too broad, split it. Keep `Execution Tasks` as the slice's live
 work packet: update checkboxes as prep, build, verification, and review complete
 instead of treating the slice as a static concept doc.
+
+After the Slice Map, slice docs, slice review, and slice exit evidence are
+recorded, stop the current work unit with build as the next action. Do not move
+straight from creating slice artifacts into building slice 0 unless the user
+explicitly asked to skip the boundary. In durable goal mode, the next
+continuation can resume from `index.md` and the active slice doc.
 
 Before coding a meaningful slice, do a lightweight slice execution prep pass.
 This should usually be a short inline research/plan/review loop that keeps

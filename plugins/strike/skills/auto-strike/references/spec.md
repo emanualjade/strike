@@ -23,10 +23,11 @@ domains, roles, workflows, readiness targets, or releaseable capabilities.
 
 Spec mode stops at specs plus handoff. It may name the active feature, likely
 slice themes, high-risk boundaries, and verification expectations in `Slice
-Handoff`, but it must not create `slices/index.md`, `slices/slice-*.md`, a
-detailed Slice Map, slice acceptance criteria, or slice execution tasks. When
-spec is ready, record `Spec Review` and `Exit Evidence`, update the Phase
-Ledger, then intentionally enter slice mode and load `slice.md`.
+Handoff`, but it must not create or link to future `slices/index.md`,
+`slices/slice-*.md`, a detailed Slice Map, numbered slice list, slice acceptance
+criteria, or slice execution tasks. When spec is ready, record `Spec Review` and
+`Exit Evidence`, update the Phase Ledger, and stop with slice mode as the next
+action. Enter slice mode as a separate work unit and load `slice.md`.
 
 Useful initiative spec shape:
 
@@ -98,8 +99,8 @@ During active spec work, keep the process sections concise:
 - [ ] Define repo-verifiable and live/human success checks.
 - [ ] Record risky surfaces, constraints, assumptions, and open questions.
 - [ ] Review the spec for sliceability and fix gaps.
-- [ ] Write only a concise Slice Handoff; leave Slice Map and slice files for
-      slice mode.
+- [ ] Write only a concise Slice Handoff; leave numbered slice lists, Slice Map,
+      slice acceptance criteria, and slice files for slice mode.
 
 ## Spec Review
 - [pass/blocker/warning] - [scope, rules, checks, risks, or missing decisions]
@@ -131,3 +132,6 @@ only for decisions that would change the product or risk.
 Update the initiative Phase Ledger before slicing. Brainstorm, grill, and spec
 should be `done`, `compressed`, or `skipped` with artifact and reason; do not
 let a direct jump to slicing hide missing thinking.
+After spec review and exit evidence are recorded, do not create slice artifacts
+in the same work unit. Update `index.md` so the next action is slice mode and
+stop; the next continuation can build the Slice Map from the finished specs.

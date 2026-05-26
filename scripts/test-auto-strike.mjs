@@ -1200,7 +1200,7 @@ Why: User wants speed.
   assert.ok(body.messages.some((item) => item.code === "unknown-grill-decision-depth" && item.severity === "warning"));
 }
 
-function testValidateDoesNotRequireDecisionDepthOutsideGrillMode() {
+function testValidateRequiresDecisionDepthAfterGrillMode() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
@@ -1235,10 +1235,10 @@ function testValidateDoesNotRequireDecisionDepthOutsideGrillMode() {
 `);
 
   const result = run(repo, ["validate"]);
-  assertStatus(result, 0, "non-grill mode should not require decision depth");
+  assertStatus(result, 0, "later phases should still require recorded grill decision depth");
   const body = json(result);
   assert.equal(body.index.currentMode, "spec");
-  assert.ok(!body.messages.some((item) => item.code === "missing-grill-decision-depth"));
+  assert.ok(body.messages.some((item) => item.code === "missing-grill-decision-depth" && item.severity === "warning"));
   assert.ok(!body.messages.some((item) => item.code === "unknown-grill-decision-depth"));
 }
 
@@ -1521,6 +1521,185 @@ Build the core tool library.
   const body = json(result);
   assert.ok(!body.messages.some((item) => item.code === "spec-phase-created-slice-artifacts"));
   assert.ok(!body.messages.some((item) => item.code === "detailed-slice-planning-in-spec"));
+}
+
+function testValidateWarnsForDetailedSliceHandoffAfterSpecIsMarkedDone() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/tool-library
+- Current mode: build
+- Active slice: auto-strike/initiatives/main/features/tool-library/slices/slice-0-scaffold.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/language.md", "# Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
+  write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Stack\nDecision: Use a local server.\n");
+  write(repo, "auto-strike/initiatives/main/grill.md", `# Grill
+
+## Decision Depth
+Level: Standard
+Why: Default.
+
+## Decision Checkpoint
+- Scope / size: One feature.
+- Stack / dependencies: Local app.
+- Data / persistence / state: JSON file.
+- Auth / identity / permissions: Seed members.
+- Validation / browser or live checks: Manual browser check.
+- User-confirmed decisions: User confirmed defaults.
+`);
+  write(repo, "auto-strike/initiatives/main/idea.md", `# Idea
+
+## Phase Ledger
+
+| Phase | Status | Artifact | Reason |
+| --- | --- | --- | --- |
+| Brainstorm | done | \`idea.md\` | First useful outcome, user, constraints, and non-goals are recorded. |
+| Grill | done | \`grill.md\`, \`decisions.md\` | User-facing grill resolved hardening decisions. |
+| Spec | done | \`spec.md\`, \`features/tool-library/feature-spec.md\` | Spec is ready to slice. |
+| Slice | done | \`features/tool-library/slices/index.md\` | Slice plan is ready. |
+| Build | in progress | \`features/tool-library/slices/slice-0-scaffold.md\` | Build started. |
+`);
+  write(repo, "auto-strike/initiatives/main/spec.md", `# Spec
+
+## Summary
+Build a local tool library.
+
+## Spec Review
+- pass - scope and feature boundary are clear.
+
+## Exit Evidence
+- Spec can be sliced without guessing.
+`);
+  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", `# Tool Library Spec
+
+## Summary
+Build the core tool library.
+
+## Slice Handoff
+- Three slices planned (see \`features/tool-library/slices/index.md\`):
+  - Slice 0: scaffold and identity.
+  - Slice 1: tool listings.
+  - Slice 2: borrow lifecycle.
+
+## Spec Review
+- pass - feature behavior is clear.
+
+## Exit Evidence
+- Feature can be sliced without guessing.
+`);
+  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/index.md", `# Slices
+
+## Slice Map
+
+| Slice | Size | Depends On | Unblocks | Risk | Verification |
+| --- | --- | --- | --- | --- | --- |
+| 0. scaffold | S | None | 1 | Low | App starts |
+
+## Slice Review
+- pass - slices are small enough.
+
+## Exit Evidence
+- Build can start with slice 0.
+`);
+  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-0-scaffold.md", `# Slice 0: Scaffold
+
+## Size
+S
+
+## Depends On
+- None.
+
+## Execution Tasks
+- [ ] Research local patterns.
+- [ ] Write plan.
+- [ ] Review plan.
+- [ ] Verify app.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "over-detailed handoff should warn even after spec is marked done");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "slice-handoff-too-detailed" && item.severity === "warning"));
+}
+
+function testValidateWarnsForMissingPhaseExitGatesBeforeBuild() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/tool-library
+- Current mode: build
+- Active slice: auto-strike/initiatives/main/features/tool-library/slices/slice-0-scaffold.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/language.md", "# Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
+  write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Stack\nDecision: Use a local server.\n");
+  write(repo, "auto-strike/initiatives/main/grill.md", `# Grill
+
+## Decision Depth
+Level: Standard
+Why: Default.
+
+## Decision Checkpoint
+- Scope / size: One feature.
+- Stack / dependencies: Local app.
+- Data / persistence / state: JSON file.
+- Auth / identity / permissions: Seed members.
+- Validation / browser or live checks: Manual browser check.
+- User-confirmed decisions: User confirmed defaults.
+`);
+  write(repo, "auto-strike/initiatives/main/idea.md", `# Idea
+
+## Phase Ledger
+
+| Phase | Status | Artifact | Reason |
+| --- | --- | --- | --- |
+| Brainstorm | done | \`idea.md\` | First useful outcome, user, constraints, and non-goals are recorded. |
+| Grill | done | \`grill.md\`, \`decisions.md\` | User-facing grill resolved hardening decisions. |
+| Spec | done | \`spec.md\`, \`features/tool-library/feature-spec.md\` | Spec is ready. |
+| Slice | done | \`features/tool-library/slices/index.md\` | Slices are ready. |
+| Build | in progress | \`features/tool-library/slices/slice-0-scaffold.md\` | Build started. |
+`);
+  write(repo, "auto-strike/initiatives/main/spec.md", "# Spec\n\n## Summary\nBuild a local tool library.\n");
+  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n\n## Summary\nBuild the core tool library.\n");
+  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/index.md", `# Slices
+
+## Slice Map
+
+| Slice | Size | Depends On | Unblocks | Risk | Verification |
+| --- | --- | --- | --- | --- | --- |
+| 0. scaffold | S | None | 1 | Low | App starts |
+`);
+  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-0-scaffold.md", `# Slice 0: Scaffold
+
+## Size
+S
+
+## Depends On
+- None.
+
+## Execution Tasks
+- [ ] Research local patterns.
+- [ ] Write plan.
+- [ ] Review plan.
+- [ ] Verify app.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "missing phase exit gates should warn, not fail");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "missing-spec-review" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "missing-spec-exit-evidence" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "missing-slice-phase-review" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "missing-slice-phase-exit-evidence" && item.severity === "warning"));
 }
 
 function testValidateAcceptsExplicitUserOptOutOfGrill() {
@@ -2950,12 +3129,14 @@ testValidateWarnsForMissingGrillDecisionDepth();
 testValidateAcceptsStandardGrillDecisionDepth();
 testValidateAcceptsDeepGrillDecisionDepthWithSuggestedChange();
 testValidateWarnsForUnknownGrillDecisionDepth();
-testValidateDoesNotRequireDecisionDepthOutsideGrillMode();
+testValidateRequiresDecisionDepthAfterGrillMode();
 testValidateWarnsForMissingGrillBeforeSpecOrSlice();
 testValidateAcceptsGrillDecisionCheckpointBeforeSpec();
 testValidateWarnsWhenSpecPhaseCreatesSliceArtifacts();
 testValidateWarnsForDetailedSlicePlanningInsideSpec();
 testValidateAllowsConciseSliceHandoffInsideSpec();
+testValidateWarnsForDetailedSliceHandoffAfterSpecIsMarkedDone();
+testValidateWarnsForMissingPhaseExitGatesBeforeBuild();
 testValidateAcceptsExplicitUserOptOutOfGrill();
 testValidateWarnsForPhaseCompletedAfterQuestionToolFailure();
 testValidateAcceptsSliceMapDependenciesAndCheckpoint();

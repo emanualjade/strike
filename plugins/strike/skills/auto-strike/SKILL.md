@@ -138,10 +138,18 @@ Do not claim a mode is complete after a shallow pass that did not produce its
 intended result.
 
 Do not blend phase work "in one pass." A phase may prepare a concise handoff for
-the next phase, but it must record its own exit evidence before the next phase's
-artifacts are created. In particular, spec mode writes initiative specs, feature
-specs, and a brief `Slice Handoff`; slice mode writes `slices/index.md` and
-`slices/slice-*.md`.
+the next phase, but it must record its own review and exit evidence before the
+next phase's artifacts are created. In particular, spec mode writes initiative
+specs, feature specs, and a brief `Slice Handoff`; slice mode writes
+`slices/index.md` and `slices/slice-*.md`.
+
+A work unit should complete at most one major phase transition. Creating cold
+start skeleton docs is fine, but after you mark brainstorm, grill, spec, or
+slice complete, stop the current unit with a short user-facing receipt and the
+next natural mode. Do not mark spec and slice done, or slice done and build in
+progress, in the same unit unless the user explicitly asked to skip that phase
+boundary. In durable goal mode, the next continuation can resume from
+`index.md` and the active phase doc.
 
 For initiative work that reaches slice, build, review, or validation, keep the
 initiative `Phase Ledger` from `workspace.md` current. Earlier phases may be

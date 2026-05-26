@@ -103,6 +103,12 @@ carry only the useful ordering context:
 - [ ] Core user/system flow works end to end.
 - [ ] Review findings are resolved or accepted.
 - [ ] Human decision needed? If yes, pause and ask.
+
+## Slice Review
+- [pass/blocker/warning] - [size, dependency, risk, working-state, or verification finding]
+
+## Exit Evidence
+- [Why this feature can enter build one slice at a time without guessing.]
 ```
 
 For each `slices/slice-[n]-[name].md`, use the slice template in
@@ -145,6 +151,12 @@ privately inferred answers; the artifact should show user engagement, explicit
 answers, prior-artifact evidence, or explicit permission to skip.
 If a question tool failed or no answer was received, keep the phase blocked or
 in progress and record the plain-text question to ask next.
+
+Do not mark multiple major phases complete in one work unit. Once a phase row
+changes to `done`, `compressed`, `skipped`, or `replaced`, stop after updating
+the active doc, `index.md`, and the next action. A later continuation can move
+to the next phase. If the user explicitly asked to skip a boundary, record that
+reason in the ledger.
 
 After implementation evidence exists, the ledger and `index.md` must not still
 look like brainstorm/planning. Build evidence means the build row needs a real

@@ -2,6 +2,18 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.16 - 2026-05-25
+
+- Strengthened Auto Strike phase boundaries so brainstorm, grill, spec, slice,
+  and build are not collapsed into one pass; completed phases should stop with
+  a receipt and next action unless the user explicitly skips the boundary.
+- Tightened spec and slice guidance so specs cannot include numbered slice
+  lists or future slice-file links, and slice planning records review plus exit
+  evidence before build starts.
+- Added helper warnings for over-detailed Slice Handoffs, missing spec review or
+  exit evidence before slicing/building, missing slice review or exit evidence
+  before build, and missing grill decision depth after later phases begin.
+
 ## 0.8.15 - 2026-05-25
 
 - Tightened Auto Strike dependency guidance so pnpm-only repos must use

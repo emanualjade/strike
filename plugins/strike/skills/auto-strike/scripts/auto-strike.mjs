@@ -1712,8 +1712,6 @@ function currentTruthMessages(state) {
 }
 
 function activeGrillDocState(state) {
-  if (state.index.currentMode !== "grill") return null;
-
   const candidates = [];
   const activeDoc = state.index.activeWork?.docPath;
   if (activeDoc && path.posix.basename(normalizeEvidencePath(activeDoc)).toLowerCase() === "grill.md") {
@@ -1742,6 +1740,10 @@ function decisionDepthLevel(grillText) {
 }
 
 function grillDecisionDepthMessages(state) {
+  const shouldCheck = state.index.currentMode === "grill" ||
+    (hasReachedSpecOrLater(state) && !grillWasExplicitlyOptedOut(state));
+  if (!shouldCheck) return [];
+
   const grillDoc = activeGrillDocState(state);
   if (!grillDoc) return [];
 
@@ -1865,6 +1867,25 @@ function detailedSlicePlanningInText(text) {
   return /\bslice\b/i.test(normalized) && slicePlanningSections >= 3;
 }
 
+function sliceHandoffIsTooDetailed(text) {
+  const handoff = extractSection(text, "Slice Handoff");
+  if (!sectionHasSubstance(handoff)) return false;
+  const normalized = normalizeText(handoff);
+  if (/\bslices\/index\.md\b/i.test(normalized)) return true;
+  if (/\bslices\/slice-[\w.-]+\.md\b/i.test(normalized)) return true;
+  if (/\bSlice\s+\d+\b/i.test(normalized)) return true;
+  if (/\bslice-\d+[-\w]*\b/i.test(normalized)) return true;
+  return false;
+}
+
+function specDocsForState(state) {
+  if (!state.activeInitiative.path) return [];
+  return state.docs.filter((sourcePath) => {
+    if (!sourcePath.startsWith(`${state.activeInitiative.path}/`)) return false;
+    return sourcePath.endsWith("/spec.md") || sourcePath.endsWith("/feature-spec.md");
+  });
+}
+
 function specSliceBoundaryMessages(state) {
   const messages = [];
   if (!state.activeInitiative.exists) return messages;
@@ -1872,19 +1893,76 @@ function specSliceBoundaryMessages(state) {
   const inSpecMode = state.index.currentMode === "spec";
   const specComplete = specPhaseIsComplete(state);
   const sliceDocs = activeInitiativeSliceDocs(state);
+  const specDocs = specDocsForState(state);
   if ((inSpecMode || !specComplete) && sliceDocs.length > 0) {
     messages.push(message("warning", "spec-phase-created-slice-artifacts", sliceDocs[0], "Spec phase should not create Slice Maps or slice files. Finish spec review and exit evidence first, then intentionally enter slice mode before writing slices."));
   }
 
   if (inSpecMode || !specComplete) {
-    const specDocs = state.docs.filter((sourcePath) => {
-      if (!state.activeInitiative.path || !sourcePath.startsWith(`${state.activeInitiative.path}/`)) return false;
-      return sourcePath.endsWith("/spec.md") || sourcePath.endsWith("/feature-spec.md");
-    });
     for (const sourcePath of specDocs) {
       const text = readFileIfPresent(path.join(state.repoRoot, sourcePath));
       if (text && detailedSlicePlanningInText(text)) {
         messages.push(message("warning", "detailed-slice-planning-in-spec", sourcePath, "Spec may include a concise Slice Handoff, but detailed Slice Maps, slice acceptance criteria, or slice execution tasks belong in slice mode after spec exit evidence."));
+      }
+    }
+  }
+
+  for (const sourcePath of specDocs) {
+    const text = readFileIfPresent(path.join(state.repoRoot, sourcePath));
+    if (text && sliceHandoffIsTooDetailed(text)) {
+      messages.push(message("warning", "slice-handoff-too-detailed", sourcePath, "Slice Handoff should stay concise. Numbered slice lists, future slices/index.md links, slice files, acceptance criteria, and execution tasks belong in slice mode."));
+    }
+  }
+
+  return messages;
+}
+
+function reachedSliceOrLater(state) {
+  if (["slice", "build", "review", "readiness"].includes(state.index.currentMode)) return true;
+  if (state.activeFeature.sliceFiles.length > 0 || state.activeSlice.path) return true;
+  return ["slice", "build", "review", "validate"].some((phase) => {
+    const row = state.phaseLedger.rows?.[phase];
+    return row && PHASE_LEDGER_ACTIVE_STATUSES.has(row.status);
+  });
+}
+
+function reachedBuildOrLater(state) {
+  if (["build", "review", "readiness"].includes(state.index.currentMode)) return true;
+  if (hasImplementationEvidence(state)) return true;
+  return ["build", "review", "validate"].some((phase) => {
+    const row = state.phaseLedger.rows?.[phase];
+    return row && PHASE_LEDGER_ACTIVE_STATUSES.has(row.status);
+  });
+}
+
+function phaseExitGateMessages(state) {
+  const messages = [];
+
+  if (reachedSliceOrLater(state)) {
+    for (const sourcePath of specDocsForState(state)) {
+      const text = readFileIfPresent(path.join(state.repoRoot, sourcePath));
+      if (!text) continue;
+      if (!sectionHasSubstance(extractSection(text, "Spec Review"))) {
+        messages.push(message("warning", "missing-spec-review", sourcePath, "Spec work reached slicing/building without a substantive Spec Review. Review scope, rules, checks, risks, and missing decisions before slicing."));
+      }
+      if (!sectionHasSubstance(extractSection(text, "Exit Evidence"))) {
+        messages.push(message("warning", "missing-spec-exit-evidence", sourcePath, "Spec work reached slicing/building without Exit Evidence. Record why the spec can be sliced without guessing before creating slice artifacts."));
+      }
+    }
+  }
+
+  if (reachedBuildOrLater(state)) {
+    const activeFeature = state.activeFeature.exists
+      ? state.activeFeature
+      : inferredFeatureFromActiveSlice(state.repoRoot, state.activeSlice);
+    const sliceIndexPath = activeFeature?.exists ? activeFeatureSliceIndexPath(activeFeature) : null;
+    if (sliceIndexPath) {
+      const text = readFileIfPresent(path.join(state.repoRoot, sliceIndexPath));
+      if (text && !sectionHasSubstance(extractSection(text, "Slice Review"))) {
+        messages.push(message("warning", "missing-slice-phase-review", sliceIndexPath, "Build started without a substantive Slice Review in slices/index.md. Review slice size, dependency order, risk placement, working-state guarantee, and verification coverage before build."));
+      }
+      if (text && !sectionHasSubstance(extractSection(text, "Exit Evidence"))) {
+        messages.push(message("warning", "missing-slice-phase-exit-evidence", sliceIndexPath, "Build started without Slice Exit Evidence. Record why the feature can enter build one slice at a time before marking build in progress."));
       }
     }
   }
@@ -2135,6 +2213,7 @@ export function validateAutoStrike(options = {}) {
   messages.push(...phaseLedgerMessages(state));
   messages.push(...phaseBypassMessages(state));
   messages.push(...specSliceBoundaryMessages(state));
+  messages.push(...phaseExitGateMessages(state));
   messages.push(...grillDecisionDepthMessages(state));
   messages.push(...grillCheckpointMessages(state));
   messages.push(...referencedAutoStrikeDocMessages(state));
