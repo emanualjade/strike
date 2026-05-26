@@ -141,6 +141,8 @@ the phase truly does not apply. A detailed kickoff prompt is not, by itself, a
 reason to skip brainstorm or grill. Do not mark a phase done because the agent
 privately inferred answers; the artifact should show user engagement, explicit
 answers, prior-artifact evidence, or explicit permission to skip.
+If a question tool failed or no answer was received, keep the phase blocked or
+in progress and record the plain-text question to ask next.
 
 After implementation evidence exists, the ledger and `index.md` must not still
 look like brainstorm/planning. Build evidence means the build row needs a real

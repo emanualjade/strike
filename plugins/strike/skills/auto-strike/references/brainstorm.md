@@ -8,6 +8,9 @@ count becomes locked.
 Do not skip a proper brainstorm with the user unless the user explicitly says to
 skip it, move along, or proceed without questions. If the user already answered
 the brainstorm questions, record the explicit answers and keep going.
+If a question tool or UI cannot deliver the question, ask in plain text and stop
+for the answer. Do not treat tool failure, denial, timeout, or no response as
+permission to choose defaults.
 
 Find:
 

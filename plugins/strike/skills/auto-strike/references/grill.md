@@ -15,6 +15,9 @@ questions. A detailed kickoff prompt can answer decision nodes, but it does not
 replace grill unless it explicitly answers those nodes. Record which decisions
 were user-stated, which were accepted assumptions, and which need a question
 before spec.
+If a question tool or UI fails while asking grill questions, fall back to a
+plain-text question and stop. A failed tool call, denied question, timeout, or
+missing answer is not user permission to accept defaults or leave grill.
 
 Good grill areas:
 

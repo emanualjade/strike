@@ -117,6 +117,10 @@ artifact and reason.
 A proper brainstorm or grill means the agent either engaged the user on the
 phase's consequential questions, or the user already answered those exact
 questions explicitly. Internal interpretation is not enough.
+If the host's question tool is unavailable, rejected, or errors, ask the same
+question in the normal user-facing response and stop. A failed question tool,
+cancelled prompt, timeout, or missing answer is not permission to skip,
+compress, pick defaults, or proceed.
 
 The kickoff prompt is input, not a spec. Even when it is detailed, extract facts,
 unknowns, assumptions, and consequential decisions into the phase artifacts
@@ -173,6 +177,8 @@ checks, not only planning docs.
 - Ask for user input on core domain language, schema/model shape, lifecycle
   states, ownership, permissions, business rules, privacy/legal posture,
   destructive behavior, or hard-to-reverse architecture.
+- If user input is needed and the host question UI fails, ask in plain text and
+  wait. Do not interpret tool failure as a user opt-out.
 - Do not convert an initial prompt directly into a full build spec. Run the
   phase docs and decision checkpoint first unless the user explicitly opts out
   of questions or phases.

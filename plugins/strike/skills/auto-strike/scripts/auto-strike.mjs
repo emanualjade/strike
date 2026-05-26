@@ -1707,6 +1707,10 @@ function rowShowsInternalInference(row) {
   return /\b(agent|model|assistant)\b.*\b(inferred|assumed|interpreted|decided)\b|\b(internal|privately)\b.*\b(inferred|assumed|interpreted|decided)\b|\bprompt (?:implied|suggested)\b/i.test(phaseLedgerRowText(row));
 }
 
+function rowShowsQuestionToolFailure(row) {
+  return /\b(AskUserQuestion|question tool|question ui|answer questions\?|tool (?:failed|failure|error|unavailable)|failed question|denied question|question denied|timeout|timed out|no answer|missing answer)\b/i.test(phaseLedgerRowText(row));
+}
+
 function grillWasExplicitlyOptedOut(state) {
   const grillRow = state.phaseLedger.rows?.grill;
   if (!grillRow) return false;
@@ -1720,6 +1724,11 @@ function phaseBypassMessages(state) {
   for (const phase of ["brainstorm", "grill"]) {
     const row = state.phaseLedger.rows?.[phase];
     if (!row) continue;
+    if (rowShowsQuestionToolFailure(row) && PHASE_LEDGER_COMPLETE_STATUSES.has(row.status)) {
+      messages.push(message("warning", "phase-completed-after-question-tool-failure", state.phaseLedger.path, `${phase} is recorded as complete/compressed/skipped after a failed or unavailable question mechanism. Ask in plain text and wait for the user instead of treating tool failure as permission to proceed.`));
+      continue;
+    }
+
     if (rowShowsInternalInference(row)) {
       messages.push(message("warning", "phase-completed-by-inference", state.phaseLedger.path, `${phase} is recorded as complete using agent inference. Run the phase with the user, cite explicit user answers/prior artifacts, or record explicit permission to skip.`));
       continue;

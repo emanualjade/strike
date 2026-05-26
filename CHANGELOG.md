@@ -2,6 +2,14 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.12 - 2026-05-25
+
+- Clarified Auto Strike question handling so failed or unavailable host question
+  tooling must fall back to a plain-text user question and stop, rather than
+  being treated as permission to accept defaults or proceed.
+- Added helper warnings when brainstorm or grill phases are completed,
+  compressed, or skipped after a question-tool failure.
+
 ## 0.8.11 - 2026-05-25
 
 - Tightened Auto Strike phase commitment so meaningful feature/MVP work must

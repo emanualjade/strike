@@ -1385,6 +1385,68 @@ function testValidateAcceptsExplicitUserOptOutOfGrill() {
   assert.ok(!body.messages.some((item) => item.code === "missing-grill-decision-checkpoint"));
 }
 
+function testValidateWarnsForPhaseCompletedAfterQuestionToolFailure() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/tool-library
+- Doc: auto-strike/initiatives/main/features/tool-library/slices/slice-0-static-app.md
+- State: Slice planning has started.
+- Next: Build the first slice.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/language.md", "# Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
+  write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Identity\nDecision: Pre-seeded picker.\n");
+  write(repo, "auto-strike/initiatives/main/spec.md", "# Spec\n\n## Summary\nBuild a local tool library.\n");
+  write(repo, "auto-strike/initiatives/main/idea.md", `# Idea
+
+## Phase Ledger
+
+| Phase | Status | Artifact | Reason |
+| --- | --- | --- | --- |
+| Brainstorm | done | \`idea.md\` | First useful outcome, user, constraints, and non-goals are recorded. |
+| Grill | compressed | \`grill.md\`, \`decisions.md\` | AskUserQuestion returned "Answer questions?", so the agent picked defaults and proceeded. |
+| Spec | done | \`spec.md\`, \`features/tool-library/feature-spec.md\` | Feature is ready to slice. |
+| Slice | in progress | \`features/tool-library/slices/index.md\` | Slice plan is being drafted. |
+`);
+  write(repo, "auto-strike/initiatives/main/grill.md", `# Grill
+
+## Decision Checkpoint
+- Scope / size: local first version.
+- Stack / dependencies: no packages.
+- Data / persistence / state: JSON file.
+- Auth / identity / permissions: pre-seeded picker.
+- Feature split / non-goals: one feature, no auth.
+- Validation / browser or live checks: browser walkthrough.
+- Accepted assumptions: Chosen after question tool failure.
+`);
+  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-0-static-app.md", `# Slice 0: Static App
+
+## Size
+S
+
+## Depends On
+- None.
+
+## Execution Tasks
+- [ ] Research local patterns.
+- [ ] Write plan.
+- [ ] Review plan.
+- [ ] Verify app.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "phase completed after question tool failure should warn, not fail");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "phase-completed-after-question-tool-failure" && item.severity === "warning"));
+}
+
 function testValidateAcceptsSliceMapDependenciesAndCheckpoint() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
@@ -2567,6 +2629,7 @@ testValidateDoesNotRequireDecisionDepthOutsideGrillMode();
 testValidateWarnsForMissingGrillBeforeSpecOrSlice();
 testValidateAcceptsGrillDecisionCheckpointBeforeSpec();
 testValidateAcceptsExplicitUserOptOutOfGrill();
+testValidateWarnsForPhaseCompletedAfterQuestionToolFailure();
 testValidateAcceptsSliceMapDependenciesAndCheckpoint();
 testValidateWarnsForMissingSliceMapDependenciesAndCheckpoint();
 testValidateWarnsForOversizedBatchedAndWeakNonVerticalSlice();
