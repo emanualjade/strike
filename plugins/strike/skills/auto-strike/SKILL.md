@@ -25,10 +25,11 @@ workspace and grow it from there.
 
 ## Host Invocation
 
-When showing future prompts, use the plugin package's `references/invocation.md`
-to render the current host's syntax. Do not copy host-specific command examples
-unchanged unless they match the active host. When the host is unknown, show the
-skill name and arguments as a plain next action.
+When showing future prompts, use the plugin-root
+`../../references/invocation.md` file, resolved from this `SKILL.md`, to render
+the current host's syntax. Do not look for it under this skill's local
+`references/` folder. When the host is unknown, show the skill name and
+arguments as a plain next action.
 
 Normal kickoff:
 
@@ -220,4 +221,4 @@ Keep responses short and user-facing. Report:
 
 Do not show raw workflow mechanics. Do not route to normal Strike board/card
 skills. If continuing later would help, show the current host's `auto-strike`
-prompt form using `references/invocation.md`.
+prompt form using plugin-root `../../references/invocation.md`.

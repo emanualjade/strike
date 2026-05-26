@@ -2,6 +2,14 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.13 - 2026-05-25
+
+- Clarified Auto Strike invocation-reference resolution so agents use the
+  plugin-root `references/invocation.md` file instead of looking under the
+  skill-local references folder.
+- Added a small skill-local invocation pointer as a fallback for hosts or agents
+  that resolve reference paths from the skill folder first.
+
 ## 0.8.12 - 2026-05-25
 
 - Clarified Auto Strike question handling so failed or unavailable host question
