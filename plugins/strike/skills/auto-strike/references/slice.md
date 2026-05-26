@@ -127,8 +127,8 @@ Slice template:
       repo patterns that can change this slice.
 - [ ] Write/update the implementation plan with exact surfaces, edge cases,
       verification, and rollback/recovery notes.
-- [ ] Review the plan with the main agent or a read-only reviewer; resolve or
-      explicitly accept findings before coding.
+- [ ] Review the plan with a read-only review subagent; the main agent
+      synthesizes findings and fixes or accepts them before coding.
 - [ ] Build only the in-scope behavior path for this slice.
 - [ ] Add or update focused tests/checks for the acceptance criteria.
 - [ ] Record verification capability before accepting skipped checks or fallback
@@ -144,7 +144,7 @@ Slice template:
 [Concrete build plan: files/surfaces, sequencing, edge cases, checks.]
 
 ## Plan Review
-[Reviewer/main-agent outcome, findings, and fixes before coding.]
+[Read-only review subagent outcome, main-agent assessment, findings, and fixes before coding.]
 
 ## Verification Capability
 - Repo scripts/checks:
@@ -234,8 +234,9 @@ momentum, not a reason to stall:
    repo surfaces likely to change, concern boundaries, verification commands,
    UI/state/error cases, data or integration risks, and any rollback or recovery
    notes.
-3. Review the implementation plan before coding. Use `review.md` for when to
-   use the main agent, a read-only reviewer, or a fresh-context pass.
+3. Review the implementation plan before coding. Use `review.md`; a read-only
+   review subagent returns findings and the main agent assesses them before
+   coding.
 4. Before verification, record what can actually be checked. For UI,
    auth/session, routing, forms, responsive layout, user-visible state,
    integrations, or skipped checks, do not treat missing repo browser packages

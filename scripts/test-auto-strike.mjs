@@ -188,6 +188,9 @@ Changed:
 
 Verified:
 - pnpm run test - passed
+
+Reviewed:
+- read-only review subagent - pass; returned findings to main agent for synthesis.
 `);
 
   const inspect = run(repo, ["inspect"]);
@@ -321,7 +324,7 @@ Verified:
   const body = json(result);
   assert.equal(body.lens, "edge-cases");
   assert.match(body.instructions.join("\n"), /Return findings to the main agent/);
-  assert.match(body.instructions.join("\n"), /read-only review agent/);
+  assert.match(body.instructions.join("\n"), /read-only review subagent/);
   assert.match(body.instructions.join("\n"), /Do not edit files/);
   assert.ok(body.focus.some((item) => /hostile inputs/i.test(item)));
   assert.ok(body.state.docs.includes("auto-strike/initiatives/main/features/video-mvp/feature-spec.md"));
@@ -788,6 +791,7 @@ Verified:
 
 Reviewed:
 - functionality: passed.
+- read-only review subagent - pass; returned findings to main agent for synthesis.
 
 ## Closeout Summary
 Implemented Slice 0: Server Boot.
@@ -800,6 +804,7 @@ Validation passed:
 
 Review:
 - functionality: passed.
+- read-only review subagent: passed.
 
 Skipped / residual risk:
 - None.
@@ -1174,6 +1179,9 @@ Changed:
 
 Verified:
 - node --check server.js - passed
+
+Reviewed:
+- read-only review subagent - pass; returned findings to main agent for synthesis.
 `);
   write(repo, "server.js", "console.log('ok');\n");
 
@@ -1217,6 +1225,7 @@ Verified:
 
 Reviewed:
 - See auto-strike/initiatives/main/readiness.md review findings.
+- read-only review subagent - pass; returned findings to main agent for synthesis.
 `);
   write(repo, "app.js", "console.log('ok');\n");
 
@@ -1256,6 +1265,9 @@ Changed:
 
 Verified:
 - node --check server.js - passed
+
+Reviewed:
+- read-only review subagent - pass; returned findings to main agent for synthesis.
 `);
   write(repo, "server.js", "console.log('ok');\n");
 
@@ -2565,6 +2577,7 @@ Verified:
 
 Reviewed:
 - functionality: passed.
+- read-only review subagent - pass; returned findings to main agent for synthesis.
 
 ## Closeout Summary
 Implemented Slice ${activeSliceIndex}: Done.
@@ -2763,6 +2776,7 @@ Verified:
 Reviewed:
 - ui-regression - pass; static CSS selector review checked new edit input against existing selectors
 - functionality - pass
+- read-only review subagent - pass; returned findings to main agent for synthesis.
 
 Skipped:
 - Browser check - checked host browser tool and manual browser option; both blocked by no GUI/browser access, so smoke script plus static UI regression review were used as replacement evidence; residual risk is visual layout.
@@ -2808,6 +2822,7 @@ Reviewed:
 - spec-coverage - pass
 - code-quality - pass
 - ui-regression - pass; static selector review checked edit input against checkbox selectors
+- read-only review subagent - pass; returned findings to main agent for synthesis.
 - user-flows - pass
 `);
   write(repo, "todo/index.html", "<!doctype html>\n<input>\n");
@@ -2850,6 +2865,7 @@ Reviewed:
 - code-quality - pass
 - ui-regression - pass by static selector review
 - user-flows - pass by curl route checks
+- read-only review subagent - pass; returned findings to main agent for synthesis.
 `);
   write(repo, "todo/index.html", "<!doctype html>\n<input>\n");
   write(repo, "todo/todo.js", "document.querySelector('button').addEventListener('click', () => {});\n");
@@ -2891,6 +2907,7 @@ Reviewed:
 - code-quality - pass
 - ui-regression - pass by static review plus syntax checks
 - user-flows - pass
+- read-only review subagent - pass; returned findings to main agent for synthesis.
 
 Skipped:
 - Automated browser screenshot/click automation - no browser automation dependency exists in this repo and package installs are out of scope; replaced with API flow checks and static UI review
@@ -2936,6 +2953,7 @@ Reviewed:
 - code-quality - pass
 - ui-regression - pass; static selector review checked edit input against checkbox selectors
 - user-flows - pass
+- read-only review subagent - pass; returned findings to main agent for synthesis.
 
 Skipped:
 - Browser screenshot/click check - browser backend unavailable; static UI regression review was used as replacement evidence
@@ -2988,6 +3006,7 @@ Reviewed:
 - code-quality - pass
 - ui-regression - pass; static selector review checked edit input against checkbox selectors
 - user-flows - pass
+- read-only review subagent - pass; returned findings to main agent for synthesis.
 
 Skipped:
 - Browser screenshot/click check - checked host browser tool and manual browser option; both blocked by no GUI/browser access, so smoke script plus static UI regression review were used as replacement evidence; residual risk is visual layout.
@@ -3031,6 +3050,7 @@ Reviewed:
 - spec-coverage - passed
 - code-quality - passed
 - final re-review - no remaining blockers
+- read-only review subagent - passed after fixes
 `);
   write(repo, "src/video/caption.ts", "export function caption() {}\n");
 
@@ -3069,6 +3089,7 @@ Reviewed:
 - spec-coverage - passed
 - code-quality - passed
 - final re-review - no remaining blockers
+- read-only review subagent - passed after fixes
 
 Skipped:
 - None.
@@ -3132,7 +3153,9 @@ Reviewed:
 - functionality - passed
 - spec-coverage - passed
 - code-quality - passed
+- read-only review subagent - passed
 - final re-review - no remaining blockers
+- read-only review subagent - passed
 
 ## Closeout Summary
 Implemented Caption.
@@ -3231,6 +3254,7 @@ Verified:
 
 Reviewed:
 - code-quality - pass
+- read-only review subagent - pass; returned findings to main agent for synthesis.
 `);
   write(repo, "src/video/upload.ts", "export function upload() {}\n");
 
@@ -3285,6 +3309,7 @@ Reviewed:
 - spec-coverage - pass
 - code-quality - pass
 - ui-regression - pass; static selector review checked edit input against checkbox selectors
+- read-only review subagent - pass; returned findings to main agent for synthesis.
 
 Skipped:
 - user-flows - accepted skip; edit/save/cancel flows were already covered by the smoke script for this narrow slice
@@ -3298,7 +3323,7 @@ Skipped:
   assert.ok(!body.messages.some((item) => item.code === "missing-required-review-lens"));
 }
 
-function testValidateWarnsForSingleSliceWithoutFreshReviewAgentEvidence() {
+function testValidateErrorsForSingleSliceWithoutReviewSubagentEvidence() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
@@ -3339,12 +3364,12 @@ Reviewed:
   write(repo, "src/video/upload.ts", "export function upload() {}\n");
 
   const result = run(repo, ["validate"]);
-  assertStatus(result, 0, "single-slice completed review without fresh reviewer evidence should warn");
+  assertStatus(result, 1, "single-slice completed review without review subagent evidence should fail");
   const body = json(result);
-  assert.ok(body.messages.some((item) => item.code === "missing-fresh-review-agent-evidence" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "missing-review-subagent-evidence" && item.severity === "error"));
 }
 
-function testValidateAcceptsFreshReviewAgentUnavailableRationale() {
+function testValidateRejectsSkippedReviewSubagentEvidence() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
@@ -3383,17 +3408,119 @@ Reviewed:
 - code-quality - pass
 
 Skipped:
-- fresh read-only review agent - host does not expose subagents in this run; main-agent review used as replacement evidence.
+- read-only review subagent - skipped; main-agent self-review used.
 `);
   write(repo, "src/video/upload.ts", "export function upload() {}\n");
 
   const result = run(repo, ["validate"]);
-  assertStatus(result, 0, "explicit unavailable-host fresh-review rationale should satisfy validation");
+  assertStatus(result, 1, "skipped review-subagent evidence should not satisfy validation");
   const body = json(result);
-  assert.ok(!body.messages.some((item) => item.code === "missing-fresh-review-agent-evidence"));
+  assert.ok(body.messages.some((item) => item.code === "missing-review-subagent-evidence" && item.severity === "error"));
 }
 
-function testValidateWarnsForMultiSliceWithoutFreshReviewAgentEvidence() {
+function testValidateErrorsForMissingReviewedSubagentEvidence() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/video-mvp
+- Current mode: review
+- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+
+## Evidence
+
+Changed:
+- src/video/upload.ts
+
+Verified:
+- node scripts/video-smoke.js - passed
+`);
+  write(repo, "src/video/upload.ts", "export function upload() {}\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 1, "review mode with changed and verified implementation needs review subagent evidence");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "missing-review-subagent-evidence" && item.severity === "error"));
+}
+
+function testValidateRejectsPendingReviewSubagentEvidence() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/video-mvp
+- Current mode: review
+- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+
+## Evidence
+
+Changed:
+- src/video/upload.ts
+
+Verified:
+- node scripts/video-smoke.js - passed
+
+Reviewed:
+- read-only review subagent - pending
+`);
+  write(repo, "src/video/upload.ts", "export function upload() {}\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 1, "pending review-subagent evidence should not satisfy validation");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "missing-review-subagent-evidence" && item.severity === "error"));
+}
+
+function testValidateRejectsMainAgentSelfReviewSubagentEvidence() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/video-mvp
+- Current mode: review
+- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+
+## Evidence
+
+Changed:
+- src/video/upload.ts
+
+Verified:
+- node scripts/video-smoke.js - passed
+
+Reviewed:
+- read-only review subagent - main agent self review passed
+`);
+  write(repo, "src/video/upload.ts", "export function upload() {}\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 1, "main-agent self-review wording should not satisfy review-subagent validation");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "missing-review-subagent-evidence" && item.severity === "error"));
+}
+
+function testValidateErrorsForMultiSliceWithoutReviewSubagentEvidence() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
@@ -3430,7 +3557,7 @@ S
 - Update \`src/video/upload.ts\` and verify with \`node scripts/video-smoke.js\`.
 
 ## Plan Review
-- read-only review agent - pass; files and verification are named.
+- read-only review subagent - pass; files and verification are named.
 
 ## Evidence
 
@@ -3448,12 +3575,12 @@ Reviewed:
   write(repo, "src/video/upload.ts", "export function upload() {}\n");
 
   const result = run(repo, ["validate"]);
-  assertStatus(result, 0, "multi-slice review without fresh reviewer evidence should warn");
+  assertStatus(result, 1, "multi-slice review without review subagent evidence should fail");
   const body = json(result);
-  assert.ok(body.messages.some((item) => item.code === "missing-fresh-review-agent-evidence" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "missing-review-subagent-evidence" && item.severity === "error"));
 }
 
-function testValidateAcceptsMultiSliceFreshReviewAgentEvidence() {
+function testValidateAcceptsMultiSliceReviewSubagentEvidence() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
@@ -3490,7 +3617,7 @@ S
 - Update \`src/video/upload.ts\` and verify with \`node scripts/video-smoke.js\`.
 
 ## Plan Review
-- read-only review agent - pass; files and verification are named.
+- read-only review subagent - pass; files and verification are named.
 
 ## Evidence
 
@@ -3501,16 +3628,170 @@ Verified:
 - node scripts/video-smoke.js - passed
 
 Reviewed:
-- read-only review agent, functionality - pass
-- fresh-context review, spec-coverage - pass
-- independent reviewer, code-quality - pass
+- read-only review subagent, functionality - pass
+- read-only review subagent, spec-coverage - pass
+- read-only review subagent, code-quality - pass
 `);
   write(repo, "src/video/upload.ts", "export function upload() {}\n");
 
   const result = run(repo, ["validate"]);
-  assertStatus(result, 0, "multi-slice review with fresh reviewer evidence should not warn");
+  assertStatus(result, 0, "multi-slice review with review subagent evidence should not warn");
   const body = json(result);
-  assert.ok(!body.messages.some((item) => item.code === "missing-fresh-review-agent-evidence"));
+  assert.ok(!body.messages.some((item) => item.code === "missing-review-subagent-evidence"));
+}
+
+function testValidateWarnsWhenCheckedTodoConflictsWithSkippedEvidence() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/todo.md", `# Todo
+
+- [x] Browser walkthrough passed for upload flow.
+`);
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/video-mvp
+- Current mode: build
+- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+
+## Evidence
+
+Changed:
+- src/video/upload.ts
+
+Verified:
+- node scripts/video-smoke.js - passed
+
+Skipped:
+- Browser walkthrough - skipped; no approved browser path was available, replacement evidence was node smoke, residual risk remains.
+`);
+  write(repo, "src/video/upload.ts", "export function upload() {}\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "checked todo contradiction should warn, not fail");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "completed-check-conflicts-with-skipped-evidence"));
+}
+
+function testValidateWarnsWhenCheckedCheckpointLacksBrowserEvidence() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/video-mvp
+- Current mode: build
+- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/index.md", `# Slices
+
+## Slice Map
+| Slice | Size | Depends On | Unblocks | Risk | Verification |
+| --- | --- | --- | --- | --- | --- |
+| 0. Upload | S | None | None | Low | Browser |
+
+## Checkpoint: After Slice 0
+- [x] Browser walkthrough works end to end.
+`);
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+
+## Evidence
+
+Changed:
+- src/video/upload.ts
+
+Verified:
+- node scripts/video-smoke.js - passed
+`);
+  write(repo, "src/video/upload.ts", "export function upload() {}\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "checked checkpoint without browser evidence should warn, not fail");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "completed-browser-check-missing-evidence"));
+}
+
+function testValidateWarnsWhenCheckedExecutionTaskConflictsWithSkippedEvidence() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/video-mvp
+- Current mode: build
+- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+
+## Execution Tasks
+- [x] Verify browser walkthrough.
+
+## Evidence
+
+Changed:
+- src/video/upload.ts
+
+Verified:
+- node scripts/video-smoke.js - passed
+
+Skipped:
+- Browser walkthrough - skipped; no approved browser path was available, replacement evidence was node smoke, residual risk remains.
+`);
+  write(repo, "src/video/upload.ts", "export function upload() {}\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "checked execution task contradiction should warn, not fail");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "completed-check-conflicts-with-skipped-evidence"));
+}
+
+function testValidateWarnsWhenVerifiedEvidenceDidNotRun() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/video-mvp
+- Current mode: review
+- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+
+## Evidence
+
+Changed:
+- src/video/upload.ts
+
+Verified:
+- Browser check not run.
+
+Reviewed:
+- read-only review subagent - pass; returned findings to main agent for synthesis.
+`);
+  write(repo, "src/video/upload.ts", "export function upload() {}\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "non-running Verified evidence should warn, not fail");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "missing-review-verified-evidence"));
 }
 
 function testValidateWarnsWhenGitChangesMissingFromChangedEvidence() {
@@ -3551,6 +3832,7 @@ Reviewed:
 - functionality - pass
 - spec-coverage - pass
 - code-quality - pass
+- read-only review subagent - pass; returned findings to main agent for synthesis.
 `);
   write(repo, "src/video/upload.ts", "export function upload() {}\n");
   write(repo, "src/video/preview.ts", "export function preview() {}\n");
@@ -3631,6 +3913,7 @@ Reviewed:
 - functionality - passed
 - spec-coverage - passed
 - code-quality - passed
+- read-only review subagent - passed
 `);
   write(repo, "src/video/upload.ts", "export function upload() {}\n");
   write(repo, "src/video/caption.ts", "export function caption() {}\n");
@@ -3670,6 +3953,7 @@ Reviewed:
 - functionality - passed
 - spec-coverage - passed
 - code-quality - passed
+- read-only review subagent - passed
 
 ## Closeout Summary
 Implemented Slice 0: Listings.
@@ -3747,6 +4031,7 @@ Reviewed:
 - functionality - passed
 - spec-coverage - passed
 - code-quality - passed
+- read-only review subagent - passed
 
 ## Closeout Summary
 Implemented Slice 0: Listings.
@@ -3883,6 +4168,7 @@ Reviewed:
 - functionality - passed
 - spec-coverage - passed
 - code-quality - passed
+- read-only review subagent - passed
 
 ## Closeout Summary
 Implemented Slice 0: Listings.
@@ -3975,6 +4261,7 @@ Reviewed:
 - functionality - pass
 - spec-coverage - pass
 - code-quality - pass
+- read-only review subagent - pass; returned findings to main agent for synthesis.
 `);
 
   const result = run(repo, ["validate"]);
@@ -4099,10 +4386,17 @@ testValidateAcceptsCloseoutSummaryWithValidationAlias();
 testValidateDoesNotRequireCloseoutForInProgressBuildSlice();
 testValidateWarnsForMissingRequiredReviewLenses();
 testValidateAcceptsReviewedAndSkippedRequiredReviewLenses();
-testValidateWarnsForSingleSliceWithoutFreshReviewAgentEvidence();
-testValidateAcceptsFreshReviewAgentUnavailableRationale();
-testValidateWarnsForMultiSliceWithoutFreshReviewAgentEvidence();
-testValidateAcceptsMultiSliceFreshReviewAgentEvidence();
+testValidateErrorsForSingleSliceWithoutReviewSubagentEvidence();
+testValidateRejectsSkippedReviewSubagentEvidence();
+testValidateErrorsForMissingReviewedSubagentEvidence();
+testValidateRejectsPendingReviewSubagentEvidence();
+testValidateRejectsMainAgentSelfReviewSubagentEvidence();
+testValidateErrorsForMultiSliceWithoutReviewSubagentEvidence();
+testValidateAcceptsMultiSliceReviewSubagentEvidence();
+testValidateWarnsWhenCheckedTodoConflictsWithSkippedEvidence();
+testValidateWarnsWhenCheckedCheckpointLacksBrowserEvidence();
+testValidateWarnsWhenCheckedExecutionTaskConflictsWithSkippedEvidence();
+testValidateWarnsWhenVerifiedEvidenceDidNotRun();
 testValidateWarnsWhenGitChangesMissingFromChangedEvidence();
 testValidateDoesNotWarnWhenGitChangeCoveredByCompletedSliceEvidence();
 testValidateWarnsForPrematureNextSliceActivation();

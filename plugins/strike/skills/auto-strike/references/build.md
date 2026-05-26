@@ -24,10 +24,8 @@ For each slice:
 7. Keep `index.md`, the Phase Ledger, and slice checkboxes current as the build
    advances. Once code exists, do not leave Active Work pointing at brainstorm,
    stale open decisions, no active feature/slice, or "no code written".
-8. Use `review.md` for the required review pass when the slice is meaningful,
-   risky, UI/user-visible, or ready to claim complete. Completed meaningful
-   slices should use a fresh read-only reviewer when the host supports it, or
-   record why that review surface is unavailable.
+8. Use `review.md` for the required review pass. You MUST run a read-only
+   review subagent. A main-agent self-review is never sufficient on its own.
 9. Fix blocking findings and re-review.
 10. When the slice is complete, write `## Closeout Summary` in the slice and use
    it as the final user-facing receipt: built, validation, review,

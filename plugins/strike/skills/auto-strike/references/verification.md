@@ -38,28 +38,18 @@ manual browser tooling is available.
 - Config/dependencies: build/start check, env example updates, startup
   validation, version fit, and security/maintenance review.
 
-For UI, browser behavior, auth/session flows, routing, forms, responsive layout,
-or user-visible state, run the app locally and inspect the changed route,
-component, or state in a browser when feasible. Check relevant desktop/mobile
-widths, loading/empty/error/success states, accessibility basics, console/runtime
-errors when feasible, and visible regressions.
+UI/user-flow slices MUST be verified in a browser. Use Browser/Chrome tools,
+Chrome MCP, repo Playwright/Cypress, a repo browser script, or explicit manual
+browser verification.
 
-`curl`, API checks, localhost status checks, and server logs can support
-verification, but they are not browser/user-flow evidence by themselves. Browser
-evidence should name the actual browser/host/manual UI check and what was seen
-or interacted with.
+Act like the user: click the flow, check visible results, console/network,
+layout, state, and error cases. Curl, static HTML, and code review are not
+browser verification.
 
 Ad hoc smoke or walkthrough scripts should fail fast: use a known-free port or
 assert the expected server, check response status and required IDs after every
 step, and do not print success after failed or empty responses.
 
-If a normally expected check cannot run, record the blocker, the risk left open,
-and the replacement evidence. Do not skip browser checks only because the repo
-lacks Playwright or another browser package; use host/manual browser tooling
-when available. Static review is a fallback for blocked browser access, not an
-equivalent replacement.
-
-For skipped browser/user-flow checks, evidence must name the host/manual browser
-option checked, the specific blocker, the replacement evidence, and the residual
-risk. "No Playwright", "no browser package", or "package install not approved"
-is not enough by itself.
+If no approved browser path is available, continue but report it loudly:
+browser verification was not performed, what you checked instead, and the
+residual user-facing risk.

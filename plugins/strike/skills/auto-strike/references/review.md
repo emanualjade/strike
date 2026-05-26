@@ -21,14 +21,10 @@ feature or initiative readiness pass needs `readiness.md`.
   risk handling.
 - After meaningful code changes, run a distinct review pass instead of relying
   only on the build mindset.
-- For a completed meaningful slice, use a read-only subagent or fresh-context
-  review when the host supports it. Main-agent review alone is a fallback, not
-  full review.
-- If fresh review agents are unavailable, record that in `Skipped:` with the
-  host/tooling reason and the replacement review evidence used.
-- For high-risk surfaces or UI/data/integration-heavy work, use separate fresh
-  reviewers for distinct lenses when the host supports parallel agents.
-- Multiple review agents may run in parallel when each has a distinct lens.
+- You MUST run a read-only review subagent.
+- A main-agent self-review is never sufficient on its own.
+- For high-risk or UI/data/integration-heavy work, run distinct read-only
+  review subagents per lens.
 
 ## Evidence
 
@@ -87,22 +83,17 @@ Add surface-specific lenses when the changed files justify them:
 - `integration-risk` for API, provider, webhook, queue, upload, media, AI,
   email, payment, or other external-service boundaries.
 
-For UI, browser behavior, auth/session flows, routing, forms, responsive layout,
-or user-visible state, include browser/user-flow review evidence. Use host
-browser tools or a manual browser check when they are available; the repo does
-not need a browser automation dependency for this to count. If browser access is
-actually blocked by the host or environment, record that blocker and perform a
-static UI regression fallback. Do not silently treat static review as equivalent
-to a browser check.
+UI/user-flow slices MUST be verified in a browser. Use Browser/Chrome tools,
+Chrome MCP, repo Playwright/Cypress, a repo browser script, or explicit manual
+browser verification.
 
-`curl`, route status checks, server logs, and localhost API checks are useful
-supporting evidence, but they are not browser/user-flow review evidence unless a
-browser or manual UI inspection actually happened and is recorded.
+Act like the user: click the flow, check visible results, console/network,
+layout, state, and error cases. Curl, static HTML, and code review are not
+browser verification.
 
-Skipped browser/user-flow evidence must name the host/manual browser option
-checked, the blocker, replacement evidence, and residual risk. Missing
-Playwright, Cypress, or another repo package is not a valid browser blocker by
-itself.
+If no approved browser path is available, continue but report it loudly:
+browser verification was not performed, what you checked instead, and the
+residual user-facing risk.
 
 ## Reviewer Contract
 

@@ -2,6 +2,17 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.21 - 2026-05-25
+
+- Made Auto Strike review subagents mandatory for completed meaningful slices:
+  missing read-only review subagent evidence is now a validation error.
+- Tightened UI/user-flow verification guidance so browser checks are explicit
+  and curl, static HTML, and code review are not treated as browser evidence.
+- Added helper checks for checked todo, checkpoint, and execution-task claims
+  that conflict with skipped evidence or lack matching verification evidence.
+- Rejected pending, skipped, blocked, self-review, or "not run" evidence as
+  positive review or verification proof.
+
 ## 0.8.20 - 2026-05-25
 
 - Added an Auto Strike recovery reference for interrupted, missing, stale, or

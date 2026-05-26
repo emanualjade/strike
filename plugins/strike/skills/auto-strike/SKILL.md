@@ -224,9 +224,8 @@ checks, not only planning docs.
   `spec.md` current, even when they are minimal.
 - Build, verify, review, and fix in loops until the stopping condition is met or
   a real blocker needs the user.
-- For completed meaningful slice reviews, use fresh read-only review subagents
-  when the host supports them; otherwise record the unavailable-host rationale.
-  Use `review.md` for reviewer behavior and synthesis rules.
+- For completed meaningful slices: You MUST run a read-only review subagent.
+  A main-agent self-review is never sufficient on its own. Use `review.md`.
 
 ## Completion Standard
 

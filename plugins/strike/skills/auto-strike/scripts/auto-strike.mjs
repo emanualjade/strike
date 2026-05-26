@@ -726,7 +726,7 @@ function parseTodo(todoText) {
     unchecked: uncheckedItems.length,
     otherItems,
     firstUnchecked: uncheckedItems.slice(0, 5),
-    checkedItems: checkedItems.slice(0, 10),
+    checkedItems,
   };
 }
 
@@ -804,6 +804,14 @@ function evidenceReviewedItems(repoRoot, evidenceLocations) {
 
 function evidenceSkippedItems(repoRoot, evidenceLocations) {
   return evidenceListItems(repoRoot, evidenceLocations, ["skipped", "skipped checks", "not run"]);
+}
+
+function evidenceItemClaimsBlockedOrNotRun(value) {
+  return /\b(skip|skipped|not performed|not run|not verified|not checked|pending|not yet|not started|unable|unavailable|blocked|not available|cannot|can't|could not|fallback|replacement evidence|static review|source review|code review)\b/i.test(String(value ?? ""));
+}
+
+function hasPositiveVerificationEvidenceItem(value) {
+  return sectionHasSubstance(value) && !evidenceItemClaimsBlockedOrNotRun(value);
 }
 
 function addChangedPath(repoRoot, changedPaths, value) {
@@ -2193,10 +2201,18 @@ function uncheckedCheckboxItems(sectionText) {
     .filter(Boolean);
 }
 
+function checkedCheckboxItems(sectionText) {
+  return normalizeText(sectionText)
+    .split("\n")
+    .map((line) => line.trim())
+    .map((line) => line.match(/^[-*]\s+\[[xX]\]\s+(.+)$/)?.[1]?.trim())
+    .filter(Boolean);
+}
+
 function sliceDocHasBuildEvidence(repoRoot, sourcePath) {
   const changed = evidenceListItems(repoRoot, [sourcePath], ["changed", "files changed", "modified", "touched"]);
   const verified = evidenceListItems(repoRoot, [sourcePath], ["verified", "verification", "checks"]);
-  return changed.length > 0 && verified.length > 0;
+  return changed.length > 0 && verified.some(hasPositiveVerificationEvidenceItem);
 }
 
 function staleSliceTaskChecklistMessages(state) {
@@ -2329,6 +2345,131 @@ function staleFeatureCheckpointMessages(state) {
   return messages;
 }
 
+const CHECK_CLAIM_CATEGORIES = [
+  {
+    name: "browser/user-flow",
+    pattern: /\b(browser|visual|screenshot|viewport|responsive|mobile|desktop|two[- ]tab|walkthrough|user[- ]flow|manual flow|click|clicked|form|console|network|playwright|chrom(?:e|ium)|safari|firefox)\b/i,
+  },
+  {
+    name: "api/curl",
+    pattern: /\b(curl|api|http|route|endpoint|GET|POST|PUT|PATCH|DELETE)\b/i,
+  },
+  {
+    name: "test/build",
+    pattern: /\b(test|tests|smoke|lint|build|typecheck|validate|pnpm|node)\b/i,
+  },
+];
+
+function checkClaimCategories(item) {
+  const text = String(item ?? "");
+  return CHECK_CLAIM_CATEGORIES
+    .filter((category) => category.pattern.test(text))
+    .map((category) => category.name);
+}
+
+function positiveBrowserEvidenceItem(item) {
+  const text = String(item ?? "");
+  if (!hasBrowserReviewEvidenceItem(text)) return false;
+  return hasPositiveVerificationEvidenceItem(text);
+}
+
+function checkedCheckpointClaims(state) {
+  const claims = [];
+  const completedSlicesByFeature = new Map();
+
+  for (const sourcePath of state.evidence.locations) {
+    const match = sourcePath.match(new RegExp(`^(${escapeRegExp(WORKSPACE_ROOT)}/initiatives/[^/]+/features/[^/]+)/slices/slice-(\\d+)[^/]*\\.md$`));
+    if (!match) continue;
+    if (!sliceDocHasBuildEvidence(state.repoRoot, sourcePath)) continue;
+    const featurePath = match[1];
+    const sliceIndex = Number.parseInt(match[2], 10);
+    const completed = completedSlicesByFeature.get(featurePath) ?? [];
+    completed.push({ index: sliceIndex, path: sourcePath });
+    completedSlicesByFeature.set(featurePath, completed);
+  }
+
+  for (const sourcePath of state.docs.filter((docPath) => docPath.endsWith("/slices/index.md"))) {
+    const featurePath = sourcePath.replace(/\/slices\/index\.md$/, "");
+    const completedSlices = completedSlicesByFeature.get(featurePath) ?? [];
+    const completedSliceIndices = completedSlices.map((slice) => slice.index);
+    const text = readFileIfPresent(path.join(state.repoRoot, sourcePath));
+    for (const section of checkpointSections(text ?? "")) {
+      if (!checkpointIsDue(section.heading, completedSliceIndices)) continue;
+      for (const item of checkedCheckboxItems(section.body)) {
+        claims.push({ path: sourcePath, item, evidenceLocations: completedSlices.map((slice) => slice.path) });
+      }
+    }
+  }
+
+  return claims;
+}
+
+function positiveEvidenceItems(repoRoot, locations, labels) {
+  return evidenceListItems(repoRoot, locations, labels).filter(hasPositiveVerificationEvidenceItem);
+}
+
+function evidenceHasCategory(items, categoryName) {
+  return items.some((item) => checkClaimCategories(item).includes(categoryName));
+}
+
+function completedCheckEvidenceContradictionMessages(state) {
+  const claims = [];
+  if (state.todo.present) {
+    for (const item of state.todo.checkedItems) {
+      claims.push({
+        path: `${WORKSPACE_ROOT}/todo.md`,
+        item,
+        evidenceLocations: state.evidence.reviewScope.locations.length > 0
+          ? state.evidence.reviewScope.locations
+          : state.evidence.locations,
+      });
+    }
+  }
+  for (const sourcePath of state.evidence.locations.filter((location) => SLICE_DOC_PATTERN.test(location))) {
+    const text = readFileIfPresent(path.join(state.repoRoot, sourcePath));
+    const tasks = extractSection(text ?? "", "Execution Tasks");
+    for (const item of checkedCheckboxItems(tasks)) {
+      claims.push({ path: sourcePath, item, evidenceLocations: [sourcePath] });
+    }
+  }
+  claims.push(...checkedCheckpointClaims(state));
+
+  const messages = [];
+
+  for (const claim of claims) {
+    const categories = checkClaimCategories(claim.item);
+    if (categories.length === 0) continue;
+    const evidenceLocations = claim.evidenceLocations?.length > 0 ? claim.evidenceLocations : state.evidence.locations;
+    const skippedItems = evidenceListItems(state.repoRoot, evidenceLocations, ["skipped", "skipped checks", "not run"]);
+    const verifiedItems = positiveEvidenceItems(state.repoRoot, evidenceLocations, ["verified", "verification", "checks"]);
+    const reviewedItems = positiveEvidenceItems(state.repoRoot, evidenceLocations, ["reviewed", "review lenses", "reviews"]);
+    const skippedCategories = skippedItems.flatMap((item) =>
+      checkClaimCategories(item).map((category) => ({ category, item }))
+    );
+    const hasAnyVerifiedEvidence = verifiedItems.length > 0;
+    const hasBrowserEvidence = [...verifiedItems, ...reviewedItems].some(positiveBrowserEvidenceItem);
+
+    const conflictingSkip = skippedCategories.find((skipped) => categories.includes(skipped.category));
+    if (conflictingSkip) {
+      messages.push(message("warning", "completed-check-conflicts-with-skipped-evidence", claim.path, `Checked item claims ${conflictingSkip.category} work is done, but evidence records it as skipped: "${claim.item}" conflicts with "${conflictingSkip.item}".`));
+      continue;
+    }
+
+    if (categories.includes("browser/user-flow") && !hasBrowserEvidence) {
+      messages.push(message("warning", "completed-browser-check-missing-evidence", claim.path, `Checked item claims browser/user-flow work is done, but no browser verification evidence was found: "${claim.item}".`));
+      continue;
+    }
+
+    const nonBrowserCategories = categories.filter((category) => category !== "browser/user-flow");
+    const missingCategory = nonBrowserCategories.find((category) => !evidenceHasCategory(verifiedItems, category));
+    if (!hasAnyVerifiedEvidence || missingCategory) {
+      messages.push(message("warning", "completed-check-missing-verified-evidence", claim.path, `Checked item claims ${missingCategory ?? "verification"} work is done, but matching Verified evidence was not found: "${claim.item}".`));
+    }
+  }
+
+  return messages;
+}
+
 function activeSlicePrepMessages(repoRoot, activeSlice, currentMode) {
   if (!activeSlice.path || !activeSlice.exists) return [];
   const sliceText = readFileIfPresent(path.join(repoRoot, activeSlice.path));
@@ -2349,7 +2490,7 @@ function activeSlicePrepMessages(repoRoot, activeSlice, currentMode) {
   }
 
   if (!sectionHasSubstance(planReview) || !planReviewHasOutcome(planReview)) {
-    messages.push(message("warning", "weak-slice-plan-review", activeSlice.path, `Active slice is${modeText} but Plan Review is missing, pending, or lacks a concrete review outcome. Record main-agent review, critical reviewer findings, or accepted skip rationale.`));
+    messages.push(message("warning", "weak-slice-plan-review", activeSlice.path, `Active slice is${modeText} but Plan Review is missing, pending, or lacks a concrete review outcome. Record read-only review subagent findings and the main-agent assessment.`));
   }
 
   return messages;
@@ -2500,6 +2641,7 @@ export function validateAutoStrike(options = {}) {
   messages.push(...completedSliceEvidenceMessages(state));
   messages.push(...prematureNextSliceActivationMessages(state));
   messages.push(...staleFeatureCheckpointMessages(state));
+  messages.push(...completedCheckEvidenceContradictionMessages(state));
 
   const explicitSlicePrepMode = index.currentModeExplicit && index.currentMode && MODES_EXPECTING_SLICE_PREP.has(index.currentMode);
   const implementationEvidenceExists = state.evidence.reviewScope.changedPaths.length > 0 ||
@@ -2524,8 +2666,8 @@ export function validateAutoStrike(options = {}) {
       messages.push(message("warning", "missing-review-changed-evidence", state.evidence.reviewScope.locations[0] ?? WORKSPACE_ROOT, "Review context has no active Changed list, so reviewer packets may miss implementation files."));
     }
     messages.push(...changedEvidenceDriftMessages(state));
-    if (state.evidence.reviewScope.verifiedItems.length === 0) {
-      messages.push(message("warning", "missing-review-verified-evidence", state.evidence.reviewScope.locations[0] ?? WORKSPACE_ROOT, "Review context has no active Verified list, so reviewer packets may miss verification evidence."));
+    if (!state.evidence.reviewScope.verifiedItems.some(hasPositiveVerificationEvidenceItem)) {
+      messages.push(message("warning", "missing-review-verified-evidence", state.evidence.reviewScope.locations[0] ?? WORKSPACE_ROOT, "Review context has no active positive Verified evidence, so reviewer packets may miss checks that actually ran."));
     }
     if (state.evidence.reviewScope.changedPaths.length > 0 && state.evidence.reviewScope.verifiedItems.length > 0 && state.evidence.reviewScope.reviewedItems.length === 0) {
       messages.push(message("warning", "missing-reviewed-lens-evidence", state.evidence.reviewScope.locations[0] ?? WORKSPACE_ROOT, "Review/readiness evidence has Changed and Verified lists but no Reviewed list, so it is unclear which review lenses were applied."));
@@ -2536,8 +2678,10 @@ export function validateAutoStrike(options = {}) {
     if (plan.surfaces.ui.length > 0 && !hasUiReviewCoverage(state.evidence.reviewScope)) {
       messages.push(message("warning", "missing-ui-browser-review-evidence", state.evidence.reviewScope.locations[0] ?? WORKSPACE_ROOT, "UI/browser/user-visible files changed but active evidence has no browser or user-flow check evidence, nor a blocked-browser rationale showing host/manual browser options checked, blocker, replacement evidence, and residual risk."));
     }
-    if (needsFreshReviewAgentEvidence(state.evidence.reviewScope) && !hasFreshReviewAgentEvidence(state.evidence.reviewScope)) {
-      messages.push(message("warning", "missing-fresh-review-agent-evidence", state.evidence.reviewScope.locations[0] ?? WORKSPACE_ROOT, "Completed meaningful slice review should show a fresh read-only review agent/fresh-context review, or an explicit rationale that review agents were unavailable."));
+    const activeSliceClosed = state.activeSlice.path && state.activeSlice.exists &&
+      sliceHasCompletedCloseout(state.repoRoot, state.activeSlice.path);
+    if (needsReviewSubagentEvidence(state.evidence.reviewScope, { explicitReviewMode, activeSliceClosed }) && !hasReviewSubagentEvidence(state.evidence.reviewScope)) {
+      messages.push(message("error", "missing-review-subagent-evidence", state.evidence.reviewScope.locations[0] ?? WORKSPACE_ROOT, "You MUST run a read-only review subagent. A main-agent self-review is never sufficient on its own. Return to review mode for this slice before continuing."));
     }
   }
 
@@ -2725,7 +2869,7 @@ function hasSkippedLensRationale(reviewScope, lens) {
 
 function requiredReviewLensMessages(state, plan = recommendedReviewPlan(state)) {
   const reviewScope = state.evidence.reviewScope;
-  if (reviewScope.changedPaths.length === 0 || reviewScope.verifiedItems.length === 0) return [];
+  if (reviewScope.changedPaths.length === 0 || !reviewScope.verifiedItems.some(hasPositiveVerificationEvidenceItem)) return [];
 
   const messages = [];
   const messagePath = reviewScope.locations[0] ?? WORKSPACE_ROOT;
@@ -2760,8 +2904,8 @@ function hasBlockedBrowserFallback(item) {
 }
 
 function hasUiReviewCoverage(reviewScope) {
-  return reviewScope.verifiedItems.some(hasBrowserReviewEvidenceItem) ||
-    reviewScope.reviewedItems.some(hasBrowserReviewEvidenceItem) ||
+  return reviewScope.verifiedItems.some(positiveBrowserEvidenceItem) ||
+    reviewScope.reviewedItems.some(positiveBrowserEvidenceItem) ||
     reviewScope.skippedItems.some(hasBlockedBrowserFallback);
 }
 
@@ -2805,7 +2949,7 @@ function reviewedItemsLookComplete(reviewedItems) {
 function sliceEvidenceLooksComplete(reviewScope) {
   return reviewScope.scope === "active-slice" &&
     reviewScope.changedPaths.length > 0 &&
-    reviewScope.verifiedItems.length > 0 &&
+    reviewScope.verifiedItems.some(hasPositiveVerificationEvidenceItem) &&
     reviewedItemsLookComplete(reviewScope.reviewedItems);
 }
 
@@ -2849,18 +2993,19 @@ function sliceCloseoutSummaryMessages(state) {
   ];
 }
 
-function hasFreshReviewAgentEvidence(reviewScope) {
-  const reviewText = [
-    ...reviewScope.reviewedItems,
-    ...reviewScope.skippedItems,
-  ].join("\n");
-  return /\b(subagent|sub-agent|review agent|fresh[- ]context|fresh eyes|fresh reviewer|independent reviewer|read-only reviewer|read-only review)\b/i.test(reviewText);
+function hasReviewSubagentEvidence(reviewScope) {
+  return reviewScope.reviewedItems.some((item) =>
+    /\bread[- ]only\b/i.test(item) &&
+    /\breview sub-?agent\b/i.test(item) &&
+    reviewItemHasConcreteOutcome(item) &&
+    !/\b(skip|skipped|unavailable|not available|cannot|can't|could not|unable|main[- ]agent self[- ]review|main agent review|self[- ]review by main agent|replacement evidence)\b/i.test(item)
+  );
 }
 
-function needsFreshReviewAgentEvidence(reviewScope) {
+function needsReviewSubagentEvidence(reviewScope, options = {}) {
   return reviewScope.changedPaths.some(isImplementationPath) &&
-    reviewScope.verifiedItems.length > 0 &&
-    reviewScope.reviewedItems.length > 0;
+    reviewScope.verifiedItems.some(hasPositiveVerificationEvidenceItem) &&
+    (options.explicitReviewMode || options.activeSliceClosed || reviewScope.reviewedItems.length > 0);
 }
 
 function resolveLens(lens) {
@@ -2879,10 +3024,10 @@ export function reviewContext(options = {}) {
     lens,
     title: LENSES[lens].title,
     instructions: [
-      "You are a read-only review agent. Return findings to the main agent for synthesis and evaluation.",
+      "You are a read-only review subagent. Return findings to the main agent for synthesis and evaluation.",
       "Do not edit files, fix issues, change docs, change package files, run formatters that write files, commit, change scope, or present conclusions directly to the user.",
       "Read the source paths before judging when they are available.",
-      "For UI, browser behavior, auth/session, routing, forms, responsive layout, or user-visible state, perform or request browser/user-flow checks and report what was actually verified. A repo missing Playwright or another browser package is not, by itself, a browser-check blocker.",
+      "For UI/user-flow slices, verify in a browser when an approved browser path exists; curl, static HTML, and code review are not browser verification.",
     ],
     focus: LENSES[lens].focus,
     sourcePaths: reviewSourcePathGroups(validation),
@@ -3181,13 +3326,13 @@ export function runCli(argv = process.argv.slice(2)) {
   if (command === "review-plan") {
     const result = reviewPlan(options);
     printResult(options, result, renderReviewPlanMarkdown);
-    return result.state.summary.errors > 0 ? 1 : 0;
+    return 0;
   }
 
   if (command === "review-context") {
     const result = reviewContext(options);
     printResult(options, result, renderReviewContextMarkdown);
-    return result.state.summary.errors > 0 ? 1 : 0;
+    return 0;
   }
 
   throw new Error(`Unknown command: ${command}`);
