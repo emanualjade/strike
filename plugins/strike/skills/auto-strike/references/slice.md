@@ -63,6 +63,8 @@ Break a slice down when it has more than 5 likely files, more than 3 acceptance
 criteria, a title that hides multiple tasks (`and`, `full`, `complete`, `MVP`,
 `setup frontend/backend`), multiple independent subsystems, or repo setup plus
 package decisions plus frontend/backend product behavior.
+Do not label a slice `M` while accepting `L/XL` signals; split it or record why
+the larger blast radius is still the smallest safe move.
 
 Non-vertical slices are allowed only when they reduce risk or unlock near-term
 vertical behavior. Keep them XS/S unless clearly justified, explain why a

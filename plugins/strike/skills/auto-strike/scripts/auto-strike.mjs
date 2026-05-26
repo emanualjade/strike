@@ -391,12 +391,19 @@ function isNoneItem(value) {
   return /^none\.?$/i.test(String(value ?? "").trim());
 }
 
-function parseLabeledItem(items, label) {
+function parseLabeledItems(items, label) {
   const pattern = new RegExp(`^${escapeRegExp(label)}\\s*:\\s*(.+)$`, "i");
-  const item = items.find((value) => pattern.test(value));
-  if (!item) return null;
-  const match = item.match(pattern);
-  return stripMarkdownShell(match?.[1] ?? "");
+  return items
+    .map((value) => value.match(pattern))
+    .filter(Boolean)
+    .map((match) => stripMarkdownShell(match?.[1] ?? ""))
+    .filter(Boolean);
+}
+
+function parseLabeledItem(items, label) {
+  const values = parseLabeledItems(items, label);
+  const useful = values.map(usefulValue).filter(Boolean);
+  return useful.at(-1) ?? values.at(-1) ?? null;
 }
 
 function parseActiveSlice(items) {
@@ -421,6 +428,8 @@ function usefulValue(value) {
 function parseActiveWork(indexText) {
   const text = extractSection(indexText, "Active Work");
   const items = markdownListItems(text);
+  const duplicateLabels = ["Initiative", "Feature", "Doc", "Slice", "Active slice", "Current slice", "Current mode", "Mode", "State", "Next", "Blocked by"]
+    .filter((label) => parseLabeledItems(items, label).length > 1);
   const initiativeRaw = usefulValue(parseLabeledItem(items, "Initiative"));
   const featureRaw = usefulValue(parseLabeledItem(items, "Feature"));
   const docRaw = usefulValue(parseLabeledItem(items, "Doc"));
@@ -443,6 +452,7 @@ function parseActiveWork(indexText) {
     state,
     next,
     blockedBy,
+    duplicateLabels,
   };
 }
 
@@ -483,6 +493,7 @@ function parseIndex(indexText) {
         state: null,
         next: null,
         blockedBy: null,
+        duplicateLabels: [],
       },
       nextBestAction: null,
       keyDocs: [],
@@ -578,23 +589,47 @@ function normalizeLedgerStatus(value) {
   return text;
 }
 
-function parsePhaseLedgerRows(sectionText) {
+function phaseLedgerRowRank(row) {
+  if (!row?.status || row.status === "pending") return 0;
+  if (["blocked", "paused"].includes(row.status)) return 1;
+  if (row.status === "in-progress" || PHASE_LEDGER_COMPLETE_STATUSES.has(row.status)) return 2;
+  return 1;
+}
+
+function choosePhaseLedgerRow(previous, next) {
+  if (!previous) return next;
+  const previousRank = phaseLedgerRowRank(previous);
+  const nextRank = phaseLedgerRowRank(next);
+  if (nextRank > previousRank) return next;
+  if (nextRank < previousRank) return previous;
+  return next;
+}
+
+function parsePhaseLedger(sectionText) {
   const rows = new Map();
+  const occurrences = new Map();
   for (const line of normalizeText(sectionText).split("\n")) {
     const cells = parseTableCells(line);
     if (!cells) continue;
     const phase = normalizeLedgerPhase(cells[0]);
     if (!phase || !PHASE_LEDGER_ORDER.includes(phase)) continue;
-    rows.set(phase, {
+    const row = {
       phase,
       statusRaw: cells[1] ?? "",
       status: normalizeLedgerStatus(cells[1] ?? ""),
       artifact: cells[2] ?? "",
       reason: cells.slice(3).join(" | "),
       raw: line.trim(),
-    });
+    };
+    rows.set(phase, choosePhaseLedgerRow(rows.get(phase), row));
+    occurrences.set(phase, [...(occurrences.get(phase) ?? []), row]);
   }
-  return rows;
+  const duplicates = Object.fromEntries(
+    [...occurrences.entries()]
+      .filter(([, phaseRows]) => phaseRows.length > 1)
+      .map(([phase, phaseRows]) => [phase, phaseRows.map((row) => row.raw)]),
+  );
+  return { rows, duplicates };
 }
 
 function findPhaseLedger(repoRoot, indexText, markdownFiles, activeInitiative) {
@@ -616,10 +651,12 @@ function findPhaseLedger(repoRoot, indexText, markdownFiles, activeInitiative) {
     if (!text) continue;
     const section = extractSection(text, "Phase Ledger");
     if (!sectionHasSubstance(section)) continue;
+    const phaseLedger = parsePhaseLedger(section);
     return {
       present: true,
       path: candidate,
-      rows: Object.fromEntries(parsePhaseLedgerRows(section)),
+      rows: Object.fromEntries(phaseLedger.rows),
+      duplicates: phaseLedger.duplicates,
     };
   }
 
@@ -627,6 +664,7 @@ function findPhaseLedger(repoRoot, indexText, markdownFiles, activeInitiative) {
     present: false,
     path: activeInitiative.ideaPath ?? activeInitiative.path ?? `${WORKSPACE_ROOT}/index.md`,
     rows: {},
+    duplicates: {},
   };
 }
 
@@ -984,6 +1022,40 @@ function activeFeatureSliceDocs(activeFeature) {
 
 function activeFeatureSliceIndexPath(activeFeature) {
   return activeFeature.path ? `${activeFeature.path}/slices/index.md` : null;
+}
+
+function featureStateFromPath(repoRoot, featurePath, raw = featurePath) {
+  const normalized = normalizeEvidencePath(featurePath);
+  const absolutePath = path.join(repoRoot, normalized);
+  if (!isFeaturePath(normalized) || !inspectPath(absolutePath)?.isDirectory()) return null;
+  const specPath = path.join(absolutePath, "feature-spec.md");
+  const slicesPath = path.join(absolutePath, "slices");
+  const readinessPath = path.join(absolutePath, "readiness.md");
+  const sliceFiles = inspectPath(slicesPath)?.isDirectory()
+    ? fs.readdirSync(slicesPath, { withFileTypes: true })
+      .filter((entry) => entry.isFile() && entry.name.endsWith(".md"))
+      .map((entry) => posix(path.join(normalized, "slices", entry.name)))
+      .sort()
+    : [];
+  return {
+    raw,
+    path: normalized,
+    inferredPath: normalized,
+    exists: true,
+    specPath: displayPath(specPath, repoRoot),
+    specExists: Boolean(inspectPath(specPath)?.isFile()),
+    slicesPath: displayPath(slicesPath, repoRoot),
+    sliceFiles,
+    readinessPath: displayPath(readinessPath, repoRoot),
+    readinessExists: Boolean(inspectPath(readinessPath)?.isFile()),
+  };
+}
+
+function inferredFeatureFromActiveSlice(repoRoot, activeSlice) {
+  if (!activeSlice.path) return null;
+  const normalized = normalizeEvidencePath(activeSlice.path);
+  const match = normalized.match(new RegExp(`^(${escapeRegExp(WORKSPACE_ROOT)}/initiatives/[^/]+/features/[^/]+)/slices/slice-\\d+[^/]*\\.md$`, "i"));
+  return match ? featureStateFromPath(repoRoot, match[1]) : null;
 }
 
 function selectReviewEvidenceLocations(evidenceLocations, activeInitiative, activeFeature, activeSlice) {
@@ -1387,11 +1459,15 @@ function hasSliceCheckpoint(sliceIndexText) {
 
 function slicePlanningMessages(state) {
   const messages = [];
-  if (!state.activeFeature.exists) return messages;
   if (!state.index.currentMode || !["slice", "build", "review", "readiness"].includes(state.index.currentMode)) return messages;
 
-  const sliceDocs = activeFeatureSliceDocs(state.activeFeature);
-  const sliceIndexPath = activeFeatureSliceIndexPath(state.activeFeature);
+  const activeFeature = state.activeFeature.exists
+    ? state.activeFeature
+    : inferredFeatureFromActiveSlice(state.repoRoot, state.activeSlice);
+  if (!activeFeature?.exists) return messages;
+
+  const sliceDocs = activeFeatureSliceDocs(activeFeature);
+  const sliceIndexPath = activeFeatureSliceIndexPath(activeFeature);
   const sliceIndexText = sliceIndexPath ? readFileIfPresent(path.join(state.repoRoot, sliceIndexPath)) : null;
 
   if (sliceDocs.length > 1 && !hasSliceMap(sliceIndexText ?? "")) {
@@ -1473,6 +1549,11 @@ function activeWorkMessages(state) {
   const messages = [];
   if (!state.index.present) return messages;
 
+  const duplicateLabels = state.index.activeWork?.duplicateLabels ?? [];
+  if (duplicateLabels.length > 0) {
+    messages.push(message("warning", "duplicate-active-work-field", `${WORKSPACE_ROOT}/index.md`, `Active Work has duplicate field lines (${duplicateLabels.join(", ")}). Replace old values in place so resume state is unambiguous.`));
+  }
+
   if (!activeWorkPointerIsValid(state.index)) {
     messages.push(message("warning", "missing-active-work", `${WORKSPACE_ROOT}/index.md`, "Index should include Active Work with an initiative, active doc, and next action so fresh context can resume without reading every phase."));
   }
@@ -1527,6 +1608,12 @@ function phaseLedgerMessages(state) {
     ];
   }
 
+  const messages = [];
+  const duplicatePhases = Object.keys(state.phaseLedger.duplicates ?? {});
+  if (duplicatePhases.length > 0) {
+    messages.push(message("warning", "duplicate-phase-ledger-row", state.phaseLedger.path, `Phase Ledger has duplicate phase rows (${duplicatePhases.join(", ")}). Keep one row per phase and update it in place so phase state is not ambiguous.`));
+  }
+
   const weak = [];
   const currentPhase = requiredPhases.at(-1);
   for (const phase of requiredPhases) {
@@ -1547,10 +1634,10 @@ function phaseLedgerMessages(state) {
     }
   }
 
-  if (weak.length === 0) return [];
-  return [
-    message("warning", "weak-phase-ledger", state.phaseLedger.path, `Phase Ledger should show completed or intentionally compressed/skipped prior phases with artifact and reason. Weak entries: ${weak.slice(0, 8).join("; ")}${weak.length > 8 ? "; ..." : ""}.`),
-  ];
+  if (weak.length > 0) {
+    messages.push(message("warning", "weak-phase-ledger", state.phaseLedger.path, `Phase Ledger should show completed or intentionally compressed/skipped prior phases with artifact and reason. Weak entries: ${weak.slice(0, 8).join("; ")}${weak.length > 8 ? "; ..." : ""}.`));
+  }
+  return messages;
 }
 
 function hasImplementationEvidence(state) {

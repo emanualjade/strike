@@ -24,6 +24,12 @@ generated lockfiles unless the user approves or repo instructions clearly allow
 it. If approval is needed, explain the package, why it is needed, and the
 alternative.
 
+Respect local package-manager constraints for all package commands, including
+read-only metadata checks. If the repo says pnpm-only, use `pnpm view` or
+official docs/registry pages for package age and version research; do not run
+`npm`, `npx`, `yarn`, or `bunx` as a shortcut. If the allowed tool cannot answer
+the question, record the blocker and ask instead of switching tools.
+
 For greenfield work, do not silently turn setup into an architecture decision.
 Use existing repo signals first. If there are no useful signals, recommend a
 small default stack or no-install prototype path, ask before dependency

@@ -2,6 +2,17 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.15 - 2026-05-25
+
+- Tightened Auto Strike dependency guidance so pnpm-only repos must use
+  `pnpm view` or official docs/registry pages even for read-only package
+  metadata checks; agents should not use `npm` or `npx` as a shortcut.
+- Added helper warnings for duplicate Active Work fields and duplicate Phase
+  Ledger rows, while resolving the most useful non-placeholder state so later
+  checks can still run.
+- Improved slice validation so oversized slice warnings still fire when active
+  state is dirty, and clarified that `M` slices should not hide `L/XL` signals.
+
 ## 0.8.14 - 2026-05-25
 
 - Tightened Auto Strike phase boundaries so spec mode can write specs and a

@@ -1850,6 +1850,155 @@ Build the whole auth MVP.
   assert.ok(body.messages.some((item) => item.code === "weak-non-vertical-slice-justification" && item.severity === "warning"));
 }
 
+function testValidateWarnsForDuplicateActiveWorkAndStillChecksSlices() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: None
+- Feature: auto-strike/initiatives/main/features/tool-library
+- Doc: auto-strike/initiatives/main/features/tool-library/slices/index.md
+- Slice: None
+- State: Slice map written.
+- Next: Build slice 0.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/language.md", "# Language\n\n## Tool Library\n- Tool means borrowable item.\n");
+  write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Status\n- Decided.\n");
+  write(repo, "auto-strike/initiatives/main/idea.md", `# Main Idea
+
+## Phase Ledger
+| Phase | Status | Artifact | Reason |
+| --- | --- | --- | --- |
+| Brainstorm | done | \`idea.md\` | First useful outcome and constraints are recorded. |
+| Grill | done | \`grill.md\` | Stack, persistence, permissions, and verification are decided. |
+| Spec | done | \`spec.md\`, \`features/tool-library/feature-spec.md\` | Feature is explicit and sliceable. |
+| Slice | done | \`features/tool-library/slices/index.md\` | Slice map is complete. |
+| Build | pending |  |  |
+| Review | pending |  |  |
+| Validate | pending |  |  |
+`);
+  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/index.md", `# Slices
+
+## Slice Map
+| Slice | Size | Depends On | Unblocks | Risk | Verification |
+| --- | --- | --- | --- | --- | --- |
+| 0. Scaffold + domain | M | None | Persona shell | High | Typecheck |
+`);
+  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-0-scaffold.md", `# Slice 0: Scaffold + domain core
+
+## Size
+M
+
+## Acceptance Criteria
+- App scaffold exists.
+- Domain types exist.
+- Store seeds.
+- Dev server boots.
+
+## Depends On
+- None.
+
+## Likely Surfaces
+- \`package.json\`
+- \`apps/tool/package.json\`
+- \`apps/tool/app/page.tsx\`
+- \`apps/tool/src/domain/types.ts\`
+- \`apps/tool/src/storage/store.ts\`
+- \`apps/tool/src/storage/seed.ts\`
+
+## Execution Tasks
+- [ ] Research package docs.
+- [ ] Write plan.
+- [ ] Review plan.
+- [ ] Verify typecheck.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "duplicate active work should warn but still validate slices");
+  const body = json(result);
+  assert.equal(body.activeFeature.path, "auto-strike/initiatives/main/features/tool-library");
+  assert.ok(body.messages.some((item) => item.code === "duplicate-active-work-field" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "too-many-slice-acceptance-criteria" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "too-many-slice-surfaces" && item.severity === "warning"));
+  assert.ok(!body.messages.some((item) => item.code === "missing-active-feature"));
+}
+
+function testValidateWarnsForDuplicatePhaseLedgerRowsWithoutFalseSpecSliceBoundary() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/tool-library
+- Doc: auto-strike/initiatives/main/features/tool-library/slices/index.md
+- Slice: auto-strike/initiatives/main/features/tool-library/slices/slice-0-scaffold.md
+- State: Slice map written.
+- Next: Build slice 0.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/language.md", "# Language\n\n## Tool Library\n- Tool means borrowable item.\n");
+  write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Status\n- Decided.\n");
+  write(repo, "auto-strike/initiatives/main/idea.md", `# Main Idea
+
+## Phase Ledger
+| Phase | Status | Artifact | Reason |
+| --- | --- | --- | --- |
+| Brainstorm | done | \`idea.md\` | First useful outcome and constraints are recorded. |
+| Grill | done | \`grill.md\` | Stack, persistence, permissions, and verification are decided. |
+| Spec | done | \`spec.md\`, \`features/tool-library/feature-spec.md\` | Feature is explicit and sliceable. |
+| Slice | done | \`features/tool-library/slices/index.md\` | Slice map is complete. |
+| Build | in progress | \`features/tool-library/slices/slice-0-scaffold.md\` | Slice 0 is active. |
+| Spec | pending |  |  |
+| Slice | pending |  |  |
+| Build | pending |  |  |
+| Review | pending |  |  |
+| Validate | pending |  |  |
+`);
+  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/index.md", `# Slices
+
+## Slice Map
+| Slice | Size | Depends On | Unblocks | Risk | Verification |
+| --- | --- | --- | --- | --- | --- |
+| 0. Scaffold | S | None | Persona shell | Medium | Typecheck |
+`);
+  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-0-scaffold.md", `# Slice 0: Scaffold
+
+## Size
+S
+
+## Acceptance Criteria
+- App starts.
+
+## Depends On
+- None.
+
+## Likely Surfaces
+- \`apps/tool/app/page.tsx\`
+
+## Execution Tasks
+- [ ] Research local pattern.
+- [ ] Write plan.
+- [ ] Review plan.
+- [ ] Verify typecheck.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "duplicate phase rows should warn without false spec boundary warning");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "duplicate-phase-ledger-row" && item.severity === "warning"));
+  assert.ok(!body.messages.some((item) => item.code === "spec-phase-created-slice-artifacts"));
+}
+
 function testReviewPlanRecommendsUiRegressionForUiChanges() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
@@ -2812,6 +2961,8 @@ testValidateWarnsForPhaseCompletedAfterQuestionToolFailure();
 testValidateAcceptsSliceMapDependenciesAndCheckpoint();
 testValidateWarnsForMissingSliceMapDependenciesAndCheckpoint();
 testValidateWarnsForOversizedBatchedAndWeakNonVerticalSlice();
+testValidateWarnsForDuplicateActiveWorkAndStillChecksSlices();
+testValidateWarnsForDuplicatePhaseLedgerRowsWithoutFalseSpecSliceBoundary();
 testReviewPlanRecommendsUiRegressionForUiChanges();
 testUiReviewEvidenceSuppressesUiReviewWarning();
 testUiRegressionReviewAloneDoesNotSuppressBrowserWarning();

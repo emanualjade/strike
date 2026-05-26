@@ -116,7 +116,9 @@ Each initiative keeps a small `## Phase Ledger`, usually in its `idea.md`. This
 is not ceremony; it makes phase compression visible so brainstorm, grill, spec,
 slice, build, review, and validation are not silently skipped.
 
-Update it when entering or leaving a phase:
+Update it when entering or leaving a phase. Keep one row per phase and replace
+the row in place; do not append duplicate `Spec`, `Slice`, or `Build` rows when
+state changes.
 
 ```md
 ## Phase Ledger
@@ -204,7 +206,8 @@ Keep it short and scannable:
 Refresh `index.md` whenever the active feature, active slice, mode, blocker, or
 next action changes. As soon as a feature folder or slice exists, point to it.
 Do not leave `Feature: None`, `Slice: None`, stale open decisions, or "no code
-written" after build evidence exists.
+written" after build evidence exists. Replace old Active Work values in place;
+do not append a second `Feature`, `Doc`, `Slice`, `State`, or `Next` line.
 
 Every concrete `auto-strike/.../*.md` path referenced in Auto Strike docs should
 exist. If a future doc is not needed yet, say that in prose without linking to a
