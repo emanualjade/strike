@@ -137,6 +137,12 @@ what changed, what is still open, and why moving modes is the right next step.
 Do not claim a mode is complete after a shallow pass that did not produce its
 intended result.
 
+Do not blend phase work "in one pass." A phase may prepare a concise handoff for
+the next phase, but it must record its own exit evidence before the next phase's
+artifacts are created. In particular, spec mode writes initiative specs, feature
+specs, and a brief `Slice Handoff`; slice mode writes `slices/index.md` and
+`slices/slice-*.md`.
+
 For initiative work that reaches slice, build, review, or validation, keep the
 initiative `Phase Ledger` from `workspace.md` current. Earlier phases may be
 compressed or skipped only with explicit user opt-out, prior-artifact evidence,
@@ -146,7 +152,7 @@ or a clear not-applicable reason.
 | --- | --- | --- |
 | brainstorm | `brainstorm.md` | First useful outcome, target moment, constraints, and first-version non-goals are clear. |
 | grill | `grill.md` | Consequential product, domain, workflow, permission, data, integration, and success-check decisions are clear. |
-| spec | `spec.md`, `code-quality.md` | Initiative overview and feature specs are clear enough to slice without guessing. |
+| spec | `spec.md`, `code-quality.md` | Initiative overview and feature specs are clear enough to slice without guessing; no slice map or slice files are created yet. |
 | slice | `slice.md`, `code-quality.md`, `verification.md` | Initiative feature split is explicit; active feature slices have size, dependencies, acceptance criteria, execution tasks, surfaces, checks, and checkpoints when needed. |
 | build | `build.md`, `code-quality.md`, `verification.md` | One slice is implemented and evidence is recorded. |
 | review | `review.md`, `code-quality.md`, `verification.md` | Findings are returned to the main agent, evaluated, fixed or accepted, and recorded. |

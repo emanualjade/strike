@@ -1745,6 +1745,66 @@ function phaseBypassMessages(state) {
   return messages;
 }
 
+function activeInitiativeSliceDocs(state) {
+  if (!state.activeInitiative.path) return [];
+  const prefix = `${state.activeInitiative.path}/features/`;
+  return state.docs
+    .filter((sourcePath) => sourcePath.startsWith(prefix) && /\/slices\/.+\.md$/i.test(sourcePath))
+    .sort();
+}
+
+function specPhaseIsComplete(state) {
+  const row = state.phaseLedger.rows?.spec;
+  return Boolean(row?.status && PHASE_LEDGER_COMPLETE_STATUSES.has(row.status));
+}
+
+function detailedSlicePlanningInText(text) {
+  const normalized = normalizeText(text);
+  if (hasSection(normalized, "Slice Map")) return true;
+  if (/\|\s*Slice\s*\|\s*Size\s*\|\s*Depends On\s*\|/i.test(normalized)) return true;
+  if (/^#{1,3}\s+Slice\s+\d+\b/im.test(normalized) &&
+      (hasSection(normalized, "Acceptance Criteria") || hasSection(normalized, "Execution Tasks") || hasSection(normalized, "Likely Surfaces"))) {
+    return true;
+  }
+  const slicePlanningSections = [
+    "Size",
+    "Acceptance Criteria",
+    "Depends On",
+    "Likely Surfaces",
+    "Execution Tasks",
+    "Implementation Research",
+    "Plan Review",
+  ].filter((heading) => hasSection(normalized, heading)).length;
+  return /\bslice\b/i.test(normalized) && slicePlanningSections >= 3;
+}
+
+function specSliceBoundaryMessages(state) {
+  const messages = [];
+  if (!state.activeInitiative.exists) return messages;
+
+  const inSpecMode = state.index.currentMode === "spec";
+  const specComplete = specPhaseIsComplete(state);
+  const sliceDocs = activeInitiativeSliceDocs(state);
+  if ((inSpecMode || !specComplete) && sliceDocs.length > 0) {
+    messages.push(message("warning", "spec-phase-created-slice-artifacts", sliceDocs[0], "Spec phase should not create Slice Maps or slice files. Finish spec review and exit evidence first, then intentionally enter slice mode before writing slices."));
+  }
+
+  if (inSpecMode || !specComplete) {
+    const specDocs = state.docs.filter((sourcePath) => {
+      if (!state.activeInitiative.path || !sourcePath.startsWith(`${state.activeInitiative.path}/`)) return false;
+      return sourcePath.endsWith("/spec.md") || sourcePath.endsWith("/feature-spec.md");
+    });
+    for (const sourcePath of specDocs) {
+      const text = readFileIfPresent(path.join(state.repoRoot, sourcePath));
+      if (text && detailedSlicePlanningInText(text)) {
+        messages.push(message("warning", "detailed-slice-planning-in-spec", sourcePath, "Spec may include a concise Slice Handoff, but detailed Slice Maps, slice acceptance criteria, or slice execution tasks belong in slice mode after spec exit evidence."));
+      }
+    }
+  }
+
+  return messages;
+}
+
 function hasReachedSpecOrLater(state) {
   const mode = state.index.currentMode;
   if (mode && MODES_REQUIRING_GRILL_CHECKPOINT.has(mode)) return true;
@@ -1987,6 +2047,7 @@ export function validateAutoStrike(options = {}) {
   messages.push(...currentTruthMessages(state));
   messages.push(...phaseLedgerMessages(state));
   messages.push(...phaseBypassMessages(state));
+  messages.push(...specSliceBoundaryMessages(state));
   messages.push(...grillDecisionDepthMessages(state));
   messages.push(...grillCheckpointMessages(state));
   messages.push(...referencedAutoStrikeDocMessages(state));

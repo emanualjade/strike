@@ -2,6 +2,14 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.14 - 2026-05-25
+
+- Tightened Auto Strike phase boundaries so spec mode can write specs and a
+  concise Slice Handoff, but not create Slice Maps or slice files before spec
+  exit evidence.
+- Added helper warnings when detailed slice planning appears inside spec docs,
+  or when slice artifacts exist while spec is still in progress.
+
 ## 0.8.13 - 2026-05-25
 
 - Clarified Auto Strike invocation-reference resolution so agents use the

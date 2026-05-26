@@ -10,6 +10,10 @@ feature folder inside the active initiative.
 Also check the initiative Phase Ledger. If brainstorm, grill, or spec were
 compressed, the ledger must say why and point to the artifact that contains the
 current truth.
+Do not begin slice artifacts while spec is still in progress. The spec may leave
+a concise `Slice Handoff`, but `slices/index.md`, Slice Maps, and
+`slices/slice-*.md` belong to this slice mode after spec exit evidence is
+recorded.
 
 Use one feature folder when the work has one primary user/system outcome, one
 readiness target, and slices that mostly depend on each other. Split the

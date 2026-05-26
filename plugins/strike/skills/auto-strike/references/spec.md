@@ -21,6 +21,13 @@ Use one feature folder when the initiative has one buildable capability. Split
 into multiple feature folders when the initiative combines independent outcomes,
 domains, roles, workflows, readiness targets, or releaseable capabilities.
 
+Spec mode stops at specs plus handoff. It may name the active feature, likely
+slice themes, high-risk boundaries, and verification expectations in `Slice
+Handoff`, but it must not create `slices/index.md`, `slices/slice-*.md`, a
+detailed Slice Map, slice acceptance criteria, or slice execution tasks. When
+spec is ready, record `Spec Review` and `Exit Evidence`, update the Phase
+Ledger, then intentionally enter slice mode and load `slice.md`.
+
 Useful initiative spec shape:
 
 ```md
@@ -91,6 +98,8 @@ During active spec work, keep the process sections concise:
 - [ ] Define repo-verifiable and live/human success checks.
 - [ ] Record risky surfaces, constraints, assumptions, and open questions.
 - [ ] Review the spec for sliceability and fix gaps.
+- [ ] Write only a concise Slice Handoff; leave Slice Map and slice files for
+      slice mode.
 
 ## Spec Review
 - [pass/blocker/warning] - [scope, rules, checks, risks, or missing decisions]
