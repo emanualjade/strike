@@ -16,9 +16,11 @@ For each slice:
 4. Implement the smallest complete behavior inside the slice.
 5. Use `verification.md` to run the checks from the spec/slice plus any focused
    checks the code makes necessary.
-6. Record build evidence in the slice file or a nearby build note: files
-   changed, checks run, results, skipped checks with reasons, important
-   implementation choices, rollback notes, and review focus.
+6. Record build evidence in the active slice's `## Evidence` section using the
+   exact labels `Changed:`, `Verified:`, `Reviewed:`, `Skipped:`, and
+   `Review Findings:`. Keep it compact: files changed, checks run, skipped
+   checks with reasons, important implementation choices, rollback notes, and
+   review focus.
 7. Keep `index.md`, the Phase Ledger, and slice checkboxes current as the build
    advances. Once code exists, do not leave Active Work pointing at brainstorm,
    stale open decisions, no active feature/slice, or "no code written".
@@ -30,12 +32,15 @@ For each slice:
 10. When the slice is complete, write `## Closeout Summary` in the slice and use
    it as the final user-facing receipt: built, validation, review,
    skipped/residual risk, docs, and next.
-11. After closeout, do not switch Active Work to the next slice, create the next
+11. Before claiming the slice done, run the helper's `validate` command when
+   available and fix or consciously record warnings about evidence, active work,
+   review, and slice boundaries.
+12. After closeout, do not switch Active Work to the next slice, create the next
    slice doc, or start the next slice's research/plan/build in the same work
    unit unless the user explicitly asked to keep going across slice boundaries.
    Keep the completed slice as the active slice, record the next natural slice
    in `Next`, and stop with the closeout receipt.
-12. Do not add features that were not asked for. Do not remove existing features
+13. Do not add features that were not asked for. Do not remove existing features
    unless asked.
 
 For local servers, avoid blocking the final response on a long-running command.

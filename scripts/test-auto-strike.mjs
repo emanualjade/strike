@@ -3652,7 +3652,145 @@ M
   assert.ok(body.messages.some((item) => item.code === "premature-next-slice-activation" && item.severity === "warning"));
 }
 
-function testValidateAcceptsNextSliceActivationAfterPrepStarts() {
+function testValidateWarnsForDocPathNextSliceWithProseSliceLabel() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/tool-library
+- Current mode: build
+- Doc: auto-strike/initiatives/main/features/tool-library/slices/slice-1-requests.md
+- Slice: Slice 1 (Requests)
+- State: Slice 0 implemented and verified. Build mode continues on Slice 1.
+- Next: Implement Slice 1.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-0-listings.md", `# Slice 0: Listings
+
+## Evidence
+
+Changed:
+- src/listings.mjs
+
+Verified:
+- node scripts/smoke.mjs - passed
+
+Reviewed:
+- functionality - passed
+- spec-coverage - passed
+- code-quality - passed
+
+## Closeout Summary
+Implemented Slice 0: Listings.
+
+Built:
+- Added listings.
+
+Validation passed:
+- node scripts/smoke.mjs
+
+Review:
+- Functionality/spec/code quality: passed.
+- Final re-review: no remaining blocking findings.
+
+Skipped / residual risk:
+- None.
+
+Docs:
+- auto-strike/initiatives/main/features/tool-library/slices/slice-0-listings.md
+
+Next:
+- Slice 1: Requests.
+`);
+  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-1-requests.md", `# Slice 1: Requests
+
+## Size
+M
+
+## Depends On
+- Slice 0: Listings
+
+## Execution Tasks
+- [x] Research request behavior.
+- [x] Write the plan.
+- [x] Review the plan.
+- [ ] Verify request behavior.
+
+## Implementation Research
+- Local precedent: \`src/listings.mjs\` keeps domain behavior isolated.
+
+## Plan
+- Add \`src/requests.mjs\` and verify with \`node scripts/smoke.mjs\`.
+
+## Plan Review
+- main-agent review - passed; surfaces and checks are named.
+`);
+  write(repo, "src/listings.mjs", "export function listings() {}\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "doc path should resolve active slice even when Slice label is prose");
+  const body = json(result);
+  assert.equal(body.activeSlice.path, "auto-strike/initiatives/main/features/tool-library/slices/slice-1-requests.md");
+  assert.ok(body.messages.some((item) => item.code === "premature-next-slice-activation" && item.severity === "warning"));
+}
+
+function testValidateWarnsForCompletedSliceCloseoutWithoutEvidence() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/tool-library
+- Current mode: build
+- Active slice: auto-strike/initiatives/main/features/tool-library/slices/slice-0-listings.md
+- Next: Close slice 0.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-0-listings.md", `# Slice 0: Listings
+
+## Closeout Summary
+Implemented Slice 0: Listings.
+
+Built:
+- Added listings.
+
+Validation passed:
+- node scripts/smoke.mjs
+
+Review:
+- Functionality/spec/code quality: passed.
+- Final re-review: no remaining blocking findings.
+
+Skipped / residual risk:
+- None.
+
+Docs:
+- auto-strike/initiatives/main/features/tool-library/slices/slice-0-listings.md
+
+Next:
+- Slice 1: Requests.
+`);
+  write(repo, "src/listings.mjs", "export function listings() {}\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "completed slice closeout without evidence should warn");
+  const body = json(result);
+  const warning = body.messages.find((item) => item.code === "completed-slice-missing-evidence");
+  assert.ok(warning);
+  assert.match(warning.message, /Changed/);
+  assert.match(warning.message, /Verified/);
+  assert.match(warning.message, /Reviewed/);
+}
+
+function testValidateAcceptsNextSliceActivationWhenUserExplicitlyContinued() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
@@ -3661,6 +3799,7 @@ function testValidateAcceptsNextSliceActivationAfterPrepStarts() {
 - Feature: auto-strike/initiatives/main/features/tool-library
 - Current mode: build
 - Active slice: auto-strike/initiatives/main/features/tool-library/slices/slice-1-requests.md
+- State: User explicitly asked to continue to the next slice after Slice 0 closeout.
 - Next: Build slice 1.
 
 ## Open Decisions
@@ -3730,7 +3869,7 @@ M
   write(repo, "src/listings.mjs", "export function listings() {}\n");
 
   const result = run(repo, ["validate"]);
-  assertStatus(result, 0, "next slice with execution prep should not warn as premature");
+  assertStatus(result, 0, "explicit user continuation should not warn as premature");
   const body = json(result);
   assert.ok(!body.messages.some((item) => item.code === "premature-next-slice-activation"));
 }
@@ -3902,7 +4041,9 @@ testValidateAcceptsMultiSliceFreshReviewAgentEvidence();
 testValidateWarnsWhenGitChangesMissingFromChangedEvidence();
 testValidateDoesNotWarnWhenGitChangeCoveredByCompletedSliceEvidence();
 testValidateWarnsForPrematureNextSliceActivation();
-testValidateAcceptsNextSliceActivationAfterPrepStarts();
+testValidateWarnsForDocPathNextSliceWithProseSliceLabel();
+testValidateWarnsForCompletedSliceCloseoutWithoutEvidence();
+testValidateAcceptsNextSliceActivationWhenUserExplicitlyContinued();
 testValidateWarnsForStaleChangedEvidencePath();
 testReviewPlanDetectsBrowserScriptUiChanges();
 testReviewContextRejectsUnknownLens();

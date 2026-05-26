@@ -159,6 +159,22 @@ Slice template:
 ## Watchouts
 [Risks, blast radius, rollback/recovery notes, accepted limits.]
 
+## Evidence
+Changed:
+- [files/surfaces]
+
+Verified:
+- [command/check/browser route/state] - [result]
+
+Reviewed:
+- [lens] - [pass / blocker / warning and short finding]
+
+Skipped:
+- [check or lens] - [reason, risk, replacement evidence]
+
+Review Findings:
+- [open blocker or "None"]
+
 ## Closeout Summary
 Implemented Slice [N]: [Name].
 
@@ -191,13 +207,14 @@ work packet: update checkboxes as prep, build, verification, and review complete
 instead of treating the slice as a static concept doc.
 
 After the Slice Map, slice docs, slice review, and slice exit evidence are
-recorded, keep `index.md` in `Current mode: slice`, point `Doc`/`Slice` at the
-active slice doc, and stop the current work unit with build as the next action.
-Do not mark build in progress or write slice execution prep until build mode
-actually starts. Do not move straight from creating slice artifacts into
-building slice 0 unless the user explicitly asked to skip the boundary. In
-durable goal mode, the next continuation can resume from `index.md` and the
-active slice doc.
+recorded, run the helper's `validate` command when available and address
+slicing warnings before exit. Keep `index.md` in `Current mode: slice`, point
+`Doc`/`Slice` at the active slice doc, and stop the current work unit with build
+as the next action. Do not mark build in progress or write slice execution prep
+until build mode actually starts. Do not move straight from creating slice
+artifacts into building slice 0 unless the user explicitly asked to skip the
+boundary. In durable goal mode, the next continuation can resume from
+`index.md` and the active slice doc.
 
 Before coding a meaningful slice, do a lightweight slice execution prep pass.
 This should usually be a short inline research/plan/review loop that keeps

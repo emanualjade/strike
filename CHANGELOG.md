@@ -2,6 +2,20 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.19 - 2026-05-25
+
+- Added an explicit slice `## Evidence` template so completed slices record
+  `Changed`, `Verified`, `Reviewed`, `Skipped`, and `Review Findings` before
+  their user-facing closeout receipt.
+- Tightened build and slice exit guidance so agents run helper validation and
+  address evidence, active-work, review, and boundary warnings before claiming
+  the phase or slice is done.
+- Improved helper active-slice resolution when `Doc:` points at a slice file
+  but `Slice:` is prose, and added warnings for closeout summaries without
+  evidence plus next-slice activation without explicit user continuation.
+- Reduced false-positive weak-planning checks when real product text uses words
+  like "placeholder" rather than placeholder-only content.
+
 ## 0.8.18 - 2026-05-25
 
 - Tightened Auto Strike slice closeout validation so next-slice skeletons after

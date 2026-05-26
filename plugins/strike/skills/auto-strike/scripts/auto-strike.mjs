@@ -524,8 +524,13 @@ function parseIndex(indexText) {
   const currentMode = currentModeRaw && !isPlaceholder(currentModeRaw)
     ? currentModeRaw.toLowerCase().split(/\s+/)[0].replace(/[^a-z-]/g, "")
     : modeFromActiveDoc(activeWork.docPath);
-  const activeSliceRaw = activeWork.slicePath ??
-    (activeWork.docPath && SLICE_DOC_PATTERN.test(activeWork.docPath) ? activeWork.docPath : null);
+  const docSlicePath = activeWork.docPath && SLICE_DOC_PATTERN.test(normalizeEvidencePath(activeWork.docPath))
+    ? activeWork.docPath
+    : null;
+  const slicePathLooksExplicit = activeWork.slicePath && isExplicitWorkspacePath(activeWork.slicePath);
+  const activeSliceRaw = docSlicePath && !slicePathLooksExplicit
+    ? docSlicePath
+    : activeWork.slicePath ?? docSlicePath;
 
   const keyDocs = markdownListItems(extractSection(indexText, "Key Docs"))
     .map((item) => ({
@@ -1447,9 +1452,18 @@ function sectionHasExplicitNone(sectionText) {
 
 function sectionHasWeakPlanningText(sectionText) {
   const text = normalizeText(sectionText);
-  return !text ||
-    isPlaceholder(stripInlineMarkdownReferences(text)) ||
-    /\b(todo|tbd|pending|not yet|not started|placeholder|fill in|unknown|unclear)\b/i.test(text);
+  if (!text || isPlaceholder(stripInlineMarkdownReferences(text))) return true;
+  return text
+    .split("\n")
+    .map((line) => stripInlineMarkdownReferences(line)
+      .replace(/^[-*]\s+/, "")
+      .replace(/^\[[ xX]\]\s+/, "")
+      .trim())
+    .filter(Boolean)
+    .some((line) => {
+      if (/^(todo|tbd|pending|not yet|not started|placeholder|unknown|unclear|fill in)\.?$/i.test(line)) return true;
+      return /\b(to be filled|fill this in|fill in later|placeholder only|placeholder text)\b/i.test(line);
+    });
 }
 
 function dependencySectionIsValid(sliceText) {
@@ -2179,13 +2193,13 @@ function sliceIndex(sourcePath) {
   return match ? Number.parseInt(match[1], 10) : null;
 }
 
-function sliceHasExecutionPrep(repoRoot, sourcePath) {
-  const text = readFileIfPresent(path.join(repoRoot, sourcePath));
-  if (!text) return false;
-  return ["Implementation Research", "Plan", "Plan Review"].some((heading) => {
-    const section = extractSection(text, heading);
-    return sectionHasSubstance(section) && !sectionHasWeakPlanningText(section);
-  });
+function activeWorkShowsExplicitSliceContinuation(state) {
+  const text = normalizeText([
+    state.index.activeWork?.state,
+    state.index.activeWork?.next,
+  ].filter(Boolean).join("\n"));
+  return /\b(user|human)\b.{0,80}\b(explicit(?:ly)?\s+)?(?:asked|said|approved|confirmed|told)\b.{0,80}\b(continue|proceed|go|keep going|next slice)\b/i.test(text) ||
+    /\bexplicit(?:ly)?\s+(?:continuing|continue|continued|proceed(?:ing)?|go(?:ing)?)\s+(?:across|to)\s+(?:the\s+)?next\s+slice\b/i.test(text);
 }
 
 function sliceHasCompletedCloseout(repoRoot, sourcePath) {
@@ -2198,7 +2212,7 @@ function prematureNextSliceActivationMessages(state) {
   if (!activePath || !SLICE_DOC_PATTERN.test(activePath)) return [];
   const activeIndex = sliceIndex(activePath);
   if (activeIndex === null || activeIndex === 0) return [];
-  if (sliceDocHasBuildEvidence(state.repoRoot, activePath) || sliceHasExecutionPrep(state.repoRoot, activePath)) return [];
+  if (sliceDocHasBuildEvidence(state.repoRoot, activePath) || activeWorkShowsExplicitSliceContinuation(state)) return [];
 
   const activeFeature = state.activeFeature.exists
     ? state.activeFeature
@@ -2212,8 +2226,26 @@ function prematureNextSliceActivationMessages(state) {
 
   if (priorCompleted.length === 0) return [];
   return [
-    message("warning", "premature-next-slice-activation", activePath, "Active Work points at a next-slice skeleton after a completed prior slice. Unless the user explicitly continued, keep the completed slice active and name the next slice only in Closeout Summary. If the user did continue, complete slice execution prep before claiming progress."),
+    message("warning", "premature-next-slice-activation", activePath, "Active Work points at a next slice after a completed prior slice, but there is no active-slice build evidence or recorded explicit user continuation. Keep the completed slice active and name the next slice only in Closeout Summary unless the user said to continue."),
   ];
+}
+
+function completedSliceEvidenceMessages(state) {
+  const messages = [];
+  for (const sourcePath of state.docs.filter((docPath) => SLICE_DOC_PATTERN.test(docPath))) {
+    const text = readFileIfPresent(path.join(state.repoRoot, sourcePath));
+    if (!text || !closeoutSummarySectionIsValid(text)) continue;
+    const changed = evidenceChangedPaths(state.repoRoot, [sourcePath]);
+    const verified = evidenceVerifiedItems(state.repoRoot, [sourcePath]);
+    const reviewed = evidenceReviewedItems(state.repoRoot, [sourcePath]);
+    const missing = [];
+    if (changed.length === 0) missing.push("Changed");
+    if (verified.length === 0) missing.push("Verified");
+    if (reviewed.length === 0) missing.push("Reviewed");
+    if (missing.length === 0) continue;
+    messages.push(message("warning", "completed-slice-missing-evidence", sourcePath, `Slice has a Closeout Summary but missing ${missing.join(", ")} evidence. Add a compact ## Evidence section before closeout so review packets and helper checks can scope the work.`));
+  }
+  return messages;
 }
 
 function checkpointSections(text) {
@@ -2435,6 +2467,7 @@ export function validateAutoStrike(options = {}) {
 
   messages.push(...slicePlanningMessages(state));
   messages.push(...staleSliceTaskChecklistMessages(state));
+  messages.push(...completedSliceEvidenceMessages(state));
   messages.push(...prematureNextSliceActivationMessages(state));
   messages.push(...staleFeatureCheckpointMessages(state));
 
