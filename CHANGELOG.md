@@ -2,6 +2,19 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.18 - 2026-05-25
+
+- Tightened Auto Strike slice closeout validation so next-slice skeletons after
+  a completed slice warn unless execution prep has actually begun.
+- Reduced multi-slice dogfood noise by treating completed slice `Changed`
+  evidence as accounted for when checking uncommitted Git changes.
+- Made closeout summary validation accept concise equivalent labels such as
+  `Validation:` while reporting which required receipt labels are missing.
+- Reduced false-positive batched-title warnings for small `and`-titled slices
+  that record a clear one-behavior rationale.
+- Clarified that ad hoc smoke/walkthrough scripts should fail fast on stale
+  servers, bad response statuses, missing IDs, or empty responses.
+
 ## 0.8.17 - 2026-05-25
 
 - Tightened Auto Strike phase-boundary language so agents do not ask for one

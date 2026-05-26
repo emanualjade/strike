@@ -34,7 +34,8 @@ const ACTIVE_WORK_DOC_FILES = new Set([
 ]);
 const SLICE_DOC_PATTERN = /\/slices\/slice-\d+[^/]*\.md$/i;
 const SLICE_SIZE_PATTERN = /^(XS|S|M|L|XL)$/i;
-const BROAD_SLICE_TITLE_PATTERN = /\b(and|full|complete|mvp)\b|setup\s+(front[- ]?end|back[- ]?end|backend|frontend)|front[- ]?end\s+(and|\/|\+|&)\s+back[- ]?end|back[- ]?end\s+(and|\/|\+|&)\s+front[- ]?end/i;
+const HARD_BATCHED_SLICE_TITLE_PATTERN = /\b(full|complete|mvp)\b|setup\s+(front[- ]?end|back[- ]?end|backend|frontend)|front[- ]?end\s+(and|\/|\+|&)\s+back[- ]?end|back[- ]?end\s+(and|\/|\+|&)\s+front[- ]?end/i;
+const AND_SLICE_TITLE_PATTERN = /\band\b/i;
 const NON_VERTICAL_SLICE_PATTERN = /\b(non[- ]vertical|foundation|migration|spike|refactor|baseline|harness|scaffold|setup)\b/i;
 
 const LENSES = {
@@ -1277,6 +1278,23 @@ function evidenceCoversGitPath(evidencePath, gitPath) {
   return normalizedEvidence === normalizedGit || normalizedGit.startsWith(`${normalizedEvidence}/`);
 }
 
+function completedSliceChangedPaths(state) {
+  const paths = [];
+  for (const sourcePath of state.docs.filter((docPath) => SLICE_DOC_PATTERN.test(docPath))) {
+    const text = readFileIfPresent(path.join(state.repoRoot, sourcePath));
+    if (!text) continue;
+    const changed = evidenceChangedPaths(state.repoRoot, [sourcePath]);
+    if (changed.length === 0) continue;
+    const verified = evidenceVerifiedItems(state.repoRoot, [sourcePath]);
+    const reviewed = evidenceReviewedItems(state.repoRoot, [sourcePath]);
+    const looksComplete = verified.length > 0 && reviewedItemsLookComplete(reviewed);
+    if (closeoutSummarySectionIsValid(text) || looksComplete) {
+      paths.push(...changed);
+    }
+  }
+  return [...new Set(paths)].filter(isImplementationPath).map(normalizeEvidencePath);
+}
+
 function changedEvidenceDriftMessages(state) {
   const reviewScope = state.evidence.reviewScope;
   if (reviewScope.changedPaths.length === 0) return [];
@@ -1287,13 +1305,14 @@ function changedEvidenceDriftMessages(state) {
   const evidencePaths = reviewScope.changedPaths
     .filter(isImplementationPath)
     .map(normalizeEvidencePath);
+  const accountedPaths = [...new Set([...evidencePaths, ...completedSliceChangedPaths(state)])];
   const messagePath = reviewScope.locations[0] ?? WORKSPACE_ROOT;
   const messages = [];
   const missingFromEvidence = gitState.paths.filter((gitPath) => {
-    return !evidencePaths.some((evidencePath) => evidenceCoversGitPath(evidencePath, gitPath));
+    return !accountedPaths.some((evidencePath) => evidenceCoversGitPath(evidencePath, gitPath));
   });
   if (missingFromEvidence.length > 0) {
-    messages.push(message("warning", "changed-evidence-may-be-stale", messagePath, `Git reports changed implementation files not listed in active Changed evidence. Confirm they are unrelated user work or update Changed before review: ${missingFromEvidence.slice(0, 8).join(", ")}${missingFromEvidence.length > 8 ? ", ..." : ""}`));
+    messages.push(message("warning", "changed-evidence-may-be-stale", messagePath, `Git reports changed implementation files not listed in active or completed-slice Changed evidence. Confirm they are unrelated user work or update Changed before review: ${missingFromEvidence.slice(0, 8).join(", ")}${missingFromEvidence.length > 8 ? ", ..." : ""}`));
   }
 
   const gitPathSet = new Set(gitState.paths);
@@ -1454,6 +1473,18 @@ function nonVerticalJustificationIsValid(sliceText) {
     /\b(unblocks?|enables?|next\s+vertical|vertical\s+slice|follow[- ]up|slice\s*\d+|slice-\d+)\b/i.test(justification);
 }
 
+function sliceHasBatchingRationale(sliceText) {
+  const rationale = extractSection(sliceText, "Why This Slice Exists");
+  return sectionHasSubstance(rationale) && !sectionHasWeakPlanningText(rationale);
+}
+
+function sliceTitleLooksBatched(title, sliceText, size, criteriaCount, surfaceCount) {
+  if (HARD_BATCHED_SLICE_TITLE_PATTERN.test(title)) return true;
+  if (!AND_SLICE_TITLE_PATTERN.test(title)) return false;
+  if (size === "L" || size === "XL" || criteriaCount > 3 || surfaceCount > 5) return true;
+  return !sliceHasBatchingRationale(sliceText);
+}
+
 function hasSliceMap(sliceIndexText) {
   if (!hasSection(sliceIndexText, "Slice Map")) return false;
   const sliceMap = extractSection(sliceIndexText, "Slice Map");
@@ -1522,8 +1553,8 @@ function slicePlanningMessages(state) {
       messages.push(message("warning", "too-many-slice-surfaces", slicePath, `Slice lists ${surfaceCount} likely surfaces; split it or record why the larger blast radius is necessary.`));
     }
 
-    if (BROAD_SLICE_TITLE_PATTERN.test(title)) {
-      messages.push(message("warning", "batched-slice-title", slicePath, "Slice title looks batched or MVP-sized; split it if the title hides multiple tasks or independent subsystems."));
+    if (sliceTitleLooksBatched(title, sliceText, size, criteriaCount, surfaceCount)) {
+      messages.push(message("warning", "batched-slice-title", slicePath, "Slice title looks batched or MVP-sized; split it unless the slice is still one small behavior path with a clear rationale."));
     }
 
     if (needsNonVerticalJustification(sliceText, title) && !nonVerticalJustificationIsValid(sliceText)) {
@@ -2143,6 +2174,48 @@ function staleSliceTaskChecklistMessages(state) {
   return messages;
 }
 
+function sliceIndex(sourcePath) {
+  const match = path.posix.basename(String(sourcePath ?? "")).match(/^slice-(\d+)\b/i);
+  return match ? Number.parseInt(match[1], 10) : null;
+}
+
+function sliceHasExecutionPrep(repoRoot, sourcePath) {
+  const text = readFileIfPresent(path.join(repoRoot, sourcePath));
+  if (!text) return false;
+  return ["Implementation Research", "Plan", "Plan Review"].some((heading) => {
+    const section = extractSection(text, heading);
+    return sectionHasSubstance(section) && !sectionHasWeakPlanningText(section);
+  });
+}
+
+function sliceHasCompletedCloseout(repoRoot, sourcePath) {
+  const text = readFileIfPresent(path.join(repoRoot, sourcePath));
+  return closeoutSummarySectionIsValid(text ?? "");
+}
+
+function prematureNextSliceActivationMessages(state) {
+  const activePath = state.activeSlice.path;
+  if (!activePath || !SLICE_DOC_PATTERN.test(activePath)) return [];
+  const activeIndex = sliceIndex(activePath);
+  if (activeIndex === null || activeIndex === 0) return [];
+  if (sliceDocHasBuildEvidence(state.repoRoot, activePath) || sliceHasExecutionPrep(state.repoRoot, activePath)) return [];
+
+  const activeFeature = state.activeFeature.exists
+    ? state.activeFeature
+    : inferredFeatureFromActiveSlice(state.repoRoot, state.activeSlice);
+  if (!activeFeature?.exists) return [];
+  const priorCompleted = activeFeatureSliceDocs(activeFeature)
+    .filter((sourcePath) => {
+      const index = sliceIndex(sourcePath);
+      return index !== null && index < activeIndex && sliceHasCompletedCloseout(state.repoRoot, sourcePath);
+    });
+
+  if (priorCompleted.length === 0) return [];
+  return [
+    message("warning", "premature-next-slice-activation", activePath, "Active Work points at a next-slice skeleton after a completed prior slice. Unless the user explicitly continued, keep the completed slice active and name the next slice only in Closeout Summary. If the user did continue, complete slice execution prep before claiming progress."),
+  ];
+}
+
 function checkpointSections(text) {
   const normalized = normalizeText(text);
   const matches = [...normalized.matchAll(/^##\s+Checkpoint\b.*$/gim)];
@@ -2362,6 +2435,7 @@ export function validateAutoStrike(options = {}) {
 
   messages.push(...slicePlanningMessages(state));
   messages.push(...staleSliceTaskChecklistMessages(state));
+  messages.push(...prematureNextSliceActivationMessages(state));
   messages.push(...staleFeatureCheckpointMessages(state));
 
   const explicitSlicePrepMode = index.currentModeExplicit && index.currentMode && MODES_EXPECTING_SLICE_PREP.has(index.currentMode);
@@ -2678,13 +2752,22 @@ function closeoutSummarySectionIsValid(sliceText) {
   if (!sectionHasSubstance(section)) return false;
   if (/\[[^\]]+\]/.test(section)) return false;
   if (markdownListItems(section).length < 5) return false;
-  return /\bImplemented\s+Slice\b/i.test(section) &&
-    /^Built:\s*$/im.test(section) &&
-    /^Validation passed:\s*$/im.test(section) &&
-    /^Review:\s*$/im.test(section) &&
-    /^(Skipped \/ residual risk|Skipped|Residual risk):\s*$/im.test(section) &&
-    /^Docs:\s*$/im.test(section) &&
-    /^Next:\s*$/im.test(section);
+  return closeoutSummaryMissingLabels(section).length === 0;
+}
+
+function closeoutSummaryMissingLabels(section) {
+  const required = [
+    ["implemented", /\bImplemented\b/i],
+    ["Built", /^Built:\s*$/im],
+    ["Validation passed", /^Validation(?:\s+passed)?:\s*$/im],
+    ["Review", /^Review:\s*$/im],
+    ["Skipped / residual risk", /^(Skipped\s*(?:\/|or)?\s*residual risk|Skipped|Residual risk):\s*$/im],
+    ["Docs", /^Docs:\s*$/im],
+    ["Next", /^Next:\s*$/im],
+  ];
+  return required
+    .filter(([, pattern]) => !pattern.test(section))
+    .map(([label]) => label);
 }
 
 function sliceCloseoutSummaryMessages(state) {
@@ -2694,9 +2777,12 @@ function sliceCloseoutSummaryMessages(state) {
 
   const sliceText = readFileIfPresent(path.join(state.repoRoot, state.activeSlice.path));
   if (closeoutSummarySectionIsValid(sliceText ?? "")) return [];
+  const section = extractSection(sliceText ?? "", "Closeout Summary");
+  const missingLabels = sectionHasSubstance(section) ? closeoutSummaryMissingLabels(section) : [];
+  const missingSuffix = missingLabels.length > 0 ? ` Missing: ${missingLabels.join(", ")}.` : "";
 
   return [
-    message("warning", "missing-slice-closeout-summary", state.activeSlice.path, "Active slice has Changed, Verified, and Reviewed evidence but lacks a substantive Closeout Summary. Add a compact user-facing receipt with built work, validation, review status, skipped/residual risk, docs, and next action."),
+    message("warning", "missing-slice-closeout-summary", state.activeSlice.path, `Active slice has Changed, Verified, and Reviewed evidence but lacks a substantive Closeout Summary. Add a compact user-facing receipt with built work, validation, review status, skipped/residual risk, docs, and next action.${missingSuffix}`),
   ];
 }
 

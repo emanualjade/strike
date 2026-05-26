@@ -2218,6 +2218,55 @@ User can log in with an existing account.
   assert.ok(!body.messages.some((item) => newWarningCodes.has(item.code)));
 }
 
+function testValidateAllowsAndSliceTitleWithSmallRationale() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/tool-library
+- Current mode: slice
+- Active slice: auto-strike/initiatives/main/features/tool-library/slices/slice-0-borrow-request-and-approval.md
+- Next: Build slice 0.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-0-borrow-request-and-approval.md", `# Slice 0: Borrow Request and Approval
+
+## Size
+M
+
+## Acceptance Criteria
+- [ ] Borrower can request a listed tool.
+- [ ] Owner can approve the pending request.
+- [ ] Conflicting requests show a useful error.
+
+## Why This Slice Exists
+Request creation and owner approval are one small behavior path because approval cannot be verified without a request to approve.
+
+## Depends On
+- None
+
+## Likely Surfaces
+- \`src/domain/requests.mjs\` - request and approval state
+- \`src/server.mjs\` - form routes
+- \`scripts/smoke.mjs\` - request and approval checks
+
+## Execution Tasks
+- [ ] Research local request patterns.
+- [ ] Write the implementation plan with surfaces and checks.
+- [ ] Review the plan before coding.
+- [ ] Verify request and approval behavior.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "small and-titled behavior slice with rationale should validate");
+  const body = json(result);
+  assert.ok(!body.messages.some((item) => item.code === "batched-slice-title"));
+}
+
 function testValidateWarnsForMissingSliceMapDependenciesAndCheckpoint() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
@@ -2992,6 +3041,66 @@ Next:
   assert.ok(!body.messages.some((item) => item.code === "missing-slice-closeout-summary"));
 }
 
+function testValidateAcceptsCloseoutSummaryWithValidationAlias() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/video-mvp
+- Current mode: review
+- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-caption.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-caption.md", `# Slice 0: Caption
+
+## Evidence
+
+Changed:
+- src/video/caption.ts
+
+Verified:
+- node scripts/caption-smoke.js - passed
+
+Reviewed:
+- functionality - passed
+- spec-coverage - passed
+- code-quality - passed
+- final re-review - no remaining blockers
+
+## Closeout Summary
+Implemented Caption.
+
+Built:
+- Added caption generation behavior.
+
+Validation:
+- node scripts/caption-smoke.js
+
+Review:
+- Functionality/spec/code quality: passed.
+- Final re-review: no remaining blocking findings.
+
+Skipped residual risk:
+- None.
+
+Docs:
+- auto-strike/initiatives/main/features/video-mvp/slices/slice-0-caption.md
+
+Next:
+- Slice 1: Caption editing.
+`);
+  write(repo, "src/video/caption.ts", "export function caption() {}\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "closeout summary should accept concise equivalent labels");
+  const body = json(result);
+  assert.ok(!body.messages.some((item) => item.code === "missing-slice-closeout-summary"));
+}
+
 function testValidateDoesNotRequireCloseoutForInProgressBuildSlice() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
@@ -3392,6 +3501,240 @@ Reviewed:
   assert.doesNotMatch(warning.message, /auto-strike/);
 }
 
+function testValidateDoesNotWarnWhenGitChangeCoveredByCompletedSliceEvidence() {
+  const repo = tempRepo();
+  initGit(repo);
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/video-mvp
+- Current mode: review
+- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-1-caption.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+
+## Evidence
+
+Changed:
+- src/video/upload.ts
+
+Verified:
+- node scripts/video-smoke.js - passed
+
+Reviewed:
+- functionality - passed
+- spec-coverage - passed
+- code-quality - passed
+- final re-review - no remaining blockers
+
+## Closeout Summary
+Implemented Slice 0: Upload.
+
+Built:
+- Added upload behavior.
+
+Validation passed:
+- node scripts/video-smoke.js
+
+Review:
+- Functionality/spec/code quality: passed.
+- Final re-review: no remaining blocking findings.
+
+Skipped / residual risk:
+- None.
+
+Docs:
+- auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
+
+Next:
+- Slice 1: Caption.
+`);
+  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-1-caption.md", `# Slice 1: Caption
+
+## Evidence
+
+Changed:
+- src/video/caption.ts
+
+Verified:
+- node scripts/caption-smoke.js - passed
+
+Reviewed:
+- functionality - passed
+- spec-coverage - passed
+- code-quality - passed
+`);
+  write(repo, "src/video/upload.ts", "export function upload() {}\n");
+  write(repo, "src/video/caption.ts", "export function caption() {}\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "prior completed slice evidence should account for earlier uncommitted files");
+  const body = json(result);
+  assert.ok(!body.messages.some((item) => item.code === "changed-evidence-may-be-stale"));
+}
+
+function testValidateWarnsForPrematureNextSliceActivation() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/tool-library
+- Current mode: build
+- Active slice: auto-strike/initiatives/main/features/tool-library/slices/slice-1-requests.md
+- Next: Build slice 1.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-0-listings.md", `# Slice 0: Listings
+
+## Evidence
+
+Changed:
+- src/listings.mjs
+
+Verified:
+- node scripts/smoke.mjs - passed
+
+Reviewed:
+- functionality - passed
+- spec-coverage - passed
+- code-quality - passed
+
+## Closeout Summary
+Implemented Slice 0: Listings.
+
+Built:
+- Added listings.
+
+Validation passed:
+- node scripts/smoke.mjs
+
+Review:
+- Functionality/spec/code quality: passed.
+- Final re-review: no remaining blocking findings.
+
+Skipped / residual risk:
+- None.
+
+Docs:
+- auto-strike/initiatives/main/features/tool-library/slices/slice-0-listings.md
+
+Next:
+- Slice 1: Requests.
+`);
+  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-1-requests.md", `# Slice 1: Requests
+
+## Size
+M
+
+## Depends On
+- Slice 0: Listings
+
+## Execution Tasks
+- [ ] Research request behavior.
+- [ ] Write the plan.
+- [ ] Review the plan.
+- [ ] Verify request behavior.
+`);
+  write(repo, "src/listings.mjs", "export function listings() {}\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "next-slice skeleton after closeout should warn");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "premature-next-slice-activation" && item.severity === "warning"));
+}
+
+function testValidateAcceptsNextSliceActivationAfterPrepStarts() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/tool-library
+- Current mode: build
+- Active slice: auto-strike/initiatives/main/features/tool-library/slices/slice-1-requests.md
+- Next: Build slice 1.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-0-listings.md", `# Slice 0: Listings
+
+## Evidence
+
+Changed:
+- src/listings.mjs
+
+Verified:
+- node scripts/smoke.mjs - passed
+
+Reviewed:
+- functionality - passed
+- spec-coverage - passed
+- code-quality - passed
+
+## Closeout Summary
+Implemented Slice 0: Listings.
+
+Built:
+- Added listings.
+
+Validation passed:
+- node scripts/smoke.mjs
+
+Review:
+- Functionality/spec/code quality: passed.
+- Final re-review: no remaining blocking findings.
+
+Skipped / residual risk:
+- None.
+
+Docs:
+- auto-strike/initiatives/main/features/tool-library/slices/slice-0-listings.md
+
+Next:
+- Slice 1: Requests.
+`);
+  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-1-requests.md", `# Slice 1: Requests
+
+## Size
+M
+
+## Depends On
+- Slice 0: Listings
+
+## Execution Tasks
+- [x] Research request behavior.
+- [x] Write the plan.
+- [x] Review the plan.
+- [ ] Verify request behavior.
+
+## Implementation Research
+- Local precedent: \`src/listings.mjs\` keeps domain behavior isolated.
+
+## Plan
+- Add \`src/requests.mjs\` and verify with \`node scripts/smoke.mjs\`.
+
+## Plan Review
+- main-agent review - passed; surfaces and checks are named.
+`);
+  write(repo, "src/listings.mjs", "export function listings() {}\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "next slice with execution prep should not warn as premature");
+  const body = json(result);
+  assert.ok(!body.messages.some((item) => item.code === "premature-next-slice-activation"));
+}
+
 function testValidateWarnsForStaleChangedEvidencePath() {
   const repo = tempRepo();
   initGit(repo);
@@ -3532,6 +3875,7 @@ testValidateWarnsForMissingPhaseExitGatesBeforeBuild();
 testValidateAcceptsExplicitUserOptOutOfGrill();
 testValidateWarnsForPhaseCompletedAfterQuestionToolFailure();
 testValidateAcceptsSliceMapDependenciesAndCheckpoint();
+testValidateAllowsAndSliceTitleWithSmallRationale();
 testValidateWarnsForMissingSliceMapDependenciesAndCheckpoint();
 testValidateDoesNotWarnForFutureSliceCheckpoint();
 testValidateWarnsForDueSliceCheckpoint();
@@ -3547,6 +3891,7 @@ testValidateWarnsForMissingVerificationCapabilityOnSkippedUiChecks();
 testValidateAcceptsVerificationCapabilityForSkippedUiChecks();
 testValidateWarnsForMissingSliceCloseoutSummary();
 testValidateAcceptsSliceCloseoutSummary();
+testValidateAcceptsCloseoutSummaryWithValidationAlias();
 testValidateDoesNotRequireCloseoutForInProgressBuildSlice();
 testValidateWarnsForMissingRequiredReviewLenses();
 testValidateAcceptsReviewedAndSkippedRequiredReviewLenses();
@@ -3555,6 +3900,9 @@ testValidateAcceptsFreshReviewAgentUnavailableRationale();
 testValidateWarnsForMultiSliceWithoutFreshReviewAgentEvidence();
 testValidateAcceptsMultiSliceFreshReviewAgentEvidence();
 testValidateWarnsWhenGitChangesMissingFromChangedEvidence();
+testValidateDoesNotWarnWhenGitChangeCoveredByCompletedSliceEvidence();
+testValidateWarnsForPrematureNextSliceActivation();
+testValidateAcceptsNextSliceActivationAfterPrepStarts();
 testValidateWarnsForStaleChangedEvidencePath();
 testReviewPlanDetectsBrowserScriptUiChanges();
 testReviewContextRejectsUnknownLens();

@@ -49,6 +49,10 @@ verification, but they are not browser/user-flow evidence by themselves. Browser
 evidence should name the actual browser/host/manual UI check and what was seen
 or interacted with.
 
+Ad hoc smoke or walkthrough scripts should fail fast: use a known-free port or
+assert the expected server, check response status and required IDs after every
+step, and do not print success after failed or empty responses.
+
 If a normally expected check cannot run, record the blocker, the risk left open,
 and the replacement evidence. Do not skip browser checks only because the repo
 lacks Playwright or another browser package; use host/manual browser tooling
