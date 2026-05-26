@@ -17,6 +17,7 @@ const MODES_REQUIRING_GRILL_CHECKPOINT = new Set(["spec", "slice", "build", "rev
 const VALID_DECISION_DEPTH_LEVELS = new Set(["lean", "standard", "deep"]);
 const PHASE_LEDGER_ORDER = ["brainstorm", "grill", "spec", "slice", "build", "review", "validate"];
 const PHASE_LEDGER_BY_MODE = {
+  spec: ["brainstorm", "grill", "spec"],
   slice: ["brainstorm", "grill", "spec", "slice"],
   build: ["brainstorm", "grill", "spec", "slice", "build"],
   review: ["brainstorm", "grill", "spec", "slice", "build", "review"],
@@ -383,8 +384,20 @@ function stripMarkdownShell(value) {
     .trim();
 }
 
+function stripInlineMarkdownReferences(value) {
+  return String(value ?? "")
+    .replace(/`[^`]*`/g, "")
+    .replace(/\[[^\]]+\]\([^)]+\)/g, "");
+}
+
 function isPlaceholder(value) {
-  return /[\[\]<>]/.test(String(value ?? ""));
+  const text = String(value ?? "").trim();
+  if (!text) return false;
+  const withoutLinks = stripInlineMarkdownReferences(text);
+  if (/^\[(?![ xX]\])[^]\n]+\]$/.test(withoutLinks)) return true;
+  if (/^<[^>\n]+>$/.test(withoutLinks)) return true;
+  return /(^|[\s/])\[(?![ xX]\])[^]\n]{2,}\](?=$|[\s/.:_-])/i.test(withoutLinks) ||
+    /(^|[\s/])<[^>\n]{2,}>(?=$|[\s/.:_-])/i.test(withoutLinks);
 }
 
 function isNoneItem(value) {
@@ -478,6 +491,7 @@ function parseIndex(indexText) {
       activeFeatureRaw: null,
       activeFeaturePath: null,
       currentMode: null,
+      currentModeExplicit: false,
       activeSliceRaw: null,
       activeWork: {
         text: "",
@@ -505,6 +519,7 @@ function parseIndex(indexText) {
 
   const activeWork = parseActiveWork(indexText);
   const currentModeRaw = activeWork.currentModeRaw;
+  const currentModeExplicit = Boolean(currentModeRaw && !isPlaceholder(currentModeRaw));
   const currentMode = currentModeRaw && !isPlaceholder(currentModeRaw)
     ? currentModeRaw.toLowerCase().split(/\s+/)[0].replace(/[^a-z-]/g, "")
     : modeFromActiveDoc(activeWork.docPath);
@@ -531,6 +546,7 @@ function parseIndex(indexText) {
     activeFeatureRaw: activeWork.featureRaw,
     activeFeaturePath: activeWork.featurePath,
     currentMode,
+    currentModeExplicit,
     activeSliceRaw: activeSliceRaw && !isPlaceholder(activeSliceRaw) ? activeSliceRaw : null,
     activeWork,
     nextBestAction: activeWork.next,
@@ -1413,7 +1429,7 @@ function sectionHasExplicitNone(sectionText) {
 function sectionHasWeakPlanningText(sectionText) {
   const text = normalizeText(sectionText);
   return !text ||
-    isPlaceholder(text) ||
+    isPlaceholder(stripInlineMarkdownReferences(text)) ||
     /\b(todo|tbd|pending|not yet|not started|placeholder|fill in|unknown|unclear)\b/i.test(text);
 }
 
@@ -1526,6 +1542,7 @@ function activeWorkPointerIsValid(index) {
   const work = index.activeWork;
   if (!work || !sectionHasSubstance(work.text)) return false;
   return activeWorkValueHasSubstance(work.initiativePath) &&
+    activeWorkValueHasSubstance(work.currentModeRaw) &&
     activeWorkValueHasSubstance(work.docPath) &&
     activeWorkValueHasSubstance(work.next);
 }
@@ -1555,7 +1572,7 @@ function activeWorkMessages(state) {
   }
 
   if (!activeWorkPointerIsValid(state.index)) {
-    messages.push(message("warning", "missing-active-work", `${WORKSPACE_ROOT}/index.md`, "Index should include Active Work with an initiative, active doc, and next action so fresh context can resume without reading every phase."));
+    messages.push(message("warning", "missing-active-work", `${WORKSPACE_ROOT}/index.md`, "Index should include Active Work with an initiative, explicit Current mode, active doc, and next action so fresh context can resume without reading every phase."));
   }
 
   const docPath = state.index.activeWork?.docPath;
@@ -1578,13 +1595,58 @@ function activeWorkMessages(state) {
   return messages;
 }
 
+function mentionsSpecArtifactCreation(text) {
+  return /\b(write|create|draft|fill|produce|complete)\b.{0,80}\b(?:initiative\s+)?spec\b/i.test(text) ||
+    /\b(write|create|draft|fill|produce|complete)\b.{0,80}\bfeature[- ]spec\b/i.test(text) ||
+    /\b(?:initiative\s+)?spec\b.{0,80}\b(write|create|draft|fill|produce|complete)\b/i.test(text) ||
+    /\bfeature[- ]spec\b.{0,80}\b(write|create|draft|fill|produce|complete)\b/i.test(text);
+}
+
+function mentionsSliceArtifactCreation(text) {
+  return /\bslice\s+the\s+build\b/i.test(text) ||
+    /\bslice-\d+[-\w]*\.md\b/i.test(text) ||
+    /\b(write|create|draft|fill|produce|plan|generate)\b.{0,80}\b(slice\s+map|slice\s+plan|slice\s+docs?|slices?)\b/i.test(text) ||
+    /\b(slice\s+map|slice\s+plan|slice\s+docs?|slices?)\b.{0,80}\b(write|create|draft|fill|produce|plan|generate)\b/i.test(text) ||
+    /\benter\s+slice\s+mode\b|\bmove\s+to\s+slice\s+mode\b/i.test(text);
+}
+
+function mentionsBuildStart(text) {
+  return /\b(start|begin|enter|move\s+to)\s+(?:the\s+)?build\b/i.test(text) ||
+    /\b(build|implement|code)\s+(?:the\s+)?(?:first\s+)?slice\b/i.test(text) ||
+    /\b(?:then|and)\s+(?:implement|code)\b/i.test(text) ||
+    /\bbegin\s+(?:implementation|coding)\b/i.test(text);
+}
+
+function phaseBoundaryBatchingMessages(state) {
+  if (!state.index.present) return [];
+
+  const next = normalizeText(state.index.activeWork?.next ?? "");
+  if (!sectionHasSubstance(next)) return [];
+
+  const createsSpec = mentionsSpecArtifactCreation(next);
+  const createsSlices = mentionsSliceArtifactCreation(next);
+  const startsBuild = mentionsBuildStart(next);
+  const messages = [];
+
+  if (createsSpec && createsSlices) {
+    messages.push(message("warning", "batched-phase-next-action", `${WORKSPACE_ROOT}/index.md`, "Active Work Next batches spec and slice work. Close the current phase, then stop with the immediate next mode; do not promise or record spec + slicing in one next action."));
+  }
+  if (createsSlices && startsBuild) {
+    messages.push(message("warning", "batched-phase-next-action", `${WORKSPACE_ROOT}/index.md`, "Active Work Next batches slice artifact creation and build/implementation. Finish the current phase or slice closeout, then stop with the immediate next mode/action; do not write slice docs and implement them in the same next action."));
+  }
+
+  return messages;
+}
+
 function phaseLedgerRequiredPhases(state) {
   const mode = state.index.currentMode;
-  if (mode && PHASE_LEDGER_BY_MODE[mode]) return PHASE_LEDGER_BY_MODE[mode];
+  if (state.index.currentModeExplicit && mode && PHASE_LEDGER_BY_MODE[mode]) {
+    return PHASE_LEDGER_BY_MODE[mode];
+  }
   if (state.evidence.reviewScope.reviewedItems.length > 0) {
     return PHASE_LEDGER_BY_MODE.review;
   }
-  if (state.activeSlice.path || state.evidence.reviewScope.changedPaths.length > 0 || state.evidence.reviewScope.verifiedItems.length > 0) {
+  if (state.evidence.reviewScope.changedPaths.length > 0 || state.evidence.reviewScope.verifiedItems.length > 0) {
     return PHASE_LEDGER_BY_MODE.build;
   }
   if (state.activeFeature.exists || state.activeFeature.sliceFiles.length > 0) {
@@ -1758,7 +1820,7 @@ function grillDecisionDepthMessages(state) {
   const level = decisionDepthLevel(grillText);
   if (!level || !VALID_DECISION_DEPTH_LEVELS.has(level)) {
     return [
-      message("warning", "unknown-grill-decision-depth", grillDoc.relativePath, "Decision Depth level should be Lean, Standard, or Deep."),
+      message("warning", "unknown-grill-decision-depth", grillDoc.relativePath, "Decision Depth should include a line exactly like `Level: Lean`, `Level: Standard`, or `Level: Deep`."),
     ];
   }
 
@@ -1980,19 +2042,22 @@ function hasReachedSpecOrLater(state) {
   });
 }
 
+function decisionCheckpointSignalChecks(sectionText) {
+  const text = normalizeText(sectionText);
+  return [
+    ["scope/size", /\b(scope|size|first[- ]version|non[- ]goals?)\b/i.test(text)],
+    ["stack/dependencies", /\b(stack|dependenc(?:y|ies)|package|runtime|framework|architecture)\b/i.test(text)],
+    ["data/state", /\b(data|persist(?:ence)?|state|model|schema|storage)\b/i.test(text)],
+    ["auth/permissions", /\b(auth|identity|session|permission|ownership|privacy)\b/i.test(text)],
+    ["validation", /\b(validation|verify|verification|browser|live|success|checks?)\b/i.test(text)],
+    ["confirmed/assumed/deferred decisions", /\b(user[- ]confirmed|confirmed|explicit|accepted assumptions?|assumptions?|deferred|opt[- ]out|opted out)\b/i.test(text)],
+  ];
+}
+
 function decisionCheckpointIsValid(sectionText) {
   const text = normalizeText(sectionText);
   if (!sectionHasSubstance(text) || sectionHasWeakPlanningText(text)) return false;
-
-  const requiredSignals = [
-    /\b(scope|size|first[- ]version|non[- ]goals?)\b/i,
-    /\b(stack|dependenc(?:y|ies)|package|runtime|framework|architecture)\b/i,
-    /\b(data|persist(?:ence)?|state|model|schema|storage)\b/i,
-    /\b(auth|identity|session|permission|ownership|privacy)\b/i,
-    /\b(validation|verify|verification|browser|live|success|checks?)\b/i,
-    /\b(user[- ]confirmed|confirmed|explicit|accepted assumptions?|assumptions?|deferred|opt[- ]out|opted out)\b/i,
-  ];
-  return requiredSignals.filter((pattern) => pattern.test(text)).length >= 5;
+  return decisionCheckpointSignalChecks(text).filter(([, present]) => present).length >= 5;
 }
 
 function grillCheckpointMessages(state) {
@@ -2015,8 +2080,11 @@ function grillCheckpointMessages(state) {
   }
 
   if (!decisionCheckpointIsValid(checkpoint)) {
+    const missingSignals = decisionCheckpointSignalChecks(checkpoint)
+      .filter(([, present]) => !present)
+      .map(([label]) => label);
     return [
-      message("warning", "weak-grill-decision-checkpoint", state.activeInitiative.grillPath, "Decision Checkpoint should cover scope/size, stack/dependencies, data/state, auth/permissions when relevant, validation, confirmed decisions, accepted assumptions, and deferred decisions."),
+      message("warning", "weak-grill-decision-checkpoint", state.activeInitiative.grillPath, `Decision Checkpoint should cover at least five core signals. Missing/weak signals: ${missingSignals.join(", ") || "none detected; remove placeholder or unresolved wording"}.`),
     ];
   }
 
@@ -2075,28 +2143,59 @@ function staleSliceTaskChecklistMessages(state) {
   return messages;
 }
 
-function checkpointText(text) {
+function checkpointSections(text) {
   const normalized = normalizeText(text);
-  const match = normalized.match(/^##\s+Checkpoint\b.*$/im);
-  if (!match || match.index === undefined) return "";
-  return normalized.slice(match.index);
+  const matches = [...normalized.matchAll(/^##\s+Checkpoint\b.*$/gim)];
+  return matches.map((match, index) => {
+    const start = match.index ?? 0;
+    const nextStart = matches[index + 1]?.index ?? normalized.length;
+    const heading = match[0];
+    const bodyStart = start + heading.length;
+    return {
+      heading,
+      body: normalized.slice(bodyStart, nextStart),
+    };
+  });
+}
+
+function checkpointDueIndex(heading) {
+  const normalized = String(heading ?? "").replace(/[–—]/g, "-");
+  const match = normalized.match(/\bafter\s+(?:slices?|tasks?)\s+(\d+)(?:\s*-\s*(\d+))?\b/i);
+  if (!match) return null;
+  return Number.parseInt(match[2] ?? match[1], 10);
+}
+
+function checkpointIsDue(heading, completedSliceIndices) {
+  const dueIndex = checkpointDueIndex(heading);
+  if (!Number.isInteger(dueIndex)) return true;
+  return completedSliceIndices.some((sliceIndex) => sliceIndex >= dueIndex);
 }
 
 function staleFeatureCheckpointMessages(state) {
   const messages = [];
-  const evidenceByFeature = new Set(
-    state.evidence.locations
-      .map((sourcePath) => sourcePath.match(new RegExp(`^(${escapeRegExp(WORKSPACE_ROOT)}/initiatives/[^/]+/features/[^/]+)/slices/`))?.[1])
-      .filter(Boolean)
-  );
+  const completedSlicesByFeature = new Map();
+
+  for (const sourcePath of state.evidence.locations) {
+    const match = sourcePath.match(new RegExp(`^(${escapeRegExp(WORKSPACE_ROOT)}/initiatives/[^/]+/features/[^/]+)/slices/slice-(\\d+)[^/]*\\.md$`));
+    if (!match) continue;
+    if (!sliceDocHasBuildEvidence(state.repoRoot, sourcePath)) continue;
+    const featurePath = match[1];
+    const sliceIndex = Number.parseInt(match[2], 10);
+    const completed = completedSlicesByFeature.get(featurePath) ?? [];
+    completed.push(sliceIndex);
+    completedSlicesByFeature.set(featurePath, completed);
+  }
 
   for (const sourcePath of state.docs.filter((docPath) => docPath.endsWith("/slices/index.md"))) {
     const featurePath = sourcePath.replace(/\/slices\/index\.md$/, "");
-    if (!evidenceByFeature.has(featurePath)) continue;
+    const completedSliceIndices = completedSlicesByFeature.get(featurePath) ?? [];
+    if (completedSliceIndices.length === 0) continue;
     const text = readFileIfPresent(path.join(state.repoRoot, sourcePath));
-    const unchecked = uncheckedCheckboxItems(checkpointText(text ?? ""));
+    const unchecked = checkpointSections(text ?? "")
+      .filter((section) => checkpointIsDue(section.heading, completedSliceIndices))
+      .flatMap((section) => uncheckedCheckboxItems(section.body));
     if (unchecked.length === 0) continue;
-    messages.push(message("warning", "stale-slice-checkpoint-checklist", sourcePath, `Feature has slice evidence but unfinished checkpoint items: ${unchecked.slice(0, 5).join("; ")}${unchecked.length > 5 ? "; ..." : ""}. Update the checkpoint or record why it remains open.`));
+    messages.push(message("warning", "stale-slice-checkpoint-checklist", sourcePath, `A due slice checkpoint has unfinished items: ${unchecked.slice(0, 5).join("; ")}${unchecked.length > 5 ? "; ..." : ""}. Update the checkpoint or record why it remains open.`));
   }
   return messages;
 }
@@ -2208,6 +2307,7 @@ export function validateAutoStrike(options = {}) {
   }
 
   messages.push(...activeWorkMessages(state));
+  messages.push(...phaseBoundaryBatchingMessages(state));
   messages.push(...activeWorkFreshnessMessages(state));
   messages.push(...currentTruthMessages(state));
   messages.push(...phaseLedgerMessages(state));
@@ -2264,8 +2364,11 @@ export function validateAutoStrike(options = {}) {
   messages.push(...staleSliceTaskChecklistMessages(state));
   messages.push(...staleFeatureCheckpointMessages(state));
 
-  if (index.currentMode && MODES_EXPECTING_SLICE_PREP.has(index.currentMode)) {
-    messages.push(...activeSlicePrepMessages(state.repoRoot, state.activeSlice, index.currentMode));
+  const explicitSlicePrepMode = index.currentModeExplicit && index.currentMode && MODES_EXPECTING_SLICE_PREP.has(index.currentMode);
+  const implementationEvidenceExists = state.evidence.reviewScope.changedPaths.length > 0 ||
+    state.evidence.reviewScope.verifiedItems.length > 0;
+  if (explicitSlicePrepMode || implementationEvidenceExists) {
+    messages.push(...activeSlicePrepMessages(state.repoRoot, state.activeSlice, explicitSlicePrepMode ? index.currentMode : null));
   }
 
   if (index.currentMode && MODES_EXPECTING_EVIDENCE.has(index.currentMode) && state.evidence.locations.length === 0) {

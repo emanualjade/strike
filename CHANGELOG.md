@@ -2,6 +2,21 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.17 - 2026-05-25
+
+- Tightened Auto Strike phase-boundary language so agents do not ask for one
+  decision and promise to close grill, write specs, and slice the build in the
+  same next action.
+- Added a helper warning when `auto-strike/index.md` records a batched next
+  action that combines spec and slice work, or slice planning and build work.
+- Tightened build closeout boundaries so completed slices stop with a receipt
+  instead of activating the next slice, and refined checkpoint warnings so
+  future slice milestones do not fire before their due slice is complete.
+- Required explicit `Current mode` in Auto Strike Active Work and stopped the
+  helper from inferring build-mode slice prep from a slice doc path alone.
+- Reduced false-positive helper warnings for future Phase Ledger rows and
+  legitimate grill checkpoint syntax such as date comparisons.
+
 ## 0.8.16 - 2026-05-25
 
 - Strengthened Auto Strike phase boundaries so brainstorm, grill, spec, slice,

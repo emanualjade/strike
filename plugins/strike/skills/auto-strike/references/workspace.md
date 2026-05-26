@@ -199,6 +199,7 @@ Keep it short and scannable:
 ## Active Work
 - Initiative: `auto-strike/initiatives/[initiative-slug]`
 - Feature: `auto-strike/initiatives/[initiative-slug]/features/[feature-slug]` / None
+- Current mode: brainstorm / grill / spec / slice / build / review / readiness
 - Doc: `auto-strike/initiatives/[initiative-slug]/[active-doc].md`
 - Slice: `auto-strike/initiatives/[initiative-slug]/features/[feature-slug]/slices/[slice].md` / None
 - State: [one short current truth]
@@ -216,10 +217,13 @@ Keep it short and scannable:
 ```
 
 Refresh `index.md` whenever the active feature, active slice, mode, blocker, or
-next action changes. As soon as a feature folder or slice exists, point to it.
-Do not leave `Feature: None`, `Slice: None`, stale open decisions, or "no code
-written" after build evidence exists. Replace old Active Work values in place;
-do not append a second `Feature`, `Doc`, `Slice`, `State`, or `Next` line.
+next action changes. `Current mode` is required; do not rely on the active doc
+path to imply the phase because slice docs can be planning artifacts or build
+artifacts depending on the moment. As soon as a feature folder or slice exists,
+point to it. Do not leave `Feature: None`, `Slice: None`, stale open decisions,
+or "no code written" after build evidence exists. Replace old Active Work values
+in place; do not append a second `Feature`, `Current mode`, `Doc`, `Slice`,
+`State`, or `Next` line.
 
 Every concrete `auto-strike/.../*.md` path referenced in Auto Strike docs should
 exist. If a future doc is not needed yet, say that in prose without linking to a

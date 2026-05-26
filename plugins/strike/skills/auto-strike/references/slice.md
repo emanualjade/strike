@@ -191,10 +191,13 @@ work packet: update checkboxes as prep, build, verification, and review complete
 instead of treating the slice as a static concept doc.
 
 After the Slice Map, slice docs, slice review, and slice exit evidence are
-recorded, stop the current work unit with build as the next action. Do not move
-straight from creating slice artifacts into building slice 0 unless the user
-explicitly asked to skip the boundary. In durable goal mode, the next
-continuation can resume from `index.md` and the active slice doc.
+recorded, keep `index.md` in `Current mode: slice`, point `Doc`/`Slice` at the
+active slice doc, and stop the current work unit with build as the next action.
+Do not mark build in progress or write slice execution prep until build mode
+actually starts. Do not move straight from creating slice artifacts into
+building slice 0 unless the user explicitly asked to skip the boundary. In
+durable goal mode, the next continuation can resume from `index.md` and the
+active slice doc.
 
 Before coding a meaningful slice, do a lightweight slice execution prep pass.
 This should usually be a short inline research/plan/review loop that keeps

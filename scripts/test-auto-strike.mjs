@@ -549,6 +549,7 @@ function testValidateAcceptsActiveWorkPointer() {
 ## Active Work
 - Initiative: auto-strike/initiatives/main
 - Feature: None
+- Current mode: brainstorm
 - Doc: auto-strike/initiatives/main/idea.md
 - State: First-outcome decision is being clarified.
 - Next: Complete the first-outcome decision.
@@ -616,6 +617,7 @@ function testValidateWarnsForWeakOrMissingActiveWorkDoc() {
 ## Active Work
 - Initiative: auto-strike/initiatives/main
 - Feature: auto-strike/initiatives/main/features/clip-notes
+- Current mode: spec
 - Doc: auto-strike/initiatives/main/features/clip-notes/feature-spec.md
 - State: Spec acceptance checks are being drafted.
 - Next: Draft acceptance checks.
@@ -658,12 +660,136 @@ function testValidateWarnsForWeakOrMissingActiveWorkDoc() {
   assert.ok(json(missing).messages.some((item) => item.code === "missing-active-work-doc" && item.severity === "warning"));
 }
 
+function testValidateWarnsForBatchedPhaseNextAction() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/tool-library
+- Feature: None
+- Doc: auto-strike/initiatives/tool-library/grill.md
+- State: Grill has one open business-rule decision.
+- Next: After the answer, close grill, write the spec and feature spec, and slice the build.
+- Blocked by: User answer on conflict policy.
+
+## Open Decisions
+- Conflict policy.
+`);
+  write(repo, "auto-strike/initiatives/tool-library/grill.md", `# Tool Library Grill
+
+## Phase Tasks
+- [x] Review brainstorm.
+- [ ] Resolve conflict policy.
+
+## Exit Evidence
+- Pending conflict policy.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "batched phase next action should warn, not fail");
+  assert.ok(json(result).messages.some((item) => item.code === "batched-phase-next-action" && item.severity === "warning"));
+}
+
+function testValidateWarnsForNextSliceDocAndImplementationBatch() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/tool-library
+- Feature: auto-strike/initiatives/tool-library/features/core
+- Current mode: build
+- Doc: auto-strike/initiatives/tool-library/features/core/slices/slice-0-server-boot.md
+- Active slice: auto-strike/initiatives/tool-library/features/core/slices/slice-0-server-boot.md
+- State: Slice 0 is closed.
+- Next: Write slice-1-json-store.md, add Implementation Research / Plan / Plan Review, then implement and verify.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/tool-library/features/core/feature-spec.md", "# Core Spec\n");
+  write(repo, "auto-strike/initiatives/tool-library/features/core/slices/slice-0-server-boot.md", `# Slice 0: Server Boot
+
+## Execution Tasks
+- [x] Research.
+- [x] Plan.
+- [x] Review.
+- [x] Verify.
+
+## Evidence
+Changed:
+- \`src/server.mjs\`
+
+Verified:
+- \`pnpm smoke\` passed.
+
+Reviewed:
+- functionality: passed.
+
+## Closeout Summary
+Implemented Slice 0: Server Boot.
+
+Built:
+- Server boots.
+
+Validation passed:
+- \`pnpm smoke\`
+
+Review:
+- functionality: passed.
+
+Skipped / residual risk:
+- None.
+
+Docs:
+- This slice doc.
+
+Next:
+- Slice 1.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "next-slice doc plus implementation next action should warn, not fail");
+  assert.ok(json(result).messages.some((item) => item.code === "batched-phase-next-action" && item.severity === "warning"));
+}
+
+function testValidateAcceptsSingleBoundaryNextAction() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/tool-library
+- Feature: None
+- Doc: auto-strike/initiatives/tool-library/grill.md
+- State: Grill has one open business-rule decision.
+- Next: After the answer, record the decision, close grill, and leave spec as the next action.
+- Blocked by: User answer on conflict policy.
+
+## Open Decisions
+- Conflict policy.
+`);
+  write(repo, "auto-strike/initiatives/tool-library/grill.md", `# Tool Library Grill
+
+## Phase Tasks
+- [x] Review brainstorm.
+- [ ] Resolve conflict policy.
+
+## Exit Evidence
+- Pending conflict policy.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "single boundary next action should not warn");
+  assert.ok(!json(result).messages.some((item) => item.code === "batched-phase-next-action"));
+}
+
 function writeBuildPhaseFixture(repo, ideaContent) {
   write(repo, "auto-strike/index.md", `# Auto Strike
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
 - Feature: auto-strike/initiatives/main/features/checklist
+- Current mode: build
 - Doc: auto-strike/initiatives/main/features/checklist/slices/slice-0-static-app.md
 - State: Slice build is in progress.
 - Next: Implement the checklist behavior.
@@ -779,6 +905,162 @@ function testValidateAcceptsPhaseLedgerAfterSlicing() {
   const body = json(result);
   assert.ok(!body.messages.some((item) => item.code === "missing-phase-ledger"));
   assert.ok(!body.messages.some((item) => item.code === "weak-phase-ledger"));
+}
+
+function testValidateAcceptsSpecPhaseLedgerWithFuturePendingRows() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/tool-library
+- Current mode: spec
+- Doc: auto-strike/initiatives/main/spec.md
+- State: Spec is being drafted.
+- Next: Finish spec review.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/language.md", "# Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
+  write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Stack\nDecision: Use a local server.\n");
+  write(repo, "auto-strike/initiatives/main/spec.md", `# Spec
+
+## Phase Tasks
+- [x] Draft initiative spec.
+- [ ] Review spec before slicing.
+
+## Exit Evidence
+- Spec is being drafted from completed grill decisions.
+`);
+  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/grill.md", `# Grill
+
+## Decision Depth
+Level: Standard
+Why: Default.
+
+## Decision Checkpoint
+- Scope / size: One local lending workflow.
+- Stack / dependencies: Local server with no third-party packages.
+- Data / persistence / state: JSON file store.
+- Auth / identity / permissions: Name picker with lender ownership checks.
+- Validation / browser or live checks: Browser walkthrough plus server smoke check.
+- User-confirmed decisions: User confirmed the local prototype scope.
+`);
+  write(repo, "auto-strike/initiatives/main/idea.md", `# Idea
+
+## Phase Ledger
+
+| Phase | Status | Artifact | Reason |
+| --- | --- | --- | --- |
+| Brainstorm | done | \`idea.md\` | First useful outcome, user, constraints, and non-goals are recorded. |
+| Grill | done | \`grill.md\`, \`decisions.md\` | User-facing grill resolved hardening decisions. |
+| Spec | in progress | \`spec.md\`, \`features/tool-library/feature-spec.md\` | Spec is being drafted. |
+| Slice | pending |  |  |
+| Build | pending |  |  |
+| Review | pending |  |  |
+| Validate | pending |  |  |
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "future pending ledger rows should not weaken active spec mode");
+  const body = json(result);
+  assert.ok(!body.messages.some((item) => item.code === "weak-phase-ledger"));
+}
+
+function testValidateDoesNotInferBuildPrepFromSliceDocAlone() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/tool-library
+- Doc: auto-strike/initiatives/main/features/tool-library/slices/slice-0-server-boot.md
+- Slice: auto-strike/initiatives/main/features/tool-library/slices/slice-0-server-boot.md
+- State: Slice planning is done; build is next.
+- Next: Build slice 0.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/language.md", "# Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
+  write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Stack\nDecision: Use a local server.\n");
+  write(repo, "auto-strike/initiatives/main/spec.md", "# Spec\n\n## Summary\nBuild a local tool library.\n");
+  write(repo, "auto-strike/initiatives/main/grill.md", `# Grill
+
+## Decision Depth
+Level: Standard
+Why: Default.
+
+## Decision Checkpoint
+- Scope / size: One local lending workflow.
+- Stack / dependencies: Local server with no third-party packages.
+- Data / persistence / state: JSON file store.
+- Auth / identity / permissions: Name picker with lender ownership checks.
+- Validation / browser or live checks: Browser walkthrough plus server smoke check.
+- User-confirmed decisions: User confirmed the local prototype scope.
+`);
+  write(repo, "auto-strike/initiatives/main/idea.md", `# Idea
+
+## Phase Ledger
+
+| Phase | Status | Artifact | Reason |
+| --- | --- | --- | --- |
+| Brainstorm | done | \`idea.md\` | First useful outcome, user, constraints, and non-goals are recorded. |
+| Grill | done | \`grill.md\`, \`decisions.md\` | User-facing grill resolved hardening decisions. |
+| Spec | done | \`spec.md\`, \`features/tool-library/feature-spec.md\` | Feature is ready to slice. |
+| Slice | done | \`features/tool-library/slices/index.md\`, \`features/tool-library/slices/slice-0-server-boot.md\` | Slices are sized and ordered; slice 0 is ready for build. |
+| Build | pending |  |  |
+`);
+  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/index.md", `# Slices
+
+## Slice Map
+
+| Slice | Size | Depends On | Unblocks | Risk | Verification |
+| --- | --- | --- | --- | --- | --- |
+| 0. server-boot | S | None | JSON store | Low | Server starts |
+
+## Slice Review
+- pass - size, dependency order, and verification are clear.
+
+## Exit Evidence
+- Feature can enter build one slice at a time without guessing.
+`);
+  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-0-server-boot.md", `# Slice 0: Server Boot
+
+## Size
+S
+
+## Acceptance Criteria
+- [ ] Server starts.
+- [ ] Health route responds.
+- [ ] Static CSS route responds.
+
+## Depends On
+- None.
+
+## Likely Surfaces
+- \`src/server.mjs\` - server route boundary.
+
+## Execution Tasks
+- [ ] Research Node http behavior.
+- [ ] Write plan.
+- [ ] Review plan.
+- [ ] Verify server boot.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "slice doc without explicit mode should require mode but not infer build prep");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "missing-active-work" && item.severity === "warning"));
+  assert.ok(!body.messages.some((item) => item.code === "weak-slice-implementation-research"));
+  assert.ok(!body.messages.some((item) => item.code === "weak-slice-plan"));
+  assert.ok(!body.messages.some((item) => item.code === "weak-slice-plan-review"));
+  assert.ok(!body.messages.some((item) => item.code === "weak-phase-ledger" && /build/i.test(item.message)));
 }
 
 function testValidateWarnsForStaleActiveWorkAfterImplementationEvidence() {
@@ -1330,7 +1612,7 @@ Why: Default.
 - Data / persistence / state: JSON file persistence is enough for this prototype.
 - Auth / identity / permissions: Name-based member switcher; no real authentication.
 - Feature split / non-goals: Listing, browsing, request, pickup, return; no payments or messaging.
-- Validation / browser or live checks: Browser walkthrough plus server smoke check.
+- Validation / browser or live checks: Browser walkthrough plus server smoke check; date windows require \`start <= end\`.
 - User-confirmed decisions: User accepted local prototype constraints in grill.
 - Accepted assumptions: Dates can be simple ISO date inputs.
 - Deferred decisions: Real auth and notifications.
@@ -2106,6 +2388,111 @@ M
   assert.ok(body.messages.some((item) => item.code === "too-many-slice-acceptance-criteria" && item.severity === "warning"));
   assert.ok(body.messages.some((item) => item.code === "too-many-slice-surfaces" && item.severity === "warning"));
   assert.ok(!body.messages.some((item) => item.code === "missing-active-feature"));
+}
+
+function writeCheckpointDueFixture(repo, activeSliceIndex) {
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/tool-library
+- Current mode: build
+- Doc: auto-strike/initiatives/main/features/tool-library/slices/slice-${activeSliceIndex}-done.md
+- Active slice: auto-strike/initiatives/main/features/tool-library/slices/slice-${activeSliceIndex}-done.md
+- State: Slice ${activeSliceIndex} has implementation evidence.
+- Next: Close slice ${activeSliceIndex}.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/index.md", `# Slices
+
+## Slice Map
+| Slice | Size | Depends On | Unblocks | Risk | Verification |
+| --- | --- | --- | --- | --- | --- |
+| 0. Server Boot | S | None | Store | Low | Smoke |
+| 1. Store | S | 0 | Identity | Medium | Smoke |
+| 2. Identity | S | 1 | Tools | Medium | Browser |
+| 3. Tools | S | 2 | Requests | Medium | Browser |
+| 4. Requests | M | 3 | Readiness | High | Browser |
+
+## Checkpoint: After Slices 0-3
+- [ ] Core user flow works end to end.
+
+## Checkpoint: After Slice 4
+- [ ] Borrow approval works end to end.
+`);
+  write(repo, `auto-strike/initiatives/main/features/tool-library/slices/slice-${activeSliceIndex}-done.md`, `# Slice ${activeSliceIndex}: Done
+
+## Size
+S
+
+## Acceptance Criteria
+- App behavior works.
+
+## Depends On
+- None.
+
+## Likely Surfaces
+- \`src/app.js\`
+
+## Execution Tasks
+- [x] Research.
+- [x] Plan.
+- [x] Review.
+- [x] Verify.
+
+## Evidence
+Changed:
+- \`src/app.js\`
+
+Verified:
+- \`pnpm smoke\` passed.
+
+Reviewed:
+- functionality: passed.
+
+## Closeout Summary
+Implemented Slice ${activeSliceIndex}: Done.
+
+Built:
+- Behavior works.
+
+Validation passed:
+- \`pnpm smoke\`
+
+Review:
+- functionality: passed.
+
+Skipped / residual risk:
+- None.
+
+Docs:
+- Slice doc.
+
+Next:
+- Next slice.
+`);
+}
+
+function testValidateDoesNotWarnForFutureSliceCheckpoint() {
+  const repo = tempRepo();
+  writeCheckpointDueFixture(repo, 0);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "future slice checkpoint should not warn before due slice completes");
+  assert.ok(!json(result).messages.some((item) => item.code === "stale-slice-checkpoint-checklist"));
+}
+
+function testValidateWarnsForDueSliceCheckpoint() {
+  const repo = tempRepo();
+  writeCheckpointDueFixture(repo, 3);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "due slice checkpoint should warn when unchecked");
+  assert.ok(json(result).messages.some((item) => item.code === "stale-slice-checkpoint-checklist" && item.severity === "warning"));
 }
 
 function testValidateWarnsForDuplicatePhaseLedgerRowsWithoutFalseSpecSliceBoundary() {
@@ -3116,9 +3503,14 @@ testValidateAcceptsConcretePreBuildSlicePrep();
 testValidateAcceptsActiveWorkPointer();
 testValidateWarnsForMissingActiveWork();
 testValidateWarnsForWeakOrMissingActiveWorkDoc();
+testValidateWarnsForBatchedPhaseNextAction();
+testValidateWarnsForNextSliceDocAndImplementationBatch();
+testValidateAcceptsSingleBoundaryNextAction();
 testValidateWarnsForMissingPhaseLedgerAfterSlicing();
 testValidateWarnsForWeakPhaseLedgerAfterSlicing();
 testValidateAcceptsPhaseLedgerAfterSlicing();
+testValidateAcceptsSpecPhaseLedgerWithFuturePendingRows();
+testValidateDoesNotInferBuildPrepFromSliceDocAlone();
 testValidateWarnsForStaleActiveWorkAfterImplementationEvidence();
 testValidateWarnsForMissingReferencedAutoStrikeDoc();
 testValidateWarnsForStaleSliceTaskChecklist();
@@ -3141,6 +3533,8 @@ testValidateAcceptsExplicitUserOptOutOfGrill();
 testValidateWarnsForPhaseCompletedAfterQuestionToolFailure();
 testValidateAcceptsSliceMapDependenciesAndCheckpoint();
 testValidateWarnsForMissingSliceMapDependenciesAndCheckpoint();
+testValidateDoesNotWarnForFutureSliceCheckpoint();
+testValidateWarnsForDueSliceCheckpoint();
 testValidateWarnsForOversizedBatchedAndWeakNonVerticalSlice();
 testValidateWarnsForDuplicateActiveWorkAndStillChecksSlices();
 testValidateWarnsForDuplicatePhaseLedgerRowsWithoutFalseSpecSliceBoundary();

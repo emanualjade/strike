@@ -97,6 +97,10 @@ decisions, record that as `compressed` with the artifact and reason.
 After recording the Decision Checkpoint and Exit Evidence, stop with spec as the
 next action. Do not continue into spec in the same work unit unless the user
 explicitly asked to skip that boundary.
+When asking the user to resolve the active grill decision, do not promise to
+write specs, create feature specs, slice the build, or begin implementation
+after their answer. Promise only to record the decision, close grill, and leave
+spec as the next action.
 
 Use `grill.md` as the grill work packet:
 

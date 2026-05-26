@@ -88,9 +88,9 @@ At the start of every run, route deliberately:
    Use the helper's `inspect` command when available.
 2. Identify the current mode from user intent and the active artifact:
    brainstorm, grill, spec, slice, build, review, or readiness.
-3. Keep `auto-strike/index.md` as a small front door: active initiative, active
-   feature when relevant, active doc or slice, short state, next action, and
-   blocker if any.
+3. Keep `auto-strike/index.md` as a small front door: active initiative,
+   explicit current mode, active feature when relevant, active doc or slice,
+   short state, next action, and blocker if any.
 4. Load the reference files for that mode, then do that mode's work until its
    purpose is satisfied or a better mode is needed.
 5. Before claiming done, run the helper's `validate` command when available and
@@ -151,6 +151,18 @@ progress, in the same unit unless the user explicitly asked to skip that phase
 boundary. In durable goal mode, the next continuation can resume from
 `index.md` and the active phase doc.
 
+The same boundary applies between build slices. After a slice closeout, name the
+next natural slice/action, but do not move Active Work to that next slice, create
+its slice doc, or promise "write, research, plan, implement, and verify" as one
+next action unless the user explicitly asked to continue across slice
+boundaries.
+
+When asking for a decision, do not promise a bundled downstream run such as
+"answer this and I will close grill, write specs, and slice the build." Phrase
+the next action as the current phase closeout plus the immediate next mode only:
+"answer this and I will close grill with spec as the next action." The next
+continuation can then load the next phase reference and commit to that phase.
+
 For initiative work that reaches slice, build, review, or validation, keep the
 initiative `Phase Ledger` from `workspace.md` current. Earlier phases may be
 compressed or skipped only with explicit user opt-out, prior-artifact evidence,
@@ -199,9 +211,9 @@ checks, not only planning docs.
   of questions or phases.
 - Keep docs current as source of truth, not ceremony. Add files only when the
   work needs them.
-- Keep `index.md` current as the resume pointer. Once feature/slice/build
-  evidence exists, do not leave it pointing at brainstorm, stale open decisions,
-  no active feature/slice, or no verification.
+- Keep `index.md` current as the resume pointer. Always record `Current mode`;
+  once feature/slice/build evidence exists, do not leave it pointing at
+  brainstorm, stale open decisions, no active feature/slice, or no verification.
 - Keep root `language.md` plus the active initiative's `decisions.md` and
   `spec.md` current, even when they are minimal.
 - Build, verify, review, and fix in loops until the stopping condition is met or
