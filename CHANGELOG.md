@@ -2,6 +2,19 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.11 - 2026-05-25
+
+- Tightened Auto Strike phase commitment so meaningful feature/MVP work must
+  run brainstorm and grill with the user unless the user explicitly opts out,
+  asks to move along, or prior artifacts already answer the phase.
+- Clarified that the kickoff prompt is source material, not a finished spec;
+  vague terms like "small", "simple", "MVP", and "real workflow" must become
+  explicit constraints before scope, stack, dependency, persistence, identity,
+  or feature-split choices are hardened.
+- Added grill Decision Checkpoint guidance plus helper warnings when spec,
+  slice, or build work appears without `grill.md` or without a substantive
+  checkpoint covering hardening decisions.
+
 ## 0.8.10 - 2026-05-25
 
 - Tightened Auto Strike validation after dogfood so implementation evidence now

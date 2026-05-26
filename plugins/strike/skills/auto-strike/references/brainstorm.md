@@ -2,6 +2,12 @@
 
 Turn the raw idea into a clearer opportunity. Start with the user, maintainer,
 operator, integration, or system moment, then work backward to the technology.
+The kickoff prompt is source material, not a finished spec. Separate explicit
+facts from assumptions before any stack, package, persistence, auth, or feature
+count becomes locked.
+Do not skip a proper brainstorm with the user unless the user explicitly says to
+skip it, move along, or proceed without questions. If the user already answered
+the brainstorm questions, record the explicit answers and keep going.
 
 Find:
 
@@ -13,6 +19,10 @@ Find:
 
 Explore a few real directions when useful, then converge to a recommendation.
 Challenge vague value, broad audiences, and attractive distractions.
+Translate vague scope words like "small", "simple", "MVP", "local", or "real
+workflow" into explicit first-version constraints and non-goals. If those words
+hide consequential product or architecture choices, hand them to grill instead
+of privately deciding.
 
 Do light idea research when it can change the first-version target: comparable
 workflows, current product expectations, difficult technical dependencies,
@@ -41,6 +51,7 @@ Use `idea.md` as the brainstorm work packet:
 | Validate | pending |  |  |
 
 ## Phase Tasks
+- [ ] Separate explicit user facts from assumptions or inferred scope.
 - [ ] Capture the target user/system moment.
 - [ ] Name the painful moment, workaround, or workflow drag.
 - [ ] Propose the first useful outcome and first-version non-goals.
@@ -49,6 +60,8 @@ Use `idea.md` as the brainstorm work packet:
 - [ ] Record exit evidence and handoff to grill.
 
 ## Current Shape
+- Explicit user facts:
+- Assumptions / inferred scope:
 - Who/what this serves:
 - Painful moment:
 - First useful outcome:

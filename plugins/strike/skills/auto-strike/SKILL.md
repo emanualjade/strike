@@ -106,10 +106,24 @@ unless the user explicitly wants Auto Strike state.
 
 ## Mode Commitment
 
-Treat the phase order as the ideal default workflow, not a mandated waterfall.
-Move forward, backward, or sideways when judgment says another mode would better
-serve the work, and borrow another mode's principles when the current work
-surfaces that kind of problem.
+For meaningful feature or MVP work, treat the phase order as the required
+default workflow: brainstorm, grill, spec, slice, build, review, readiness.
+Move backward or sideways when judgment says another mode would better serve the
+work, but do not silently skip a phase. A phase may be skipped or compressed
+only when the user explicitly opts out, explicitly asks to move along, prior
+artifacts already satisfy it, or the phase truly does not apply; record the
+artifact and reason.
+
+A proper brainstorm or grill means the agent either engaged the user on the
+phase's consequential questions, or the user already answered those exact
+questions explicitly. Internal interpretation is not enough.
+
+The kickoff prompt is input, not a spec. Even when it is detailed, extract facts,
+unknowns, assumptions, and consequential decisions into the phase artifacts
+before hardening scope, stack, dependencies, persistence, auth/identity, feature
+count, or validation depth. Do not treat words like "small", "simple", "MVP",
+or "real workflow" as settled requirements until brainstorm/grill translates
+them into explicit constraints.
 
 Each mode still has a purpose. When moving modes, leave enough state for a fresh
 context to know whether the active doc is complete, paused, skipped, replaced,
@@ -120,7 +134,8 @@ intended result.
 
 For initiative work that reaches slice, build, review, or validation, keep the
 initiative `Phase Ledger` from `workspace.md` current. Earlier phases may be
-compressed or skipped, but only with an artifact and reason.
+compressed or skipped only with explicit user opt-out, prior-artifact evidence,
+or a clear not-applicable reason.
 
 | Mode | Load | Exit Evidence |
 | --- | --- | --- |
@@ -158,6 +173,9 @@ checks, not only planning docs.
 - Ask for user input on core domain language, schema/model shape, lifecycle
   states, ownership, permissions, business rules, privacy/legal posture,
   destructive behavior, or hard-to-reverse architecture.
+- Do not convert an initial prompt directly into a full build spec. Run the
+  phase docs and decision checkpoint first unless the user explicitly opts out
+  of questions or phases.
 - Keep docs current as source of truth, not ceremony. Add files only when the
   work needs them.
 - Keep `index.md` current as the resume pointer. Once feature/slice/build

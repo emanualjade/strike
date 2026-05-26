@@ -13,6 +13,7 @@ const MODES_EXPECTING_SPEC = new Set(["slice", "build", "review", "readiness"]);
 const MODES_EXPECTING_SLICE = new Set(["build", "review", "readiness"]);
 const MODES_EXPECTING_SLICE_PREP = new Set(["build", "review", "readiness"]);
 const MODES_EXPECTING_EVIDENCE = new Set(["review", "readiness"]);
+const MODES_REQUIRING_GRILL_CHECKPOINT = new Set(["spec", "slice", "build", "review", "readiness"]);
 const VALID_DECISION_DEPTH_LEVELS = new Set(["lean", "standard", "deep"]);
 const PHASE_LEDGER_ORDER = ["brainstorm", "grill", "spec", "slice", "build", "review", "validate"];
 const PHASE_LEDGER_BY_MODE = {
@@ -1675,6 +1676,119 @@ function grillDecisionDepthMessages(state) {
   return [];
 }
 
+function phaseLedgerRowText(row) {
+  if (!row) return "";
+  return normalizeText([row.statusRaw, row.artifact, row.reason, row.raw].filter(Boolean).join("\n"));
+}
+
+function rowShowsExplicitUserOptOut(row) {
+  const text = phaseLedgerRowText(row);
+  return /\b(user|human)\b.*\b(opt(?:ed)?\s*out|skip(?:ped)?|move\s+along|no\s+questions?|proceed\s+without\s+questions?|use\s+judgment)\b/i.test(text) ||
+    /\b(skip(?:ped)?|compress(?:ed)?)\b.*\b(user|human)\b/i.test(text) ||
+    /\b(explicit(?:ly)?\s+(?:opted\s+out|skipped|asked\s+to\s+move\s+along))\b/i.test(text);
+}
+
+function rowShowsExplicitAnswers(row) {
+  const text = phaseLedgerRowText(row);
+  return /\b(explicit(?:ly)?\s+(?:answered|stated|provided|confirmed)|explicit user (?:wording|answers?|decisions?)|user (?:already )?(?:answered|stated|confirmed|provided)|prompt explicitly)\b/i.test(text);
+}
+
+function rowShowsPriorArtifact(row) {
+  const text = phaseLedgerRowText(row);
+  return /\b(prior|existing|previous|earlier|already completed)\b.*\b(artifact|docs?|documents?|decisions?|spec|grill|brainstorm|auto strike|repo context)\b/i.test(text) ||
+    /\b(recorded in|carried from)\b.*\b(artifact|docs?|documents?|decisions?|spec|grill|brainstorm)\b/i.test(text);
+}
+
+function rowShowsNotApplicable(row) {
+  return /\b(not applicable|does not apply|n\/a|irrelevant)\b/i.test(phaseLedgerRowText(row));
+}
+
+function rowShowsInternalInference(row) {
+  return /\b(agent|model|assistant)\b.*\b(inferred|assumed|interpreted|decided)\b|\b(internal|privately)\b.*\b(inferred|assumed|interpreted|decided)\b|\bprompt (?:implied|suggested)\b/i.test(phaseLedgerRowText(row));
+}
+
+function grillWasExplicitlyOptedOut(state) {
+  const grillRow = state.phaseLedger.rows?.grill;
+  if (!grillRow) return false;
+  return ["compressed", "skipped", "replaced"].includes(grillRow.status) && rowShowsExplicitUserOptOut(grillRow);
+}
+
+function phaseBypassMessages(state) {
+  if (!hasReachedSpecOrLater(state) || !state.phaseLedger.present) return [];
+
+  const messages = [];
+  for (const phase of ["brainstorm", "grill"]) {
+    const row = state.phaseLedger.rows?.[phase];
+    if (!row) continue;
+    if (rowShowsInternalInference(row)) {
+      messages.push(message("warning", "phase-completed-by-inference", state.phaseLedger.path, `${phase} is recorded as complete using agent inference. Run the phase with the user, cite explicit user answers/prior artifacts, or record explicit permission to skip.`));
+      continue;
+    }
+
+    if (row.status === "compressed" && !rowShowsExplicitUserOptOut(row) && !rowShowsExplicitAnswers(row) && !rowShowsPriorArtifact(row)) {
+      messages.push(message("warning", "phase-compressed-without-permission", state.phaseLedger.path, `${phase} is compressed without explicit user opt-out, explicit prior answers, or prior-artifact evidence.`));
+    }
+
+    if (row.status === "skipped" && !rowShowsExplicitUserOptOut(row) && !rowShowsNotApplicable(row)) {
+      messages.push(message("warning", "phase-skipped-without-permission", state.phaseLedger.path, `${phase} is skipped without explicit user opt-out, move-along request, or not-applicable reason.`));
+    }
+  }
+  return messages;
+}
+
+function hasReachedSpecOrLater(state) {
+  const mode = state.index.currentMode;
+  if (mode && MODES_REQUIRING_GRILL_CHECKPOINT.has(mode)) return true;
+  if (state.activeFeature.exists || state.activeFeature.sliceFiles.length > 0 || hasImplementationEvidence(state)) return true;
+  return ["spec", "slice", "build", "review", "validate"].some((phase) => {
+    const row = state.phaseLedger.rows?.[phase];
+    return row && PHASE_LEDGER_ACTIVE_STATUSES.has(row.status);
+  });
+}
+
+function decisionCheckpointIsValid(sectionText) {
+  const text = normalizeText(sectionText);
+  if (!sectionHasSubstance(text) || sectionHasWeakPlanningText(text)) return false;
+
+  const requiredSignals = [
+    /\b(scope|size|first[- ]version|non[- ]goals?)\b/i,
+    /\b(stack|dependenc(?:y|ies)|package|runtime|framework|architecture)\b/i,
+    /\b(data|persist(?:ence)?|state|model|schema|storage)\b/i,
+    /\b(auth|identity|session|permission|ownership|privacy)\b/i,
+    /\b(validation|verify|verification|browser|live|success|checks?)\b/i,
+    /\b(user[- ]confirmed|confirmed|explicit|accepted assumptions?|assumptions?|deferred|opt[- ]out|opted out)\b/i,
+  ];
+  return requiredSignals.filter((pattern) => pattern.test(text)).length >= 5;
+}
+
+function grillCheckpointMessages(state) {
+  if (!state.activeInitiative.exists || !hasReachedSpecOrLater(state) || grillWasExplicitlyOptedOut(state)) {
+    return [];
+  }
+
+  if (!state.activeInitiative.grillExists) {
+    return [
+      message("warning", "missing-initiative-grill", state.activeInitiative.grillPath, "Initiative has reached spec/slice/build work without grill.md. Run a proper grill session with the user or record an explicit user opt-out before hardening scope, stack, dependencies, persistence, identity, or feature split."),
+    ];
+  }
+
+  const grillText = readFileIfPresent(path.join(state.repoRoot, state.activeInitiative.grillPath));
+  const checkpoint = extractSection(grillText ?? "", "Decision Checkpoint");
+  if (!sectionHasSubstance(checkpoint)) {
+    return [
+      message("warning", "missing-grill-decision-checkpoint", state.activeInitiative.grillPath, "Grill should record a Decision Checkpoint before spec/slice/build so vague kickoff language and consequential assumptions are explicit."),
+    ];
+  }
+
+  if (!decisionCheckpointIsValid(checkpoint)) {
+    return [
+      message("warning", "weak-grill-decision-checkpoint", state.activeInitiative.grillPath, "Decision Checkpoint should cover scope/size, stack/dependencies, data/state, auth/permissions when relevant, validation, confirmed decisions, accepted assumptions, and deferred decisions."),
+    ];
+  }
+
+  return [];
+}
+
 function autoStrikeDocReferences(text) {
   return [...new Set([...normalizeText(text).matchAll(/\bauto-strike\/[A-Za-z0-9._~/-]+\.md\b/g)]
     .map((match) => match[0])
@@ -1863,7 +1977,9 @@ export function validateAutoStrike(options = {}) {
   messages.push(...activeWorkFreshnessMessages(state));
   messages.push(...currentTruthMessages(state));
   messages.push(...phaseLedgerMessages(state));
+  messages.push(...phaseBypassMessages(state));
   messages.push(...grillDecisionDepthMessages(state));
+  messages.push(...grillCheckpointMessages(state));
   messages.push(...referencedAutoStrikeDocMessages(state));
 
   if (index.activeInitiativePath && isExplicitWorkspacePath(index.activeInitiativePath)) {

@@ -1242,6 +1242,149 @@ function testValidateDoesNotRequireDecisionDepthOutsideGrillMode() {
   assert.ok(!body.messages.some((item) => item.code === "unknown-grill-decision-depth"));
 }
 
+function testValidateWarnsForMissingGrillBeforeSpecOrSlice() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/tool-library
+- Doc: auto-strike/initiatives/main/features/tool-library/feature-spec.md
+- State: Feature has been specced and is being sliced.
+- Next: Slice the feature.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/language.md", "# Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
+  write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Status\n- Tool-library decisions are being recorded.\n");
+  write(repo, "auto-strike/initiatives/main/spec.md", "# Spec\n\n## Summary\nBuild a local tool library.\n");
+  write(repo, "auto-strike/initiatives/main/idea.md", `# Idea
+
+## Phase Ledger
+
+| Phase | Status | Artifact | Reason |
+| --- | --- | --- | --- |
+| Brainstorm | done | \`idea.md\` | First useful outcome, user, constraints, and non-goals are recorded. |
+| Grill | done | \`idea.md\` | Agent inferred decisions from the prompt. |
+| Spec | done | \`spec.md\`, \`features/tool-library/feature-spec.md\` | Feature is ready to slice. |
+| Slice | in progress | \`features/tool-library/slices/index.md\` | Slice plan is being drafted. |
+| Build | pending |  |  |
+| Review | pending |  |  |
+| Validate | pending |  |  |
+`);
+  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "missing real grill artifact should warn, not fail");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "missing-initiative-grill" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "phase-completed-by-inference" && item.severity === "warning"));
+}
+
+function testValidateAcceptsGrillDecisionCheckpointBeforeSpec() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: None
+- Doc: auto-strike/initiatives/main/spec.md
+- State: Spec is being drafted from grill decisions.
+- Next: Draft the feature map.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/language.md", "# Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
+  write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Stack\nDecision: Use vanilla HTML and a tiny local server.\n");
+  write(repo, "auto-strike/initiatives/main/spec.md", "# Spec\n\n## Summary\nBuild a local tool library.\n");
+  write(repo, "auto-strike/initiatives/main/idea.md", `# Idea
+
+## Phase Ledger
+
+| Phase | Status | Artifact | Reason |
+| --- | --- | --- | --- |
+| Brainstorm | done | \`idea.md\` | First useful outcome, user, constraints, and non-goals are recorded. |
+| Grill | done | \`grill.md\`, \`decisions.md\` | User-facing grill resolved hardening decisions. |
+| Spec | in progress | \`spec.md\` | Spec is being drafted. |
+`);
+  write(repo, "auto-strike/initiatives/main/grill.md", `# Tool Library Grill
+
+## Phase Tasks
+- [x] Review the brainstorm handoff and repo context.
+- [x] Set or confirm Grill Decision Depth.
+- [x] Translate vague kickoff language into explicit constraints or questions.
+- [x] Identify consequential product/domain/data/workflow decisions.
+- [x] Record the Decision Checkpoint before spec.
+
+## Decision Depth
+Level: Standard
+Why: Default.
+
+## Decision Checkpoint
+- Scope / size: First version is a local two-member lending workflow, not a complete marketplace.
+- Stack / dependencies: Vanilla HTML plus a tiny local server; no third-party packages.
+- Data / persistence / state: JSON file persistence is enough for this prototype.
+- Auth / identity / permissions: Name-based member switcher; no real authentication.
+- Feature split / non-goals: Listing, browsing, request, pickup, return; no payments or messaging.
+- Validation / browser or live checks: Browser walkthrough plus server smoke check.
+- User-confirmed decisions: User accepted local prototype constraints in grill.
+- Accepted assumptions: Dates can be simple ISO date inputs.
+- Deferred decisions: Real auth and notifications.
+
+## Exit Evidence
+- Scope, stack, persistence, identity, feature split, and validation are explicit enough to spec.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "grill decision checkpoint should satisfy spec-stage validation");
+  const body = json(result);
+  assert.ok(!body.messages.some((item) => item.code === "missing-initiative-grill"));
+  assert.ok(!body.messages.some((item) => item.code === "missing-grill-decision-checkpoint"));
+  assert.ok(!body.messages.some((item) => item.code === "weak-grill-decision-checkpoint"));
+}
+
+function testValidateAcceptsExplicitUserOptOutOfGrill() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/tool-library
+- Doc: auto-strike/initiatives/main/features/tool-library/feature-spec.md
+- State: User asked to skip grill and move along to implementation planning.
+- Next: Slice the feature.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/language.md", "# Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
+  write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Status\n- User asked the agent to proceed with assumptions.\n");
+  write(repo, "auto-strike/initiatives/main/spec.md", "# Spec\n\n## Summary\nBuild a local tool library.\n");
+  write(repo, "auto-strike/initiatives/main/idea.md", `# Idea
+
+## Phase Ledger
+
+| Phase | Status | Artifact | Reason |
+| --- | --- | --- | --- |
+| Brainstorm | done | \`idea.md\` | First useful outcome, user, constraints, and non-goals are recorded. |
+| Grill | skipped | \`idea.md\`, \`decisions.md\` | User explicitly asked to skip grill and move along; assumptions are recorded. |
+| Spec | done | \`spec.md\`, \`features/tool-library/feature-spec.md\` | Feature is ready to slice. |
+| Slice | in progress | \`features/tool-library/slices/index.md\` | Slice plan is being drafted. |
+`);
+  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "explicit user opt-out should not require grill artifact");
+  const body = json(result);
+  assert.ok(!body.messages.some((item) => item.code === "missing-initiative-grill"));
+  assert.ok(!body.messages.some((item) => item.code === "missing-grill-decision-checkpoint"));
+}
+
 function testValidateAcceptsSliceMapDependenciesAndCheckpoint() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
@@ -2421,6 +2564,9 @@ testValidateAcceptsStandardGrillDecisionDepth();
 testValidateAcceptsDeepGrillDecisionDepthWithSuggestedChange();
 testValidateWarnsForUnknownGrillDecisionDepth();
 testValidateDoesNotRequireDecisionDepthOutsideGrillMode();
+testValidateWarnsForMissingGrillBeforeSpecOrSlice();
+testValidateAcceptsGrillDecisionCheckpointBeforeSpec();
+testValidateAcceptsExplicitUserOptOutOfGrill();
 testValidateAcceptsSliceMapDependenciesAndCheckpoint();
 testValidateWarnsForMissingSliceMapDependenciesAndCheckpoint();
 testValidateWarnsForOversizedBatchedAndWeakNonVerticalSlice();

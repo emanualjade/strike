@@ -9,6 +9,13 @@ Default path:
 
 - `auto-strike/initiatives/<initiative-slug>/grill.md`
 
+Grill is not optional for meaningful feature or MVP work unless the user
+explicitly opts out, says to move along, or asks the agent to proceed without
+questions. A detailed kickoff prompt can answer decision nodes, but it does not
+replace grill unless it explicitly answers those nodes. Record which decisions
+were user-stated, which were accepted assumptions, and which need a question
+before spec.
+
 Good grill areas:
 
 - affected user/system/workflow and success
@@ -20,6 +27,16 @@ Good grill areas:
 - integrations, external side effects, and failure cases
 - UI/API/CLI behavior when relevant
 - validation evidence
+
+Hardening decisions require explicit handling before spec/slice/build:
+
+- scope and meaning of vague words such as "small", "simple", "MVP", "local",
+  "real workflow", "production", or "quick"
+- stack, framework, dependency, package install, runtime, and build choices
+- data model, persistence, auth/identity/session, permissions, ownership, and
+  lifecycle/state choices
+- feature split, non-goals, validation depth, browser/manual checks, and any
+  dependency/security/cost/privacy risk
 
 When starting a meaningful grill session, ask once unless the user already gave
 a clear depth signal:
@@ -78,10 +95,12 @@ Use `grill.md` as the grill work packet:
 ## Phase Tasks
 - [ ] Review the brainstorm handoff and repo context.
 - [ ] Set or confirm Grill Decision Depth.
+- [ ] Translate vague kickoff language into explicit constraints or questions.
 - [ ] Identify consequential product/domain/data/workflow decisions.
 - [ ] Capture consequential new branches as they appear.
 - [ ] Suggest deeper or lighter area depth only when risk/profile justifies it.
 - [ ] Ask or answer only decisions that change product behavior or risk.
+- [ ] Record the Decision Checkpoint before spec.
 - [ ] Update root `language.md` and initiative `decisions.md` with current truth.
 - [ ] Record exit evidence and handoff to spec.
 
@@ -121,6 +140,17 @@ Question:
 ## Decisions Made
 - [Decision] - [where recorded]
 
+## Decision Checkpoint
+- Scope / size:
+- Stack / dependencies:
+- Data / persistence / state:
+- Auth / identity / permissions:
+- Feature split / non-goals:
+- Validation / browser or live checks:
+- User-confirmed decisions:
+- Accepted assumptions:
+- Deferred decisions:
+
 ## Exit Evidence
 - [Why the initiative is clear enough to spec at the selected depth, including
   accepted assumptions, deferred decisions, and unresolved blockers.]
@@ -131,5 +161,7 @@ Question:
 
 Exit when consequential product, domain, workflow, permission, data,
 integration, and success-check decisions are clear enough to spec without
-guessing. If no user question is needed, record why repo context or the user's
-input already answered the consequential decisions.
+guessing. If no user question is needed, record why repo context, prior
+artifacts, explicit user wording, or a user opt-out already answered the
+consequential decisions. Do not leave grill by silently converting the kickoff
+prompt into a spec.

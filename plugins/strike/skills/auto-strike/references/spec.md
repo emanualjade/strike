@@ -3,6 +3,12 @@
 Every initiative has a `spec.md`, even when minimal. Specs are durable
 source-of-truth artifacts, not implementation scripts.
 
+Before writing a real spec, confirm brainstorm and grill produced artifacts or
+were explicitly opted out by the user. Do not treat the kickoff prompt as the
+spec. Pull current truth from `idea.md`, `grill.md`, `decisions.md`, root
+`language.md`, repo context, and research; unresolved hardening decisions go
+back to grill.
+
 Default paths:
 
 - `auto-strike/initiatives/<initiative-slug>/spec.md` for the initiative
@@ -78,6 +84,7 @@ During active spec work, keep the process sections concise:
 ```md
 ## Phase Tasks
 - [ ] Pull current truth from idea, grill, root language, and initiative decisions.
+- [ ] Confirm grill has a Decision Checkpoint or an explicit user opt-out.
 - [ ] Write or update the initiative feature map.
 - [ ] Write feature specs for buildable capabilities.
 - [ ] Write product behavior, scope, non-goals, rules, and flows.

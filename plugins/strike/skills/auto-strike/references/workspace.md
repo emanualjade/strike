@@ -16,8 +16,9 @@ or move the unrelated content.
 The user should not need to know which docs to create. On every run, discover
 what exists, decide what is missing, and update or restructure lightly. On cold
 start, create root `language.md` plus the active initiative's `idea.md`,
-`decisions.md`, and `spec.md`. Keep them minimal if the truth is still emerging,
-but do not leave them absent.
+`decisions.md`, `grill.md`, and `spec.md`. Keep them minimal if the truth is
+still emerging, but do not leave them absent once the initiative reaches spec or
+later.
 
 ```text
 auto-strike/
@@ -28,6 +29,7 @@ auto-strike/
     <initiative-slug>/
       idea.md
       decisions.md
+      grill.md
       spec.md
 ```
 
@@ -63,10 +65,12 @@ represents one Auto Strike user request, session, campaign, MVP, or milestone.
 Create a new initiative only when starting a new Auto Strike run/request that is
 meaningfully separate from existing active work.
 
-Every active initiative owns `decisions.md` and `spec.md`, even when they are
-brief. `decisions.md` may say no consequential decisions have been made yet, but
-it must become the current truth once brainstorm or grill resolves product,
-model, workflow, permission, architecture, dependency, or validation decisions.
+Every active initiative owns `decisions.md`, `grill.md`, and `spec.md` once it
+reaches spec or later, even when they are brief. `decisions.md` may say no
+consequential decisions have been made yet, but it must become the current truth
+once brainstorm or grill resolves product, model, workflow, permission,
+architecture, dependency, or validation decisions. `grill.md` must record either
+the decision pressure-test and Decision Checkpoint or the user's explicit opt-out.
 `spec.md` may start as a thin initiative overview, but it must exist before
 feature specs, slices, or build work proceed.
 
@@ -131,8 +135,12 @@ Update it when entering or leaving a phase:
 Allowed statuses: `in progress`, `done`, `compressed`, `skipped`, `blocked`,
 `paused`, or `replaced`. Before slicing or building, earlier phases should be
 `done`, `compressed`, or `skipped` with a real artifact and reason. Use
-`compressed` only when the prompt, repo, or prior artifacts already provide
-enough detail; use `skipped` only when the phase truly does not apply.
+`compressed` only when prior artifacts or explicit user wording already provide
+enough detail; use `skipped` only when the user opts out, asks to move along, or
+the phase truly does not apply. A detailed kickoff prompt is not, by itself, a
+reason to skip brainstorm or grill. Do not mark a phase done because the agent
+privately inferred answers; the artifact should show user engagement, explicit
+answers, prior-artifact evidence, or explicit permission to skip.
 
 After implementation evidence exists, the ledger and `index.md` must not still
 look like brainstorm/planning. Build evidence means the build row needs a real
