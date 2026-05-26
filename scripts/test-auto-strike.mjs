@@ -93,6 +93,8 @@ function testSimpleFeatureSlugDoesNotHardFail() {
 - Initiative: auto-strike/initiatives/main
 - Feature: tiny-copy-fix
 - Current mode: build
+- Doc: auto-strike/initiatives/main/features/tiny-copy-fix/slices/slice-0-copy.md
+- Slice: auto-strike/initiatives/main/features/tiny-copy-fix/slices/slice-0-copy.md
 - Next best action: Edit the button copy.
 
 ## Project State
@@ -108,6 +110,7 @@ function testSimpleFeatureSlugDoesNotHardFail() {
 - Manual copy check.
 `);
   write(repo, "auto-strike/initiatives/main/features/tiny-copy-fix/feature-spec.md", "# Tiny Copy Fix Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/tiny-copy-fix/slices/slice-0-copy.md", "# Slice 0: Copy\n");
   write(repo, "auto-strike/todo.md", `# Todo
 
 - [ ] Update button copy.
@@ -209,6 +212,8 @@ function testValidateWarnsForMissingEvidence() {
 - Initiative: auto-strike/initiatives/main
 - Feature: auto-strike/initiatives/main/features/search-mvp
 - Current mode: review
+- Active slice: auto-strike/initiatives/main/features/search-mvp/slices/slice-0-search.md
+- Next: Record review evidence.
 
 ## Open Decisions
 - None.
@@ -658,6 +663,64 @@ function testValidateWarnsForWeakOrMissingActiveWorkDoc() {
   const missing = run(missingRepo, ["validate"]);
   assertStatus(missing, 0, "missing active work doc should warn, not fail");
   assert.ok(json(missing).messages.some((item) => item.code === "missing-active-work-doc" && item.severity === "warning"));
+}
+
+function testValidateErrorsForMissingActiveWorkDocDuringBuild() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/tool-library
+- Current mode: build
+- Doc: auto-strike/initiatives/main/features/tool-library/slices/slice-0-foundation.md
+- Slice: auto-strike/initiatives/main/features/tool-library/slices/slice-0-foundation.md
+- State: Building the foundation slice.
+- Next: Repair missing slice state before continuing build.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Feature\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 1, "missing active build doc should hard fail recovery-sensitive modes");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "missing-active-work-doc" && item.severity === "error"));
+  assert.ok(body.messages.some((item) => item.code === "missing-active-slice" && item.severity === "error"));
+}
+
+function testValidateErrorsForMissingActiveFeatureDuringReview() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: missing-feature
+- Current mode: review
+- Doc: auto-strike/initiatives/main/review.md
+- Slice: None
+- State: Reviewing a completed slice.
+- Next: Repair missing feature pointer before continuing review.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/review.md", `# Review
+
+## Phase Tasks
+- [ ] Scope review.
+- [ ] Record findings.
+
+## Exit Evidence
+- Review is pending.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 1, "missing active feature should hard fail review recovery-sensitive mode");
+  assert.ok(json(result).messages.some((item) => item.code === "missing-active-feature" && item.severity === "error"));
 }
 
 function testValidateWarnsForBatchedPhaseNextAction() {
@@ -3985,6 +4048,8 @@ testValidateAcceptsConcretePreBuildSlicePrep();
 testValidateAcceptsActiveWorkPointer();
 testValidateWarnsForMissingActiveWork();
 testValidateWarnsForWeakOrMissingActiveWorkDoc();
+testValidateErrorsForMissingActiveWorkDocDuringBuild();
+testValidateErrorsForMissingActiveFeatureDuringReview();
 testValidateWarnsForBatchedPhaseNextAction();
 testValidateWarnsForNextSliceDocAndImplementationBatch();
 testValidateAcceptsSingleBoundaryNextAction();

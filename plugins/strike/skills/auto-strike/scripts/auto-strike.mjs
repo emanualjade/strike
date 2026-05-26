@@ -13,6 +13,8 @@ const MODES_EXPECTING_SPEC = new Set(["slice", "build", "review", "readiness"]);
 const MODES_EXPECTING_SLICE = new Set(["build", "review", "readiness"]);
 const MODES_EXPECTING_SLICE_PREP = new Set(["build", "review", "readiness"]);
 const MODES_EXPECTING_EVIDENCE = new Set(["review", "readiness"]);
+const RECOVERY_BLOCKING_MODES = new Set(["build", "review", "readiness"]);
+const RECOVERY_POINTER_REQUIRED_MODES = new Set(["build", "readiness"]);
 const MODES_REQUIRING_GRILL_CHECKPOINT = new Set(["spec", "slice", "build", "review", "readiness"]);
 const VALID_DECISION_DEPTH_LEVELS = new Set(["lean", "standard", "deep"]);
 const PHASE_LEDGER_ORDER = ["brainstorm", "grill", "spec", "slice", "build", "review", "validate"];
@@ -1586,9 +1588,11 @@ function activeWorkValueHasSubstance(value) {
 function activeWorkPointerIsValid(index) {
   const work = index.activeWork;
   if (!work || !sectionHasSubstance(work.text)) return false;
+  const activeDocOrSlice = activeWorkValueHasSubstance(work.docPath) ||
+    activeWorkValueHasSubstance(work.slicePath);
   return activeWorkValueHasSubstance(work.initiativePath) &&
     activeWorkValueHasSubstance(work.currentModeRaw) &&
-    activeWorkValueHasSubstance(work.docPath) &&
+    activeDocOrSlice &&
     activeWorkValueHasSubstance(work.next);
 }
 
@@ -1607,9 +1611,19 @@ function activeWorkDocNeedsTaskPacket(docPath) {
   return ACTIVE_WORK_DOC_FILES.has(basename);
 }
 
+function isRecoveryBlockingMode(mode) {
+  return RECOVERY_BLOCKING_MODES.has(mode ?? "");
+}
+
+function isRecoveryPointerRequiredMode(mode) {
+  return RECOVERY_POINTER_REQUIRED_MODES.has(mode ?? "");
+}
+
 function activeWorkMessages(state) {
   const messages = [];
   if (!state.index.present) return messages;
+  const recoveryBlocking = isRecoveryBlockingMode(state.index.currentMode);
+  const pointerRequired = isRecoveryPointerRequiredMode(state.index.currentMode);
 
   const duplicateLabels = state.index.activeWork?.duplicateLabels ?? [];
   if (duplicateLabels.length > 0) {
@@ -1622,6 +1636,14 @@ function activeWorkMessages(state) {
 
   const docPath = state.index.activeWork?.docPath;
   if (!docPath || isPlaceholder(docPath)) {
+    const slicePath = state.index.activeWork?.slicePath;
+    const resolvedSlice = slicePath && !isPlaceholder(slicePath)
+      ? resolveRepoReferencePath(state.repoRoot, slicePath)
+      : null;
+    const hasExistingSlicePointer = resolvedSlice?.safe && resolvedSlice.exists;
+    if (pointerRequired && !hasExistingSlicePointer) {
+      messages.push(message("error", "missing-active-work-doc", `${WORKSPACE_ROOT}/index.md`, "Build/readiness mode needs an existing active doc or slice. Read references/recovery.md and repair Auto Strike state before continuing code work."));
+    }
     return messages;
   }
 
@@ -1629,7 +1651,9 @@ function activeWorkMessages(state) {
   if (!resolved?.safe) {
     messages.push(message("error", "unsafe-active-work-doc", docPath, "Active Work doc path is unsafe."));
   } else if (!resolved.exists) {
-    messages.push(message("warning", "missing-active-work-doc", resolved.relativePath, "Active Work points to a doc that does not exist."));
+    const severity = recoveryBlocking ? "error" : "warning";
+    const suffix = recoveryBlocking ? " Read references/recovery.md and repair Auto Strike state before continuing code work." : "";
+    messages.push(message(severity, "missing-active-work-doc", resolved.relativePath, `Active Work points to a doc that does not exist.${suffix}`));
   } else if (activeWorkDocNeedsTaskPacket(resolved.relativePath)) {
     const activeDocText = readFileIfPresent(resolved.absolutePath);
     if (!activeWorkDocIsValid(activeDocText)) {
@@ -2453,8 +2477,10 @@ export function validateAutoStrike(options = {}) {
     messages.push(message("error", "invalid-active-slice-path", state.activeSlice.path, "Active slice must live under the active feature's slices/ directory."));
   }
 
-  if (index.currentMode && ["slice", "build", "review"].includes(index.currentMode) && !activeFeature.exists) {
-    messages.push(message("warning", "missing-active-feature", activeFeature.inferredPath ?? `${WORKSPACE_ROOT}/index.md`, "Slice/build/review mode should name an existing active feature inside the active initiative."));
+  if (index.currentMode && ["slice", "build", "review", "readiness"].includes(index.currentMode) && !activeFeature.exists) {
+    const severity = isRecoveryBlockingMode(index.currentMode) ? "error" : "warning";
+    const suffix = severity === "error" ? " Read references/recovery.md and repair Auto Strike state before continuing code work." : "";
+    messages.push(message(severity, "missing-active-feature", activeFeature.inferredPath ?? `${WORKSPACE_ROOT}/index.md`, `Slice/build/review/readiness mode should name an existing active feature inside the active initiative.${suffix}`));
   }
 
   if (index.currentMode && MODES_EXPECTING_SPEC.has(index.currentMode) && activeFeature.exists && !activeFeature.specExists) {
@@ -2462,7 +2488,11 @@ export function validateAutoStrike(options = {}) {
   }
 
   if (index.currentMode && MODES_EXPECTING_SLICE.has(index.currentMode) && activeFeature.exists && activeFeature.sliceFiles.length === 0) {
-    messages.push(message("warning", "missing-active-slice", activeFeature.slicesPath, "Current mode usually expects active slice docs, but none were found."));
+    const severity = isRecoveryPointerRequiredMode(index.currentMode) ? "error" : "warning";
+    const messageText = severity === "error"
+      ? "Build/readiness mode needs an existing active slice doc. Read references/recovery.md and repair Auto Strike state before continuing code work."
+      : "Review mode usually expects active slice docs, but none were found.";
+    messages.push(message(severity, "missing-active-slice", activeFeature.slicesPath, messageText));
   }
 
   messages.push(...slicePlanningMessages(state));

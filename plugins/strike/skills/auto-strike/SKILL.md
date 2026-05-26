@@ -73,6 +73,9 @@ Use this map:
 - Dependencies, package installs/upgrades, migrations, lockfiles, package-shaped
   architecture choices, or greenfield setup decisions: read
   `references/dependencies.md`.
+- Interrupted runs, workspace wipes, missing active docs/slices, stale pointers,
+  or helper errors that contradict the current mode: read
+  `references/recovery.md`.
 
 If a task crosses areas, read the small set of relevant references. For example,
 first implementation in a new repo normally needs `workspace.md`,
@@ -96,6 +99,9 @@ At the start of every run, route deliberately:
 5. Before claiming done, run the helper's `validate` command when available and
    resolve errors. Treat warnings as prompts for judgment, not automatic
    blockers.
+6. If validation shows missing or contradictory Auto Strike state, read
+   `references/recovery.md` and re-establish the current truth before building,
+   reviewing, or claiming readiness.
 
 Do not expose workflow mechanics to the user unless they help with a decision.
 The user should only need to provide the idea and respond to consequential

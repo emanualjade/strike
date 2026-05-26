@@ -2,6 +2,14 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.20 - 2026-05-25
+
+- Added an Auto Strike recovery reference for interrupted, missing, stale, or
+  contradictory workspace state.
+- Tightened helper validation so build/review/readiness modes treat missing
+  active docs, features, or slice docs as recovery blockers instead of ordinary
+  warnings.
+
 ## 0.8.19 - 2026-05-25
 
 - Added an explicit slice `## Evidence` template so completed slices record

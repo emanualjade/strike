@@ -229,6 +229,11 @@ Every concrete `auto-strike/.../*.md` path referenced in Auto Strike docs should
 exist. If a future doc is not needed yet, say that in prose without linking to a
 missing path.
 
+If `index.md`, Key Docs, the active feature, active slice, or active doc point
+to missing or contradictory state, read `recovery.md`. Recovery should
+re-establish the current truth before build, review, or readiness work
+continues; it should not become a broad rebuild.
+
 ## Todo
 
 Use `auto-strike/todo.md` as one flat checklist:
