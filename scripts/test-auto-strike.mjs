@@ -1704,6 +1704,65 @@ Why: Default.
   assert.ok(!body.messages.some((item) => item.code === "weak-grill-decision-checkpoint"));
 }
 
+function testValidateWarnsForToolingConstraintRuntimeConflict() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: None
+- Current mode: spec
+- Doc: auto-strike/initiatives/main/spec.md
+- State: Spec is being drafted.
+- Next: Draft the feature map.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/idea.md", `# Idea
+
+## Current Shape
+- Constraint: Do not use npm or npx; use pnpm only if a package command is needed.
+
+## Phase Ledger
+| Phase | Status | Artifact | Reason |
+| --- | --- | --- | --- |
+| Brainstorm | done | \`idea.md\` | First useful outcome and constraints are recorded. |
+| Grill | done | \`grill.md\`, \`decisions.md\` | User-facing grill resolved hardening decisions. |
+| Spec | in progress | \`spec.md\` | Spec is being drafted. |
+`);
+  write(repo, "auto-strike/initiatives/main/grill.md", `# Grill
+
+## Decision Depth
+Level: Standard
+Why: Default.
+
+## Decision Checkpoint
+- Scope / size: Small local web app.
+- Stack / dependencies / tooling constraints: Python 3 stdlib, no package commands.
+- Data / persistence / state: JSON file.
+- Auth / identity / permissions: Name-only personas.
+- Validation / browser or live checks: Browser walkthrough plus checks.
+- User-confirmed decisions: User gave pnpm-only package constraint.
+- Accepted assumptions: None.
+
+## Exit Evidence
+- Decisions are recorded.
+`);
+  write(repo, "auto-strike/initiatives/main/decisions.md", `# Decisions
+
+## Stack
+Decision: Use Python 3 stdlib because it avoids npm, npx, and pnpm package installs.
+`);
+  write(repo, "auto-strike/initiatives/main/spec.md", "# Spec\n\n## Summary\nBuild the local app.\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "runtime conflict with pnpm/no-npm constraint should warn, not fail");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "possible-tooling-constraint-runtime-conflict" && item.severity === "warning"));
+}
+
 function testValidateWarnsWhenSpecPhaseCreatesSliceArtifacts() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
@@ -4358,6 +4417,7 @@ testValidateWarnsForUnknownGrillDecisionDepth();
 testValidateRequiresDecisionDepthAfterGrillMode();
 testValidateWarnsForMissingGrillBeforeSpecOrSlice();
 testValidateAcceptsGrillDecisionCheckpointBeforeSpec();
+testValidateWarnsForToolingConstraintRuntimeConflict();
 testValidateWarnsWhenSpecPhaseCreatesSliceArtifacts();
 testValidateWarnsForDetailedSlicePlanningInsideSpec();
 testValidateAllowsConciseSliceHandoffInsideSpec();

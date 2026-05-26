@@ -120,7 +120,9 @@ dependency discipline when packages or setup are involved, and code quality
 checklist. Initiative specs should make the feature split, readiness target,
 dependencies, and cross-feature constraints clear. Feature specs should name the
 expected code organization, architecture boundaries, risky shared surfaces, and
-blast radius where those choices matter. If the repo is greenfield, be more
+blast radius where those choices matter. Specs must preserve declared
+tooling/security constraints; a runtime or package-manager change belongs back
+in grill unless the user explicitly approved it. If the repo is greenfield, be more
 explicit: the first structure will anchor future agents and should be clean from
 slice one.
 

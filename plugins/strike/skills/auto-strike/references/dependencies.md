@@ -30,8 +30,13 @@ official docs/registry pages for package age and version research; do not run
 `npm`, `npx`, `yarn`, or `bunx` as a shortcut. If the allowed tool cannot answer
 the question, record the blocker and ask instead of switching tools.
 
+Package-manager or tooling constraints are not loopholes. If the user or repo
+names an allowed toolchain for security or project policy, do not choose another
+runtime, language, package manager, or build tool merely to avoid installing
+packages. Name the tradeoff and get explicit user approval first.
+
 For greenfield work, do not silently turn setup into an architecture decision.
 Use existing repo signals first. If there are no useful signals, recommend a
-small default stack or no-install prototype path, ask before dependency
-installation, and record the chosen setup plus any blocked install step in
-`auto-strike/`.
+small default stack that respects the declared tooling constraints, ask before
+dependency installation or stack changes, and record the chosen setup plus any
+blocked install step in `auto-strike/`.

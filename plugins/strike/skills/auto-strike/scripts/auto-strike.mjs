@@ -2168,6 +2168,35 @@ function grillCheckpointMessages(state) {
   return [];
 }
 
+function stackToolingConstraintMessages(state) {
+  if (state.workspace.status !== "recognized") return [];
+
+  const docs = state.docs
+    .map((sourcePath) => ({
+      sourcePath,
+      text: readFileIfPresent(path.join(state.repoRoot, sourcePath)) ?? "",
+    }))
+    .filter((doc) => doc.text.trim().length > 0);
+
+  const combined = normalizeText(docs.map((doc) => doc.text).join("\n\n"));
+  const hasPnpmConstraint =
+    /\bpnpm[-\s]*(?:only|required|exclusive|constraint|policy)\b/i.test(combined) ||
+    /\buse\s+`?pnpm`?\b/i.test(combined) ||
+    /\bno\s+`?npm`?\s*(?:or|\/|,)\s*`?npx`?\b/i.test(combined) ||
+    /\bno\s+`?npm`?\b/i.test(combined) ||
+    /\bno\s+`?npx`?\b/i.test(combined);
+
+  if (!hasPnpmConstraint) return [];
+
+  const nonPnpmRuntimePattern = /\b(?:decision|chosen|choose|choosing|selected|select|stack|runtime|language|use|using|built\s+on|build\s+with)\b[^\n.]{0,160}\b(?:python|python3|pip|uv|ruby|rails|go|golang|cargo|rust|deno|bun)\b/i;
+  const conflict = docs.find((doc) => nonPnpmRuntimePattern.test(normalizeText(doc.text)));
+  if (!conflict) return [];
+
+  return [
+    message("warning", "possible-tooling-constraint-runtime-conflict", conflict.sourcePath, "Docs name pnpm/no-npm as a tooling constraint while stack/runtime text points outside that toolchain. Do not use another runtime as a no-install workaround; get explicit user approval or revise the stack."),
+  ];
+}
+
 function autoStrikeDocReferences(text) {
   return [...new Set([...normalizeText(text).matchAll(/\bauto-strike\/[A-Za-z0-9._~/-]+\.md\b/g)]
     .map((match) => match[0])
@@ -2586,6 +2615,7 @@ export function validateAutoStrike(options = {}) {
   messages.push(...phaseExitGateMessages(state));
   messages.push(...grillDecisionDepthMessages(state));
   messages.push(...grillCheckpointMessages(state));
+  messages.push(...stackToolingConstraintMessages(state));
   messages.push(...referencedAutoStrikeDocMessages(state));
 
   if (index.activeInitiativePath && isExplicitWorkspacePath(index.activeInitiativePath)) {

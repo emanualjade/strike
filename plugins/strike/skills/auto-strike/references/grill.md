@@ -36,6 +36,9 @@ Hardening decisions require explicit handling before spec/slice/build:
 - scope and meaning of vague words such as "small", "simple", "MVP", "local",
   "real workflow", "production", or "quick"
 - stack, framework, dependency, package install, runtime, and build choices
+- repo or user tooling constraints, especially security-driven ones; do not
+  switch runtimes or package managers as a no-install workaround without
+  explicit user approval
 - data model, persistence, auth/identity/session, permissions, ownership, and
   lifecycle/state choices
 - feature split, non-goals, validation depth, browser/manual checks, and any
@@ -157,7 +160,7 @@ Question:
 
 ## Decision Checkpoint
 - Scope / size:
-- Stack / dependencies:
+- Stack / dependencies / tooling constraints:
 - Data / persistence / state:
 - Auth / identity / permissions:
 - Feature split / non-goals:

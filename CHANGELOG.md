@@ -2,6 +2,15 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.22 - 2026-05-26
+
+- Tightened Auto Strike stack/setup guidance so user- or repo-named tooling
+  constraints, especially security-driven pnpm/no-npm policies, cannot be
+  bypassed by choosing a different runtime or package manager as a no-install
+  workaround.
+- Added helper validation for possible runtime/tooling conflicts when Auto
+  Strike docs combine pnpm/no-npm constraints with non-matching stack decisions.
+
 ## 0.8.21 - 2026-05-25
 
 - Made Auto Strike review subagents mandatory for completed meaningful slices:

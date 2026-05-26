@@ -136,6 +136,11 @@ count, or validation depth. Do not treat words like "small", "simple", "MVP",
 or "real workflow" as settled requirements until brainstorm/grill translates
 them into explicit constraints.
 
+Treat user- or repo-named tooling as a hard constraint, especially when framed
+as security policy. Do not choose a different runtime, language, package
+manager, or build tool as a no-install workaround unless the user explicitly
+approves that stack change after you name the tradeoff.
+
 Each mode still has a purpose. When moving modes, leave enough state for a fresh
 context to know whether the active doc is complete, paused, skipped, replaced,
 or being revisited. This can be one line in `index.md` or the active phase doc:
@@ -209,7 +214,8 @@ checks, not only planning docs.
   first-version decisions without waiting on the user.
 - Ask for user input on core domain language, schema/model shape, lifecycle
   states, ownership, permissions, business rules, privacy/legal posture,
-  destructive behavior, or hard-to-reverse architecture.
+  destructive behavior, tooling/security policy, or hard-to-reverse
+  architecture.
 - If user input is needed and the host question UI fails, ask in plain text and
   wait. Do not interpret tool failure as a user opt-out.
 - Do not convert an initial prompt directly into a full build spec. Run the

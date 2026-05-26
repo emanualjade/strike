@@ -1,6 +1,6 @@
 {
   "name": "strike",
-  "version": "0.8.21",
+  "version": "0.8.22",
   "private": true,
   "packageManager": "pnpm@11.1.3",
   "description": "Cross-agent skills plugin and marketplace for the Strike workflow.",
