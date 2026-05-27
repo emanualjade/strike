@@ -2,6 +2,12 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.24 - 2026-05-26
+
+- Reissued the Auto Strike quality-gate release under a fresh plugin version so
+  host installs and caches pick up the `playwright-cli`-only browser guidance
+  instead of stale `0.8.23` skill content.
+
 ## 0.8.23 - 2026-05-26
 
 - Made Auto Strike UI/browser verification first-class with a dedicated
