@@ -1196,6 +1196,72 @@ Reviewed:
   assert.ok(body.messages.some((item) => item.code === "weak-phase-ledger" && /build/i.test(item.message)));
 }
 
+function testValidateWarnsForStaleFinalIndexState() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/tool-library
+- Current mode: readiness (closed)
+- Doc: auto-strike/initiatives/main/readiness.md
+- Slice: auto-strike/initiatives/main/features/tool-library/slices/slice-6-final.md (closed)
+- State: Initiative complete.
+- Next: User can run the app.
+
+## Key Docs
+- auto-strike/initiatives/main/readiness.md - final readiness.
+- auto-strike/initiatives/main/features/tool-library/slices/slice-6-final.md - active build target.
+
+## Open Decisions
+- None.
+
+## Verification
+- Planned later: full request loop.
+`);
+  write(repo, "auto-strike/initiatives/main/idea.md", `# Idea
+
+## Phase Ledger
+| Phase | Status | Artifact | Reason |
+| --- | --- | --- | --- |
+| Brainstorm | done | \`idea.md\` | Done. |
+| Grill | done | \`decisions.md\` | Done. |
+| Spec | done | \`spec.md\` | Done. |
+| Slice | done | \`slices/index.md\` | Done. |
+| Build | done | \`slices/slice-6-final.md\` | Done. |
+| Review | done | \`readiness.md\` | Done. |
+| Validate | done | \`readiness.md\` | Done. |
+`);
+  write(repo, "auto-strike/initiatives/main/readiness.md", `# Readiness
+
+## Phase Tasks
+- [x] Run checks.
+- [x] Update docs.
+
+## Exit Evidence
+- Ready.
+`);
+  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Feature Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-6-final.md", `# Slice 6: Final
+
+## Evidence
+Changed:
+- src/app.js
+
+Verified:
+- pnpm smoke - passed
+
+Reviewed:
+- read-only review subagent - passed
+`);
+  write(repo, "src/app.js", "export {};\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "closed readiness with stale index should warn");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "stale-final-index-state" && item.severity === "warning"));
+}
+
 function testValidateWarnsForMissingReferencedAutoStrikeDoc() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
@@ -2494,6 +2560,142 @@ Build the whole auth MVP.
   assert.ok(body.messages.some((item) => item.code === "weak-non-vertical-slice-justification" && item.severity === "warning"));
 }
 
+function testValidateRequiresWhyNotSplitForLargeSlice() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/tool-library
+- Current mode: slice
+- Active slice: auto-strike/initiatives/main/features/tool-library/slices/slice-1-tools.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-1-tools.md", `# Slice 1: Tools
+
+## Size
+L
+
+## Acceptance Criteria
+- Tools can be listed.
+
+## Depends On
+- None.
+
+## Likely Surfaces
+- \`src/routes/tools.js\`
+- \`src/routes/pages.js\`
+- \`src/store.js\`
+- \`src/smoke.js\`
+
+## Execution Tasks
+- [ ] Research nearby patterns.
+- [ ] Write plan.
+- [ ] Review plan.
+- [ ] Verify checks.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "large slice missing why-not-split should warn");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "missing-why-not-split" && item.severity === "warning"));
+}
+
+function testValidateWarnsForBroadStackSliceWithoutStrongWhyNotSplit() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/tool-library
+- Current mode: slice
+- Active slice: auto-strike/initiatives/main/features/tool-library/slices/slice-1-tools.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-1-tools.md", `# Slice 1: Tools
+
+## Size
+M
+
+## Acceptance Criteria
+- Tool listing flow works.
+
+## Depends On
+- None.
+
+## Likely Surfaces
+- \`src/routes/pages.js\` - UI page and form.
+- \`src/routes/tools.js\` - route handler.
+- \`src/store.js\` - persisted state.
+- \`src/smoke.js\` - smoke tests.
+
+## Execution Tasks
+- [ ] Research nearby patterns.
+- [ ] Write plan.
+- [ ] Review plan.
+- [ ] Verify checks.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "broad stack slice without strong why-not-split should warn");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "broad-stack-slice-needs-split" && item.severity === "warning"));
+}
+
+function testValidateAcceptsBroadStackSliceWithStrongWhyNotSplit() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/tool-library
+- Current mode: slice
+- Active slice: auto-strike/initiatives/main/features/tool-library/slices/slice-1-tools.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-1-tools.md", `# Slice 1: Tools
+
+## Size
+M
+
+## Acceptance Criteria
+- Tool listing flow works.
+
+## Depends On
+- None.
+
+## Likely Surfaces
+- \`src/routes/pages.js\` - UI page and form.
+- \`src/routes/tools.js\` - route handler.
+- \`src/store.js\` - persisted state.
+- \`src/smoke.js\` - smoke tests.
+
+## Why Not Split
+This is one behavior and cannot work smaller: the form, route, persisted write,
+and smoke check must land together to make one observable listing flow.
+
+## Execution Tasks
+- [ ] Research nearby patterns.
+- [ ] Write plan.
+- [ ] Review plan.
+- [ ] Verify checks.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "strong why-not-split should satisfy broad-stack warning");
+  const body = json(result);
+  assert.ok(!body.messages.some((item) => item.code === "broad-stack-slice-needs-split"));
+}
+
 function testValidateWarnsForDuplicateActiveWorkAndStillChecksSlices() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
@@ -2793,6 +2995,7 @@ Verified:
   assertStatus(validate, 0, "UI review gaps should warn, not fail");
   const body = json(validate);
   assert.ok(body.messages.some((item) => item.code === "missing-reviewed-lens-evidence" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "missing-browser-verification-capability" && item.severity === "warning"));
   assert.ok(body.messages.some((item) => item.code === "missing-ui-browser-review-evidence" && item.severity === "warning"));
 
   const alias = run(repo, ["review-context", "--lens", "frontend"]);
@@ -2816,12 +3019,12 @@ function testUiReviewEvidenceSuppressesUiReviewWarning() {
   write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
   write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
 
-## Verification Capability
-- Repo scripts/checks: \`node scripts/todo-smoke.js\`.
-  - Host/browser/manual checks: checked host browser tool and manual browser option; both unavailable in this session because GUI access is blocked.
-- Package installs allowed: none.
-  - Blocked checks: browser screenshot/click check blocked by no host browser or manual browser access.
-- Replacement evidence: smoke script plus static UI regression review; residual risk is visual layout.
+## Browser Verification Capability
+- Applies: yes, this slice changes a visible edit input.
+- Playwright CLI: checked \`playwright-cli --version\`; unavailable in this session because CLI access is blocked.
+- Target URL / route: /todo.
+- Viewports / flows: edit task flow at desktop width.
+- Status: BLOCKED; UI is code-verified, not browser-verified; replacement evidence is smoke script plus static UI regression review; residual user-facing risk is visual layout.
 
 ## Evidence
 
@@ -2838,7 +3041,7 @@ Reviewed:
 - read-only review subagent - pass; returned findings to main agent for synthesis.
 
 Skipped:
-- Browser check - checked host browser tool and manual browser option; both blocked by no GUI/browser access, so smoke script plus static UI regression review were used as replacement evidence; residual risk is visual layout.
+- Browser check - playwright-cli unavailable, so smoke script plus static UI regression review were used as replacement evidence; residual risk is visual layout.
 `);
   write(repo, "todo/index.html", "<!doctype html>\n<input>\n");
   write(repo, "todo/todo.js", "export function todo() {}\n");
@@ -2848,7 +3051,9 @@ Skipped:
   const body = json(result);
   assert.ok(!body.messages.some((item) => item.code === "missing-reviewed-lens-evidence"));
   assert.ok(!body.messages.some((item) => item.code === "missing-ui-browser-review-evidence"));
+  assert.ok(!body.messages.some((item) => item.code === "missing-browser-verification-capability"));
   assert.ok(!body.messages.some((item) => item.code === "missing-verification-capability"));
+  assert.ok(body.messages.some((item) => item.code === "ui-browser-verification-blocked" && item.severity === "warning"));
 }
 
 function testUiRegressionReviewAloneDoesNotSuppressBrowserWarning() {
@@ -2978,7 +3183,7 @@ Skipped:
   assertStatus(result, 0, "package-only browser skip should warn, not fail");
   const body = json(result);
   assert.ok(body.messages.some((item) => item.code === "missing-ui-browser-review-evidence" && item.severity === "warning"));
-  assert.ok(body.messages.some((item) => item.code === "missing-verification-capability" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "missing-browser-verification-capability" && item.severity === "warning"));
 }
 
 function testValidateWarnsForMissingVerificationCapabilityOnSkippedUiChecks() {
@@ -3023,7 +3228,7 @@ Skipped:
   const result = run(repo, ["validate"]);
   assertStatus(result, 0, "missing verification capability should warn, not fail");
   const body = json(result);
-  assert.ok(body.messages.some((item) => item.code === "missing-verification-capability" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "missing-browser-verification-capability" && item.severity === "warning"));
   assert.ok(body.messages.some((item) => item.code === "missing-ui-browser-review-evidence" && item.severity === "warning"));
 }
 
@@ -3043,12 +3248,12 @@ function testValidateAcceptsVerificationCapabilityForSkippedUiChecks() {
   write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
   write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
 
-## Verification Capability
-- Repo scripts/checks: \`node scripts/todo-smoke.js\`.
-  - Host/browser/manual checks: checked host browser tool and manual browser option; browser backend unavailable in this session and manual browser check blocked by no GUI access.
-- Package installs allowed: none.
-- Blocked checks: browser screenshot/click check blocked by no host browser access.
-- Replacement evidence: smoke script plus static UI regression review; residual risk is visual layout.
+## Browser Verification Capability
+- Applies: yes, this slice changes a visible edit input.
+- Playwright CLI: checked \`playwright-cli --version\`; unavailable in this session.
+- Target URL / route: /todo.
+- Viewports / flows: edit task flow at desktop width.
+- Status: BLOCKED; UI is code-verified, not browser-verified; replacement evidence is smoke script plus static UI regression review; residual user-facing risk is visual layout.
 
 ## Evidence
 
@@ -3068,7 +3273,7 @@ Reviewed:
 - read-only review subagent - pass; returned findings to main agent for synthesis.
 
 Skipped:
-- Browser screenshot/click check - checked host browser tool and manual browser option; both blocked by no GUI/browser access, so smoke script plus static UI regression review were used as replacement evidence; residual risk is visual layout.
+- Browser screenshot/click check - playwright-cli unavailable, so smoke script plus static UI regression review were used as replacement evidence; residual risk is visual layout.
 `);
   write(repo, "todo/index.html", "<!doctype html>\n<input>\n");
   write(repo, "todo/todo.js", "document.querySelector('button').addEventListener('click', () => {});\n");
@@ -3077,6 +3282,172 @@ Skipped:
   assertStatus(result, 0, "recorded verification capability should satisfy validation");
   const body = json(result);
   assert.ok(!body.messages.some((item) => item.code === "missing-verification-capability"));
+  assert.ok(!body.messages.some((item) => item.code === "missing-browser-verification-capability"));
+  assert.ok(!body.messages.some((item) => item.code === "missing-ui-browser-review-evidence"));
+  assert.ok(body.messages.some((item) => item.code === "ui-browser-verification-blocked" && item.severity === "warning"));
+}
+
+function testValidateAcceptsRealBrowserVerificationForUiChecks() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/todo-dogfood
+- Current mode: review
+- Active slice: auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+
+## Browser Verification Capability
+- Applies: yes, this slice changes the visible edit flow.
+- Playwright CLI: available; \`playwright-cli --version\` passed.
+- Target URL / route: http://127.0.0.1:3000/todo.
+- Viewports / flows: desktop edit flow.
+- Status: verified.
+
+## Evidence
+
+Changed:
+- todo/index.html
+- todo/todo.js
+
+Verified:
+- playwright-cli: opened /todo, clicked Edit, saved the task, checked visible result, checked console errors = 0 - passed
+
+Reviewed:
+- functionality - pass
+- spec-coverage - pass
+- code-quality - pass
+- ui-regression - pass with browser evidence
+- user-flows - pass with browser evidence
+- read-only review subagent - pass; returned findings to main agent for synthesis.
+`);
+  write(repo, "todo/index.html", "<!doctype html>\n<input>\n");
+  write(repo, "todo/todo.js", "document.querySelector('button').addEventListener('click', () => {});\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "real browser evidence should satisfy UI browser validation");
+  const body = json(result);
+  assert.ok(!body.messages.some((item) => item.code === "missing-browser-verification-capability"));
+  assert.ok(!body.messages.some((item) => item.code === "missing-ui-browser-review-evidence"));
+  assert.ok(!body.messages.some((item) => item.code === "ui-browser-verification-blocked"));
+}
+
+function testValidateDoesNotContradictGenericTasksWhenBrowserBlocked() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/todo-dogfood
+- Current mode: review
+- Active slice: auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+
+## Execution Tasks
+- [x] Verify the acceptance criteria and any required browser/user-flow checks.
+
+## Browser Verification Capability
+- Applies: yes, this slice changes a visible form.
+- Playwright CLI: checked \`playwright-cli --version\`; unavailable in this session.
+- Target URL / route: /todo.
+- Viewports / flows: edit task flow.
+- Status: BLOCKED; UI is code-verified, not browser-verified; replacement evidence is smoke script plus static UI review; residual user-facing risk is visual layout.
+
+## Evidence
+
+Changed:
+- todo/index.html
+- todo/todo.js
+
+Verified:
+- node scripts/todo-smoke.js - passed
+
+Reviewed:
+- functionality - pass
+- spec-coverage - pass
+- code-quality - pass
+- ui-regression - pass by static review
+- user-flows - pass by smoke route checks
+- read-only review subagent - pass; returned findings to main agent for synthesis.
+
+Skipped:
+- Browser verification - playwright-cli unavailable, so smoke script plus static UI review were used as replacement evidence; residual risk is visual layout.
+`);
+  write(repo, "todo/index.html", "<!doctype html>\n<input>\n");
+  write(repo, "todo/todo.js", "document.querySelector('button').addEventListener('click', () => {});\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "generic verified task plus honest browser block should not look contradictory");
+  const body = json(result);
+  assert.ok(!body.messages.some((item) => item.code === "completed-check-conflicts-with-skipped-evidence"));
+  assert.ok(body.messages.some((item) => item.code === "ui-browser-verification-blocked" && item.severity === "warning"));
+}
+
+function testValidateDoesNotContradictCompletedBrowserTaskWhenFallbackBrowserRan() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/todo-dogfood
+- Current mode: review
+- Active slice: auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+
+## Execution Tasks
+- [x] For UI/user-flow work, record browser verification capability per \`verification.md\`.
+- [x] Verify the acceptance criteria and required browser/user-flow checks.
+
+## Browser Verification Capability
+- Applies: yes, this slice changes a visible form.
+- Playwright CLI: available; \`playwright-cli --version\` passed.
+- Target URL / route: http://127.0.0.1:3000/todo.
+- Viewports / flows: edit task flow and mobile overflow check.
+- Status: verified.
+
+## Evidence
+
+Changed:
+- todo/index.html
+- todo/todo.js
+
+Verified:
+- playwright-cli browser flow - passed edit task and mobile overflow checks.
+
+Reviewed:
+- read-only review subagent - pass; returned findings to main agent for synthesis.
+- functionality - pass
+- spec-coverage - pass
+- code-quality - pass
+- ui-regression - pass with browser evidence
+- user-flows - pass with browser evidence
+
+Skipped:
+- None for required checks.
+`);
+  write(repo, "todo/index.html", "<!doctype html>\n<input>\n");
+  write(repo, "todo/todo.js", "document.querySelector('button').addEventListener('click', () => {});\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "completed browser task with real fallback browser evidence should not warn as contradictory");
+  const body = json(result);
+  assert.ok(!body.messages.some((item) => item.code === "completed-check-conflicts-with-skipped-evidence"));
   assert.ok(!body.messages.some((item) => item.code === "missing-ui-browser-review-evidence"));
 }
 
@@ -3728,7 +4099,7 @@ Verified:
 - node scripts/video-smoke.js - passed
 
 Skipped:
-- Browser walkthrough - skipped; no approved browser path was available, replacement evidence was node smoke, residual risk remains.
+- Browser walkthrough - skipped; playwright-cli was unavailable, replacement evidence was node smoke, residual risk remains.
 `);
   write(repo, "src/video/upload.ts", "export function upload() {}\n");
 
@@ -3808,7 +4179,7 @@ Verified:
 - node scripts/video-smoke.js - passed
 
 Skipped:
-- Browser walkthrough - skipped; no approved browser path was available, replacement evidence was node smoke, residual risk remains.
+- Browser walkthrough - skipped; playwright-cli was unavailable, replacement evidence was node smoke, residual risk remains.
 `);
   write(repo, "src/video/upload.ts", "export function upload() {}\n");
 
@@ -4405,6 +4776,7 @@ testValidateAcceptsPhaseLedgerAfterSlicing();
 testValidateAcceptsSpecPhaseLedgerWithFuturePendingRows();
 testValidateDoesNotInferBuildPrepFromSliceDocAlone();
 testValidateWarnsForStaleActiveWorkAfterImplementationEvidence();
+testValidateWarnsForStaleFinalIndexState();
 testValidateWarnsForMissingReferencedAutoStrikeDoc();
 testValidateWarnsForStaleSliceTaskChecklist();
 testValidateWarnsForMissingCurrentTruthDocs();
@@ -4431,6 +4803,9 @@ testValidateWarnsForMissingSliceMapDependenciesAndCheckpoint();
 testValidateDoesNotWarnForFutureSliceCheckpoint();
 testValidateWarnsForDueSliceCheckpoint();
 testValidateWarnsForOversizedBatchedAndWeakNonVerticalSlice();
+testValidateRequiresWhyNotSplitForLargeSlice();
+testValidateWarnsForBroadStackSliceWithoutStrongWhyNotSplit();
+testValidateAcceptsBroadStackSliceWithStrongWhyNotSplit();
 testValidateWarnsForDuplicateActiveWorkAndStillChecksSlices();
 testValidateWarnsForDuplicatePhaseLedgerRowsWithoutFalseSpecSliceBoundary();
 testReviewPlanRecommendsUiRegressionForUiChanges();
@@ -4440,6 +4815,8 @@ testCurlLocalhostDoesNotSuppressBrowserWarning();
 testPackageOnlyBrowserSkipDoesNotSuppressBrowserWarning();
 testValidateWarnsForMissingVerificationCapabilityOnSkippedUiChecks();
 testValidateAcceptsVerificationCapabilityForSkippedUiChecks();
+testValidateAcceptsRealBrowserVerificationForUiChecks();
+testValidateDoesNotContradictGenericTasksWhenBrowserBlocked();
 testValidateWarnsForMissingSliceCloseoutSummary();
 testValidateAcceptsSliceCloseoutSummary();
 testValidateAcceptsCloseoutSummaryWithValidationAlias();

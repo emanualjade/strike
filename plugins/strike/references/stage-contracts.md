@@ -505,8 +505,8 @@ Primary job:
   that phase files exist
 - verify that important project tests/checks exist, or that missing tests are
   explicitly called out as readiness gaps
-- run broad enough tests, command/API checks, manual checks, or browser checks
-  for confidence
+- run broad enough tests, command/API checks, manual checks, or `playwright-cli`
+  browser checks for confidence
 - route failures back as plain-language checklist items
 - read phase `fix.md` when present as part of the reviewed phase evidence
 
@@ -521,7 +521,7 @@ Move to `08-retro` when:
 
 - success checks pass, including required live/human checks
 - repo-verifiable spec checks have evidence from tests, commands, API checks,
-  generated artifacts, browser walkthroughs, or code/repo inspection as
+  generated artifacts, `playwright-cli` walkthroughs, or code/repo inspection as
   appropriate
 - important project behavior has tests/checks, or the absence of tests is
   intentionally accepted and visible

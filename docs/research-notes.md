@@ -127,6 +127,14 @@ Strike therefore treats the stable handoff as `Next Strike skill` plus
 `Arguments`, with host-specific rendering documented in
 `plugins/strike/references/invocation.md`.
 
+2026-05-25 utility skill note: Agent Skills do not require every skill to be a
+Strike board/card workflow step. Standalone utility skills can still live in
+`plugins/strike/skills/<skill-name>/SKILL.md` when they are useful as plugin
+capabilities and do not participate in `Next Strike skill` handoffs. The repo
+validator therefore allows explicitly named standalone utilities, currently
+`handoff`, to omit Strike-specific host invocation guidance while still
+requiring portable frontmatter and Codex `agents/openai.yaml` metadata.
+
 ## Design Decision
 
 This repo is both a marketplace and the plugin source:

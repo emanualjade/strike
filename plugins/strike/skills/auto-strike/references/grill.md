@@ -44,44 +44,41 @@ Hardening decisions require explicit handling before spec/slice/build:
 - feature split, non-goals, validation depth, browser/manual checks, and any
   dependency/security/cost/privacy risk
 
-When starting a meaningful grill session, ask once unless the user already gave
-a clear depth signal:
+Before a meaningful grill session, ask once unless the user already chose a
+depth:
 
 ```md
-How hard should I grill decisions before spec?
+How deeply should I pressure-test decisions before spec?
 
-- Lean: move fast, ask only consequential questions, record reversible assumptions.
-- Standard: pressure-test major product/domain/workflow decisions.
-- Deep: stress-test important decision points with scenarios, tradeoffs, and implications.
+- Lean: ask only consequential questions; record safe assumptions.
+- Standard: pressure-test major product, domain, workflow, and risk decisions.
+- Deep: keep drilling until important decisions are explicit.
 
-Default is Standard. You can change this as we go if you want more or less detail.
+Default is Standard. You can change depth as we go.
 ```
 
-If the user does not answer the depth question but grill can otherwise continue,
-use `Standard` and record `Why: Default.` Do not silently choose `Lean`; use
-Lean only when the user clearly asks to move quickly or the prior artifact
-explicitly says lean depth is acceptable.
+If the user does not answer but grill can otherwise continue, use `Standard` and
+record `Why: Default.` Do not choose `Lean` unless the user asks for speed or
+accepts lean depth.
 
-Decision Depth applies only to Grill. It controls how deeply each decision node
-is examined, not whether new branches are noticed. Capture consequential new
-branches at every level. It does not lower spec, slice, build, review,
+Decision Depth applies only to Grill. It controls how hard each decision node is
+examined, not whether new branches are noticed. Capture consequential new
+branches at every level. It never lowers spec, slice, build, review,
 verification, readiness, security, or code-quality standards.
 
-- Lean: resolve or record consequential decisions; assume reversible low-risk
-  details when they do not change scope, quality, or risk.
-- Standard: resolve major decision points enough to spec without guessing.
-- Deep: examine tradeoffs, implications, edge cases, and follow-on decisions for
-  important decision points before spec.
+- Lean: resolve consequential decisions; assume reversible low-risk details only
+  when they do not change scope, quality, or risk.
+- Standard: resolve major decisions enough to spec without guessing.
+- Deep: examine tradeoffs, edge cases, implications, and follow-on decisions for
+  important nodes.
 
-Lean still must not assume auth/security, privacy, payments, destructive data,
+Lean must not assume auth/security, privacy, payments, destructive data,
 ownership, permissions, compliance-sensitive choices, dependency risk, or
-hard-to-reverse architecture unless explicitly out of scope or accepted by the
-user.
+hard-to-reverse architecture unless the user explicitly accepts it.
 
-If one area has a different risk profile, suggest a depth change briefly.
-Suggestions are not active overrides. Record active overrides only after user
-direction or a clearly justified move deeper. Going leaner for an area requires
-user consent.
+If an area needs more depth, suggest it briefly and record the change after user
+direction or a clearly safer move deeper. Going leaner for an area requires user
+consent.
 
 When naming models or concepts, prefer the core noun before qualifiers. If the
 language starts creating sibling nouns like `ManualReport` and

@@ -41,6 +41,8 @@ Edge / Flow Coverage:
 - [important edge case or user flow] - [handled/tested/deferred/accepted]
 
 Reviewed:
+- read-only review subagent - passed / passed after fixes; returned findings to
+  main agent for synthesis.
 - [lens] - [pass / blocker / warning and short finding]
 
 Skipped:
@@ -53,6 +55,8 @@ Review Findings:
 Keep `Changed:` aligned with the actual implementation files changed in the
 worktree. If Git or the helper reports extra changed files, confirm they are
 unrelated user work or update the evidence before trusting review packets.
+Keep the explicit `read-only review subagent` line; lens-specific review bullets
+alone do not prove a separate reviewer was used.
 
 Use `review-plan` after `Changed:` and `Verified:` evidence exists. Use
 `review-context --lens <lens>` to prepare compact reviewer packets. The helper
@@ -83,17 +87,9 @@ Add surface-specific lenses when the changed files justify them:
 - `integration-risk` for API, provider, webhook, queue, upload, media, AI,
   email, payment, or other external-service boundaries.
 
-UI/user-flow slices MUST be verified in a browser. Use Browser/Chrome tools,
-Chrome MCP, repo Playwright/Cypress, a repo browser script, or explicit manual
-browser verification.
-
-Act like the user: click the flow, check visible results, console/network,
-layout, state, and error cases. Curl, static HTML, and code review are not
-browser verification.
-
-If no approved browser path is available, continue but report it loudly:
-browser verification was not performed, what you checked instead, and the
-residual user-facing risk.
+For UI/user-flow work, review `playwright-cli` evidence against
+`verification.md`. Browser-skipped UI must be reported as code-verified, with
+replacement evidence and residual user-facing risk.
 
 ## Reviewer Contract
 

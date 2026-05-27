@@ -208,9 +208,9 @@ configuration changed.
 Record skipped checks honestly. A skipped check is acceptable only when the
 reason and replacement evidence are clear.
 
-For frontend/UI phases, run an appropriate local visual or browser check when
-the relevant UI can be run locally. If the local preview cannot start, record
-the blocker instead of pretending visual verification happened.
+For frontend/UI phases, use `playwright-cli` when the relevant UI can be run
+locally. If `playwright-cli` or the local preview is blocked, record the blocker
+instead of pretending visual verification happened.
 
 Do not end your turn with a local server or other task-owned process still
 running.

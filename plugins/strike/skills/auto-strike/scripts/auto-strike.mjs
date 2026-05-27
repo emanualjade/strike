@@ -1502,6 +1502,32 @@ function sliceHasBatchingRationale(sliceText) {
   return sectionHasSubstance(rationale) && !sectionHasWeakPlanningText(rationale);
 }
 
+function whyNotSplitIsValid(sliceText, { strong = false } = {}) {
+  if (!hasSection(sliceText, "Why Not Split")) return false;
+  const section = extractSection(sliceText, "Why Not Split");
+  if (!sectionHasSubstance(section) || sectionHasWeakPlanningText(section)) return false;
+  if (!strong) return true;
+  return /\b(one behavior|cannot work smaller|can't work smaller|smallest safe|atomic|same state transition|tightly coupled|split(?:ting)? would|must land together)\b/i.test(section);
+}
+
+function sliceBroadStackSignals(sliceText) {
+  const text = normalizeText([
+    extractSection(sliceText, "In Scope"),
+    extractSection(sliceText, "Likely Surfaces"),
+  ].join("\n"));
+  return {
+    ui: /\b(ui|frontend|component|page|pages|screen|view|views|form|forms|layout|html|css|tsx|jsx)\b|\.html\b|\.css\b|\.tsx\b|\.jsx\b|routes\/pages/i.test(text),
+    route: /\b(route|routes|api|endpoint|handler|controller|server action|server)\b|\/routes\//i.test(text),
+    state: /\b(state|store|storage|data|database|db|model|schema|migration|repository|persistence)\b|data\.json/i.test(text),
+    test: /\b(test|tests|spec|smoke|e2e|playwright|cypress)\b|\/tests?\//i.test(text),
+  };
+}
+
+function sliceTouchesUiRouteStateAndTests(sliceText) {
+  const signals = sliceBroadStackSignals(sliceText);
+  return signals.ui && signals.route && signals.state && signals.test;
+}
+
 function sliceTitleLooksBatched(title, sliceText, size, criteriaCount, surfaceCount) {
   if (HARD_BATCHED_SLICE_TITLE_PATTERN.test(title)) return true;
   if (!AND_SLICE_TITLE_PATTERN.test(title)) return false;
@@ -1567,6 +1593,9 @@ function slicePlanningMessages(state) {
 
     if (size === "L" || size === "XL") {
       messages.push(message("warning", "oversized-slice", slicePath, `Slice size is ${size}; challenge and split it unless a recorded rationale proves this is the smallest safe slice.`));
+      if (!whyNotSplitIsValid(sliceText)) {
+        messages.push(message("warning", "missing-why-not-split", slicePath, "L/XL slices require ## Why Not Split."));
+      }
     }
 
     if (criteriaCount > 3) {
@@ -1575,6 +1604,10 @@ function slicePlanningMessages(state) {
 
     if (surfaceCount > 5) {
       messages.push(message("warning", "too-many-slice-surfaces", slicePath, `Slice lists ${surfaceCount} likely surfaces; split it or record why the larger blast radius is necessary.`));
+    }
+
+    if (sliceTouchesUiRouteStateAndTests(sliceText) && !whyNotSplitIsValid(sliceText, { strong: true })) {
+      messages.push(message("warning", "broad-stack-slice-needs-split", slicePath, "Slice touches UI + route/API + state/data + tests. Split it unless ## Why Not Split proves one behavior cannot work smaller."));
     }
 
     if (sliceTitleLooksBatched(title, sliceText, size, criteriaCount, surfaceCount)) {
@@ -1815,6 +1848,40 @@ function activeWorkFreshnessMessages(state) {
 
   if (state.index.openDecisions.length > 0) {
     messages.push(message("warning", "open-decisions-after-implementation", `${WORKSPACE_ROOT}/index.md`, "Implementation evidence exists while index.md still lists open decisions. Resolve them, record accepted assumptions, or move back to grill/spec before continuing build."));
+  }
+
+  return messages;
+}
+
+function readinessIsClosed(state) {
+  if (!state.activeInitiative.readinessExists && !state.activeFeature.readinessExists) return false;
+  const validateRow = state.phaseLedger.rows?.validate;
+  if (validateRow?.status && PHASE_LEDGER_COMPLETE_STATUSES.has(validateRow.status)) return true;
+  const text = normalizeText([
+    state.index.activeWork?.currentModeRaw,
+    state.index.activeWork?.state,
+    state.index.activeWork?.next,
+  ].filter(Boolean).join("\n"));
+  return state.index.currentMode === "readiness" && /\b(closed|complete(?:d)?|done|ready to use|ready)\b/i.test(text);
+}
+
+function finalIndexStateMessages(state) {
+  if (!state.index.present || !readinessIsClosed(state)) return [];
+  const messages = [];
+  const indexPath = `${WORKSPACE_ROOT}/index.md`;
+  const text = normalizeText([
+    state.index.activeWork?.text,
+    state.index.keyDocs.map((item) => item.raw).join("\n"),
+    state.index.verification.join("\n"),
+    state.index.projectState,
+  ].filter(Boolean).join("\n"));
+
+  if (state.index.currentMode !== "readiness") {
+    messages.push(message("warning", "stale-final-index-mode", indexPath, "Readiness is closed, but index.md Current mode is not readiness."));
+  }
+
+  if (/\b(active build target|build in progress|planned later|planned \(later|planned \(slice|future slice|later slices?|planned next slice|will be built)\b/i.test(text)) {
+    messages.push(message("warning", "stale-final-index-state", indexPath, "Readiness is closed, but index.md still contains active-build, planned-later, or future-slice language."));
   }
 
   return messages;
@@ -2377,7 +2444,7 @@ function staleFeatureCheckpointMessages(state) {
 const CHECK_CLAIM_CATEGORIES = [
   {
     name: "browser/user-flow",
-    pattern: /\b(browser|visual|screenshot|viewport|responsive|mobile|desktop|two[- ]tab|walkthrough|user[- ]flow|manual flow|click|clicked|form|console|network|playwright|chrom(?:e|ium)|safari|firefox)\b/i,
+    pattern: /\b(browser|visual|screenshot|viewport|responsive|mobile|desktop|two[- ](?:tab|window)|user[- ]flow|manual flow|manual browser|console|network|playwright|chrom(?:e|ium)|safari|firefox|gui)\b/i,
   },
   {
     name: "api/curl",
@@ -2389,17 +2456,35 @@ const CHECK_CLAIM_CATEGORIES = [
   },
 ];
 
+const PLAYWRIGHT_CLI_PATTERN = /\bplaywright[-\s]?cli\b/i;
+const BROWSER_SURFACE_PATTERN = /\b(browser|visual|screenshot|viewport|responsive|mobile|desktop|two[- ](?:tab|window)|user[- ]flow|manual flow|manual browser|console|network|playwright|chrom(?:e|ium)|safari|firefox|gui)\b/i;
+
 function checkClaimCategories(item) {
   const text = String(item ?? "");
+  if (skippedEvidenceSaysNoneRequired(text)) return [];
   return CHECK_CLAIM_CATEGORIES
     .filter((category) => category.pattern.test(text))
     .map((category) => category.name);
+}
+
+function skippedEvidenceSaysNoneRequired(text) {
+  return /\bnone\b.{0,40}\b(required|skipped|missing|blocked)\b/i.test(text) ||
+    /\b(no|none)\s+(required\s+)?checks?\s+(?:were\s+)?skipped\b/i.test(text);
 }
 
 function positiveBrowserEvidenceItem(item) {
   const text = String(item ?? "");
   if (!hasBrowserReviewEvidenceItem(text)) return false;
   return hasPositiveVerificationEvidenceItem(text);
+}
+
+function claimsCompletedBrowserVerification(item) {
+  const text = String(item ?? "");
+  if (!sectionHasSubstance(text)) return false;
+  if (evidenceItemClaimsBlockedOrNotRun(text)) return false;
+  if (/\b(any required|required .*checks?)\b/i.test(text)) return false;
+  const doneWord = /\b(pass(?:ed)?|works?|verify|verified|checked|done|complete(?:d)?|walk(?:ed)?(?:through)?|exercised)\b/i;
+  return BROWSER_SURFACE_PATTERN.test(text) && doneWord.test(text);
 }
 
 function checkedCheckpointClaims(state) {
@@ -2478,13 +2563,16 @@ function completedCheckEvidenceContradictionMessages(state) {
     const hasAnyVerifiedEvidence = verifiedItems.length > 0;
     const hasBrowserEvidence = [...verifiedItems, ...reviewedItems].some(positiveBrowserEvidenceItem);
 
-    const conflictingSkip = skippedCategories.find((skipped) => categories.includes(skipped.category));
+    const conflictingSkip = skippedCategories.find((skipped) =>
+      categories.includes(skipped.category) &&
+      (skipped.category !== "browser/user-flow" || claimsCompletedBrowserVerification(claim.item))
+    );
     if (conflictingSkip) {
       messages.push(message("warning", "completed-check-conflicts-with-skipped-evidence", claim.path, `Checked item claims ${conflictingSkip.category} work is done, but evidence records it as skipped: "${claim.item}" conflicts with "${conflictingSkip.item}".`));
       continue;
     }
 
-    if (categories.includes("browser/user-flow") && !hasBrowserEvidence) {
+    if (categories.includes("browser/user-flow") && !hasBrowserEvidence && claimsCompletedBrowserVerification(claim.item)) {
       messages.push(message("warning", "completed-browser-check-missing-evidence", claim.path, `Checked item claims browser/user-flow work is done, but no browser verification evidence was found: "${claim.item}".`));
       continue;
     }
@@ -2608,6 +2696,7 @@ export function validateAutoStrike(options = {}) {
   messages.push(...activeWorkMessages(state));
   messages.push(...phaseBoundaryBatchingMessages(state));
   messages.push(...activeWorkFreshnessMessages(state));
+  messages.push(...finalIndexStateMessages(state));
   messages.push(...currentTruthMessages(state));
   messages.push(...phaseLedgerMessages(state));
   messages.push(...phaseBypassMessages(state));
@@ -2705,8 +2794,10 @@ export function validateAutoStrike(options = {}) {
     messages.push(...requiredReviewLensMessages(state, plan));
     messages.push(...verificationCapabilityMessages(state, plan));
     messages.push(...sliceCloseoutSummaryMessages(state));
-    if (plan.surfaces.ui.length > 0 && !hasUiReviewCoverage(state.evidence.reviewScope)) {
-      messages.push(message("warning", "missing-ui-browser-review-evidence", state.evidence.reviewScope.locations[0] ?? WORKSPACE_ROOT, "UI/browser/user-visible files changed but active evidence has no browser or user-flow check evidence, nor a blocked-browser rationale showing host/manual browser options checked, blocker, replacement evidence, and residual risk."));
+    if (plan.surfaces.ui.length > 0 && hasBlockedUiBrowserFallback(state.evidence.reviewScope) && !hasPositiveUiBrowserCoverage(state.evidence.reviewScope)) {
+      messages.push(message("warning", "ui-browser-verification-blocked", state.evidence.reviewScope.locations[0] ?? WORKSPACE_ROOT, "UI/browser/user-visible files changed, but playwright-cli verification was blocked. Treat this as code-verified, not browser-verified."));
+    } else if (plan.surfaces.ui.length > 0 && !hasUiReviewCoverage(state.evidence.reviewScope)) {
+      messages.push(message("warning", "missing-ui-browser-review-evidence", state.evidence.reviewScope.locations[0] ?? WORKSPACE_ROOT, "UI/browser/user-visible files changed but active evidence has no playwright-cli browser check, nor a blocked-playwright-cli rationale with replacement evidence and residual risk."));
     }
     const activeSliceClosed = state.activeSlice.path && state.activeSlice.exists &&
       sliceHasCompletedCloseout(state.repoRoot, state.activeSlice.path);
@@ -2842,10 +2933,10 @@ function recommendedReviewPlan(state) {
     notes.push("No active Changed list was found; review-context may miss implementation files until slice evidence is updated.");
   }
   if (surfaces.ui.length > 0) {
-    notes.push("For UI/browser/user-visible changes, include browser or user-flow evidence. Use host/manual browser tooling when available; if browser access is actually blocked, record the blocker and a static UI regression fallback.");
+    notes.push("For UI/browser/user-visible changes, record Browser Verification Capability and include playwright-cli evidence. If playwright-cli is blocked, record that the UI is code-verified, not browser-verified, plus replacement evidence and residual risk.");
   }
   if (reviewScopeNeedsCapabilityRecord(state.evidence.reviewScope, surfaces)) {
-    notes.push("Record Verification Capability for skipped checks or UI/auth/integration work: repo checks, host/manual browser or user-flow options, install constraints, blockers, replacement evidence, and residual risk.");
+    notes.push("Record Browser Verification Capability for UI work, and verification capability for other skipped checks or auth/integration work: repo checks, playwright-cli status, install constraints, blockers, replacement evidence, and residual risk.");
   }
 
   return {
@@ -2912,40 +3003,72 @@ function requiredReviewLensMessages(state, plan = recommendedReviewPlan(state)) 
 
 function hasBrowserReviewEvidenceItem(item) {
   const text = String(item ?? "");
-  if (/\b(curl|httpie|wget|api|GET|POST|PUT|PATCH|DELETE)\b/i.test(text) && !/\b(browser|visual|screenshot|viewport|responsive|mobile|desktop|playwright|chrom(e|ium)|safari|firefox)\b/i.test(text)) {
+  if (/\b(curl|httpie|wget|api|GET|POST|PUT|PATCH|DELETE)\b/i.test(text) && !PLAYWRIGHT_CLI_PATTERN.test(text)) {
     return false;
   }
-  return /\b(browser|visual|screenshot|viewport|responsive|mobile|desktop|playwright|chrom(e|ium)|safari|firefox)\b/i.test(text);
+  return PLAYWRIGHT_CLI_PATTERN.test(text);
 }
 
 function hasBlockedBrowserFallback(item) {
   const text = String(item ?? "");
-  const mentionsBrowserSurface = /\b(browser|visual|screenshot|viewport|responsive|mobile|desktop|rendered|layout|playwright|chrom(e|ium)|safari|firefox)\b/i.test(text);
-  if (!mentionsBrowserSurface) return false;
-  const hasRealBlocker = /\b(blocked|unavailable|not available|cannot|can't|could not|unable|no access|no host browser|no browser tool|browser tool unavailable|browser access unavailable|gui unavailable|headless unavailable|server could not start|auth blocked|environment restriction)\b/i.test(text);
+  if (!PLAYWRIGHT_CLI_PATTERN.test(text)) return false;
+  const hasRealBlocker = /\b(blocked|unavailable|not available|cannot|can't|could not|unable|no access|not found|not installed|not on path|server could not start|auth blocked|environment restriction)\b/i.test(text);
   if (!hasRealBlocker) return false;
-  const checkedHostOrManualOption = /\b(host browser|host\/manual|manual browser|browser tool|codex browser|chrome|computer use|gui access|checked host|checked manual|checked browser|inspected host|looked for host|looked for manual)\b/i.test(text);
-  if (!checkedHostOrManualOption) return false;
   const namesReplacementEvidence = /\b(replacement evidence|replacement|fallback|static review|static ui|smoke|syntax|api flow|manual code review)\b/i.test(text);
   if (!namesReplacementEvidence) return false;
   const namesResidualRisk = /\b(residual risk|risk left open|remaining risk|open risk)\b/i.test(text);
   if (!namesResidualRisk) return false;
-  return !/\b(no browser automation dependency|no playwright|no browser dependency|package installs? (?:are|is) out of scope|no .*dependency exists in this repo)\b/i.test(text);
+  return true;
 }
 
 function hasUiReviewCoverage(reviewScope) {
+  return hasPositiveUiBrowserCoverage(reviewScope) || hasBlockedUiBrowserFallback(reviewScope);
+}
+
+function hasPositiveUiBrowserCoverage(reviewScope) {
   return reviewScope.verifiedItems.some(positiveBrowserEvidenceItem) ||
-    reviewScope.reviewedItems.some(positiveBrowserEvidenceItem) ||
-    reviewScope.skippedItems.some(hasBlockedBrowserFallback);
+    reviewScope.reviewedItems.some(positiveBrowserEvidenceItem);
+}
+
+function hasBlockedUiBrowserFallback(reviewScope) {
+  return reviewScope.skippedItems.some(hasBlockedBrowserFallback);
+}
+
+function sectionLabelHasValue(section, labelPattern, options = {}) {
+  const { allowNone = false } = options;
+  return normalizeText(section)
+    .split("\n")
+    .map((line) => line.trim().replace(/^[-*]\s+/, ""))
+    .some((line) => {
+      const match = line.match(/^([^:]+):\s*(.*)$/);
+      if (!match || !labelPattern.test(match[1])) return false;
+      const value = match[2].trim();
+      if (!value || isPlaceholder(value)) return false;
+      if (allowNone && isNoneItem(value.replace(/[.;]$/, ""))) return true;
+      return sectionHasSubstance(value);
+    });
+}
+
+function browserVerificationCapabilitySectionIsValid(sliceText) {
+  if (!hasSection(sliceText, "Browser Verification Capability")) return false;
+  const section = extractSection(sliceText, "Browser Verification Capability");
+  if (!sectionHasSubstance(section)) return false;
+  const namesApplies = sectionLabelHasValue(section, /\b(applies)\b/i);
+  const namesPlaywrightCli = sectionLabelHasValue(section, /\b(playwright[-\s]?cli)\b/i);
+  const namesTarget = sectionLabelHasValue(section, /\b(target|url|route)\b/i, { allowNone: true });
+  const namesFlows = sectionLabelHasValue(section, /\b(viewports?|flows?|flow)\b/i, { allowNone: true });
+  const namesBlockedOrStatus = sectionLabelHasValue(section, /\b(if blocked|blocked|status)\b/i);
+  return namesApplies && namesPlaywrightCli && namesTarget && namesFlows && namesBlockedOrStatus;
 }
 
 function verificationCapabilitySectionIsValid(sliceText) {
+  if (browserVerificationCapabilitySectionIsValid(sliceText)) return true;
   if (!hasSection(sliceText, "Verification Capability")) return false;
   const section = extractSection(sliceText, "Verification Capability");
   if (!sectionHasSubstance(section)) return false;
   const text = normalizeText(section);
   const namesRepoChecks = /\b(repo|script|scripts|command|commands|check|checks|test|tests|lint|build|typecheck|node|pnpm|curl|api)\b/i.test(text);
-  const namesHostOrManualChecks = /\b(host|manual|browser|chrome|chromium|safari|firefox|computer use|codex browser|playwright|cypress|viewport|responsive|user[- ]flow|api|curl)\b/i.test(text);
+  const namesHostOrManualChecks = /\b(playwright[-\s]?cli|viewport|responsive|user[- ]flow|api|curl)\b/i.test(text);
   const namesConstraintsOrFallback = /\b(blocked|blocker|available|unavailable|not available|allowed|not allowed|constraint|constraints|install|package|fallback|replacement|residual risk|skipped|none|n\/a)\b/i.test(text);
   return namesRepoChecks && namesHostOrManualChecks && namesConstraintsOrFallback;
 }
@@ -2960,10 +3083,16 @@ function verificationCapabilityMessages(state, plan) {
   if (!state.activeSlice.path || !state.activeSlice.exists) return [];
 
   const sliceText = readFileIfPresent(path.join(state.repoRoot, state.activeSlice.path));
+  if (plan.surfaces.ui.length > 0) {
+    if (browserVerificationCapabilitySectionIsValid(sliceText ?? "")) return [];
+    return [
+      message("warning", "missing-browser-verification-capability", state.activeSlice.path, "UI/user-flow evidence needs a Browser Verification Capability record: playwright-cli status, target URL/route, viewports/flows, and verified or blocked/replacement/residual-risk status."),
+    ];
+  }
   if (verificationCapabilitySectionIsValid(sliceText ?? "")) return [];
 
   return [
-    message("warning", "missing-verification-capability", state.activeSlice.path, "Active review evidence has skipped checks or UI/auth/integration surfaces, but the slice lacks concrete Verification Capability. Record repo checks, host/manual browser or user-flow options, install constraints, blocked checks, and replacement evidence before accepting fallback verification."),
+    message("warning", "missing-verification-capability", state.activeSlice.path, "Active review evidence has skipped checks or auth/integration surfaces, but the slice lacks concrete Verification Capability. Record repo checks, playwright-cli status when relevant, install constraints, blocked checks, and replacement evidence before accepting fallback verification."),
   ];
 }
 
@@ -3057,7 +3186,7 @@ export function reviewContext(options = {}) {
       "You are a read-only review subagent. Return findings to the main agent for synthesis and evaluation.",
       "Do not edit files, fix issues, change docs, change package files, run formatters that write files, commit, change scope, or present conclusions directly to the user.",
       "Read the source paths before judging when they are available.",
-      "For UI/user-flow slices, verify in a browser when an approved browser path exists; curl, static HTML, and code review are not browser verification.",
+      "For UI/user-flow slices, use playwright-cli for browser verification; curl, static HTML, other browser tools, and code review are not browser verification.",
     ],
     focus: LENSES[lens].focus,
     sourcePaths: reviewSourcePathGroups(validation),

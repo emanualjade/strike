@@ -62,8 +62,10 @@ Before editing implementation files:
 - Do not overwrite, revert, delete, or reformat unrelated user work.
 - Do not use destructive commands or broad cleanup unless the user explicitly
   asks.
-- Do not commit, push, install dependencies, run migrations, or change
-  production-facing config unless the user approves or the repo instructions
-  clearly allow it.
+- Do not install dependencies, run migrations, or change production-facing config
+  unless the user approves or the repo instructions clearly allow it.
+- In Auto Strike, completed slice and readiness checkpoints are expected to be
+  committed and pushed. Stage only scoped work and never include unrelated user
+  changes.
 - Keep changes scoped to the active slice. If a fix requires broad shared
   changes, stop and update the plan before continuing.

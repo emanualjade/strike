@@ -12,6 +12,7 @@ const warnings = [];
 const pluginVersions = new Map();
 const marketplaceVersions = [];
 const knownSkillNames = new Set();
+const standaloneUtilitySkillNames = new Set(["handoff"]);
 
 function rel(filePath) {
   return path.relative(root, filePath) || ".";
@@ -368,11 +369,13 @@ function validateSkill(skillPath) {
     }
   }
 
-  if (!skillText.includes("## Host Invocation")) {
-    fail(`${rel(skillFile)}: missing Host Invocation section`);
-  }
-  if (!skillText.includes("references/invocation.md")) {
-    fail(`${rel(skillFile)}: must reference plugin host invocation guidance`);
+  if (!standaloneUtilitySkillNames.has(skillName)) {
+    if (!skillText.includes("## Host Invocation")) {
+      fail(`${rel(skillFile)}: missing Host Invocation section`);
+    }
+    if (!skillText.includes("references/invocation.md")) {
+      fail(`${rel(skillFile)}: must reference plugin host invocation guidance`);
+    }
   }
 
   const concreteClaudeInvocations = [...skillText.matchAll(/\/strike:[a-z0-9-]+/g)].map((match) => match[0]);

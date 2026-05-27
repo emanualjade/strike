@@ -2,6 +2,25 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.23 - 2026-05-26
+
+- Made Auto Strike UI/browser verification first-class with a dedicated
+  `Browser Verification Capability` record for UI/user-flow slices.
+- Standardized UI/browser verification on `playwright-cli` as the only approved
+  browser path unless the user explicitly overrides it.
+- Tightened helper validation so real browser evidence, blocked browser
+  fallbacks, and code-only replacement evidence are distinguished instead of
+  collapsing into generic verification.
+- Reduced false-positive contradiction warnings when checked smoke/API tasks
+  coexist with clearly skipped browser verification.
+- Tightened slice sizing pressure with `Why Not Split` checks for L/XL and
+  broad UI + route/API + state/data + test slices.
+- Added stale final-index warnings when closed readiness still leaves
+  active-build, planned-later, or future-slice language in `index.md`.
+- Tightened Grill Decision Depth wording so agents ask the user once, default
+  to Standard, and treat depth as questioning pressure rather than permission to
+  lower build quality.
+
 ## 0.8.22 - 2026-05-26
 
 - Tightened Auto Strike stack/setup guidance so user- or repo-named tooling

@@ -263,8 +263,8 @@ ownership, or usage context.
 Split success checks into:
 
 - repo-verifiable checks: tests, command output, API responses, generated
-  files, screenshots, routes, rendered states, type checks, browser
-  walkthroughs, logs, or repo evidence readiness review can inspect
+  files, routes, rendered states, type checks, `playwright-cli` walkthroughs,
+  logs, or repo evidence readiness review can inspect
 - live/human checks: user taste calls, maintainer or stakeholder signoff, live
   sales/demo checks, external user signoff, production smoke checks, or
   analytics that cannot be proven from repo evidence alone

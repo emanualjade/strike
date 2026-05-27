@@ -16,6 +16,8 @@ For each slice:
 4. Implement the smallest complete behavior inside the slice.
 5. Use `verification.md` to run the checks from the spec/slice plus any focused
    checks the code makes necessary.
+   For UI/user-flow work, fill the slice's `Browser Verification Capability`
+   with the `playwright-cli` result before accepting fallback evidence.
 6. Record build evidence in the active slice's `## Evidence` section using the
    exact labels `Changed:`, `Verified:`, `Reviewed:`, `Skipped:`, and
    `Review Findings:`. Keep it compact: files changed, checks run, skipped
@@ -24,21 +26,26 @@ For each slice:
 7. Keep `index.md`, the Phase Ledger, and slice checkboxes current as the build
    advances. Once code exists, do not leave Active Work pointing at brainstorm,
    stale open decisions, no active feature/slice, or "no code written".
-8. Use `review.md` for the required review pass. You MUST run a read-only
-   review subagent. A main-agent self-review is never sufficient on its own.
+8. Use `review.md` for the required review pass. Completed meaningful slices
+   MUST run a read-only review subagent.
 9. Fix blocking findings and re-review.
 10. When the slice is complete, write `## Closeout Summary` in the slice and use
    it as the final user-facing receipt: built, validation, review,
    skipped/residual risk, docs, and next.
+   For UI/browser status, follow `verification.md`.
 11. Before claiming the slice done, run the helper's `validate` command when
    available and fix or consciously record warnings about evidence, active work,
    review, and slice boundaries.
-12. After closeout, do not switch Active Work to the next slice, create the next
+12. Commit and push the slice checkpoint before starting another slice. Inspect
+   the worktree, stage only this slice's code/docs, commit with a slice-specific
+   message, and push. Do not include unrelated user work. If commit or push
+   cannot complete, stop and report the exact blocker.
+13. After closeout, do not switch Active Work to the next slice, create the next
    slice doc, or start the next slice's research/plan/build in the same work
    unit unless the user explicitly asked to keep going across slice boundaries.
    Keep the completed slice as the active slice, record the next natural slice
    in `Next`, and stop with the closeout receipt.
-13. Do not add features that were not asked for. Do not remove existing features
+14. Do not add features that were not asked for. Do not remove existing features
    unless asked.
 
 For local servers, avoid blocking the final response on a long-running command.
