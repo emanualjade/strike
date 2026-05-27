@@ -30,9 +30,8 @@ without raw field labels.
 
 ## Procedure
 
-1. Resolve the consuming repository root. Prefer
-   `git rev-parse --show-toplevel`; fall back to `pwd` when no git root is
-   available.
+1. Resolve the consuming repository root. Prefer the project root; fall back to
+   `pwd` when no project root can be detected.
 2. Run this skill's bundled initialization script by absolute path from the
    consuming repository root:
 

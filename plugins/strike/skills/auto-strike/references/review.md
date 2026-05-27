@@ -52,9 +52,9 @@ Review Findings:
 - [open blocker or "None"]
 ```
 
-Keep `Changed:` aligned with the actual implementation files changed in the
-worktree. If Git or the helper reports extra changed files, confirm they are
-unrelated user work or update the evidence before trusting review packets.
+Keep `Changed:` aligned with the implementation files actually touched. If the
+helper or reviewer reports extra files, confirm they are unrelated user work or
+update the evidence before trusting review packets.
 Keep the explicit `read-only review subagent` line; lens-specific review bullets
 alone do not prove a separate reviewer was used.
 

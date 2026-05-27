@@ -92,7 +92,7 @@ grill, or research inside slice.
 - board pointer moved back from `05-slice` to `04-spec` when the spec is too
   thin or contradictory to slice safely
 
-Use a normal filesystem move, not `git mv`, and verify exactly one pointer file
+Use a normal filesystem move and verify exactly one pointer file
 exists for the project slug after moving.
 
 ## Slicing Principles

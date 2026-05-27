@@ -67,9 +67,8 @@ without raw field labels.
    - `check-setup`
    - `review-instructions <entry|all>`
    - `preview <skill-name>`
-2. Resolve the consuming repository root. Prefer
-   `git rev-parse --show-toplevel`; fall back to `pwd` when no git root is
-   available.
+2. Resolve the consuming repository root. Prefer the project root; fall back to
+   `pwd` when no project root can be detected.
 3. Confirm the repo-local Strike runtime exists at
    `strike/customize/system/customize.mjs`. If it is missing, stop and say
    exactly:
@@ -151,9 +150,9 @@ or collect extra docs/assets but does not clearly say whether the output is
 per-project or shared/ongoing, or does not provide a repo-safe save path.
 
 A repo-safe path is relative, normalized inside the repo root, not absolute, not
-under `~`, not using `..`, and not inside `.git/`, dependency, cache, or
-build-output folders unless the user explicitly asks and the active skill allows
-it.
+under `~`, not using `..`, and not inside repository metadata, dependency,
+cache, or build-output folders unless the user explicitly asks and the active
+skill allows it.
 
 When warning about an unclear extra doc/asset request, suggest concrete
 replacement snippets such as:

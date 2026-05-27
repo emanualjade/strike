@@ -114,7 +114,7 @@ or a later spec gap that routed the card back to research.
 - board pointer left in `04-spec` when research was run as an optional pre-spec
   pass from `04-spec`
 
-Use a normal filesystem move, not `git mv`, and verify exactly one pointer file
+Use a normal filesystem move and verify exactly one pointer file
 exists for the project slug after moving.
 
 ## Skip Mode

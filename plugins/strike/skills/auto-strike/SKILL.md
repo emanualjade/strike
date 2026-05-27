@@ -211,11 +211,11 @@ Keep responses short and user-facing. Report:
 - which Auto Strike docs were created or updated
 - what was built or verified, when code changed
 - for completed slices, the slice `Closeout Summary`: built, validation, review,
-  skipped/residual risk, docs, commit/push, and next
+  skipped/residual risk, docs, commit and push, and next
 - for UI/user-flow work, `playwright-cli` status; if blocked, say code-verified
   rather than browser-verified
 - for completed readiness, a short receipt: shipped, run command, checks,
-  review status, residual risk, commit/push, next action
+  review status, residual risk, commit and push, next action
 - blockers, human/live checks, or skipped checks with reasons
 - the next best action
 

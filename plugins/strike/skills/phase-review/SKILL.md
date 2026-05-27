@@ -93,11 +93,10 @@ of date. Stop and tell the user to run the Strike `init` skill to refresh it.
 - selected phase `build-brief.md` when present
 - selected phase `build.md`
 - existing selected phase `review.md` if present
-- current `git status --short`
-- current diff for files listed in `build.md`
-- focused implementation/test files only as needed to verify the diff
+- focused implementation/test files only as needed to verify the build
 
-Treat `build.md` and the current diff as the main review target. Use
+Treat `build.md`, build evidence, and focused implementation files as the main
+review target. Use
 `spec.md`, `plan.md`, and `build-brief.md` to check intent and scope.
 
 ## Writes
@@ -108,13 +107,13 @@ Treat `build.md` and the current diff as the main review target. Use
   every listed phase has a clean review and no implementation checklist items
   remain open
 
-Use normal filesystem moves, not `git mv`, and verify exactly one pointer file
+Use normal filesystem moves and verify exactly one pointer file
 exists for the project slug after moving.
 
 ## Review Lenses
 
-Review against the phase plan, build brief, spec, build evidence, and current
-diff:
+Review against the phase plan, build brief, spec, build evidence, and focused
+implementation files:
 
 - scope: changes stay inside the selected phase
 - behavior: the phase outcome appears implemented

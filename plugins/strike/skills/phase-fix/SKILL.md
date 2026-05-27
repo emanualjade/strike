@@ -107,7 +107,6 @@ routing metadata, or repo glossary edits.
 - existing selected phase `fix.md` if present
 - `outputs/readiness/readiness.md` if readiness review moved the card back to
   implementation
-- current `git status --short`
 - current implementation/test files named by the blocking fixes and build
   evidence
 
@@ -259,5 +258,4 @@ skill`, or `Arguments`.
 - Do not create durable IDs or hidden state fields.
 - Do not move out of `06-implementation`.
 - Do not commit.
-- Do not run or recommend `git checkout --`, `git clean`, or repo-wide
-  reset/restore commands.
+- Do not run or recommend repo-wide reset/restore commands.

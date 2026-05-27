@@ -20,8 +20,8 @@ user decide what to do next.
 Keep progress updates quiet. It is fine to say what you are about to do when it
 affects the user's repository, but do not narrate internal mechanics such as
 reading this skill, checking bundled script syntax, or inspecting invocation
-rules. If the current directory is not a Git repo, mention the fallback once:
-"This is not a Git repo, so I will create Strike files in `<path>`."
+rules. If the project root cannot be detected, mention the fallback once:
+"I will create Strike files in `<path>`."
 
 ## Purpose
 
@@ -50,9 +50,9 @@ without raw field labels.
 ## Procedure
 
 1. Require a project name unless the user clearly points at an existing card.
-2. Resolve the consuming repository root before running the script. Prefer
-   `git rev-parse --show-toplevel` from the user's current repo directory;
-   fall back to `pwd` only when no git root is available.
+2. Resolve the consuming repository root before running the script. Prefer the
+   project root from the user's current repo directory; fall back to `pwd` only
+   when no project root can be detected.
 3. Run the bundled `scripts/start-card.sh` by absolute path, passing the
    consuming repository root with `--repo-root <path>`. Do not `cd` into the
    skill directory before running it, do not hand-create the files, and do not

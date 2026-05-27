@@ -99,7 +99,6 @@ routing metadata, or repo glossary edits.
 - `phases/<phase-slug>/build-brief.md`
 - `phases/<phase-slug>/research.md` if present
 - existing `phases/<phase-slug>/build.md` if present
-- current `git status --short`
 - focused repo files named by the build brief
 
 Treat `build-brief.md` as the main handoff. Use `spec.md` and `plan.md` to
@@ -131,20 +130,18 @@ lane, verify exactly one pointer file exists for the project slug.
 Before editing implementation or test files:
 
 1. Read the build brief and likely touched files.
-2. Run `git status --short`.
-3. Identify expected implementation, test, or documentation files for this
+2. Identify expected implementation, test, or documentation files for this
    phase.
-4. If an expected file already has unrelated user changes that make the phase
+3. If an expected file already has unrelated user changes that make the phase
    unsafe to edit, stop and explain the conflict.
-5. If the file is dirty but the changes are clearly part of the selected phase
+4. If existing file changes are clearly part of the selected phase
    or can be worked with safely, continue carefully.
-6. Tell the user which files or surfaces are about to change.
+5. Tell the user which files or surfaces are about to change.
 
 Untracked or modified Strike docs are normal while a card is in progress and
 are not a reason to stop.
 
-Never revert user changes. Never use repo-wide reset, `git checkout --`, or
-`git clean`.
+Never revert user changes. Never run destructive repo-wide cleanup.
 
 ## Build Behavior
 
@@ -289,7 +286,7 @@ ready when:
 - open concerns are visible as checkboxes when they matter
 - phase-review can start after a context reset without rediscovering what changed
 
-If review would have to reconstruct the build from git diff alone, improve
+If review would have to reconstruct the build from raw file changes alone, improve
 `build.md` before updating the card.
 
 ## Output
@@ -321,5 +318,4 @@ skill`, or `Arguments`.
 - Do not create review, fix, readiness, or retro artifacts.
 - Do not create durable IDs or hidden state fields.
 - Do not commit.
-- Do not run or recommend `git checkout --`, `git clean`, or repo-wide
-  reset/restore commands.
+- Do not run or recommend repo-wide reset/restore commands.

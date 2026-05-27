@@ -3,7 +3,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
-import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const SCRIPT_FILE = fileURLToPath(import.meta.url);
@@ -222,18 +221,6 @@ function resolveRepoRoot(repoRootOption) {
       throw new Error(`Repo root does not exist: ${repoRootOption}`);
     }
     return fs.realpathSync(resolved);
-  }
-
-  try {
-    const gitRoot = execFileSync("git", ["rev-parse", "--show-toplevel"], {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
-    }).trim();
-    if (gitRoot) {
-      return fs.realpathSync(gitRoot);
-    }
-  } catch {
-    // Fall through to the current working directory.
   }
 
   return fs.realpathSync(process.cwd());
@@ -1223,120 +1210,25 @@ function keyDocMessages(repoRoot, keyDocs) {
   return messages;
 }
 
-function runGitLines(repoRoot, args) {
-  try {
-    const output = execFileSync("git", ["-C", repoRoot, ...args], {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
-    });
-    return output
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter(Boolean);
-  } catch {
-    return null;
-  }
-}
-
-function gitRoot(repoRoot) {
-  const lines = runGitLines(repoRoot, ["rev-parse", "--show-toplevel"]);
-  if (!lines || lines.length === 0) return null;
-  return fs.realpathSync(lines[0]);
-}
-
-function repoRelativeGitPath(repoRoot, gitRootPath, gitRelativePath) {
-  const absolutePath = path.resolve(gitRootPath, gitRelativePath);
-  const relativePath = path.relative(repoRoot, absolutePath);
-  if (!relativePath || relativePath.startsWith("..") || path.isAbsolute(relativePath)) return null;
-  return posix(relativePath);
-}
-
-function gitChangedPaths(repoRoot) {
-  const rootPath = gitRoot(repoRoot);
-  if (!rootPath) {
-    return {
-      available: false,
-      paths: [],
-    };
-  }
-
-  const paths = new Set();
-  const commands = [
-    ["diff", "--name-only", "--diff-filter=ACDMRTUXB"],
-    ["diff", "--cached", "--name-only", "--diff-filter=ACDMRTUXB"],
-    ["ls-files", "--others", "--exclude-standard"],
-  ];
-
-  for (const args of commands) {
-    const lines = runGitLines(rootPath, args) ?? [];
-    for (const line of lines) {
-      const relativePath = repoRelativeGitPath(repoRoot, rootPath, line);
-      if (relativePath && isImplementationPath(relativePath)) {
-        paths.add(relativePath);
-      }
-    }
-  }
-
-  return {
-    available: true,
-    paths: [...paths].sort(),
-  };
-}
-
 function normalizeEvidencePath(sourcePath) {
   return posix(String(sourcePath ?? "").replace(/^\.\/+/, "").replace(/\/+$/, ""));
-}
-
-function evidenceCoversGitPath(evidencePath, gitPath) {
-  const normalizedEvidence = normalizeEvidencePath(evidencePath);
-  const normalizedGit = normalizeEvidencePath(gitPath);
-  return normalizedEvidence === normalizedGit || normalizedGit.startsWith(`${normalizedEvidence}/`);
-}
-
-function completedSliceChangedPaths(state) {
-  const paths = [];
-  for (const sourcePath of state.docs.filter((docPath) => SLICE_DOC_PATTERN.test(docPath))) {
-    const text = readFileIfPresent(path.join(state.repoRoot, sourcePath));
-    if (!text) continue;
-    const changed = evidenceChangedPaths(state.repoRoot, [sourcePath]);
-    if (changed.length === 0) continue;
-    const verified = evidenceVerifiedItems(state.repoRoot, [sourcePath]);
-    const reviewed = evidenceReviewedItems(state.repoRoot, [sourcePath]);
-    const looksComplete = verified.length > 0 && reviewedItemsLookComplete(reviewed);
-    if (closeoutSummarySectionIsValid(text) || looksComplete) {
-      paths.push(...changed);
-    }
-  }
-  return [...new Set(paths)].filter(isImplementationPath).map(normalizeEvidencePath);
 }
 
 function changedEvidenceDriftMessages(state) {
   const reviewScope = state.evidence.reviewScope;
   if (reviewScope.changedPaths.length === 0) return [];
 
-  const gitState = gitChangedPaths(state.repoRoot);
-  if (!gitState.available) return [];
-
   const evidencePaths = reviewScope.changedPaths
     .filter(isImplementationPath)
     .map(normalizeEvidencePath);
-  const accountedPaths = [...new Set([...evidencePaths, ...completedSliceChangedPaths(state)])];
   const messagePath = reviewScope.locations[0] ?? WORKSPACE_ROOT;
   const messages = [];
-  const missingFromEvidence = gitState.paths.filter((gitPath) => {
-    return !accountedPaths.some((evidencePath) => evidenceCoversGitPath(evidencePath, gitPath));
-  });
-  if (missingFromEvidence.length > 0) {
-    messages.push(message("warning", "changed-evidence-may-be-stale", messagePath, `Git reports changed implementation files not listed in active or completed-slice Changed evidence. Confirm they are unrelated user work or update Changed before review: ${missingFromEvidence.slice(0, 8).join(", ")}${missingFromEvidence.length > 8 ? ", ..." : ""}`));
-  }
 
-  const gitPathSet = new Set(gitState.paths);
   const unresolvedEvidence = evidencePaths.filter((sourcePath) => {
-    return !fs.existsSync(path.join(state.repoRoot, sourcePath)) &&
-      !gitPathSet.has(sourcePath);
+    return !fs.existsSync(path.join(state.repoRoot, sourcePath));
   });
   if (unresolvedEvidence.length > 0) {
-    messages.push(message("warning", "stale-changed-evidence-path", messagePath, `Active Changed evidence references implementation paths that do not exist and are not reported by Git as changed: ${unresolvedEvidence.slice(0, 8).join(", ")}${unresolvedEvidence.length > 8 ? ", ..." : ""}`));
+    messages.push(message("warning", "stale-changed-evidence-path", messagePath, `Active Changed evidence references implementation paths that do not exist: ${unresolvedEvidence.slice(0, 8).join(", ")}${unresolvedEvidence.length > 8 ? ", ..." : ""}`));
   }
 
   return messages;

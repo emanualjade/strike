@@ -79,8 +79,7 @@ implementation/test diffs named by the build, fix, and review evidence.
 - `outputs/spec/spec.md`
 - every phase `plan.md`, `build-brief.md` when present, `build.md`, `fix.md`
   when present, and `review.md`
-- current `git status --short`
-- current diff for files listed in phase `build.md` and `fix.md` when present
+- focused implementation/test files only as needed to verify readiness evidence
 
 ## Writes
 
@@ -157,7 +156,7 @@ When verdict is `Awaiting human check` or `Blocked`:
 
 ## Moving The Board
 
-Use a normal filesystem move, not `git mv`; board pointers may be untracked
+Use a normal filesystem move; board pointers may be untracked
 while the workflow is in progress. After the move, verify exactly one pointer
 exists for the project slug under `docs/strike/board/*/`.
 

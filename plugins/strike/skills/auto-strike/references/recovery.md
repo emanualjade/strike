@@ -10,7 +10,7 @@ Stop broad coding and answer these from evidence:
 
 - What exists on disk?
 - What is missing?
-- What is contradicted by code, docs, git state, or helper output?
+- What is contradicted by code, docs, helper output, or current artifacts?
 - What was last actually completed?
 - What can be verified now?
 - What is the smallest correct place to resume?
@@ -19,7 +19,7 @@ Classify each affected phase, feature, or slice:
 
 - Complete: artifact exists, evidence exists, and checks still pass or are
   clearly recorded.
-- Recoverable: enough docs, code, git state, or conversation context remains to
+- Recoverable: enough docs, code, artifact state, or conversation context remains to
   reconstruct minimal state without guessing.
 - Unverified: artifact exists but needs checks before it can be trusted.
 - Missing/stale: referenced docs or code are absent, stale, or contradicted.
@@ -40,7 +40,7 @@ Classify each affected phase, feature, or slice:
 ## Resume
 
 1. Inspect `auto-strike/index.md`, the active initiative, active feature, active
-   slice, Key Docs, relevant code, and git state.
+   slice, Key Docs, relevant code, and current artifacts.
 2. Write or update a short recovery note in the active doc or `index.md`: what
    was trusted, repaired, still unverified, and why.
 3. Run the helper `validate` command when available.

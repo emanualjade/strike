@@ -18,7 +18,7 @@ explicitly says otherwise.
   `references/invocation.md`, then show the active host's next prompt in plain
   user-facing language. Do not dump raw handoff fields unless the user asks for
   them.
-- When moving a board pointer, use a normal filesystem move, not `git mv`, then
+- When moving a board pointer, use a normal filesystem move, then
   verify exactly one pointer exists for the project slug.
 - Utilities with no board lane normally leave board pointers alone. A utility
   may move a pointer only when its contract explicitly says it can route a
@@ -436,8 +436,8 @@ Validation:
 - verification that matters for the phase has run or is visible as an unchecked
   user action
 - failed or skipped checks are recorded honestly
-- phase-review can start after a context reset without reconstructing the build from
-  git diff alone
+- phase-review can start after a context reset without reconstructing the build
+  from raw file changes alone
 
 The board pointer stays in `06-implementation` for completed builds;
 phase-review is the next step.
@@ -461,7 +461,7 @@ Writes:
 
 Validation:
 
-- phase plan, build evidence, and current diff were read
+- phase plan, build evidence, and focused implementation files were read
 - blocking fixes are plain unchecked checklist items
 - pass verdict has enough evidence to trust readiness review as the next stage
 - skipped, failed, or missing checks are not hidden

@@ -4224,59 +4224,7 @@ Reviewed:
   assert.ok(body.messages.some((item) => item.code === "missing-review-verified-evidence"));
 }
 
-function testValidateWarnsWhenGitChangesMissingFromChangedEvidence() {
-  const repo = tempRepo();
-  initGit(repo);
-  write(repo, "auto-strike/index.md", `# Auto Strike
-
-## Active Work
-- Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/video-mvp
-- Current mode: review
-- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
-
-## Open Decisions
-- None.
-`);
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
-
-## Implementation Research
-- Local precedent: src/video/upload.ts owns upload behavior.
-
-## Plan
-- Update \`src/video/upload.ts\` and verify with \`node scripts/video-smoke.js\`.
-
-## Plan Review
-- main-agent review - pass; files and verification are named.
-
-## Evidence
-
-Changed:
-- src/video/upload.ts
-
-Verified:
-- node scripts/video-smoke.js - passed
-
-Reviewed:
-- functionality - pass
-- spec-coverage - pass
-- code-quality - pass
-- read-only review subagent - pass; returned findings to main agent for synthesis.
-`);
-  write(repo, "src/video/upload.ts", "export function upload() {}\n");
-  write(repo, "src/video/preview.ts", "export function preview() {}\n");
-
-  const result = run(repo, ["validate"]);
-  assertStatus(result, 0, "git changed files missing from Changed evidence should warn, not fail");
-  const body = json(result);
-  const warning = body.messages.find((item) => item.code === "changed-evidence-may-be-stale");
-  assert.ok(warning);
-  assert.match(warning.message, /src\/video\/preview\.ts/);
-  assert.doesNotMatch(warning.message, /auto-strike/);
-}
-
-function testValidateDoesNotWarnWhenGitChangeCoveredByCompletedSliceEvidence() {
+function testValidateDoesNotCompareChangedEvidenceAgainstRepoDiff() {
   const repo = tempRepo();
   initGit(repo);
   write(repo, "auto-strike/index.md", `# Auto Strike
@@ -4349,9 +4297,9 @@ Reviewed:
   write(repo, "src/video/caption.ts", "export function caption() {}\n");
 
   const result = run(repo, ["validate"]);
-  assertStatus(result, 0, "prior completed slice evidence should account for earlier uncommitted files");
+  assertStatus(result, 0, "Changed evidence should be artifact-based, not repo-diff-based");
   const body = json(result);
-  assert.ok(!body.messages.some((item) => item.code === "changed-evidence-may-be-stale"));
+  assert.ok(!body.messages.some((item) => item.message.includes("src/video/upload.ts")));
 }
 
 function testValidateWarnsForPrematureNextSliceActivation() {
@@ -4834,8 +4782,7 @@ testValidateWarnsWhenCheckedTodoConflictsWithSkippedEvidence();
 testValidateWarnsWhenCheckedCheckpointLacksBrowserEvidence();
 testValidateWarnsWhenCheckedExecutionTaskConflictsWithSkippedEvidence();
 testValidateWarnsWhenVerifiedEvidenceDidNotRun();
-testValidateWarnsWhenGitChangesMissingFromChangedEvidence();
-testValidateDoesNotWarnWhenGitChangeCoveredByCompletedSliceEvidence();
+testValidateDoesNotCompareChangedEvidenceAgainstRepoDiff();
 testValidateWarnsForPrematureNextSliceActivation();
 testValidateWarnsForDocPathNextSliceWithProseSliceLabel();
 testValidateWarnsForCompletedSliceCloseoutWithoutEvidence();

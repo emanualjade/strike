@@ -96,7 +96,7 @@ context. Do not inspect broadly just to feel prepared.
 - board pointer moved from `04-spec` to `05-slice` only when slice planning can
   continue after a context reset
 
-Use a normal filesystem move, not `git mv`, and verify exactly one pointer file
+Use a normal filesystem move and verify exactly one pointer file
 exists for the project slug after moving.
 
 ## Spec Conversation

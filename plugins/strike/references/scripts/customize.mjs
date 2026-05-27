@@ -3,7 +3,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
-import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const SCRIPT_FILE = fileURLToPath(import.meta.url);
@@ -114,18 +113,6 @@ function resolveRepoRoot(repoRootOption) {
       throw new Error(`Repo root does not exist: ${repoRootOption}`);
     }
     return fs.realpathSync(resolved);
-  }
-
-  try {
-    const gitRoot = execFileSync("git", ["rev-parse", "--show-toplevel"], {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
-    }).trim();
-    if (gitRoot) {
-      return fs.realpathSync(gitRoot);
-    }
-  } catch {
-    // Fall through to the current working directory.
   }
 
   return fs.realpathSync(process.cwd());

@@ -37,7 +37,7 @@ Use `verification.md`, `review.md`, and `code-quality.md`. Check:
   rationale or moved to follow-up only when outside accepted scope
 - docs/state: docs, root language, initiative decisions, evidence, todo, and
   next action reflect the final state
-- git checkpoint: readiness changes are committed and pushed before final
+- checkpoint: readiness changes are committed and pushed before final
   completion is reported
 
 Do not call the work complete when accepted-scope defects, stale docs, review

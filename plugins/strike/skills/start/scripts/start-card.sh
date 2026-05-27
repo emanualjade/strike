@@ -75,7 +75,7 @@ fi
 project_name="${project_name_parts[*]}"
 
 if [[ -z "$repo_root" ]]; then
-  repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+  repo_root="$(pwd)"
 fi
 
 if [[ ! -d "$repo_root" ]]; then

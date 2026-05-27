@@ -39,8 +39,8 @@ docs/strike/board/01-brainstorm/image-generator.md
 docs/strike/board/02-grill/image-generator.md
 ```
 
-Use a normal filesystem move, not `git mv`. Board pointers may be untracked,
-and the workflow should not depend on git index state to move a card.
+Use a normal filesystem move. Board pointers may be untracked, and the workflow
+should not depend on index state to move a card.
 
 After moving, verify exactly one pointer exists for the slug:
 

@@ -92,7 +92,7 @@ know.
 - board pointer moved from `02-grill` to `04-spec` when research is unnecessary
   and spec can continue after a context reset
 
-Use a normal filesystem move, not `git mv`, and verify exactly one pointer file
+Use a normal filesystem move and verify exactly one pointer file
 exists for the project slug after moving.
 
 ## Conversation

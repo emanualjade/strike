@@ -38,7 +38,7 @@ Warn when customization asks Strike to create, save, append, maintain, export, o
 - whether the output is per-project or shared/ongoing
 - the repo-safe save path to use
 
-A repo-safe path is relative, normalized inside the repo root, not absolute, not under `~`, not using `..`, and not inside `.git/`, dependency, cache, or build-output folders unless the user explicitly asks and the active skill allows it.
+A repo-safe path is relative, normalized inside the repo root, not absolute, not under `~`, not using `..`, and not inside repository metadata, dependency, cache, or build-output folders unless the user explicitly asks and the active skill allows it.
 
 When warning about an unclear extra doc/asset request, suggest one or more replacement snippets:
 

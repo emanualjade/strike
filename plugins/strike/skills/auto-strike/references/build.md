@@ -36,10 +36,9 @@ For each slice:
 11. Before claiming the slice done, run the helper's `validate` command when
    available and fix or consciously record warnings about evidence, active work,
    review, and slice boundaries.
-12. Commit and push the slice checkpoint before starting another slice. Inspect
-   the worktree, stage only this slice's code/docs, commit with a slice-specific
-   message, and push. Do not include unrelated user work. If commit or push
-   cannot complete, stop and report the exact blocker.
+12. Commit and push the slice checkpoint before starting another slice. Include
+   only this slice's code/docs. If commit or push cannot complete, stop and
+   report the exact blocker.
 13. After closeout, do not switch Active Work to the next slice, create the next
    slice doc, or start the next slice's research/plan/build in the same work
    unit unless the user explicitly asked to keep going across slice boundaries.

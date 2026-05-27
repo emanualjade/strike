@@ -134,9 +134,9 @@ repo-local marketplace files, and repo-local skill folders are not part of the
 portable package.
 
 The plugin has no package-manager install step. The bundled `start` skill uses
-its included shell script plus common local tools: `bash`, `git` when available,
-`find`, `sed`, `mkdir`, and `touch`. The `customize` utility and slug helpers
-use the bundled Node scripts and require Node.js 18 or newer.
+its included shell script plus common local tools such as `bash`, `find`, `sed`,
+`mkdir`, and `touch`. The `customize` utility and slug helpers use the bundled
+Node scripts and require Node.js 18 or newer.
 
 ## Local Development
 
@@ -160,5 +160,5 @@ entry at that location instead.
 
 When iterating in Codex, remember that local plugins are installed into Codex's
 plugin cache. Refresh or reinstall the local plugin if edits do not appear. The
-Codex marketplace upgrade command applies to Git-backed marketplaces, not local
-path marketplaces.
+Codex marketplace upgrade command applies to remote marketplaces, not local path
+marketplaces.

@@ -249,7 +249,7 @@ Review Findings:
 ```
 
 Done claims need evidence or a clear skipped-check reason. Record `Changed:` and
-`Verified:` before review so helper packets can scope changed files. Use
+`Verified:` before review so helper packets can scope touched files. Use
 `review.md` for review behavior and lens details.
 
 ## Language

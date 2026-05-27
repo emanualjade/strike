@@ -74,7 +74,6 @@ the run.
 - every phase `plan.md`, `build-brief.md`, `build.md`, `review.md`, and
   `fix.md` that exists
 - `outputs/readiness/readiness.md`
-- current `git status --short`
 
 ## Writes
 
@@ -115,7 +114,7 @@ When retro is written:
 
 ## Moving The Board
 
-Use a normal filesystem move, not `git mv`; board pointers may be untracked
+Use a normal filesystem move; board pointers may be untracked
 while the workflow is in progress. After the move, verify exactly one pointer
 exists for the project slug under `docs/strike/board/*/`.
 
