@@ -21,10 +21,11 @@ feature or initiative readiness pass needs `readiness.md`.
   risk handling.
 - After meaningful code changes, run a distinct review pass instead of relying
   only on the build mindset.
-- You MUST run a read-only review subagent.
-- A main-agent self-review is never sufficient on its own.
-- For high-risk or UI/data/integration-heavy work, run distinct read-only
-  review subagents per lens.
+- Required: meaningful slices need at least one read-only review subagent
+  covering the baseline lenses. A main-agent self-review is never sufficient.
+- Required: if the slice touches UI, user flows, state/data, security, or
+  integrations, add those lenses explicitly. For high-risk slices, use separate
+  read-only subagents for separate risk areas.
 
 ## Evidence
 
@@ -102,6 +103,10 @@ The main agent evaluates each finding as valid, invalid, already handled,
 blocking, accepted risk, or follow-up. Fix blocking issues, verify again, and
 re-review. Do not use review as an excuse to redesign the feature unless the
 current design cannot meet the spec safely.
+
+Keep the loop bounded: after fixes, run one focused re-review. Continue only for
+new or still-open blockers. Non-blocking, lower priority suggestions become accepted risk or
+follow-up.
 
 After findings are fixed or accepted, summarize review in the slice's
 `Closeout Summary` as confidence telemetry, not review minutes. Keep bullets

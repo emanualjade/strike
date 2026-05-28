@@ -65,7 +65,7 @@ Before editing implementation files:
 - Do not install dependencies, run migrations, or change production-facing config
   unless the user approves or the repo instructions clearly allow it.
 - In Auto Strike, completed slice and readiness checkpoints are expected to be
-  committed and pushed. Include only scoped work and never include unrelated user
-  changes.
+  committed. Push only when requested, repo policy requires it, or release flow
+  needs it. Include only scoped work and never include unrelated user changes.
 - Keep changes scoped to the active slice. If a fix requires broad shared
   changes, stop and update the plan before continuing.

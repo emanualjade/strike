@@ -2,6 +2,7 @@
 name: auto-strike
 description: Use when the user asks for Auto Strike to turn an idea into a shipped feature or MVP with a standalone workspace.
 argument-hint: "[idea]"
+disable-model-invocation: true
 allowed-tools: Read Write Edit MultiEdit Bash Grep Glob WebFetch WebSearch Agent
 ---
 
@@ -119,10 +120,11 @@ Treat user- or repo-named tooling as a hard constraint. Do not switch runtime,
 language, package manager, or build tool as a workaround unless the user
 explicitly approves the tradeoff.
 
-Do one phase at a time. A phase may leave a handoff, but it must record its own
-state, review/exit evidence, and next mode before the next phase creates
-artifacts. Do not blend work "in one pass" unless the user explicitly skips that
-boundary.
+Do not blend phases. Broad "build/ship this" requests allow Auto Strike to
+continue phase by phase, not to combine brainstorm, grill, spec, slice, build,
+review, or readiness in one pass. A phase may leave a handoff, but it must
+record its own state, review/exit evidence, and next mode before the next phase
+creates artifacts.
 
 After a slice closeout, name the next natural slice/action. Do not move Active
 Work to the next slice or create the next slice doc unless the user explicitly
@@ -185,12 +187,14 @@ checks, not only planning docs.
 - Build, verify, review, and fix in loops until the stopping condition is met or
   a real blocker needs the user.
 - Completed meaningful slices MUST run a read-only review subagent. A main-agent
-  self-review is never sufficient on its own. Use `review.md`.
+  self-review is never sufficient on its own. Cover baseline lenses; add
+  UI/user-flow/state/data/security/integration lenses when touched. Use
+  `review.md`.
 - UI/user-flow work follows `verification.md`: use `playwright-cli` only. If it
   is blocked, report code-verified rather than browser-verified.
-- After each completed slice, commit and push the slice checkpoint before
-  starting another slice. Do not include unrelated user work. If commit or push
-  cannot complete, stop and report the exact blocker.
+- After each completed slice, commit the slice checkpoint before starting
+  another slice. Push only when requested, repo policy requires it, or release
+  flow needs it. Do not include unrelated user work.
 
 ## Completion Standard
 
@@ -211,11 +215,11 @@ Keep responses short and user-facing. Report:
 - which Auto Strike docs were created or updated
 - what was built or verified, when code changed
 - for completed slices, the slice `Closeout Summary`: built, validation, review,
-  skipped/residual risk, docs, commit and push, and next
+  skipped/residual risk, docs, commit/push status, and next
 - for UI/user-flow work, `playwright-cli` status; if blocked, say code-verified
   rather than browser-verified
 - for completed readiness, a short receipt: shipped, run command, checks,
-  review status, residual risk, commit and push, next action
+  review status, residual risk, commit/push status, next action
 - blockers, human/live checks, or skipped checks with reasons
 - the next best action
 

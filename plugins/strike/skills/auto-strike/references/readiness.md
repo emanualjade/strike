@@ -37,8 +37,9 @@ Use `verification.md`, `review.md`, and `code-quality.md`. Check:
   rationale or moved to follow-up only when outside accepted scope
 - docs/state: docs, root language, initiative decisions, evidence, todo, and
   next action reflect the final state
-- checkpoint: readiness changes are committed and pushed before final
-  completion is reported
+- checkpoint: readiness changes are committed before final completion is
+  reported; push when requested, repo policy requires it, or release flow needs
+  it
 
 Do not call the work complete when accepted-scope defects, stale docs, review
 blockers, or missing required checks remain unresolved.
@@ -94,22 +95,24 @@ Docs:
 - [primary docs updated]
 
 Commit / push:
-- [commit hash and push status]
+- [commit hash and push status if pushed]
 
 Next:
 - [next action]
 ```
 
 If readiness finds fixable issues, assign them to the smallest affected slice or
-feature and loop through fix, verify, review, and readiness again.
+feature and loop through fix, verify, review, and readiness once. Continue only
+for new or still-open blockers.
 
 Use the `Final Receipt` as the user-facing terminal summary when the whole
 feature or initiative is done. For a single completed slice, use the slice's
 `Closeout Summary` instead.
 
-If readiness changes code or docs, commit and push those changes before the
-final receipt. If commit or push cannot complete, report the exact blocker and
-do not call readiness fully complete.
+If readiness changes code or docs, commit those changes before the final
+receipt. Push only when requested, repo policy requires it, or release flow
+needs it. If commit cannot complete, report the exact blocker and do not call
+readiness fully complete.
 
 ## User Control
 

@@ -396,11 +396,11 @@ function validateSkill(skillPath) {
   } else {
     const openaiMetadata = fs.readFileSync(openaiMetadataPath, "utf8");
     if (skillName === "auto-strike") {
-      if (/disable-model-invocation:\s*true/.test(skillText)) {
-        fail(`${rel(skillFile)}: auto-strike must stay Codex-invocable; do not disable model invocation`);
+      if (!/disable-model-invocation:\s*true/.test(skillText)) {
+        fail(`${rel(skillFile)}: auto-strike must be explicit user-invocation only`);
       }
-      if (!/allow_implicit_invocation:\s*true/.test(openaiMetadata)) {
-        fail(`${rel(openaiMetadataPath)}: auto-strike must allow Codex invocation`);
+      if (!/allow_implicit_invocation:\s*false/.test(openaiMetadata)) {
+        fail(`${rel(openaiMetadataPath)}: auto-strike must disable implicit Codex invocation`);
       }
       if (!/display_name:\s*["']?Auto Strike["']?/.test(openaiMetadata)) {
         fail(`${rel(openaiMetadataPath)}: auto-strike must provide Codex interface metadata`);

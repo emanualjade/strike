@@ -2,6 +2,17 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.25 - 2026-05-27
+
+- Bounded Auto Strike review loops: after fixes, agents run one focused
+  re-review and continue only for new or still-open blockers.
+- Made review lens coverage explicit: meaningful slices require at least one
+  read-only review subagent for baseline lenses, with surface-specific lenses
+  added when touched.
+- Kept Auto Strike slice/readiness commits mandatory while making push
+  conditional on user request, repo policy, or release flow.
+- Set Auto Strike host metadata to explicit user invocation only.
+
 ## 0.8.24 - 2026-05-26
 
 - Reissued the Auto Strike quality-gate release under a fresh plugin version so

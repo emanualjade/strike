@@ -28,7 +28,8 @@ For each slice:
    stale open decisions, no active feature/slice, or "no code written".
 8. Use `review.md` for the required review pass. Completed meaningful slices
    MUST run a read-only review subagent.
-9. Fix blocking findings and re-review.
+9. Fix blocking findings and run one focused re-review. Continue only for new
+   or still-open blockers.
 10. When the slice is complete, write `## Closeout Summary` in the slice and use
    it as the final user-facing receipt: built, validation, review,
    skipped/residual risk, docs, and next.
@@ -36,9 +37,10 @@ For each slice:
 11. Before claiming the slice done, run the helper's `validate` command when
    available and fix or consciously record warnings about evidence, active work,
    review, and slice boundaries.
-12. Commit and push the slice checkpoint before starting another slice. Include
-   only this slice's code/docs. If commit or push cannot complete, stop and
-   report the exact blocker.
+12. Commit the slice checkpoint before starting another slice. Include only this
+   slice's code/docs. Push only when requested, repo policy requires it, or
+   release flow needs it. If commit cannot complete, stop and report the exact
+   blocker.
 13. After closeout, do not switch Active Work to the next slice, create the next
    slice doc, or start the next slice's research/plan/build in the same work
    unit unless the user explicitly asked to keep going across slice boundaries.

@@ -140,7 +140,8 @@ Use this template:
 - [ ] Verify the acceptance criteria and required browser/user-flow checks.
 - [ ] Record Changed, Verified, Reviewed, Skipped, and Review Findings evidence.
 - [ ] Write the Closeout Summary and use it as the final user-facing receipt.
-- [ ] Commit and push the slice checkpoint before starting another slice.
+- [ ] Commit the slice checkpoint before starting another slice; push only when
+      requested, repo policy requires it, or release flow needs it.
 
 ## Implementation Research
 [Docs, versions, local precedent, or why no extra research is needed.]
@@ -203,7 +204,7 @@ Docs:
 - [primary Auto Strike docs updated]
 
 Commit / push:
-- [commit hash and push status]
+- [commit hash and push status if pushed]
 
 Next:
 - [next natural slice/action]
