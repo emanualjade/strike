@@ -2,6 +2,14 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.27 - 2026-05-29
+
+- Fixed Auto Strike helper parsing for normal Markdown links in `Active Work`
+  and `Key Docs`, so links resolve to their target paths instead of labels.
+- Reduced Auto Strike UI review false positives for plain `.js` / `.ts` files
+  that live under UI-shaped directories but do not contain browser-facing code.
+- Aligned Auto Strike inspect output with the canonical `Next:` field wording.
+
 ## 0.8.26 - 2026-05-28
 
 - Added a shared Strike language contract and aligned normal Strike plus Auto

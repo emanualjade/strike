@@ -294,6 +294,52 @@ function testKeyDocsCanReferenceRepoDocs() {
   assert.match(markdownReview.stdout, /README\.md/);
 }
 
+function testMarkdownLinksResolveToTargets() {
+  const repo = tempRepo();
+  write(repo, "README.md", "# Product Notes\n");
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: [Main](auto-strike/initiatives/main)
+- Feature: None.
+- Current mode: brainstorm
+- Doc: [Idea](auto-strike/initiatives/main/idea.md)
+- State: Idea is being clarified.
+- Next: Grill the durable terminology.
+- Blocked by: None.
+
+## Key Docs
+- [README](README.md) - product notes.
+- [Idea](auto-strike/initiatives/main/idea.md) - active idea.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/idea.md", `# Main Idea
+
+## Phase Tasks
+- [x] Capture initial idea.
+- [ ] Grill terminology.
+
+## Exit Evidence
+- The idea is clear enough to resume.
+`);
+
+  const inspect = run(repo, ["inspect"]);
+  assertStatus(inspect, 0, "inspect should parse markdown-link targets");
+  const inspectBody = json(inspect);
+  assert.equal(inspectBody.index.activeInitiativePath, "auto-strike/initiatives/main");
+  assert.equal(inspectBody.index.activeWork.docPath, "auto-strike/initiatives/main/idea.md");
+  assert.deepEqual(inspectBody.index.keyDocs.map((item) => item.path), [
+    "README.md",
+    "auto-strike/initiatives/main/idea.md",
+  ]);
+
+  const validate = run(repo, ["validate"]);
+  assertStatus(validate, 0, "markdown-link key docs should not produce missing-doc errors");
+  assert.ok(!json(validate).messages.some((item) => item.code === "missing-key-doc"));
+}
+
 function testReviewContextPacket() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
@@ -4684,6 +4730,41 @@ Verified:
   assert.ok(plan.required.map((item) => item.lens).includes("ui-regression"));
 }
 
+function testReviewPlanDoesNotInferUiFromScriptPathOnly() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/backend-route
+- Current mode: review
+- Active slice: auto-strike/initiatives/main/features/backend-route/slices/slice-0-handler.md
+- State: Backend route helper is ready for review.
+- Next: Review backend route helper.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/backend-route/slices/slice-0-handler.md", `# Slice 0: Handler
+
+## Evidence
+Changed:
+- app/demo.js
+
+Verified:
+- node --check app/demo.js - passed
+`);
+  write(repo, "app/demo.js", "export const demo = true;\n");
+
+  const result = run(repo, ["review-plan"]);
+  assertStatus(result, 0, "review-plan should not infer UI from script path alone");
+  const plan = json(result);
+  assert.ok(plan.changedPaths.includes("app/demo.js"));
+  assert.ok(!plan.surfaces.ui.includes("app/demo.js"));
+  assert.ok(!plan.required.map((item) => item.lens).includes("ui-regression"));
+}
+
 function testReviewContextRejectsUnknownLens() {
   const repo = tempRepo();
   const result = run(repo, ["review-context", "--lens", "unknown-lens"]);
@@ -4705,6 +4786,7 @@ testInitiativeInspectAndValidateWithEvidence();
 testValidateWarnsForMissingEvidence();
 testValidateBrokenKeyDocReference();
 testKeyDocsCanReferenceRepoDocs();
+testMarkdownLinksResolveToTargets();
 testReviewContextPacket();
 testImplementationPlanReviewContext();
 testReviewContextScopesChangedFilesToActiveFeature();
@@ -4790,6 +4872,7 @@ testValidateWarnsForCompletedSliceCloseoutWithoutEvidence();
 testValidateAcceptsNextSliceActivationWhenUserExplicitlyContinued();
 testValidateWarnsForStaleChangedEvidencePath();
 testReviewPlanDetectsBrowserScriptUiChanges();
+testReviewPlanDoesNotInferUiFromScriptPathOnly();
 testReviewContextRejectsUnknownLens();
 testHelpWorksWithoutCommand();
 

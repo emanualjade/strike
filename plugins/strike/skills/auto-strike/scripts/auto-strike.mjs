@@ -371,7 +371,7 @@ function markdownListItems(sectionText) {
 function stripMarkdownShell(value) {
   return String(value ?? "")
     .replace(/^`([^`]+)`$/, "$1")
-    .replace(/^\[([^\]]+)\]\([^)]+\)$/, "$1")
+    .replace(/^\[[^\]]+\]\(([^)]+)\)$/, "$1")
     .trim();
 }
 
@@ -416,10 +416,10 @@ function parseActiveSlice(items) {
 
 function extractInlinePath(value) {
   const text = String(value ?? "").trim();
+  const markdownLink = text.match(/\[[^\]]+\]\(([^)\s]+)(?:\s+["'][^"']*["'])?\)/);
+  if (markdownLink) return markdownLink[1].trim();
   const codeMatch = text.match(/`([^`]+)`/);
   if (codeMatch) return codeMatch[1].trim();
-  const markdownLink = text.match(/\[([^\]]+)\]\([^)]+\)/);
-  if (markdownLink) return markdownLink[1].trim();
   const leading = text.split(/\s+-\s+|\s+--\s+|\s+:\s+/)[0]?.trim();
   return stripMarkdownShell(leading);
 }
@@ -2738,9 +2738,12 @@ function isUiChangedPath(sourcePath, repoRoot) {
   const extension = pathExtension(sourcePath);
   if (UI_EXTENSIONS.has(extension)) return true;
   if (!UI_SCRIPT_EXTENSIONS.has(extension)) return false;
-  if (pathSegments(sourcePath).some((segment) => UI_PATH_SEGMENTS.has(segment))) return true;
   const text = readRepoText(repoRoot, sourcePath);
-  return /\b(document|window)\s*\.|\b(querySelector|addEventListener|classList|innerHTML|localStorage|sessionStorage|customElements)\b|from\s+["']react["']|React\.createElement|return\s*\(?\s*<[A-Za-z]/.test(text);
+  if (/\b(document|window)\s*\.|\b(querySelector|addEventListener|classList|innerHTML|localStorage|sessionStorage|customElements)\b|from\s+["']react["']|React\.createElement|return\s*\(?\s*<[A-Za-z]/.test(text)) {
+    return true;
+  }
+  return pathSegments(sourcePath).some((segment) => UI_PATH_SEGMENTS.has(segment)) &&
+    /\b(component|render|view|page|screen|className|aria-|role=|href=|onClick|button|form|input|select|textarea)\b/i.test(text);
 }
 
 function isDataChangedPath(sourcePath) {
@@ -3110,7 +3113,7 @@ function renderInspectMarkdown(state) {
     `- Phase ledger: ${state.phaseLedger.present ? state.phaseLedger.path : "Missing"}`,
     `- Language: ${state.language.present ? state.language.path : "Missing"}`,
     `- Initiative decisions: ${state.activeInitiative.decisionsExists ? state.activeInitiative.decisionsPath : "Missing"}`,
-    `- Next best action declared: ${state.index.nextBestAction ?? "None"}`,
+    `- Next declared: ${state.index.nextBestAction ?? "None"}`,
     "",
     "## Docs",
     ...bulletLines(state.docs),
