@@ -171,6 +171,14 @@ instead of a CVE ignore list.
 
 ## GitHub Actions Host Smoke Tests
 
+2026-05-29 update: CI and host smoke workflows use `pnpm/action-setup@v6`
+instead of Corepack so the GitHub runner installs the version declared by
+`packageManager` (`pnpm@11.4.0`). The workflows now run
+`pnpm install --frozen-lockfile` before any `pnpm run ...` command because
+`verifyDepsBeforeRun: error` requires install-state metadata before script
+execution. Source checked: https://github.com/pnpm/action-setup and
+https://github.com/actions/setup-node/blob/main/docs/advanced-usage.md
+
 2026-05-19 research pass: keep the first host smoke workflows manual
 (`workflow_dispatch`) and deterministic. GitHub documents manual workflow
 dispatch, workflow notifications, logs, failed-step log filtering with

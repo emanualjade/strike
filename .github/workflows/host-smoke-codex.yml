@@ -28,16 +28,17 @@ jobs:
       - name: Prepare diagnostics
         run: mkdir -p host-smoke-artifacts/codex
 
-      - name: Enable pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@11.1.3 --activate
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
 
       - name: Print runtime versions
         run: |
           node --version
           npm --version
           pnpm --version
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Validate repository
         run: |
