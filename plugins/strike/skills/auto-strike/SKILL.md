@@ -182,8 +182,9 @@ checks, not only planning docs.
 - Keep `index.md` current as the resume pointer. Always record `Current mode`;
   once feature/slice/build evidence exists, do not leave it pointing at
   brainstorm, stale open decisions, no active feature/slice, or no verification.
-- Keep root `language.md` plus the active initiative's `decisions.md` and
-  `spec.md` current, even when they are minimal.
+- Keep root `UBIQUITOUS_LANGUAGE.md` current when durable language exists, and
+  keep the active initiative's `decisions.md` and `spec.md` current, even when
+  they are minimal.
 - Build, verify, review, and fix in loops until the stopping condition is met or
   a real blocker needs the user.
 - Completed meaningful slices MUST run a read-only review subagent. A main-agent

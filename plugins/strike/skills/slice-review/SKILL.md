@@ -173,7 +173,7 @@ Allowed:
 - confirm a named route, component, helper, schema, or command exists
 - inspect a nearby pattern only enough to see whether a phase is fake or too
   broad
-- inspect language file for term conflicts
+- inspect `UBIQUITOUS_LANGUAGE.md` for term conflicts
 
 Not allowed:
 

@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 
 const SCRIPT_FILE = fileURLToPath(import.meta.url);
 const WORKSPACE_ROOT = "auto-strike";
+const LANGUAGE_FILE = "UBIQUITOUS_LANGUAGE.md";
 const VALID_MODES = new Set(["brainstorm", "grill", "idea", "decisions", "spec", "slice", "build", "review", "readiness"]);
 const MODES_EXPECTING_SPEC = new Set(["slice", "build", "review", "readiness"]);
 const MODES_EXPECTING_SLICE = new Set(["build", "review", "readiness"]);
@@ -274,7 +275,7 @@ function listWorkspaceEntries(rootPath) {
 }
 
 function isRecognizableWorkspace(rootPath) {
-  const directMarkers = ["index.md", "todo.md", "language.md"];
+  const directMarkers = ["index.md", "todo.md"];
   if (directMarkers.some((marker) => inspectPath(path.join(rootPath, marker))?.isFile())) {
     return true;
   }
@@ -1130,7 +1131,7 @@ export function inspectAutoStrike(options = {}) {
     : [];
   const indexText = readFileIfPresent(path.join(workspacePath, "index.md"));
   const todoText = readFileIfPresent(path.join(workspacePath, "todo.md"));
-  const languagePath = path.join(workspacePath, "language.md");
+  const languagePath = path.join(repoRoot, LANGUAGE_FILE);
   const languageText = readFileIfPresent(languagePath);
   const index = parseIndex(indexText);
   const todo = parseTodo(todoText);
@@ -1155,8 +1156,8 @@ export function inspectAutoStrike(options = {}) {
     index,
     todo,
     language: {
-      present: Boolean(languageText),
-      path: `${WORKSPACE_ROOT}/language.md`,
+      present: languageText !== null,
+      path: LANGUAGE_FILE,
       headings: parseDecisionHeadings(languageText),
       substantive: markdownDocHasSubstance(languageText),
     },
@@ -1783,10 +1784,8 @@ function currentTruthMessages(state) {
   const messages = [];
   if (!["recognized", "empty"].includes(state.workspace.status)) return messages;
 
-  if (!state.language.present) {
-    messages.push(message("warning", "missing-root-language", `${WORKSPACE_ROOT}/language.md`, "Root language.md is mandatory. Create it as the shared glossary/domain model, even if it starts with no durable terms recorded yet."));
-  } else if (!state.language.substantive) {
-    messages.push(message("warning", "weak-root-language", state.language.path, "Root language.md exists but has no substantive glossary/domain-model content or explicit empty-state note."));
+  if (state.language.present && !state.language.substantive) {
+    messages.push(message("warning", "weak-root-language", state.language.path, "UBIQUITOUS_LANGUAGE.md exists but has no substantive glossary/domain-language content."));
   }
 
   if (!state.activeInitiative.exists) return messages;
@@ -3262,7 +3261,7 @@ function reviewSourcePathGroups(state) {
 
   const workspaceDocs = filterExistingSourcePaths(state, [
     `${WORKSPACE_ROOT}/todo.md`,
-    `${WORKSPACE_ROOT}/language.md`,
+    LANGUAGE_FILE,
     ...state.evidence.reviewScope.changedPaths.filter((sourcePath) => sourcePath.startsWith(`${WORKSPACE_ROOT}/`)),
   ]).filter((sourcePath) => !usedPaths.has(sourcePath));
   for (const sourcePath of workspaceDocs) usedPaths.add(sourcePath);
@@ -3277,7 +3276,7 @@ function reviewSourcePathGroups(state) {
   return [
     { title: "Active Docs", paths: activeDocs },
     { title: "Changed Files From Active Evidence", paths: changedFiles },
-    { title: "Workspace Docs", paths: workspaceDocs },
+    { title: "Workspace And Language Docs", paths: workspaceDocs },
     { title: "Context Docs", paths: contextDocs },
   ].map((group) => ({
     ...group,

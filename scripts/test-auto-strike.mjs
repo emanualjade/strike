@@ -991,7 +991,7 @@ function testValidateAcceptsSpecPhaseLedgerWithFuturePendingRows() {
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/language.md", "# Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
+  write(repo, "UBIQUITOUS_LANGUAGE.md", "# Ubiquitous Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
   write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Stack\nDecision: Use a local server.\n");
   write(repo, "auto-strike/initiatives/main/spec.md", `# Spec
 
@@ -1054,7 +1054,7 @@ function testValidateDoesNotInferBuildPrepFromSliceDocAlone() {
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/language.md", "# Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
+  write(repo, "UBIQUITOUS_LANGUAGE.md", "# Ubiquitous Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
   write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Stack\nDecision: Use a local server.\n");
   write(repo, "auto-strike/initiatives/main/spec.md", "# Spec\n\n## Summary\nBuild a local tool library.\n");
   write(repo, "auto-strike/initiatives/main/grill.md", `# Grill
@@ -1149,7 +1149,7 @@ function testValidateWarnsForStaleActiveWorkAfterImplementationEvidence() {
 ## Verification
 - None yet - no code written.
 `);
-  write(repo, "auto-strike/language.md", "# Language\n\n## Tool Library\n- Member: Neighbor using the app.\n");
+  write(repo, "UBIQUITOUS_LANGUAGE.md", "# Ubiquitous Language\n\n## Tool Library\n- Member: Neighbor using the app.\n");
   write(repo, "auto-strike/initiatives/tool-library/decisions.md", "# Decisions\n\n## Identity\n- Persona switcher.\n");
   write(repo, "auto-strike/initiatives/tool-library/spec.md", "# Spec\n\n## Overview\n- Build a local tool library.\n");
   write(repo, "auto-strike/initiatives/tool-library/idea.md", `# Idea
@@ -1275,7 +1275,7 @@ function testValidateWarnsForMissingReferencedAutoStrikeDoc() {
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/language.md", "# Language\n\n## Checklist\n- Item: A task.\n");
+  write(repo, "UBIQUITOUS_LANGUAGE.md", "# Ubiquitous Language\n\n## Checklist\n- Item: A task.\n");
   write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Scope\n- Local checklist.\n");
   write(repo, "auto-strike/initiatives/main/spec.md", "# Spec\n\n## Overview\n- Local checklist.\n");
   write(repo, "auto-strike/initiatives/main/features/checklist/feature-spec.md", "# Checklist Feature Spec\n");
@@ -1314,7 +1314,7 @@ function testValidateWarnsForStaleSliceTaskChecklist() {
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/language.md", "# Language\n\n## Checklist\n- Item: A task.\n");
+  write(repo, "UBIQUITOUS_LANGUAGE.md", "# Ubiquitous Language\n\n## Checklist\n- Item: A task.\n");
   write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Scope\n- Local checklist.\n");
   write(repo, "auto-strike/initiatives/main/spec.md", "# Spec\n\n## Overview\n- Local checklist.\n");
   write(repo, "auto-strike/initiatives/main/features/checklist/feature-spec.md", "# Checklist Feature Spec\n");
@@ -1343,7 +1343,7 @@ Reviewed:
   assert.ok(body.messages.some((item) => item.code === "stale-slice-task-checklist" && item.severity === "warning"));
 }
 
-function testValidateWarnsForMissingCurrentTruthDocs() {
+function testValidateAllowsMissingRootLanguage() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
@@ -1369,9 +1369,10 @@ function testValidateWarnsForMissingCurrentTruthDocs() {
 `);
 
   const result = run(repo, ["validate"]);
-  assertStatus(result, 0, "missing current-truth docs should warn, not fail");
+  assertStatus(result, 0, "missing root language should not warn by itself");
   const body = json(result);
-  assert.ok(body.messages.some((item) => item.code === "missing-root-language" && item.severity === "warning"));
+  assert.ok(!body.messages.some((item) => item.code === "missing-root-language"));
+  assert.ok(!body.messages.some((item) => item.code === "weak-root-language"));
   assert.ok(body.messages.some((item) => item.code === "missing-initiative-decisions" && item.severity === "warning"));
   assert.ok(body.messages.some((item) => item.code === "missing-initiative-spec" && item.severity === "warning"));
 }
@@ -1391,7 +1392,7 @@ function testValidateWarnsForWeakCurrentTruthDocs() {
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/language.md", "# Language\n");
+  write(repo, "UBIQUITOUS_LANGUAGE.md", "# Ubiquitous Language\n");
   write(repo, "auto-strike/initiatives/main/decisions.md", "# Main Decisions\n");
   write(repo, "auto-strike/initiatives/main/spec.md", "# Main Spec\n");
   write(repo, "auto-strike/initiatives/main/idea.md", `# Main Idea
@@ -1427,7 +1428,7 @@ function testValidateAcceptsMinimalCurrentTruthDocs() {
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/language.md", `# Language
+  write(repo, "UBIQUITOUS_LANGUAGE.md", `# Ubiquitous Language
 
 ## Current Terms
 - No durable domain terms recorded yet.
@@ -1680,7 +1681,7 @@ function testValidateWarnsForMissingGrillBeforeSpecOrSlice() {
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/language.md", "# Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
+  write(repo, "UBIQUITOUS_LANGUAGE.md", "# Ubiquitous Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
   write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Status\n- Tool-library decisions are being recorded.\n");
   write(repo, "auto-strike/initiatives/main/spec.md", "# Spec\n\n## Summary\nBuild a local tool library.\n");
   write(repo, "auto-strike/initiatives/main/idea.md", `# Idea
@@ -1721,7 +1722,7 @@ function testValidateAcceptsGrillDecisionCheckpointBeforeSpec() {
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/language.md", "# Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
+  write(repo, "UBIQUITOUS_LANGUAGE.md", "# Ubiquitous Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
   write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Stack\nDecision: Use vanilla HTML and a tiny local server.\n");
   write(repo, "auto-strike/initiatives/main/spec.md", "# Spec\n\n## Summary\nBuild a local tool library.\n");
   write(repo, "auto-strike/initiatives/main/idea.md", `# Idea
@@ -1845,7 +1846,7 @@ function testValidateWarnsWhenSpecPhaseCreatesSliceArtifacts() {
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/language.md", "# Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
+  write(repo, "UBIQUITOUS_LANGUAGE.md", "# Ubiquitous Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
   write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Stack\nDecision: Use a local server.\n");
   write(repo, "auto-strike/initiatives/main/grill.md", `# Grill
 
@@ -1908,7 +1909,7 @@ function testValidateWarnsForDetailedSlicePlanningInsideSpec() {
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/language.md", "# Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
+  write(repo, "UBIQUITOUS_LANGUAGE.md", "# Ubiquitous Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
   write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Stack\nDecision: Use a local server.\n");
   write(repo, "auto-strike/initiatives/main/grill.md", `# Grill
 
@@ -1965,7 +1966,7 @@ function testValidateAllowsConciseSliceHandoffInsideSpec() {
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/language.md", "# Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
+  write(repo, "UBIQUITOUS_LANGUAGE.md", "# Ubiquitous Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
   write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Stack\nDecision: Use a local server.\n");
   write(repo, "auto-strike/initiatives/main/grill.md", `# Grill
 
@@ -2018,7 +2019,7 @@ function testValidateWarnsForDetailedSliceHandoffAfterSpecIsMarkedDone() {
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/language.md", "# Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
+  write(repo, "UBIQUITOUS_LANGUAGE.md", "# Ubiquitous Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
   write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Stack\nDecision: Use a local server.\n");
   write(repo, "auto-strike/initiatives/main/grill.md", `# Grill
 
@@ -2122,7 +2123,7 @@ function testValidateWarnsForMissingPhaseExitGatesBeforeBuild() {
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/language.md", "# Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
+  write(repo, "UBIQUITOUS_LANGUAGE.md", "# Ubiquitous Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
   write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Stack\nDecision: Use a local server.\n");
   write(repo, "auto-strike/initiatives/main/grill.md", `# Grill
 
@@ -2199,7 +2200,7 @@ function testValidateAcceptsExplicitUserOptOutOfGrill() {
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/language.md", "# Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
+  write(repo, "UBIQUITOUS_LANGUAGE.md", "# Ubiquitous Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
   write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Status\n- User asked the agent to proceed with assumptions.\n");
   write(repo, "auto-strike/initiatives/main/spec.md", "# Spec\n\n## Summary\nBuild a local tool library.\n");
   write(repo, "auto-strike/initiatives/main/idea.md", `# Idea
@@ -2237,7 +2238,7 @@ function testValidateWarnsForPhaseCompletedAfterQuestionToolFailure() {
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/language.md", "# Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
+  write(repo, "UBIQUITOUS_LANGUAGE.md", "# Ubiquitous Language\n\n## Tool Library\n- Member: Neighbor using the tool library.\n");
   write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Identity\nDecision: Pre-seeded picker.\n");
   write(repo, "auto-strike/initiatives/main/spec.md", "# Spec\n\n## Summary\nBuild a local tool library.\n");
   write(repo, "auto-strike/initiatives/main/idea.md", `# Idea
@@ -2713,7 +2714,7 @@ function testValidateWarnsForDuplicateActiveWorkAndStillChecksSlices() {
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/language.md", "# Language\n\n## Tool Library\n- Tool means borrowable item.\n");
+  write(repo, "UBIQUITOUS_LANGUAGE.md", "# Ubiquitous Language\n\n## Tool Library\n- Tool means borrowable item.\n");
   write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Status\n- Decided.\n");
   write(repo, "auto-strike/initiatives/main/idea.md", `# Main Idea
 
@@ -2897,7 +2898,7 @@ function testValidateWarnsForDuplicatePhaseLedgerRowsWithoutFalseSpecSliceBounda
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/language.md", "# Language\n\n## Tool Library\n- Tool means borrowable item.\n");
+  write(repo, "UBIQUITOUS_LANGUAGE.md", "# Ubiquitous Language\n\n## Tool Library\n- Tool means borrowable item.\n");
   write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Status\n- Decided.\n");
   write(repo, "auto-strike/initiatives/main/idea.md", `# Main Idea
 
@@ -4727,7 +4728,7 @@ testValidateWarnsForStaleActiveWorkAfterImplementationEvidence();
 testValidateWarnsForStaleFinalIndexState();
 testValidateWarnsForMissingReferencedAutoStrikeDoc();
 testValidateWarnsForStaleSliceTaskChecklist();
-testValidateWarnsForMissingCurrentTruthDocs();
+testValidateAllowsMissingRootLanguage();
 testValidateWarnsForWeakCurrentTruthDocs();
 testValidateAcceptsMinimalCurrentTruthDocs();
 testValidateWarnsForMissingGrillDecisionDepth();

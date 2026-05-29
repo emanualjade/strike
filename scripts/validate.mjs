@@ -248,12 +248,6 @@ function validateClaudeMarketplace() {
   });
 }
 
-function validateGitHubMarketplace() {
-  validatePortableMarketplace(".github/plugin/marketplace.json", {
-    descriptionInMetadata: true,
-  });
-}
-
 function validatePortableMarketplace(marketplacePath, options) {
   const marketplace = readJson(marketplacePath);
   if (!marketplace) return;
@@ -414,15 +408,12 @@ function validateSkill(skillPath) {
 function validatePlugin(pluginPath) {
   const pluginName = path.basename(pluginPath);
   const relativePluginPath = rel(pluginPath);
-  const copilotManifestPath = path.join(relativePluginPath, "plugin.json");
   const codexManifestPath = path.join(relativePluginPath, ".codex-plugin/plugin.json");
   const claudeManifestPath = path.join(relativePluginPath, ".claude-plugin/plugin.json");
-  const copilot = readJson(copilotManifestPath);
   const codex = readJson(codexManifestPath);
   const claude = readJson(claudeManifestPath);
 
   for (const [host, manifest, manifestPath] of [
-    ["copilot", copilot, copilotManifestPath],
     ["codex", codex, codexManifestPath],
     ["claude", claude, claudeManifestPath],
   ]) {
@@ -451,11 +442,11 @@ function validatePlugin(pluginPath) {
     }
   }
 
-  const manifestVersions = [copilot, codex, claude]
+  const manifestVersions = [codex, claude]
     .filter(Boolean)
     .map((manifest) => manifest.version);
   if (new Set(manifestVersions).size > 1) {
-    fail(`${relativePluginPath}: Copilot, Codex, and Claude manifest versions should match`);
+    fail(`${relativePluginPath}: Codex and Claude manifest versions should match`);
   }
   if (manifestVersions.length > 0 && new Set(manifestVersions).size === 1) {
     pluginVersions.set(pluginName, manifestVersions[0]);
@@ -548,6 +539,7 @@ function validateRuntimeReferenceBoundary() {
   const allowedRuntimeReferences = [
     /^plugins\/strike\/references\/board-model\.md$/,
     /^plugins\/strike\/references\/invocation\.md$/,
+    /^plugins\/strike\/references\/language\.md$/,
     /^plugins\/strike\/references\/slug-policy\.md$/,
     /^plugins\/strike\/references\/stage-contracts\.md$/,
     /^plugins\/strike\/references\/scripts\/[a-z0-9-]+\.mjs$/,
@@ -621,7 +613,6 @@ function validateCodexShortcutHandoffs() {
 
 validateCodexMarketplace();
 validateClaudeMarketplace();
-validateGitHubMarketplace();
 validatePlugins();
 validateVersionAlignment();
 validateSharedReferences();

@@ -32,7 +32,6 @@ next command:
 | Claude Code plugin | `/clear`, then `/strike:<skill-name> <args>` |
 | Codex app | Start a new thread from the same repo root, then type `$` to select the installed Strike skill, or `@` to choose Strike or one of its bundled skills. The short prompt form is `$<skill-name> <args>`; namespaced `$strike:<skill-name> <args>` may appear. |
 | Codex CLI | Run `/clear`, then use `/skills` or `$<skill-name> <args>` from the same repo root. Namespaced `$strike:<skill-name> <args>` may appear. |
-| GitHub Copilot CLI | Start a fresh session if no reset command is visible, then `/<skill-name> <args>` after confirming the skill is visible with `/skills list` or `/skills info <skill-name>`. |
 
 When the handoff does not ask for a reset, run only the skill command for the
 current host.
@@ -59,7 +58,6 @@ Codex CLI:
 /clear
 $brainstorm checkout-redesign
 Codex namespaced: $strike:brainstorm checkout-redesign
-GitHub Copilot CLI: /brainstorm checkout-redesign
 ```
 
 ```txt
@@ -74,7 +72,6 @@ Codex CLI:
 /clear
 $phase-plan checkout-redesign phase:api-contract
 Codex namespaced: $strike:phase-plan checkout-redesign phase:api-contract
-GitHub Copilot CLI: /phase-plan checkout-redesign phase:api-contract
 ```
 
 ## Writing Rule

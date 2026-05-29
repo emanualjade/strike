@@ -177,7 +177,7 @@ Allowed:
 - confirm a named route/component/helper/schema exists
 - check official docs for a small stack constraint
 - verify a command, test convention, or repo pattern
-- inspect language file for term conflicts
+- inspect `UBIQUITOUS_LANGUAGE.md` for term conflicts
 
 Not allowed:
 

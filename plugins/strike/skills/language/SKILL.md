@@ -47,51 +47,22 @@ node strike/customize/system/customize.mjs --repo-root <repo-root> preview langu
 
 ## Source Of Truth
 
-Use the repo root file:
+Use the shared language contract in the plugin package:
+
+```txt
+references/language.md
+```
+
+The consuming repo's durable glossary is the repo root file:
 
 ```txt
 UBIQUITOUS_LANGUAGE.md
 ```
 
-This file is a glossary, not a spec, scratchpad, implementation guide, or stage
-artifact. It should stay readable by a human and useful to an agent after
-a context reset.
-
-If the file is missing, offer to create it only after a concrete term or
-ambiguity has been resolved. Do not create an empty glossary.
-
-## Language File Shape
-
-Keep `UBIQUITOUS_LANGUAGE.md` simple and conversational.
-
-Context sections group related terms:
-
-```md
-## Work Execution
-
-### Task
-Meaning: A unit of work the system creates, schedules, or tracks to completion.
-Use in: code, docs, planning.
-User-facing: Task.
-Avoid: Job, run, process unless the system defines those separately.
-Notes: Use Run only for a single execution attempt when that distinction matters.
-```
-
-Use optional fields only when useful:
-
-- `Use in:` for code/UI/docs/planning boundaries
-- `User-facing:` when UI language differs from code language
-- `Code-facing:` when code language differs from user-facing language
-- `Avoid:` for aliases that future agents should not introduce
-- `Notes:` for subtle constraints, bounded-context splits, or migration status
-- `Kind:` only when model classification clarifies the term
-
-Keep shared sections at the bottom:
-
-- `## Relationships`
-- `## Domain Events` when event language matters
-- `## Example Dialogue`
-- `## Flagged Ambiguities`
+Follow the contract's file shape, session behavior, and promotion rules. If
+`UBIQUITOUS_LANGUAGE.md` is missing, offer to create it only after a concrete
+term, accepted alias, or meaningful ambiguity has been resolved. Do not create
+an empty glossary.
 
 ## Jobs
 
@@ -178,12 +149,7 @@ When called with a Strike project slug:
 - compare important repo language against `UBIQUITOUS_LANGUAGE.md`
 
 When another Strike skill is working and a language issue appears, the skill
-should handle the light version inline:
-
-```txt
-You said "job"; the glossary uses "Task" for planned work and "Run" for one
-execution attempt. Which one do you mean here?
-```
+should handle the light version inline using the shared language contract.
 
 Use the `language` skill for deeper work: term tracing, glossary updates,
 branch/path scans, or messy conflicts.

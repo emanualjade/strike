@@ -1,7 +1,7 @@
 # Release Workflow
 
-Use this workflow when publishing a Strike version for Claude Code, Codex, and
-GitHub Copilot CLI users.
+Use this workflow when publishing a Strike version for Claude Code and Codex
+users.
 
 ## Normal Work
 
@@ -35,9 +35,8 @@ Release only after the version and changelog changes are committed and pushed.
 
 1. Update `CHANGELOG.md` and all versioned package surfaces:
    `package.json`, `plugins/strike/.codex-plugin/plugin.json`,
-   `plugins/strike/.claude-plugin/plugin.json`, `plugins/strike/plugin.json`,
-   `.claude-plugin/marketplace.json`, and
-   `.github/plugin/marketplace.json`. Do not add a version to
+   `plugins/strike/.claude-plugin/plugin.json`, and
+   `.claude-plugin/marketplace.json`. Do not add a version to
    `.agents/plugins/marketplace.json`.
 2. Commit the release changes.
 3. Push the commit to GitHub.
@@ -54,7 +53,6 @@ and asks Claude to rehearse the tag creation with `--dry-run`.
 
 - `CI`
 - `Host Smoke - Claude Code`
-- `Host Smoke - GitHub Copilot CLI`
 - `Host Smoke - Codex`
 
 If any host smoke workflow has not run on the release commit, trigger it

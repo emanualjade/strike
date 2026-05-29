@@ -24,12 +24,11 @@ Draft target shape:
 ```text
 auto-strike/
   index.md
-  language.md
-  decisions.md
   todo.md
   initiatives/
     <initiative-slug>/
       idea.md
+      decisions.md
       grill.md
       spec.md
       readiness.md
@@ -53,6 +52,8 @@ auto-strike/
       complete, but does not need to exist until feature readiness.
 - [x] Initiative-level `todo.md` is optional for larger initiatives. Root
       `todo.md` remains the cross-initiative operational front door.
+- [x] Durable language lives in repo root `UBIQUITOUS_LANGUAGE.md`, not inside
+      `auto-strike/`.
 - [x] Feature specs are named `feature-spec.md` to avoid confusing initiative
       overview specs with buildable feature specs.
 - [x] Cross-feature workflows live in initiative `spec.md` by default. Use

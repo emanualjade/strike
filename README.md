@@ -42,7 +42,6 @@ You need one of these AI coding tools:
 
 - Codex
 - Claude Code
-- GitHub Copilot CLI
 
 You also need Node.js 18 or newer available as `node`. Strike uses bundled
 deterministic Node scripts for card and filename setup.
@@ -58,7 +57,6 @@ Choose the install path that matches the host and scope you want.
 | Claude Code | User | Personal install across all repositories. |
 | Claude Code | Repository shared | Shared install for everyone using one repository. |
 | Claude Code | Repository private | Personal install in one repository only. |
-| GitHub Copilot CLI | CLI user | You want to try the packaged Copilot CLI plugin. |
 
 Claude Code also has a managed scope for administrator-controlled plugins. It
 is not a normal user install path, so this README does not list commands for it.
@@ -226,27 +224,6 @@ After installing, run this app prompt inside Claude Code to activate Strike:
 
 </details>
 
-<details>
-<summary>Install in GitHub Copilot CLI</summary>
-
-Copilot CLI support is packaged and covered by the host smoke workflow for
-install, update, and deterministic Strike runtime checks. To try it, run these
-terminal commands:
-
-```bash
-copilot plugin marketplace add emanualjade/strike
-copilot plugin install strike@strike
-copilot plugin list
-```
-
-Before using a Strike skill in Copilot CLI, confirm the visible skill names:
-
-```text
-/skills list
-```
-
-</details>
-
 ## Update Strike
 
 <details>
@@ -309,17 +286,6 @@ claude plugin list --json
 Old version directories may remain in `~/.claude/plugins/cache/` for up to 7
 days. That does not matter unless `claude plugin list --json` still shows Strike
 using the old version.
-
-</details>
-
-<details>
-<summary>Update GitHub Copilot CLI</summary>
-
-Run this terminal command:
-
-```bash
-copilot plugin update strike
-```
 
 </details>
 
@@ -395,27 +361,6 @@ Strike project files stay in `docs/strike/` until you delete them.
 
 </details>
 
-<details>
-<summary>Uninstall from GitHub Copilot CLI</summary>
-
-Run these terminal commands:
-
-```bash
-copilot plugin uninstall strike
-copilot plugin marketplace remove strike
-```
-
-Verify:
-
-```bash
-copilot plugin list
-copilot plugin marketplace list
-```
-
-Strike project files stay in `docs/strike/` until you delete them.
-
-</details>
-
 ## Start A Project
 
 Before running normal Strike workflow skills in a repository, initialize Strike
@@ -431,12 +376,6 @@ Codex:
 
 ```text
 $init
-```
-
-GitHub Copilot CLI:
-
-```text
-/init
 ```
 
 `init` installs or refreshes Strike-managed runtime files under
@@ -530,9 +469,6 @@ shortcut:
 ```text
 $spec csv-export
 ```
-
-In GitHub Copilot CLI, start a fresh Copilot CLI session if there is no visible
-context-reset command, then run the next Strike skill from the same repo root.
 
 ## Example Project Run
 

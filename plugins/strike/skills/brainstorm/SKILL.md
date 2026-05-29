@@ -208,9 +208,9 @@ Surface hidden assumptions before saving:
 
 Interrupt kindly for predictable traps: "everyone," "nice to have," "users
 will like it," or terms that mean multiple things in the current domain. If a
-language conflict looks consequential, surface it lightly and suggest
-the `language` skill for deeper glossary work rather than turning brainstorm
-into glossary maintenance.
+language conflict looks consequential, follow the shared language contract,
+surface it lightly, and suggest the `language` skill for deeper glossary work
+rather than turning brainstorm into glossary maintenance.
 Be honest, not merely supportive. A good brainstorm partner is not a
 yes-machine. If an idea is weak, say why with kindness. Push back on unnecessary
 complexity, vague value, broad audiences, and solution shapes that do not match

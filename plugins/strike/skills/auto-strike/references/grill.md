@@ -85,9 +85,9 @@ language starts creating sibling nouns like `ManualReport` and
 `ScheduledReport`, ask whether the qualifier is better as a field, enum, state,
 permission, relationship, configuration, placement, ownership, or usage context.
 
-Update root `language.md` and the initiative `decisions.md` as language and
-decisions crystallize. Do not keep contradictory history unless it explains the
-current choice.
+Update root `UBIQUITOUS_LANGUAGE.md` only when durable language crystallizes.
+Update the initiative `decisions.md` as decisions crystallize. Do not keep
+contradictory history unless it explains the current choice.
 Grill happens at the initiative level. It may discover feature candidates, but
 it does not create new initiatives. If the work looks like a separate
 initiative, ask the user before splitting it out.
@@ -116,7 +116,8 @@ Use `grill.md` as the grill work packet:
 - [ ] Suggest deeper or lighter area depth only when risk/profile justifies it.
 - [ ] Ask or answer only decisions that change product behavior or risk.
 - [ ] Record the Decision Checkpoint before spec.
-- [ ] Update root `language.md` and initiative `decisions.md` with current truth.
+- [ ] Update root `UBIQUITOUS_LANGUAGE.md` when durable language exists; update
+      initiative `decisions.md` with current truth.
 - [ ] Record exit evidence and handoff to spec.
 
 ## Decision Depth

@@ -146,14 +146,11 @@ would change the project, resolve it in grill.
 
 ## Language And Modeling
 
-If `UBIQUITOUS_LANGUAGE.md` exists, read it lightly before naming or
-model-shape decisions. If it is absent, continue without glossary context.
-Challenge vague, overloaded, or conflicting terms in the moment:
-
-```txt
-You said "job"; the glossary uses "Task" for planned work and "Run" for one
-execution attempt. Which one do you mean here?
-```
+Follow the shared language contract in the plugin package's
+`references/language.md`. If `UBIQUITOUS_LANGUAGE.md` exists, read it lightly
+before naming or model-shape decisions. If it is absent, continue until durable
+language appears. Challenge vague, overloaded, or conflicting terms in the
+moment.
 
 Use the Core Noun Before Qualifiers lens when naming things, defining domain
 language, or sketching schema concepts. If the language starts creating

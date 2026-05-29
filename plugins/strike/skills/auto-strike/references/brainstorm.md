@@ -59,7 +59,8 @@ Use `idea.md` as the brainstorm work packet:
 - [ ] Name the painful moment, workaround, or workflow drag.
 - [ ] Propose the first useful outcome and first-version non-goals.
 - [ ] Note any idea-level research that can change the first-version target.
-- [ ] Create or update root `language.md` and initiative `decisions.md` / `spec.md`.
+- [ ] Create or update root `UBIQUITOUS_LANGUAGE.md` only when durable language
+      exists; update initiative `decisions.md` / `spec.md`.
 - [ ] Record exit evidence and handoff to grill.
 
 ## Current Shape

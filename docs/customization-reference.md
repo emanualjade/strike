@@ -219,7 +219,7 @@ Do not put `!strike/customize/...` in portable Strike skills.
 
 Current host docs do not define `!path` as a portable `SKILL.md` file include.
 Claude Code documents `!` as shell command dynamic context injection, which is
-host-specific and can be disabled. Codex, GitHub Copilot CLI, and the Agent
+host-specific and can be disabled. Codex and the Agent
 Skills specification document `SKILL.md` plus referenced supporting files, not
 a shared `!` import syntax.
 

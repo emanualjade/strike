@@ -563,7 +563,8 @@ Primary job:
   wording affects planning, UI, code, docs, or domain modeling
 - compare Strike Project artifacts against repo language when called with
   a project slug
-- keep shared language in `UBIQUITOUS_LANGUAGE.md`
+- follow `references/language.md` and keep durable shared language in
+  `UBIQUITOUS_LANGUAGE.md`
 
 Writes:
 

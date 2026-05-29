@@ -1,8 +1,8 @@
 {
   "name": "strike",
-  "version": "0.8.25",
+  "version": "0.8.26",
   "private": true,
-  "packageManager": "pnpm@11.1.3",
+  "packageManager": "pnpm@11.4.0",
   "description": "Cross-agent skills plugin and marketplace for the Strike workflow.",
   "license": "MIT",
   "scripts": {
@@ -12,7 +12,6 @@
     "validate:publish": "node scripts/validate.mjs --publish",
     "host:smoke:local": "node scripts/host-smoke.mjs --host all --skip-missing",
     "host:smoke:claude": "node scripts/host-smoke.mjs --host claude --strict-missing",
-    "host:smoke:copilot": "node scripts/host-smoke.mjs --host copilot --strict-missing",
     "host:smoke:codex": "node scripts/host-smoke.mjs --host codex --strict-missing",
     "release:validate": "pnpm run test && pnpm run validate:publish && claude plugin validate ./plugins/strike && claude plugin validate ./.claude-plugin/marketplace.json",
     "release:check": "pnpm run release:validate && claude plugin tag --dry-run ./plugins/strike",
@@ -20,6 +19,6 @@
   },
   "engines": {
     "node": ">=22.13",
-    "pnpm": "11.1.3"
+    "pnpm": "11.4.0"
   }
 }

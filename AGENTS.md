@@ -2,11 +2,11 @@
 
 ## Purpose
 
-This repository publishes Strike as a cross-agent plugin and skills marketplace. Keep the portable skill instructions reusable across Codex, Claude Code, GitHub Copilot CLI, and other clients that understand Agent Skills-style `SKILL.md` folders.
+This repository publishes Strike as a cross-agent plugin and skills marketplace. Keep the portable skill instructions reusable across Codex, Claude Code, and other clients that understand Agent Skills-style `SKILL.md` folders.
 
 ## Repository Snapshot
 
-- We are building an installable and updateable Strike workflow plugin package for multiple AI agents, starting with Codex, Claude Code, and GitHub Copilot CLI.
+- We are building an installable and updateable Strike workflow plugin package for multiple AI agents, starting with Codex and Claude Code.
 - The repo contains researched manifests, marketplaces, validation tooling,
   templates, documentation, and the production Strike skill package.
 - The next milestone is to validate install/update flows in each supported host
@@ -20,10 +20,8 @@ This repository publishes Strike as a cross-agent plugin and skills marketplace.
 - Put agent-specific metadata beside the portable content:
   - Codex plugin metadata lives in `plugins/strike/.codex-plugin/plugin.json`.
   - Claude plugin metadata lives in `plugins/strike/.claude-plugin/plugin.json`.
-  - GitHub Copilot CLI plugin metadata lives in `plugins/strike/plugin.json`.
   - Codex marketplace metadata lives in `.agents/plugins/marketplace.json`.
   - Claude marketplace metadata lives in `.claude-plugin/marketplace.json`.
-  - GitHub Copilot CLI marketplace metadata lives in `.github/plugin/marketplace.json`.
 - Shared Strike workflow references may live in `plugins/strike/references/` when multiple skills point to them; treat this as package documentation, not host magic.
 - Keep templates outside `plugins/strike/skills/` so agents do not discover them as real skills.
 
@@ -48,7 +46,7 @@ This repository publishes Strike as a cross-agent plugin and skills marketplace.
 - Prefer deterministic scripts in a skill-local `scripts/` folder when repeatable logic is safer than prose.
 - Store templates, images, and other reusable output materials in a skill-local `assets/` folder.
 - Treat `references/` and `assets/` as portable Agent Skills conventions, not guaranteed host magic. The skill instructions should point agents to supporting files when they matter.
-- Put plugin agents in `plugins/strike/agents/` only when we intentionally ship host-supported custom agents. Prefer `agents/<agent-name>.agent.md` filenames when the same agent should work in Claude Code and GitHub Copilot CLI.
+- Put plugin agents in `plugins/strike/agents/` only when we intentionally ship host-supported custom agents.
 
 ## Versioning And Updates
 
@@ -59,7 +57,8 @@ This repository publishes Strike as a cross-agent plugin and skills marketplace.
 - Treat `/strike:*` as Claude Code invocation syntax. Portable skill handoffs should use `Next Strike skill` plus `Arguments` and render host-specific commands through `plugins/strike/references/invocation.md`.
 - Local workstation package work uses pnpm only. Never use `npm` or `npx` locally for repo scripts, installs, or one-off package execution. Use `pnpm run` for scripts and `pnpm exec` for installed binaries.
 - Use the normal `pnpm` command so local Socket Firewall aliases or wrappers can apply. Do not bypass wrappers with `command pnpm` or an absolute pnpm binary path.
-- Do not run local package installs unless the user explicitly approves. If pnpm is missing or the version is wrong, ask the user to install or enable pnpm 11.1.3.
+- Use standalone `pnpm` for this repo. Do not use Corepack commands such as `corepack`, `corepack pnpm`, `corepack enable`, or `corepack prepare`. If pnpm reports a version mismatch, stop and alert the user. Do not try to resolve it.
+- Do not run local package installs unless the user explicitly approves. If pnpm is missing or the version is wrong, ask the user to install or enable standalone pnpm 11.
 - Never approve pnpm dependency build scripts unilaterally. If pnpm asks for build-script approval, stop and work with the user to validate each package before allowlisting it.
 - Run `pnpm run validate` after moving in skills or editing manifests. Before publishing, run `pnpm run validate:publish` and every available host-native validator. Treat `skills-ref` as an optional research/debugging tool unless it gains a documented way to handle useful host-specific fields.
 
@@ -67,14 +66,14 @@ This repository publishes Strike as a cross-agent plugin and skills marketplace.
 
 - Use `docs/release.md` for the full release workflow.
 - If installed users need to receive a change through normal plugin update, make a semver release instead of only pushing to `main`.
-- Before committing the release, update `CHANGELOG.md` and bump every versioned surface that exists: `package.json`, `plugins/strike/.codex-plugin/plugin.json`, `plugins/strike/.claude-plugin/plugin.json`, `plugins/strike/plugin.json`, `.claude-plugin/marketplace.json`, and `.github/plugin/marketplace.json`.
+- Before committing the release, update `CHANGELOG.md` and bump every versioned surface that exists: `package.json`, `plugins/strike/.codex-plugin/plugin.json`, `plugins/strike/.claude-plugin/plugin.json`, and `.claude-plugin/marketplace.json`.
 - Do not add a version to `.agents/plugins/marketplace.json`; that marketplace entry intentionally uses the Codex local-path shape.
 - Run `pnpm run release:validate` before the release commit when practical, then commit and push the version/changelog changes.
 - After the release commit is pushed, run `pnpm run release:tag`; it reruns the release checks, creates `strike--v<version>`, and pushes the tag.
 
 ## Host Smoke Workflows
 
-- Use precise terms: `target CLI` means Claude Code, Codex, or GitHub Copilot CLI; `local workstation` means the maintainer's machine; `GitHub runner` means the disposable Actions machine.
+- Use precise terms: `target CLI` means Claude Code or Codex; `local workstation` means the maintainer's machine; `GitHub runner` means the disposable Actions machine.
 - Develop GitHub Actions host smoke-test changes on a separate branch first.
 - Keep `workflow_dispatch` on host smoke workflows so maintainers can rerun them on demand.
 - Host smoke workflows may also run on `pull_request` once the team is actively hardening them on PRs. Do not add `push`, `schedule`, release, or required-check behavior until the PR-triggered workflows have passed reliably.
@@ -82,7 +81,7 @@ This repository publishes Strike as a cross-agent plugin and skills marketplace.
 - Keep host smoke-test implementation notes in `docs/host-smoke-tests.md`, not the public `README.md`.
 - Never install or update target CLIs from local workstation checks. Local checks may use target CLIs already on `PATH`; if one is missing, ask the user to install it or run the GitHub workflow.
 - GitHub runner workflows may install target CLIs because runners are disposable. Treat GitHub-hosted workflows as the source of truth for fresh-install and update confidence. Local Docker, temp-home, or `act` runs are debugging aids unless the repo explicitly promotes them later.
-- Keep each host isolated in its own workflow so Claude Code, Codex, and GitHub Copilot CLI failures can be debugged independently.
+- Keep each host isolated in its own workflow so Claude Code and Codex failures can be debugged independently.
 
 ## Working Rules
 
@@ -95,7 +94,7 @@ This repository publishes Strike as a cross-agent plugin and skills marketplace.
 ## Lessons Learned
 
 - Treat `pnpm run validate` as repo-shape validation, not proof that every host schema accepts the package.
-- Keep Codex, Claude, and Copilot manifest/source rules separate; shared skills are portable, plugin packaging is host-specific.
+- Keep Codex and Claude manifest/source rules separate; shared skills are portable, plugin packaging is host-specific.
 - Keep host invocation syntax separate too: `/strike:*` is Claude Code plugin syntax, not a universal Strike command language.
 - Label host requirements separately from portable repo policy. Do not turn a stricter local convention into a claimed platform rule.
 - Do not publish an empty plugin. `plugins/strike/skills/` needs at least one real skill directory before release.

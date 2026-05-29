@@ -249,4 +249,3 @@ printf 'next_args=%s\n' "$slug"
 printf 'next_claude_reset=/clear\n'
 printf 'next_claude=/strike:brainstorm %s\n' "$slug"
 printf 'next_codex=$brainstorm %s\n' "$slug"
-printf 'next_copilot=/brainstorm %s\n' "$slug"

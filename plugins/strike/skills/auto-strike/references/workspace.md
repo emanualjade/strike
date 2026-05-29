@@ -7,8 +7,8 @@ auto-strike/
 ```
 
 Before writing there, check whether it is already Auto Strike state. Recognize
-files such as `index.md`, `todo.md`, `language.md`, or
-`initiatives/<slug>/...`. If `auto-strike/` exists but looks unrelated, do not
+files such as `index.md`, `todo.md`, or `initiatives/<slug>/...`. If
+`auto-strike/` exists but looks unrelated, do not
 overwrite it. Ask whether to reuse it, move it, or choose another workspace path.
 
 The user should not need to know which docs to create. Discover what exists,
@@ -16,13 +16,12 @@ create what is missing, and keep the structure light.
 
 ## Shape
 
-Cold start creates the root index, todo, language file, and active initiative:
+Cold start creates the root index, todo, and active initiative:
 
 ```text
 auto-strike/
   index.md
   todo.md
-  language.md
   initiatives/
     <initiative-slug>/
       idea.md
@@ -60,7 +59,8 @@ auto-strike/
 
 Use the lowest level that owns the decision:
 
-- `language.md`: shared glossary and domain model across initiatives.
+- `UBIQUITOUS_LANGUAGE.md` at repo root: durable glossary and domain language
+  across normal Strike, Auto Strike, and repo work.
 - `initiatives/<slug>/`: one Auto Strike request, session, campaign, MVP, or
   milestone.
 - `features/<slug>/`: one buildable capability with its own feature spec,
@@ -254,21 +254,16 @@ Done claims need evidence or a clear skipped-check reason. Record `Changed:` and
 
 ## Language
 
-Create `auto-strike/language.md` for every Auto Strike initiative. It is the
-shared glossary and domain-model language across initiatives:
+Follow the shared language contract in the plugin package's
+`references/language.md`. Use the repo root `UBIQUITOUS_LANGUAGE.md` as the
+only durable glossary for Auto Strike and normal Strike. If it exists, read it
+before naming, modeling, or planning around domain terms. If it is missing,
+create it only when durable language, an accepted alias, or a meaningful
+ambiguity has crystallized.
 
-```md
-# Language
-
-## [Context]
-
-- Term: Meaning. Use in: code/docs/UI/planning. Avoid: stale aliases.
-```
-
-Keep terms that affect product behavior, user-facing copy, code names, data
-models, permissions, integrations, or future planning. Do not add every casual
-phrase. Merge aliases into one canonical term when possible. Flag ambiguity
-instead of pretending it is settled.
+Keep it lean. Challenge conflicts with the glossary, sharpen overloaded terms,
+stress-test domain boundaries with concrete scenarios, cross-reference code
+when implementation may disagree, and promote only stable language.
 
 ## Initiative Decisions
 
@@ -304,7 +299,7 @@ docs just for neatness.
 When docs disagree, prefer current-truth artifacts in this order:
 
 1. active initiative `decisions.md` for decisions
-2. root `language.md` for terms
+2. root `UBIQUITOUS_LANGUAGE.md` for durable terms
 3. active initiative `spec.md` for initiative scope and feature map
 4. feature `feature-spec.md` for buildable feature scope
 5. slice files for current implementation work
@@ -316,10 +311,10 @@ Fix contradictions when found.
 
 Auto Strike should get smarter as the repo gains feature history.
 
-Start by reading `index.md`, `todo.md`, root `language.md`, and the active
-initiative's `decisions.md` and `spec.md`. Then decide whether the new idea
-belongs to an existing initiative, extends an existing feature or slice, or
-deserves a new initiative.
+Start by reading `index.md`, `todo.md`, root `UBIQUITOUS_LANGUAGE.md` if it
+exists, and the active initiative's `decisions.md` and `spec.md`. Then decide
+whether the new idea belongs to an existing initiative, extends an existing
+feature or slice, or deserves a new initiative.
 
 Reuse language, decisions, architecture notes, and verification patterns.
 Restructure lightly when the layout gets in the way: rename vague files, split

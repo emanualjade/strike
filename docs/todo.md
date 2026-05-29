@@ -30,7 +30,7 @@ plugin users; this file tracks release, validation, and setup work.
   - Done: host smoke checks are documented as a pre-tag release gate in
     `docs/release.md`.
   - Notes: PR-triggered installed-runtime smoke passed on GitHub runners in
-    PR #3 for Claude Code, Codex, and GitHub Copilot CLI. Branch protection can
+    PR #3 for Claude Code and Codex. Branch protection can
     make them required PR checks later after more run history. Keep live model
     invocation out of required checks until auth and cost behavior are explicit.
 - [ ] After the next versioned Strike release, rerun host update checks.
@@ -47,7 +47,7 @@ plugin users; this file tracks release, validation, and setup work.
     ```
     Run only the Claude update command for the scope being checked.
 - [ ] Update `README.md` with any exact invocation details learned from the
-  Codex UI check or Copilot CLI smoke test.
+  Codex UI check.
   - Owner: Codex.
   - When it matters: after those checks are completed.
 - [ ] Keep improving local validation when new release risks show up.

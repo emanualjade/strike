@@ -12,14 +12,11 @@ const repoRoot = path.resolve(__dirname, "..");
 
 const targetCli = {
   claude: "claude",
-  copilot: "copilot",
   codex: "codex",
 };
 const directoryEnvKeys = new Set([
   "CLAUDE_CODE_PLUGIN_CACHE_DIR",
   "CODEX_HOME",
-  "COPILOT_HOME",
-  "COPILOT_CACHE_HOME",
 ]);
 
 const packageJson = readJson(path.join(repoRoot, "package.json"));
@@ -94,7 +91,7 @@ function printHelp() {
   console.log(`Usage: node scripts/host-smoke.mjs [options]
 
 Options:
-  --host claude|copilot|codex|all
+  --host claude|codex|all
   --skip-missing
   --strict-missing
   --artifacts-dir <dir>
@@ -128,8 +125,6 @@ async function main() {
     attempted += 1;
     if (host === "claude") {
       results.push(await runClaude(binary, options));
-    } else if (host === "copilot") {
-      results.push(await runCopilot(binary, options));
     } else if (host === "codex") {
       results.push(await runCodex(binary, options));
     }
@@ -199,60 +194,6 @@ async function runClaude(binary, options) {
   } finally {
     if (installed) {
       safeRun(ctx, "plugin-uninstall", ["plugin", "uninstall", "strike@strike", "--scope", "user"]);
-    }
-    if (marketplaceAdded) {
-      safeRun(ctx, "marketplace-remove", ["plugin", "marketplace", "remove", "strike"]);
-    }
-    cleanupContext(ctx);
-  }
-}
-
-async function runCopilot(binary, options) {
-  const ctx = createContext("copilot", binary, options, {
-    COPILOT_HOME: "copilot-home",
-    COPILOT_CACHE_HOME: "copilot-cache",
-    COPILOT_AUTO_UPDATE: "false",
-  });
-  delete ctx.env.COPILOT_GITHUB_TOKEN;
-  delete ctx.env.GH_TOKEN;
-  delete ctx.env.GITHUB_TOKEN;
-
-  let directInstalled = false;
-  let marketplaceInstalled = false;
-  let marketplaceAdded = false;
-  try {
-    run(ctx, "version", ["--version"]);
-
-    run(ctx, "direct-install", ["plugin", "install", "./plugins/strike"]);
-    directInstalled = true;
-    run(ctx, "direct-list", ["plugin", "list"]);
-    const directRoot = assertCopilotInstall(ctx);
-    assertInstalledRuntime(directRoot, ctx, "copilot-direct-install");
-    run(ctx, "direct-uninstall", ["plugin", "uninstall", "strike"]);
-    directInstalled = false;
-    resetDirectory(ctx.env.COPILOT_HOME);
-    resetDirectory(ctx.env.COPILOT_CACHE_HOME);
-
-    run(ctx, "marketplace-add", ["plugin", "marketplace", "add", repoRoot]);
-    marketplaceAdded = true;
-    run(ctx, "marketplace-list", ["plugin", "marketplace", "list"]);
-    run(ctx, "marketplace-browse", ["plugin", "marketplace", "browse", "strike"]);
-    run(ctx, "marketplace-install", ["plugin", "install", "strike@strike"]);
-    marketplaceInstalled = true;
-    run(ctx, "marketplace-plugin-list", ["plugin", "list"]);
-    const marketplaceRoot = assertCopilotInstall(ctx);
-    assertInstalledRuntime(marketplaceRoot, ctx, "copilot-marketplace-install");
-    run(ctx, "marketplace-plugin-update", ["plugin", "update", "strike"]);
-    const updatedRoot = assertCopilotInstall(ctx);
-    assertInstalledRuntime(updatedRoot, ctx, "copilot-marketplace-update");
-
-    return finishContext(ctx, "passed");
-  } finally {
-    if (marketplaceInstalled) {
-      safeRun(ctx, "marketplace-plugin-uninstall", ["plugin", "uninstall", "strike"]);
-    }
-    if (directInstalled) {
-      safeRun(ctx, "direct-uninstall", ["plugin", "uninstall", "strike"]);
     }
     if (marketplaceAdded) {
       safeRun(ctx, "marketplace-remove", ["plugin", "marketplace", "remove", "strike"]);
@@ -425,21 +366,6 @@ function assertClaudeList(stdout) {
   return plugin.installPath;
 }
 
-function assertCopilotInstall(ctx) {
-  const roots = findPluginRoots([ctx.env.COPILOT_HOME, ctx.env.COPILOT_CACHE_HOME], "plugin.json");
-  const validRoot = roots.find((root) => {
-    try {
-      assertPluginRoot(root, "plugin.json", { quiet: true });
-      return true;
-    } catch {
-      return false;
-    }
-  });
-  assert(validRoot, `Could not find an installed/copied Copilot strike plugin under ${ctx.env.COPILOT_HOME} or ${ctx.env.COPILOT_CACHE_HOME}.`);
-  assertPluginRoot(validRoot, "plugin.json");
-  return validRoot;
-}
-
 function assertCodexConfig(ctx) {
   const configPath = [
     ctx.env.CODEX_HOME ? path.join(ctx.env.CODEX_HOME, "config.toml") : null,
@@ -594,12 +520,6 @@ function installedRuntimeRoots(ctx) {
   if (ctx.env.CLAUDE_CODE_PLUGIN_CACHE_DIR) {
     roots.push(ctx.env.CLAUDE_CODE_PLUGIN_CACHE_DIR);
   }
-  if (ctx.env.COPILOT_HOME) {
-    roots.push(ctx.env.COPILOT_HOME);
-  }
-  if (ctx.env.COPILOT_CACHE_HOME) {
-    roots.push(ctx.env.COPILOT_CACHE_HOME);
-  }
   return roots.filter((root) => root && existsSync(root)).map((root) => realpathSync(root));
 }
 
@@ -616,26 +536,6 @@ function assertDirectory(filePath, context) {
 function isPathInside(childPath, parentPath) {
   const relativePath = path.relative(parentPath, childPath);
   return relativePath === "" || (!relativePath.startsWith("..") && !path.isAbsolute(relativePath));
-}
-
-function findPluginRoots(searchRoots, manifestName) {
-  const roots = [];
-  for (const searchRoot of searchRoots) {
-    if (!searchRoot || !existsSync(searchRoot)) {
-      continue;
-    }
-    walk(searchRoot, 9, (filePath) => {
-      if (path.basename(filePath) === manifestName) {
-        roots.push(path.dirname(filePath));
-      }
-    });
-  }
-  return roots;
-}
-
-function resetDirectory(dirPath) {
-  rmSync(dirPath, { recursive: true, force: true });
-  mkdirSync(dirPath, { recursive: true });
 }
 
 function walk(root, maxDepth, onFile, depth = 0) {
@@ -690,13 +590,6 @@ function writeSnapshots(ctx) {
   if (ctx.env.CODEX_HOME) {
     snapshotRoots.push(["codex-home", ctx.env.CODEX_HOME]);
   }
-  if (ctx.env.COPILOT_HOME) {
-    snapshotRoots.push(["copilot-home", ctx.env.COPILOT_HOME]);
-  }
-  if (ctx.env.COPILOT_CACHE_HOME) {
-    snapshotRoots.push(["copilot-cache", ctx.env.COPILOT_CACHE_HOME]);
-  }
-
   for (const [name, root] of snapshotRoots) {
     writeFileSync(path.join(ctx.artifactsDir, `tree-${name}.txt`), treeSnapshot(root));
   }

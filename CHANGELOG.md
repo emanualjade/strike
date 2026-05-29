@@ -2,6 +2,19 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.26 - 2026-05-28
+
+- Added a shared Strike language contract and aligned normal Strike plus Auto
+  Strike on root `UBIQUITOUS_LANGUAGE.md` as the only durable glossary.
+- Removed Auto Strike's `auto-strike/language.md` requirement and stopped
+  warning when no glossary exists yet.
+- Aligned local package-manager policy on standalone pnpm `11.4.0`, with pnpm
+  downloading the declared version and failing rather than auto-installing stale
+  dependencies before scripts.
+- Removed previously packaged third-host plugin manifests, marketplace metadata,
+  install docs, and smoke workflow coverage so Strike now ships only Codex and
+  Claude Code packaging.
+
 ## 0.8.25 - 2026-05-27
 
 - Bounded Auto Strike review loops: after fixes, agents run one focused
@@ -361,7 +374,7 @@ All notable changes to Strike will be recorded here.
 ## 0.5.1 - 2026-05-19
 
 - Clarified host-specific Strike invocation guidance for Codex app, Codex CLI,
-  Claude Code, and GitHub Copilot CLI.
+  and Claude Code.
 - Updated the shared invocation reference to distinguish Codex app `$`/`@`
   selection from Codex CLI `/skills` and `/clear` behavior.
 - Fixed stale customization notes so the implemented `customize review
@@ -560,8 +573,8 @@ All notable changes to Strike will be recorded here.
 ## 0.1.0 - 2026-05-17
 
 - Imported the production Strike skill set into `plugins/strike`.
-- Added Codex, Claude Code, and GitHub Copilot CLI plugin manifests.
-- Added Codex, Claude Code, and GitHub Copilot CLI marketplace entries.
+- Added Codex and Claude Code plugin manifests.
+- Added Codex and Claude Code marketplace entries.
 - Added MIT licensing and repo validation for cross-agent release hygiene.
 - Kept `0.1.0` as the first private testing release version.
 - Verified the available local, Git-backed, and Claude host smoke checks.

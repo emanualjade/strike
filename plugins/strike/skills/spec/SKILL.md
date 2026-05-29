@@ -244,9 +244,10 @@ decided.
 
 ## Language And Modeling
 
-Use repo language consistently. If `UBIQUITOUS_LANGUAGE.md` exists, read it
-lightly before naming project concepts or writing domain vocabulary. If it is
-absent, continue without glossary context.
+Use repo language consistently and follow the shared language contract in the
+plugin package's `references/language.md`. If `UBIQUITOUS_LANGUAGE.md` exists,
+read it lightly before naming project concepts or writing domain vocabulary. If
+it is absent, continue until durable language appears.
 
 If the spec introduces Project-local terms, define them in the spec. If a term
 should become repo-wide language, mention the `language` skill as a follow

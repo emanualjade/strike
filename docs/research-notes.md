@@ -38,8 +38,8 @@ adds a separate reference-only package projection.
 ## Customization Imports
 
 2026-05-18 customization audit: do not treat `!strike/customize/...` as a
-portable `SKILL.md` import. Codex Agent Skills, GitHub Copilot agent skills,
-and the Agent Skills specification document `SKILL.md` plus referenced
+portable `SKILL.md` import. Codex Agent Skills and the Agent Skills
+specification document `SKILL.md` plus referenced
 supporting files; they do not define a shared `!` file-include syntax. Claude
 Code skills document `!` as dynamic shell context injection, not a plain file
 include, and that behavior is host-specific. Strike therefore uses a bundled
@@ -100,19 +100,13 @@ marketplace update before plugin update when checking for a new release.
 
 OpenAI documents `AGENTS.md` as the repository-level instruction file for Codex in the [Codex AGENTS.md guide](https://developers.openai.com/codex/guides/agents-md). The [Codex plugin docs](https://developers.openai.com/codex/plugins/build) define a `.codex-plugin/plugin.json` manifest and a repo marketplace at `.agents/plugins/marketplace.json`, with entries pointing to `./plugins/<plugin-name>`.
 
-The repo keeps `AGENTS.md` as the canonical agent guidance file and adds `CLAUDE.md` plus `.github/copilot-instructions.md` as thin pointers. Current Codex CLI commands manage marketplaces; plugin install and enable flows happen through the Codex plugin browser. Codex app docs say `$` invokes skills and enabled skills appear in the slash command list; Codex plugin docs also say `@` can invoke a plugin or bundled skill directly. Codex CLI docs document `/skills` for skill browsing and `/clear` for a fresh chat in the same CLI session.
-
-## GitHub Copilot CLI
-
-[GitHub Copilot agent skills docs](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills) describe skills as folders of instructions, scripts, and resources using the Agent Skills specification. The [Copilot CLI skill docs](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-skills) document project skills under `.github/skills`, `.claude/skills`, or `.agents/skills`, `/skills list`, `/skills info`, and direct `/SKILL-NAME` prompting. For installable bundles, the [Copilot CLI plugin reference](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference) defines plugins with a root `plugin.json`, default `skills/` and `agents/` directories, terminal `copilot plugin ...` commands, and marketplaces at `.github/plugin/marketplace.json`. Copilot CLI also looks in `.claude-plugin/marketplace.json`, but this repo includes the GitHub-native path too.
-
-The Agent Skills specification and Claude Code docs define `allowed-tools` as a
-space-separated string. GitHub's Copilot CLI command reference currently
-documents `allowed-tools` as a comma-separated string or YAML array, while the
-Copilot skill how-to examples use a single string value such as `shell`. Strike
-keeps the Agent Skills/Claude space-separated form as repo policy for now, and
-the GitHub Copilot CLI smoke test must verify whether this field is accepted
-as-is before claiming fully verified Copilot support.
+The repo keeps `AGENTS.md` as the canonical agent guidance file and adds
+`CLAUDE.md` as a thin pointer. Current Codex CLI commands manage marketplaces;
+plugin install and enable flows happen through the Codex plugin browser. Codex
+app docs say `$` invokes skills and enabled skills appear in the slash command
+list; Codex plugin docs also say `@` can invoke a plugin or bundled skill
+directly. Codex CLI docs document `/skills` for skill browsing and `/clear` for
+a fresh chat in the same CLI session.
 
 ## Invocation Syntax
 
@@ -120,8 +114,7 @@ Host invocation syntax is not portable. Claude Code plugin skills are
 namespaced as `/plugin-name:skill-name`. Codex app documents `$` skill mentions
 and `@` plugin/bundled-skill selection, while Codex CLI documents `/skills` and
 `/clear`. Codex does not document custom `/strike:*` slash commands for plugin
-skills. GitHub Copilot CLI documents skill invocation as `/SKILL-NAME` and
-deduplicates plugin skills by the `name` field inside `SKILL.md`.
+skills.
 
 Strike therefore treats the stable handoff as `Next Strike skill` plus
 `Arguments`, with host-specific rendering documented in
@@ -141,10 +134,12 @@ This repo is both a marketplace and the plugin source:
 
 - `.agents/plugins/marketplace.json` exposes the plugin to Codex.
 - `.claude-plugin/marketplace.json` exposes the plugin to Claude Code.
-- `.github/plugin/marketplace.json` exposes the plugin to GitHub Copilot CLI.
 - `plugins/strike/` contains host manifests, shared workflow references, and one portable skills content tree.
 
 That shape gives us install and update paths for the major hosts while keeping the actual skills singular.
+
+2026-05-28 update: the active installable hosts are Codex and Claude Code,
+while the shared `SKILL.md` tree remains portable Agent Skills-style content.
 
 2026-05-18 accuracy audit: The Agent Skills specification defines
 `allowed-tools` as a space-separated string. Strike now keeps shipped skill
@@ -157,18 +152,18 @@ frontmatter in that portable form and the repo validator rejects comma-separated
 
 ## Package Manager Hardening
 
-2026-05-19 pnpm research pass: npm registry metadata lists pnpm `11.1.3` as
-the current latest release and requires Node `>=22.13`, so Strike pins
-`packageManager` to `pnpm@11.1.3` and raises the repo engine floor to Node
-`>=22.13`. pnpm 11 documents `minimumReleaseAge`,
+2026-05-19 pnpm research pass, updated 2026-05-28: npm registry metadata lists
+pnpm `11.4.0` as the current latest release and requires Node `>=22.13`, so
+Strike pins `packageManager` and `engines.pnpm` to `11.4.0` while keeping the
+repo engine floor at Node `>=22.13`. pnpm 11 documents `minimumReleaseAge`,
 `minimumReleaseAgeStrict`, `minimumReleaseAgeIgnoreMissingTime`,
 `trustPolicy`, `trustPolicyExclude`, `blockExoticSubdeps`, `allowBuilds`,
 `strictDepBuilds`, `engineStrict`, `pmOnFail`, and `verifyDepsBeforeRun` in
 `pnpm-workspace.yaml`. Strike uses these settings to delay fresh package
 versions, require strict release-age behavior, block transitive exotic package
-sources, avoid trust downgrades, require explicit build-script approval, fail
-instead of auto-downloading another package manager, and avoid dependency
-auto-install checks before `pnpm run`.
+sources, avoid trust downgrades, require explicit build-script approval,
+download and run the declared standalone pnpm version when needed, and fail
+instead of auto-installing stale dependencies before `pnpm run`.
 
 pnpm 11 audit docs say `auditConfig.ignoreGhsas` replaces the older
 `auditConfig.ignoreCves` filter, so Strike keeps an empty GHSA ignore list
@@ -187,16 +182,11 @@ Claude Code documents npm installation with `@anthropic-ai/claude-code`,
 commands, `claude plugin validate`, `claude plugin install`, `claude plugin
 list --json`, and plugin cache behavior under `~/.claude/plugins/cache`.
 
-GitHub documents Copilot CLI npm installation with `@github/copilot`, Node.js
-22+, `copilot plugin marketplace add`, `copilot plugin install`, `copilot
-plugin list`, `copilot plugin update`, `copilot plugin uninstall`, and the
-`COPILOT_HOME` / `COPILOT_CACHE_HOME` isolation variables.
-
 Codex documents `codex plugin marketplace add`, `upgrade`, and `remove`, and
 the OpenAI Codex CLI repository documents npm installation with `@openai/codex`.
 The Codex plugin docs say marketplace plugins are installed into
 `~/.codex/plugins/cache/$MARKETPLACE_NAME/$PLUGIN_NAME/$VERSION/` and can be
-enabled/disabled, but they do not currently document a Claude/Copilot-style
+enabled/disabled, but they do not currently document a Claude-style
 non-interactive `codex plugin install` command in the same reference. Therefore
 Codex GitHub smoke coverage should start as marketplace-lifecycle coverage and
 must not be described as full non-interactive plugin install coverage until a
@@ -216,23 +206,19 @@ surface for plugin smoke tests. Use `claude plugin validate`, JSON list output,
 and documented plugin-cache environment variables such as
 `CLAUDE_CODE_PLUGIN_CACHE_DIR`, `CLAUDE_CODE_PLUGIN_PREFER_HTTPS`,
 `CLAUDE_CODE_PLUGIN_GIT_TIMEOUT_MS`, and
-`CLAUDE_CODE_DISABLE_OFFICIAL_MARKETPLACE_AUTOINSTALL`. GitHub Copilot CLI does
-not currently document a separate plugin validator; its documented validation
-loop is install locally, list installed plugins, check component discovery, then
-uninstall. Use `COPILOT_HOME`, `COPILOT_CACHE_HOME`, and
-`COPILOT_AUTO_UPDATE=false` to isolate CI state. Codex should use a temp `HOME`
-and documented marketplace lifecycle commands until the install/enable command
-surface is clearer.
+`CLAUDE_CODE_DISABLE_OFFICIAL_MARKETPLACE_AUTOINSTALL`. Codex should use a temp
+`HOME` and documented marketplace lifecycle commands until the install/enable
+command surface is clearer.
 
 2026-05-19 local tooling probe: Claude Code `2.1.144` and Codex CLI `0.130.0`
-were available locally; GitHub Copilot CLI was not. With `HOME`,
-`XDG_CACHE_HOME`, and `XDG_CONFIG_HOME` set to temp directories, Claude
+were available locally. With `HOME`, `XDG_CACHE_HOME`, and `XDG_CONFIG_HOME`
+set to temp directories, Claude
 successfully ran `claude plugin validate .`, `claude plugin validate
 ./plugins/strike`, marketplace add, `plugin install strike@strike`, JSON list,
 update, uninstall, and marketplace remove without touching the maintainer's real
 home directory. The installed cache contained `.claude-plugin/plugin.json`,
-`.codex-plugin/plugin.json`, root `plugin.json`, and all Strike skill
-`SKILL.md` files under the temp `CLAUDE_CODE_PLUGIN_CACHE_DIR`. Codex
+`.codex-plugin/plugin.json`, and all Strike skill `SKILL.md` files under the
+temp `CLAUDE_CODE_PLUGIN_CACHE_DIR`. Codex
 successfully ran version checks and local marketplace add/remove with temp
 `HOME`; on macOS it warned that it would not create helper binaries under the
 system temp directory, but exited successfully. `codex plugin marketplace
@@ -245,8 +231,8 @@ coverage can test upgrade from the repository source.
 event syntax for workflows that need both manual and PR-triggered execution.
 The first PR-triggered phase intentionally uses no path filters so every PR can
 exercise the fresh target CLI install paths. Each host workflow keeps its own
-job and cancel-in-progress concurrency so Claude Code, Codex, and GitHub
-Copilot CLI failures remain independently diagnosable.
+job and cancel-in-progress concurrency so Claude Code and Codex failures remain
+independently diagnosable.
 
 ## Codex Skill Invocation
 

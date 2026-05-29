@@ -35,7 +35,8 @@ Use `verification.md`, `review.md`, and `code-quality.md`. Check:
   clearly reported as code-verified because `playwright-cli` is blocked
 - review status: blockers are fixed; non-blocking findings are accepted with
   rationale or moved to follow-up only when outside accepted scope
-- docs/state: docs, root language, initiative decisions, evidence, todo, and
+- docs/state: docs, root `UBIQUITOUS_LANGUAGE.md`, initiative decisions,
+  evidence, todo, and
   next action reflect the final state
 - checkpoint: readiness changes are committed before final completion is
   reported; push when requested, repo policy requires it, or release flow needs
