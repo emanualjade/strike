@@ -4765,6 +4765,155 @@ Verified:
   assert.ok(!plan.required.map((item) => item.lens).includes("ui-regression"));
 }
 
+function testValidateErrorsForStripeWorkWithoutCliSandboxEvidence() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/checkout
+- Current mode: review
+- Active slice: auto-strike/initiatives/main/features/checkout/slices/slice-0-payment-intent.md
+- State: Stripe PaymentIntent slice is ready for review.
+- Next: Review Stripe sandbox evidence.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/features/checkout/feature-spec.md", "# Checkout Spec\n\n## Summary\nCreate a Stripe PaymentIntent checkout path.\n");
+  write(repo, "auto-strike/initiatives/main/features/checkout/slices/slice-0-payment-intent.md", `# Slice 0: Payment Intent
+
+## Evidence
+Changed:
+- src/billing/stripe-checkout.ts
+
+Verified:
+- pnpm run test - passed
+
+Reviewed:
+- read-only review subagent - pass; returned findings to main agent for synthesis.
+`);
+  write(repo, "src/billing/stripe-checkout.ts", "import Stripe from 'stripe';\nexport function createPaymentIntent() {}\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 1, "Stripe implementation without CLI sandbox evidence should fail in review");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "missing-stripe-cli-sandbox-evidence" && item.severity === "error"));
+}
+
+function testValidateAcceptsStripeCliSandboxEvidence() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/checkout
+- Current mode: review
+- Active slice: auto-strike/initiatives/main/features/checkout/slices/slice-0-payment-intent.md
+- State: Stripe PaymentIntent slice is ready for review.
+- Next: Review Stripe sandbox evidence.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+
+## Verification
+- stripe --version - passed in sandbox/test account.
+`);
+  write(repo, "auto-strike/initiatives/main/features/checkout/feature-spec.md", "# Checkout Spec\n\n## Summary\nCreate a Stripe PaymentIntent checkout path.\n");
+  write(repo, "auto-strike/initiatives/main/features/checkout/slices/slice-0-payment-intent.md", `# Slice 0: Payment Intent
+
+## Evidence
+Changed:
+- src/billing/stripe-checkout.ts
+
+Verified:
+- stripe --version - passed in sandbox/test account.
+- stripe payment_intents create --amount 1000 --currency usd - test mode returned pi_123.
+- stripe trigger payment_intent.succeeded - sandbox event evt_123 reached local webhook.
+
+Reviewed:
+- read-only review subagent - pass; returned findings to main agent for synthesis.
+`);
+  write(repo, "src/billing/stripe-checkout.ts", "import Stripe from 'stripe';\nexport function createPaymentIntent() {}\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "Stripe CLI sandbox evidence should satisfy Stripe verification gate");
+  assert.ok(!json(result).messages.some((item) => item.code === "missing-stripe-cli-sandbox-evidence"));
+}
+
+function testValidateWarnsForStripeConnectWithoutSkillResearch() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: None.
+- Current mode: spec
+- Doc: auto-strike/initiatives/main/spec.md
+- State: Stripe Connect onboarding is being specified.
+- Next: Record Connect account decisions.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/spec.md", `# Connect Spec
+
+## Summary
+Create Stripe Connect connected accounts with account links and requested capabilities.
+
+## Phase Tasks
+- [x] Draft Connect scope.
+- [ ] Record Connect research.
+
+## Exit Evidence
+- Connect scope is being clarified.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "missing stripe-connect skill research should warn, not hard fail during spec");
+  assert.ok(json(result).messages.some((item) => item.code === "missing-stripe-connect-skill-research" && item.severity === "warning"));
+}
+
+function testValidateAcceptsStripeConnectSkillResearchNote() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: None.
+- Current mode: spec
+- Doc: auto-strike/initiatives/main/spec.md
+- State: Stripe Connect onboarding is being specified.
+- Next: Record Connect account decisions.
+- Blocked by: None.
+
+## Open Decisions
+- None.
+`);
+  write(repo, "auto-strike/initiatives/main/spec.md", `# Connect Spec
+
+## Summary
+Create Stripe Connect connected accounts with account links and requested capabilities.
+
+## Research Notes
+- Used installed stripe-connect skill to choose hosted onboarding, requested capabilities, and webhook scope.
+
+## Phase Tasks
+- [x] Draft Connect scope.
+- [x] Record Connect research.
+
+## Exit Evidence
+- Connect scope is ready for spec review.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "stripe-connect skill research note should satisfy Connect warning");
+  assert.ok(!json(result).messages.some((item) => item.code === "missing-stripe-connect-skill-research"));
+}
+
 function testReviewContextRejectsUnknownLens() {
   const repo = tempRepo();
   const result = run(repo, ["review-context", "--lens", "unknown-lens"]);
@@ -4873,6 +5022,10 @@ testValidateAcceptsNextSliceActivationWhenUserExplicitlyContinued();
 testValidateWarnsForStaleChangedEvidencePath();
 testReviewPlanDetectsBrowserScriptUiChanges();
 testReviewPlanDoesNotInferUiFromScriptPathOnly();
+testValidateErrorsForStripeWorkWithoutCliSandboxEvidence();
+testValidateAcceptsStripeCliSandboxEvidence();
+testValidateWarnsForStripeConnectWithoutSkillResearch();
+testValidateAcceptsStripeConnectSkillResearchNote();
 testReviewContextRejectsUnknownLens();
 testHelpWorksWithoutCommand();
 

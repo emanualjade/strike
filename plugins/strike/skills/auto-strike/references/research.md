@@ -15,6 +15,8 @@ For third-party frameworks, APIs, SDKs, CLIs, auth, payments, uploads, video,
 AI services, databases, queues, deployment platforms, accessibility, security,
 or browser behavior, check current official docs before making binding decisions
 or writing code. Prefer the idiomatic path for the actual version in the repo.
+For Stripe work, load `stripe.md`. For Stripe Connect, use the installed
+`stripe-connect` skill first when available and record the implications.
 
 When a domain has known standards or common traps, do focused research before
 locking in the model or workflow. Example domains include commerce, taxes,

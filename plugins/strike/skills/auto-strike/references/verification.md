@@ -11,6 +11,7 @@ available:
 - repo scripts/checks
 - `playwright-cli`, API, command, or user-flow checks
 - package/install constraints
+- Stripe CLI sandbox checks when Stripe is in scope
 - blocked checks and why they are blocked
 - replacement evidence and residual risk
 
@@ -44,6 +45,10 @@ For every UI/user-flow slice, record this before final verification:
 - Auth/permissions/payments/uploads: current official docs, negative permission
   cases, sandbox/mock checks, webhook/retry/idempotency behavior, and secret
   handling.
+- Stripe/Billing/Connect: use `stripe.md`; verify with Stripe CLI and sandbox
+  account evidence, including webhook forwarding/triggering when webhooks are in
+  scope. Code-only Stripe verification is not enough unless the user explicitly
+  accepts that risk for the slice.
 - Integrations/AI/media/background jobs: sample inputs,
   timeout/rate-limit/provider failure behavior, cost limits, retry behavior, and
   logs/debug evidence.

@@ -199,6 +199,11 @@ const DATA_PATH_PATTERN = /(^|\/)(data|database|db|migrations?|models?|repositor
 const SECURITY_PATH_PATTERN = /(^|\/)(auth|billing|payments?|permissions?|privacy|roles?|secrets?|sessions?|stripe|tokens?)(\/|$)|(^|\/)\.env(\.|$)|(^|\/)(\.env|env)(\/|$)/i;
 const INTEGRATION_PATH_PATTERN = /(^|\/)(adapters?|ai|api|clients?|email|integrations?|llm|media|payments?|providers?|queues?|server|services?|uploads?|webhooks?)(\/|$)/i;
 const ROUTE_HANDLER_PATTERN = /(^|\/)(api|routes?|server|actions)(\/|$)|(^|\/)(route|handler|controller)\.[cm]?[jt]s$/i;
+const STRIPE_SCOPE_PATTERN = /\b(stripe|checkout session|checkout\.sessions?|payment\s*intent|paymentintent|payment_intent|subscription|invoice|billing portal|customer portal|webhook signing secret|stripe webhook|payment method|payment_method|setup intent|setupintent|refund|dispute|charge|stripe tax|test clock)\b/i;
+const STRIPE_CONNECT_SCOPE_PATTERN = /\b(stripe connect|connected accounts?|connect account|account links?|account sessions?|express account|custom account|standard account|destination charges?|direct charges?|separate charges?|transfers?|payouts?|application fees?|platform account|stripe-account)\b/i;
+const STRIPE_CLI_PATTERN = /\bstripe\s+(?:--version|listen|trigger|logs|customers?|payment_intents?|checkout|subscriptions?|invoices?|accounts?|account_links?|account_sessions?|transfers?|payouts?|refunds?|events?|products?|prices?)\b|\bstripe\b.{0,80}\b(?:cli|sandbox|test mode|listen|trigger|webhook|payment_intent|checkout session|connected account|account link|transfer|payout|application fee)\b/i;
+const STRIPE_SANDBOX_PATTERN = /\b(sandbox|test mode|test account|test key|test card|test clock|pk_test|sk_test|whsec_|evt_|pi_|cs_test_|cus_|sub_|in_|price_|prod_|acct_|tr_|po_|re_|ch_)\b/i;
+const STRIPE_CONNECT_SKILL_PATTERN = /\bstripe-connect\b/i;
 
 function normalizeText(value) {
   return String(value ?? "")
@@ -2155,6 +2160,83 @@ function stackToolingConstraintMessages(state) {
   ];
 }
 
+function stripeScopeText(state) {
+  const activeDocs = [
+    `${WORKSPACE_ROOT}/index.md`,
+    state.activeInitiative.ideaPath,
+    state.activeInitiative.decisionsPath,
+    state.activeInitiative.grillPath,
+    state.activeInitiative.specPath,
+    state.activeFeature.specPath,
+    state.activeSlice.path,
+    state.activeFeature.readinessPath,
+    state.activeInitiative.readinessPath,
+  ];
+  const changedPaths = state.evidence.reviewScope.changedPaths.filter(isImplementationPath);
+  const evidenceText = [
+    ...state.evidence.reviewScope.verifiedItems,
+    ...state.evidence.reviewScope.reviewedItems,
+    ...state.evidence.reviewScope.skippedItems,
+    ...state.index.verification,
+  ].join("\n");
+  const sourceText = [...new Set([...activeDocs, ...changedPaths])]
+    .filter(Boolean)
+    .map((sourcePath) => `${sourcePath}\n${readRepoText(state.repoRoot, sourcePath)}`)
+    .join("\n\n");
+  return normalizeText([
+    state.index.activeWork?.text,
+    state.index.keyDocs.map((item) => item.raw).join("\n"),
+    evidenceText,
+    sourceText,
+  ].filter(Boolean).join("\n\n"));
+}
+
+function hasStripeCliSandboxEvidence(state) {
+  const evidenceText = normalizeText([
+    ...state.evidence.reviewScope.verifiedItems,
+    ...state.index.verification,
+  ].join("\n"));
+  return STRIPE_CLI_PATTERN.test(evidenceText) && STRIPE_SANDBOX_PATTERN.test(evidenceText);
+}
+
+function stripeVerificationShouldBlock(state) {
+  if (state.index.currentMode === "readiness") return true;
+  if (state.index.currentMode === "review") return true;
+  return Boolean(state.activeSlice.path && state.activeSlice.exists &&
+    sliceHasCompletedCloseout(state.repoRoot, state.activeSlice.path));
+}
+
+function stripeMessages(state) {
+  const text = stripeScopeText(state);
+  const hasStripe = STRIPE_SCOPE_PATTERN.test(text);
+  const hasConnect = STRIPE_CONNECT_SCOPE_PATTERN.test(text);
+  if (!hasStripe && !hasConnect) return [];
+
+  const messages = [];
+  const messagePath = state.activeSlice.path ??
+    state.activeFeature.path ??
+    state.activeInitiative.path ??
+    `${WORKSPACE_ROOT}/index.md`;
+
+  if (hasConnect && !STRIPE_CONNECT_SKILL_PATTERN.test(text)) {
+    messages.push(message("warning", "missing-stripe-connect-skill-research", messagePath, "Stripe Connect work should start from the installed stripe-connect skill when available. Record that skill's implications in research, decisions, spec, or slice planning, or record why it was unavailable."));
+  }
+
+  const hasStripeImplementationEvidence = state.evidence.reviewScope.changedPaths.some(isImplementationPath) ||
+    state.evidence.reviewScope.verifiedItems.length > 0 ||
+    state.evidence.reviewScope.reviewedItems.length > 0;
+  if (!hasStripeImplementationEvidence && !["build", "review", "readiness"].includes(state.index.currentMode ?? "")) {
+    return messages;
+  }
+
+  if (!hasStripeCliSandboxEvidence(state)) {
+    const severity = stripeVerificationShouldBlock(state) ? "error" : "warning";
+    messages.push(message(severity, "missing-stripe-cli-sandbox-evidence", messagePath, "Stripe implementation needs Stripe CLI sandbox evidence before it can be called done. Record commands such as stripe --version, stripe listen/trigger or relevant Stripe object creation/retrieval, sandbox/test-mode object IDs, webhook events when applicable, and blockers/residual risk if CLI verification cannot run."));
+  }
+
+  return messages;
+}
+
 function autoStrikeDocReferences(text) {
   return [...new Set([...normalizeText(text).matchAll(/\bauto-strike\/[A-Za-z0-9._~/-]+\.md\b/g)]
     .map((match) => match[0])
@@ -2596,6 +2678,7 @@ export function validateAutoStrike(options = {}) {
   messages.push(...grillDecisionDepthMessages(state));
   messages.push(...grillCheckpointMessages(state));
   messages.push(...stackToolingConstraintMessages(state));
+  messages.push(...stripeMessages(state));
   messages.push(...referencedAutoStrikeDocMessages(state));
 
   if (index.activeInitiativePath && isExplicitWorkspacePath(index.activeInitiativePath)) {

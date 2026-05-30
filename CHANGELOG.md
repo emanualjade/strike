@@ -2,6 +2,15 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.28 - 2026-05-29
+
+- Added Auto Strike Stripe guidance for official-docs research, Stripe CLI
+  sandbox verification, and required webhook/Stripe object evidence.
+- Added Stripe Connect handling that tells Auto Strike to start from an
+  installed `stripe-connect` skill when available.
+- Added helper validation for missing Stripe CLI sandbox evidence and missing
+  Stripe Connect skill research notes.
+
 ## 0.8.27 - 2026-05-29
 
 - Fixed Auto Strike helper parsing for normal Markdown links in `Active Work`

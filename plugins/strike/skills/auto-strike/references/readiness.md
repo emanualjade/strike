@@ -31,6 +31,9 @@ Use `verification.md`, `review.md`, and `code-quality.md`. Check:
   data, integration, and UI/device cases are handled or explicitly out of scope
 - checks: repo-verifiable checks, focused tests, and browser/user-flow checks
   pass where relevant
+- Stripe status: accepted Stripe, Billing, webhook, or Connect paths have Stripe
+  CLI sandbox evidence, or a user-accepted residual-risk note when sandbox
+  verification is blocked
 - browser status: UI/user-flow work is verified with `playwright-cli`, or
   clearly reported as code-verified because `playwright-cli` is blocked
 - review status: blockers are fixed; non-blocking findings are accepted with

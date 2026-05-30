@@ -69,6 +69,8 @@ current work safe. Resolve `references/*` paths relative to this `SKILL.md`:
   readiness checks.
 - `references/dependencies.md`: packages, installs, upgrades, lockfiles,
   migrations.
+- `references/stripe.md`: Stripe, Billing, Checkout, PaymentIntent,
+  Subscription, webhook, Stripe CLI, sandbox, or Stripe Connect work.
 - `references/recovery.md`: interrupted runs, missing docs, stale pointers,
   contradictory helper output, or untrustworthy state.
 
