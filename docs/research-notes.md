@@ -101,12 +101,39 @@ marketplace update before plugin update when checking for a new release.
 OpenAI documents `AGENTS.md` as the repository-level instruction file for Codex in the [Codex AGENTS.md guide](https://developers.openai.com/codex/guides/agents-md). The [Codex plugin docs](https://developers.openai.com/codex/plugins/build) define a `.codex-plugin/plugin.json` manifest and a repo marketplace at `.agents/plugins/marketplace.json`, with entries pointing to `./plugins/<plugin-name>`.
 
 The repo keeps `AGENTS.md` as the canonical agent guidance file and adds
-`CLAUDE.md` as a thin pointer. Current Codex CLI commands manage marketplaces;
-plugin install and enable flows happen through the Codex plugin browser. Codex
-app docs say `$` invokes skills and enabled skills appear in the slash command
-list; Codex plugin docs also say `@` can invoke a plugin or bundled skill
-directly. Codex CLI docs document `/skills` for skill browsing and `/clear` for
-a fresh chat in the same CLI session.
+`CLAUDE.md` as a thin pointer. Codex CLI commands manage configured
+marketplace sources with `codex plugin marketplace add|list|upgrade|remove`.
+Codex CLI `0.135.0` also exposes `codex plugin add <plugin@marketplace>` and
+`codex plugin remove <plugin@marketplace>`, which install/remove a plugin from
+the configured marketplace snapshot and update the user's local plugin cache.
+Therefore Codex install docs should treat marketplace registration and plugin
+installation as separate steps:
+
+```bash
+codex plugin marketplace add emanualjade/strike --ref main --sparse .agents/plugins --sparse plugins/strike
+codex plugin add strike@strike
+```
+
+Update docs should likewise run both `codex plugin marketplace upgrade strike`
+and `codex plugin add strike@strike`; marketplace upgrade alone refreshes the
+Git snapshot but does not guarantee the installed plugin cache has been
+refreshed. The local Desktop app and CLI share Codex state under
+`~/.codex/config.toml`, `~/.codex/.tmp/marketplaces/`, and
+`~/.codex/plugins/cache/`, but the app can keep running process state and each
+thread loads skills when the thread starts. After install or update, users
+should fully quit and relaunch Codex Desktop and start a new thread before
+testing skills.
+
+2026-05-31 Codex cache note: current `codex-cli 0.135.0` rejects
+`codex --clear-cache`, and the official docs checked do not list a supported
+cache-clear command. Strike docs should use supported plugin remove,
+marketplace remove/add, plugin add, app relaunch, and fresh-thread steps for
+cache and discovery recovery.
+
+Codex app docs say `$` invokes skills and enabled skills appear in the slash
+command list; Codex plugin docs also say `@` can invoke a plugin or bundled
+skill directly. Codex CLI docs document `/skills` for skill browsing and
+`/clear` for a fresh chat in the same CLI session.
 
 ## Invocation Syntax
 
@@ -140,6 +167,13 @@ That shape gives us install and update paths for the major hosts while keeping t
 
 2026-05-28 update: the active installable hosts are Codex and Claude Code,
 while the shared `SKILL.md` tree remains portable Agent Skills-style content.
+
+2026-05-31 Codex dogfood decision: keep the published Codex marketplace name as
+`strike` so users install the public package with `strike@strike`. For local
+dogfooding, create a separate local marketplace root named `strike-dev` that
+symlinks to this checkout's `plugins/strike` directory, then install
+`strike@strike-dev`. This avoids colliding with normal machine-wide
+`strike@strike` installs while preserving the public marketplace selector.
 
 2026-05-18 accuracy audit: The Agent Skills specification defines
 `allowed-tools` as a space-separated string. Strike now keeps shipped skill
@@ -253,3 +287,9 @@ Auto Strike is the primary user-invoked standalone workflow, so its Codex
 metadata now keeps it visible with `allow_implicit_invocation: true` plus
 `interface` display metadata, while the smaller board/card step skills remain
 manual-only. Source checked: https://developers.openai.com/codex/skills
+
+2026-05-31 correction: the shipped `auto-strike/agents/openai.yaml` and the repo
+validator now enforce `allow_implicit_invocation: true` for Auto Strike. The
+portable `SKILL.md` still carries Claude's `disable-model-invocation: true`, so
+Claude slash-command behavior remains manually invoked while Codex can surface
+Auto Strike as the primary entry point.

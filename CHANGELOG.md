@@ -2,6 +2,17 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.29 - 2026-05-31
+
+- Rewrote Codex install and update guidance around the deterministic
+  `codex plugin add strike@strike` flow, Desktop relaunches, fresh threads, and
+  clean reinstall troubleshooting.
+- Added a non-colliding `strike-dev` local dogfood workflow for testing this
+  checkout without disturbing a normal published `strike@strike` install.
+- Made Auto Strike visible as the primary Codex entry skill with
+  `allow_implicit_invocation: true` while keeping smaller Strike workflow step
+  skills manual-only.
+
 ## 0.8.28 - 2026-05-29
 
 - Added Auto Strike Stripe guidance for official-docs research, Stripe CLI

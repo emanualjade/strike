@@ -154,9 +154,12 @@ claude --plugin-dir ./plugins/strike
 Codex can load the plugin through a local marketplace entry that points to the
 plugin checkout path. In this app repo, that path is `./plugins/strike`; in a
 standalone plugin repo or a different checkout layout, point the marketplace
-entry at that location instead.
+entry at that location instead. When dogfooding this repo on a machine that
+also has the published Strike plugin installed, use a separate local
+marketplace name such as `strike-dev` so `strike@strike-dev` does not disturb
+the normal `strike@strike` install.
 
 When iterating in Codex, remember that local plugins are installed into Codex's
-plugin cache. Refresh or reinstall the local plugin if edits do not appear. The
-Codex marketplace upgrade command applies to remote marketplaces, not local path
-marketplaces.
+plugin cache. Refresh or reinstall the local plugin with `codex plugin add` if
+edits do not appear. The Codex marketplace upgrade command applies to remote
+marketplaces, not local path marketplaces.

@@ -69,7 +69,7 @@ jobs:
           --codex-source "$GITHUB_REPOSITORY"
           --codex-ref "$GITHUB_SHA"
           --codex-sparse .agents/plugins
-          --codex-sparse plugins
+          --codex-sparse plugins/strike
 
       - name: Upload diagnostics
         if: failure()

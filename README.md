@@ -64,38 +64,66 @@ is not a normal user install path, so this README does not list commands for it.
 <details>
 <summary>Install globally in Codex</summary>
 
-Run this terminal command:
+Use this when you want Strike available across your local Codex setup,
+including Codex CLI and Codex Desktop.
+
+Run these terminal commands:
 
 ```bash
-codex plugin marketplace add emanualjade/strike --sparse .agents/plugins --sparse plugins
+codex plugin marketplace add emanualjade/strike --ref main --sparse .agents/plugins --sparse plugins/strike
+codex plugin add strike@strike
+codex plugin list --marketplace strike
 ```
 
-This registers the Strike marketplace. It does not install Strike into the
-current conversation yet.
+`codex plugin marketplace add` registers the Strike marketplace.
+`codex plugin add strike@strike` installs and enables the Strike plugin from
+that marketplace. The selector format is `plugin-name@marketplace-name`.
 
-Open Codex. You can use the Codex app, or run this terminal command:
+Strike's bundled skills are installed with the plugin. Do not install the
+individual Strike skills separately.
+
+For Codex CLI, start a fresh Codex session from the repo where you want Strike
+to work:
 
 ```bash
+cd /path/to/your/repo
 codex
 ```
 
-In the Codex prompt, open the plugin browser:
+Inside Codex CLI, you can inspect plugins and skills with:
 
 ```text
 /plugins
+/skills
 ```
 
-Select **Install plugin**. If Strike is already installed but disabled, toggle
-it on. After that, start a fresh Codex conversation and run Strike from the repo
-root you want it to work on.
+For Codex Desktop, open the workspace:
+
+```bash
+cd /path/to/your/repo
+codex app "$PWD"
+```
+
+If Codex Desktop was already running, fully quit and relaunch it before testing
+Strike. Closing the window may leave the app process alive; use **Cmd+Q** on
+macOS or quit Codex from the Windows system tray. Then start a new blank thread
+from the workspace.
+
+Invoke Strike with `@Strike`, or invoke a bundled skill explicitly with `$`.
+For example:
+
+```text
+$auto-strike Build an MVP for this idea: ...
+$start Add user profile page
+```
 
 </details>
 
 <details>
 <summary>Install in one Codex repository</summary>
 
-Use this when one repository should offer Strike, and you do not want to add the
-Strike marketplace to your general Codex setup.
+Use this when one repository should offer Strike through its own Codex plugin
+catalog.
 
 Codex repository marketplaces are added by creating or editing this file in the
 repo root:
@@ -114,15 +142,16 @@ create the directory:
 mkdir -p .agents/plugins
 ```
 
-Then create `.agents/plugins/marketplace.json` with this content. The top-level
-`name` and `interface.displayName` describe your repository's plugin catalog;
-Strike is just one entry in the `plugins` list.
+Then create `.agents/plugins/marketplace.json` with this content. Replace the
+top-level `name` with a unique kebab-case catalog name for your repository; that
+name is the marketplace name used by Codex. Strike is just one entry in the
+`plugins` list.
 
 ```json
 {
-  "name": "my-project-plugins",
+  "name": "example-project-plugins",
   "interface": {
-    "displayName": "My Project Plugins"
+    "displayName": "Example Project Plugins"
   },
   "plugins": [
     {
@@ -143,21 +172,33 @@ Strike is just one entry in the `plugins` list.
 }
 ```
 
-Open Codex from this same repo root. You can use the Codex app, or run this
-terminal command from the repo root:
+For the plugin browser flow, fully restart Codex, open Codex from this same repo
+root, then open the plugin browser and install Strike from your repository
+marketplace:
 
 ```bash
 codex
 ```
 
-In the Codex prompt, open the plugin browser:
-
 ```text
 /plugins
 ```
 
-Select **Install plugin**. If Strike is already installed but disabled, toggle
-it on. After that, start a fresh Codex conversation from the same repo root.
+For a deterministic CLI install from that repository marketplace, register the
+repo root as a local marketplace source first:
+
+```bash
+cd /path/to/your/repo
+codex plugin marketplace add "$PWD"
+codex plugin add strike@example-project-plugins
+codex plugin list --marketplace example-project-plugins
+```
+
+Use the marketplace name from your own `.agents/plugins/marketplace.json`; do
+not use `strike@strike` unless the marketplace name is actually `strike`.
+
+After installing, fully quit and relaunch Codex Desktop if you use the desktop
+app, then start a new blank thread from the same repo root.
 
 </details>
 
@@ -229,17 +270,39 @@ After installing, run this app prompt inside Claude Code to activate Strike:
 <details>
 <summary>Update Codex</summary>
 
-For a global Codex marketplace, run this terminal command:
+For a global Codex install, refresh the marketplace snapshot and then reinstall
+Strike from that refreshed snapshot:
 
 ```bash
 codex plugin marketplace upgrade strike
+codex plugin add strike@strike
+codex plugin list --marketplace strike
 ```
 
-Restart Codex, open `/plugins`, apply any available Strike update, then start a
-new thread.
+`marketplace upgrade` refreshes the configured Git marketplace. `plugin add`
+refreshes the installed Strike plugin cache and leaves Strike enabled.
 
-For a repository Codex marketplace, restart Codex from that repo root, open
-`/plugins`, and apply any available Strike update.
+For a repository marketplace, run the install command again with that
+repository's marketplace name:
+
+```bash
+cd /path/to/your/repo
+codex plugin add strike@example-project-plugins
+codex plugin list --marketplace example-project-plugins
+```
+
+After updating, fully quit and relaunch Codex Desktop if you use the desktop
+app, then start a new blank thread. In Codex CLI, exit the current session and
+start a fresh one from the repo root.
+
+If the install still looks stale, force a clean reinstall:
+
+```bash
+codex plugin remove strike@strike
+codex plugin marketplace upgrade strike
+codex plugin add strike@strike
+codex plugin list --marketplace strike
+```
 
 </details>
 
@@ -294,12 +357,140 @@ use Strike if you need to refresh Strike-managed runtime files under
 `strike/customize/system/`. Existing user customization files under
 `strike/customize/user/` are preserved.
 
+## Codex Troubleshooting
+
+<details>
+<summary>Strike marketplace appears, but Strike is not installed</summary>
+
+Check the marketplace and install the plugin:
+
+```bash
+codex plugin list --marketplace strike
+codex plugin add strike@strike
+codex plugin list --marketplace strike
+```
+
+For a repository marketplace, replace `strike` with the marketplace name from
+that repository's `.agents/plugins/marketplace.json`.
+
+</details>
+
+<details>
+<summary>Strike is installed, but skills do not appear</summary>
+
+Start a fresh session after installing or updating. Codex loads skills when a
+thread starts, so an already-open thread can keep the old skill list.
+
+For Codex CLI:
+
+```bash
+cd /path/to/your/repo
+codex
+```
+
+Then inspect:
+
+```text
+/plugins
+/skills
+```
+
+For Codex Desktop, fully quit and relaunch the app, then open a new blank
+thread from the repo root. If the plugin browser still looks stale, open
+`/plugins`, toggle Strike off and back on, quit and relaunch Codex Desktop, then
+start another new thread.
+
+</details>
+
+<details>
+<summary>Clean reinstall in Codex</summary>
+
+Use this when an update still appears stale after a normal refresh:
+
+```bash
+codex plugin remove strike@strike
+codex plugin marketplace remove strike
+codex plugin marketplace add emanualjade/strike --ref main --sparse .agents/plugins --sparse plugins/strike
+codex plugin add strike@strike
+codex plugin list --marketplace strike
+```
+
+Codex does not currently expose a supported `codex --clear-cache` command. The
+commands above remove and recreate the supported marketplace and plugin cache
+state.
+
+</details>
+
+<details>
+<summary>Dogfood Strike from this checkout</summary>
+
+Maintainers can install this local checkout without disturbing a normal
+published `strike@strike` install by creating a separate local marketplace
+named `strike-dev`. The plugin inside that marketplace is still named `strike`.
+
+```bash
+cd /path/to/strike
+
+DEV_MARKETPLACE="$HOME/.codex/strike-dev-marketplace"
+mkdir -p "$DEV_MARKETPLACE/.agents/plugins" "$DEV_MARKETPLACE/plugins"
+ln -sfn "$PWD/plugins/strike" "$DEV_MARKETPLACE/plugins/strike"
+cat > "$DEV_MARKETPLACE/.agents/plugins/marketplace.json" <<'JSON'
+{
+  "name": "strike-dev",
+  "interface": {
+    "displayName": "Strike Dev"
+  },
+  "plugins": [
+    {
+      "name": "strike",
+      "source": {
+        "source": "local",
+        "path": "./plugins/strike"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Coding"
+    }
+  ]
+}
+JSON
+
+codex plugin marketplace add "$DEV_MARKETPLACE"
+codex plugin add strike@strike-dev
+codex plugin list --marketplace strike-dev
+```
+
+Use `strike@strike` for the published GitHub install and `strike@strike-dev`
+for this local checkout. After local edits, run `codex plugin add
+strike@strike-dev` again, then restart Codex and start a new thread.
+
+</details>
+
+<details>
+<summary>Codex web and workspace sharing</summary>
+
+A local CLI or Desktop install does not automatically publish Strike to Codex
+web/cloud. Until public Plugin Directory publishing is available, share a local
+plugin through the Codex app: open **Plugins**, go to **Created by you**, open
+Strike, select **Share**, and invite workspace members or copy a share link.
+Recipients can install it from **Shared with you**.
+
+</details>
+
 ## Uninstall Strike
 
 <details>
 <summary>Uninstall Codex</summary>
 
-Open the Codex plugin browser:
+Remove the installed plugin:
+
+```bash
+codex plugin remove strike@strike
+```
+
+Or open the Codex plugin browser:
 
 ```text
 /plugins
@@ -313,7 +504,14 @@ If you added the global Strike marketplace, remove it:
 codex plugin marketplace remove strike
 ```
 
-If you installed Strike from a repository marketplace, edit or delete:
+If you installed the local development marketplace from this repo, remove it:
+
+```bash
+codex plugin remove strike@strike-dev
+codex plugin marketplace remove strike-dev
+```
+
+If you added Strike to a repository marketplace, edit or delete:
 
 ```text
 .agents/plugins/marketplace.json

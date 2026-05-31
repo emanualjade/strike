@@ -393,8 +393,8 @@ function validateSkill(skillPath) {
       if (!/disable-model-invocation:\s*true/.test(skillText)) {
         fail(`${rel(skillFile)}: auto-strike must be explicit user-invocation only`);
       }
-      if (!/allow_implicit_invocation:\s*false/.test(openaiMetadata)) {
-        fail(`${rel(openaiMetadataPath)}: auto-strike must disable implicit Codex invocation`);
+      if (!/allow_implicit_invocation:\s*true/.test(openaiMetadata)) {
+        fail(`${rel(openaiMetadataPath)}: auto-strike must allow implicit Codex invocation`);
       }
       if (!/display_name:\s*["']?Auto Strike["']?/.test(openaiMetadata)) {
         fail(`${rel(openaiMetadataPath)}: auto-strike must provide Codex interface metadata`);
