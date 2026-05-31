@@ -2,6 +2,13 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.30 - 2026-05-31
+
+- Renamed Auto Strike's intermediate planning layer from features to delivery phases, making `phases/<phase-slug>/phase-spec.md` the canonical path between initiative specs and slices.
+- Renamed Auto Strike workflow progress docs from Phase Ledger/Phase Tasks to Mode Ledger/Mode Tasks so brainstorm, spec, build, review, and readiness are clearly workflow modes rather than delivery phases.
+- Aligned Auto Strike helper warnings, readiness ledger parsing, and allowed `Current mode` values with the canonical workflow modes.
+- Kept one-release compatibility warnings for legacy `Feature:` fields, `features/<feature-slug>/feature-spec.md` paths, and `Phase Ledger` headings.
+
 ## 0.8.29 - 2026-05-31
 
 - Rewrote Codex install and update guidance around the deterministic

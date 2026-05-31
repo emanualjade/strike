@@ -48,6 +48,17 @@ component. Normal Strike and Auto Strike both point to it and use the consuming
 repo root `UBIQUITOUS_LANGUAGE.md` as the single durable glossary. This is
 Strike workflow policy, not a host schema requirement.
 
+2026-05-31 update: Auto Strike's runtime workspace now uses
+`auto-strike/initiatives/<initiative-slug>/phases/<phase-slug>/phase-spec.md`
+as the canonical delivery-phase layer between initiative specs and slices. The
+workflow progress terms are now `Mode Ledger` and `Mode Tasks` so brainstorm,
+grill, spec, slice, build, review, and readiness are not confused with delivery
+phases. Legacy `features/<feature-slug>/feature-spec.md`, `Feature:` Active
+Work fields, and `Phase Ledger` headings remain read-compatible with warnings
+for one release. This is Strike workflow policy, not a host schema requirement;
+see `docs/auto-strike-initiative-restructure.md` and
+`plugins/strike/skills/auto-strike/references/workspace.md`.
+
 ### `plugins/strike/references/invocation.md`
 
 - Grounded in research: Yes.

@@ -9,7 +9,7 @@ Default path:
 
 - `auto-strike/initiatives/<initiative-slug>/grill.md`
 
-Grill is not optional for meaningful feature or MVP work unless the user
+Grill is not optional for meaningful delivery-phase or MVP work unless the user
 explicitly opts out, says to move along, or asks the agent to proceed without
 questions. A detailed kickoff prompt can answer decision nodes, but it does not
 replace grill unless it explicitly answers those nodes. Record which decisions
@@ -41,7 +41,7 @@ Hardening decisions require explicit handling before spec/slice/build:
   explicit user approval
 - data model, persistence, auth/identity/session, permissions, ownership, and
   lifecycle/state choices
-- feature split, non-goals, validation depth, browser/manual checks, and any
+- delivery-phase split, non-goals, validation depth, browser/manual checks, and any
   dependency/security/cost/privacy risk
 
 Before a meaningful grill session, ask once unless the user already chose a
@@ -88,17 +88,17 @@ permission, relationship, configuration, placement, ownership, or usage context.
 Update root `UBIQUITOUS_LANGUAGE.md` only when durable language crystallizes.
 Update the initiative `decisions.md` as decisions crystallize. Do not keep
 contradictory history unless it explains the current choice.
-Grill happens at the initiative level. It may discover feature candidates, but
+Grill happens at the initiative level. It may discover phase candidates, but
 it does not create new initiatives. If the work looks like a separate
 initiative, ask the user before splitting it out.
-Update the initiative Phase Ledger when entering and leaving grill. If grill is
+Update the initiative Mode Ledger when entering and leaving grill. If grill is
 compressed because the prompt or repo already answered the consequential
 decisions, record that as `compressed` with the artifact and reason.
 After recording the Decision Checkpoint and Exit Evidence, stop with spec as the
 next action. Do not continue into spec in the same work unit unless the user
 explicitly asked to skip that boundary.
 When asking the user to resolve the active grill decision, do not promise to
-write specs, create feature specs, slice the build, or begin implementation
+write specs, create phase specs, slice the build, or begin implementation
 after their answer. Promise only to record the decision, close grill, and leave
 spec as the next action.
 
@@ -107,7 +107,7 @@ Use `grill.md` as the grill work packet:
 ```md
 # [Initiative] Grill
 
-## Phase Tasks
+## Mode Tasks
 - [ ] Review the brainstorm handoff and repo context.
 - [ ] Set or confirm Grill Decision Depth.
 - [ ] Translate vague kickoff language into explicit constraints or questions.
@@ -144,7 +144,7 @@ Question:
 
 ## Pressure Points
 - Scope:
-- Feature candidates:
+- Delivery phase candidates:
 - Domain language:
 - Models/relationships:
 - Flows/states:
@@ -161,7 +161,7 @@ Question:
 - Stack / dependencies / tooling constraints:
 - Data / persistence / state:
 - Auth / identity / permissions:
-- Feature split / non-goals:
+- Delivery-phase split / non-goals:
 - Validation / browser or live checks:
 - User-confirmed decisions:
 - Accepted assumptions:
@@ -172,7 +172,7 @@ Question:
   accepted assumptions, deferred decisions, and unresolved blockers.]
 
 ## Handoff To Spec
-- [Initiative feature map, rules, constraints, flows, and risks the spec must preserve.]
+- [Initiative phase map, rules, constraints, flows, and risks the spec must preserve.]
 ```
 
 Exit when consequential product, domain, workflow, permission, data,

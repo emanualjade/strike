@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 const SCRIPT_FILE = fileURLToPath(import.meta.url);
 const WORKSPACE_ROOT = "auto-strike";
 const LANGUAGE_FILE = "UBIQUITOUS_LANGUAGE.md";
-const VALID_MODES = new Set(["brainstorm", "grill", "idea", "decisions", "spec", "slice", "build", "review", "readiness"]);
+const VALID_MODES = new Set(["brainstorm", "grill", "spec", "slice", "build", "review", "readiness"]);
 const MODES_EXPECTING_SPEC = new Set(["slice", "build", "review", "readiness"]);
 const MODES_EXPECTING_SLICE = new Set(["build", "review", "readiness"]);
 const MODES_EXPECTING_SLICE_PREP = new Set(["build", "review", "readiness"]);
@@ -17,20 +17,21 @@ const RECOVERY_BLOCKING_MODES = new Set(["build", "review", "readiness"]);
 const RECOVERY_POINTER_REQUIRED_MODES = new Set(["build", "readiness"]);
 const MODES_REQUIRING_GRILL_CHECKPOINT = new Set(["spec", "slice", "build", "review", "readiness"]);
 const VALID_DECISION_DEPTH_LEVELS = new Set(["lean", "standard", "deep"]);
-const PHASE_LEDGER_ORDER = ["brainstorm", "grill", "spec", "slice", "build", "review", "validate"];
-const PHASE_LEDGER_BY_MODE = {
+const MODE_LEDGER_ORDER = ["brainstorm", "grill", "spec", "slice", "build", "review", "readiness"];
+const MODE_LEDGER_BY_MODE = {
   spec: ["brainstorm", "grill", "spec"],
   slice: ["brainstorm", "grill", "spec", "slice"],
   build: ["brainstorm", "grill", "spec", "slice", "build"],
   review: ["brainstorm", "grill", "spec", "slice", "build", "review"],
-  readiness: ["brainstorm", "grill", "spec", "slice", "build", "review", "validate"],
+  readiness: ["brainstorm", "grill", "spec", "slice", "build", "review", "readiness"],
 };
-const PHASE_LEDGER_COMPLETE_STATUSES = new Set(["done", "complete", "completed", "compressed", "skipped", "replaced"]);
-const PHASE_LEDGER_ACTIVE_STATUSES = new Set([...PHASE_LEDGER_COMPLETE_STATUSES, "in-progress", "active", "blocked", "paused"]);
+const MODE_LEDGER_COMPLETE_STATUSES = new Set(["done", "complete", "completed", "compressed", "skipped", "replaced"]);
+const MODE_LEDGER_ACTIVE_STATUSES = new Set([...MODE_LEDGER_COMPLETE_STATUSES, "in-progress", "active", "blocked", "paused"]);
 const ACTIVE_WORK_DOC_FILES = new Set([
   "idea.md",
   "grill.md",
   "spec.md",
+  "phase-spec.md",
   "feature-spec.md",
   "readiness.md",
 ]);
@@ -56,7 +57,7 @@ const LENSES = {
       "Primary happy paths and first-time user flows.",
       "Returning, interrupted, resumed, invalid, duplicate, cancel, retry, and recovery flows.",
       "Whether the UI/API/CLI exposes the right state and next action.",
-      "Mobile or constrained-device flows when the feature has a UI.",
+      "Mobile or constrained-device flows when the phase has a UI.",
     ],
   },
   "spec-coverage": {
@@ -83,7 +84,7 @@ const LENSES = {
       "Whether the built behavior works end to end for the core MVP path.",
       "Validation, errors, recovery, persistence, integration behavior, and state transitions.",
       "Regressions in existing behavior or adjacent workflows.",
-      "Gaps that block the user from running or opening the feature.",
+      "Gaps that block the user from running or opening the phase.",
     ],
   },
   "code-quality": {
@@ -437,10 +438,12 @@ function usefulValue(value) {
 function parseActiveWork(indexText) {
   const text = extractSection(indexText, "Active Work");
   const items = markdownListItems(text);
-  const duplicateLabels = ["Initiative", "Feature", "Doc", "Slice", "Active slice", "Current slice", "Current mode", "Mode", "State", "Next", "Blocked by"]
+  const duplicateLabels = ["Initiative", "Phase", "Feature", "Doc", "Slice", "Active slice", "Current slice", "Current mode", "Mode", "State", "Next", "Blocked by"]
     .filter((label) => parseLabeledItems(items, label).length > 1);
   const initiativeRaw = usefulValue(parseLabeledItem(items, "Initiative"));
-  const featureRaw = usefulValue(parseLabeledItem(items, "Feature"));
+  const phaseLabelRaw = usefulValue(parseLabeledItem(items, "Phase"));
+  const legacyFeatureRaw = usefulValue(parseLabeledItem(items, "Feature"));
+  const phaseRaw = phaseLabelRaw ?? legacyFeatureRaw;
   const docRaw = usefulValue(parseLabeledItem(items, "Doc"));
   const sliceRaw = usefulValue(parseLabeledItem(items, "Slice")) ?? parseActiveSlice(items);
   const currentModeRaw = usefulValue(parseLabeledItem(items, "Current mode")) ?? usefulValue(parseLabeledItem(items, "Mode"));
@@ -451,8 +454,11 @@ function parseActiveWork(indexText) {
     text,
     initiativeRaw,
     initiativePath: initiativeRaw ? extractInlinePath(initiativeRaw) : null,
-    featureRaw,
-    featurePath: featureRaw ? extractInlinePath(featureRaw) : null,
+    phaseRaw,
+    phasePath: phaseRaw ? extractInlinePath(phaseRaw) : null,
+    phaseLabelRaw,
+    legacyFeatureRaw,
+    legacyFeaturePath: legacyFeatureRaw ? extractInlinePath(legacyFeatureRaw) : null,
     docRaw,
     docPath: docRaw ? extractInlinePath(docRaw) : null,
     sliceRaw,
@@ -474,7 +480,7 @@ function modeFromActiveDoc(docPath) {
   if (basename === "readiness.md") return "readiness";
   if (normalized.endsWith("/slices/index.md")) return "slice";
   if (SLICE_DOC_PATTERN.test(normalized)) return "build";
-  if (basename === "spec.md" || basename === "feature-spec.md") return "spec";
+  if (basename === "spec.md" || basename === "phase-spec.md" || basename === "feature-spec.md") return "spec";
   return null;
 }
 
@@ -484,8 +490,8 @@ function parseIndex(indexText) {
       present: false,
       activeInitiativeRaw: null,
       activeInitiativePath: null,
-      activeFeatureRaw: null,
-      activeFeaturePath: null,
+      activePhaseRaw: null,
+      activePhasePath: null,
       currentMode: null,
       currentModeExplicit: false,
       activeSliceRaw: null,
@@ -493,8 +499,11 @@ function parseIndex(indexText) {
         text: "",
         initiativeRaw: null,
         initiativePath: null,
-        featureRaw: null,
-        featurePath: null,
+        phaseRaw: null,
+        phasePath: null,
+        phaseLabelRaw: null,
+        legacyFeatureRaw: null,
+        legacyFeaturePath: null,
         docRaw: null,
         docPath: null,
         sliceRaw: null,
@@ -544,8 +553,10 @@ function parseIndex(indexText) {
     present: true,
     activeInitiativeRaw: activeWork.initiativeRaw,
     activeInitiativePath: activeWork.initiativePath,
-    activeFeatureRaw: activeWork.featureRaw,
-    activeFeaturePath: activeWork.featurePath,
+    activePhaseRaw: activeWork.phaseRaw,
+    activePhasePath: activeWork.phasePath,
+    activeFeatureRaw: activeWork.legacyFeatureRaw,
+    activeFeaturePath: activeWork.legacyFeaturePath,
     currentMode,
     currentModeExplicit,
     activeSliceRaw: activeSliceRaw && !isPlaceholder(activeSliceRaw) ? activeSliceRaw : null,
@@ -584,7 +595,7 @@ function normalizeLedgerPhase(value) {
   if (/\bslice\b|\bslicing\b/.test(text)) return "slice";
   if (/\bbuild\b|\bimplement\b|\bimplementation\b/.test(text)) return "build";
   if (/\breview\b|\breviewer\b/.test(text)) return "review";
-  if (/\bvalidate\b|\bvalidation\b|\bverify\b|\bverification\b|\breadiness\b/.test(text)) return "validate";
+  if (/\bvalidate\b|\bvalidation\b|\bverify\b|\bverification\b|\breadiness\b/.test(text)) return "readiness";
   return null;
 }
 
@@ -606,30 +617,30 @@ function normalizeLedgerStatus(value) {
   return text;
 }
 
-function phaseLedgerRowRank(row) {
+function modeLedgerRowRank(row) {
   if (!row?.status || row.status === "pending") return 0;
   if (["blocked", "paused"].includes(row.status)) return 1;
-  if (row.status === "in-progress" || PHASE_LEDGER_COMPLETE_STATUSES.has(row.status)) return 2;
+  if (row.status === "in-progress" || MODE_LEDGER_COMPLETE_STATUSES.has(row.status)) return 2;
   return 1;
 }
 
-function choosePhaseLedgerRow(previous, next) {
+function chooseModeLedgerRow(previous, next) {
   if (!previous) return next;
-  const previousRank = phaseLedgerRowRank(previous);
-  const nextRank = phaseLedgerRowRank(next);
+  const previousRank = modeLedgerRowRank(previous);
+  const nextRank = modeLedgerRowRank(next);
   if (nextRank > previousRank) return next;
   if (nextRank < previousRank) return previous;
   return next;
 }
 
-function parsePhaseLedger(sectionText) {
+function parseModeLedger(sectionText) {
   const rows = new Map();
   const occurrences = new Map();
   for (const line of normalizeText(sectionText).split("\n")) {
     const cells = parseTableCells(line);
     if (!cells) continue;
     const phase = normalizeLedgerPhase(cells[0]);
-    if (!phase || !PHASE_LEDGER_ORDER.includes(phase)) continue;
+    if (!phase || !MODE_LEDGER_ORDER.includes(phase)) continue;
     const row = {
       phase,
       statusRaw: cells[1] ?? "",
@@ -638,7 +649,7 @@ function parsePhaseLedger(sectionText) {
       reason: cells.slice(3).join(" | "),
       raw: line.trim(),
     };
-    rows.set(phase, choosePhaseLedgerRow(rows.get(phase), row));
+    rows.set(phase, chooseModeLedgerRow(rows.get(phase), row));
     occurrences.set(phase, [...(occurrences.get(phase) ?? []), row]);
   }
   const duplicates = Object.fromEntries(
@@ -649,7 +660,7 @@ function parsePhaseLedger(sectionText) {
   return { rows, duplicates };
 }
 
-function findPhaseLedger(repoRoot, indexText, markdownFiles, activeInitiative) {
+function findModeLedger(repoRoot, indexText, markdownFiles, activeInitiative) {
   const candidates = [];
   if (activeInitiative.path) {
     candidates.push(`${activeInitiative.path}/idea.md`);
@@ -666,20 +677,27 @@ function findPhaseLedger(repoRoot, indexText, markdownFiles, activeInitiative) {
       ? indexText
       : readFileIfPresent(path.join(repoRoot, candidate));
     if (!text) continue;
-    const section = extractSection(text, "Phase Ledger");
+    let section = extractSection(text, "Mode Ledger");
+    let legacyName = false;
+    if (!sectionHasSubstance(section)) {
+      section = extractSection(text, "Phase Ledger");
+      legacyName = sectionHasSubstance(section);
+    }
     if (!sectionHasSubstance(section)) continue;
-    const phaseLedger = parsePhaseLedger(section);
+    const modeLedger = parseModeLedger(section);
     return {
       present: true,
       path: candidate,
-      rows: Object.fromEntries(phaseLedger.rows),
-      duplicates: phaseLedger.duplicates,
+      legacyName,
+      rows: Object.fromEntries(modeLedger.rows),
+      duplicates: modeLedger.duplicates,
     };
   }
 
   return {
     present: false,
     path: activeInitiative.ideaPath ?? activeInitiative.path ?? `${WORKSPACE_ROOT}/index.md`,
+    legacyName: false,
     rows: {},
     duplicates: {},
   };
@@ -859,11 +877,15 @@ function isInitiativePath(sourcePath) {
   return new RegExp(`^${escapeRegExp(WORKSPACE_ROOT)}/initiatives/[^/]+$`).test(normalizeEvidencePath(sourcePath));
 }
 
-function isFeaturePath(sourcePath) {
+function isPhasePath(sourcePath) {
+  return new RegExp(`^${escapeRegExp(WORKSPACE_ROOT)}/initiatives/[^/]+/phases/[^/]+$`).test(normalizeEvidencePath(sourcePath));
+}
+
+function isLegacyFeaturePath(sourcePath) {
   return new RegExp(`^${escapeRegExp(WORKSPACE_ROOT)}/initiatives/[^/]+/features/[^/]+$`).test(normalizeEvidencePath(sourcePath));
 }
 
-function isFeatureShorthand(sourcePath) {
+function isPhaseShorthand(sourcePath) {
   const value = String(sourcePath ?? "").trim().replace(/^`|`$/g, "");
   return Boolean(value) && !value.includes("/") && !isPlaceholder(value) && !isNoneItem(value);
 }
@@ -871,7 +893,7 @@ function isFeatureShorthand(sourcePath) {
 function inferInitiativePath(index) {
   const candidates = [
     index.activeInitiativePath,
-    index.activeFeaturePath,
+    index.activePhasePath,
     index.activeWork?.docPath,
     index.activeSliceRaw,
   ].filter(Boolean).map(normalizeEvidencePath);
@@ -898,6 +920,10 @@ function activeInitiativeState(repoRoot, index) {
       grillExists: false,
       specPath: null,
       specExists: false,
+      phasesPath: null,
+      phaseDirs: [],
+      legacyFeaturesPath: null,
+      legacyFeatureDirs: [],
       featuresPath: null,
       featureDirs: [],
       readinessPath: null,
@@ -909,10 +935,17 @@ function activeInitiativeState(repoRoot, index) {
   const decisionsPath = path.join(resolved.absolutePath, "decisions.md");
   const grillPath = path.join(resolved.absolutePath, "grill.md");
   const specPath = path.join(resolved.absolutePath, "spec.md");
-  const featuresPath = path.join(resolved.absolutePath, "features");
+  const phasesPath = path.join(resolved.absolutePath, "phases");
+  const legacyFeaturesPath = path.join(resolved.absolutePath, "features");
   const readinessPath = path.join(resolved.absolutePath, "readiness.md");
-  const featureDirs = inspectPath(featuresPath)?.isDirectory()
-    ? fs.readdirSync(featuresPath, { withFileTypes: true })
+  const phaseDirs = inspectPath(phasesPath)?.isDirectory()
+    ? fs.readdirSync(phasesPath, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => posix(path.join(resolved.relativePath, "phases", entry.name)))
+      .sort()
+    : [];
+  const legacyFeatureDirs = inspectPath(legacyFeaturesPath)?.isDirectory()
+    ? fs.readdirSync(legacyFeaturesPath, { withFileTypes: true })
       .filter((entry) => entry.isDirectory())
       .map((entry) => posix(path.join(resolved.relativePath, "features", entry.name)))
       .sort()
@@ -931,14 +964,18 @@ function activeInitiativeState(repoRoot, index) {
     grillExists: Boolean(inspectPath(grillPath)?.isFile()),
     specPath: displayPath(specPath, repoRoot),
     specExists: Boolean(inspectPath(specPath)?.isFile()),
-    featuresPath: displayPath(featuresPath, repoRoot),
-    featureDirs,
+    phasesPath: displayPath(phasesPath, repoRoot),
+    phaseDirs,
+    legacyFeaturesPath: displayPath(legacyFeaturesPath, repoRoot),
+    legacyFeatureDirs,
+    featuresPath: displayPath(phasesPath, repoRoot),
+    featureDirs: phaseDirs,
     readinessPath: displayPath(readinessPath, repoRoot),
     readinessExists: Boolean(inspectPath(readinessPath)?.isFile()),
   };
 }
 
-function resolveActiveFeaturePath(repoRoot, rawPath, activeInitiative) {
+function resolveActivePhasePath(repoRoot, rawPath, activeInitiative) {
   if (!rawPath || isPlaceholder(rawPath) || isNoneItem(rawPath)) return null;
   const cleaned = String(rawPath).trim().replace(/^`|`$/g, "").replace(/^\.\/+/, "");
   if (path.isAbsolute(cleaned) || cleaned.split(/[\\/]+/).includes("..")) {
@@ -951,23 +988,49 @@ function resolveActiveFeaturePath(repoRoot, rawPath, activeInitiative) {
     };
   }
   if (!cleaned.includes("/") && activeInitiative.path) {
-    const relativePath = posix(path.join(activeInitiative.path, "features", cleaned));
+    const relativePath = posix(path.join(activeInitiative.path, "phases", cleaned));
+    const legacyRelativePath = posix(path.join(activeInitiative.path, "features", cleaned));
+    const absolutePath = path.join(repoRoot, relativePath);
+    const legacyAbsolutePath = path.join(repoRoot, legacyRelativePath);
+    if (!fs.existsSync(absolutePath) && fs.existsSync(legacyAbsolutePath)) {
+      return {
+        raw: rawPath,
+        safe: true,
+        relativePath: legacyRelativePath,
+        absolutePath: legacyAbsolutePath,
+        exists: true,
+        legacyFeaturePath: true,
+      };
+    }
     return {
       raw: rawPath,
       safe: true,
       relativePath,
-      absolutePath: path.join(repoRoot, relativePath),
-      exists: fs.existsSync(path.join(repoRoot, relativePath)),
+      absolutePath,
+      exists: fs.existsSync(absolutePath),
+      legacyFeaturePath: false,
+    };
+  }
+  if ((cleaned.startsWith("phases/") || cleaned.startsWith("features/")) && activeInitiative.path) {
+    const relativePath = posix(path.join(activeInitiative.path, cleaned));
+    const absolutePath = path.join(repoRoot, relativePath);
+    return {
+      raw: rawPath,
+      safe: true,
+      relativePath,
+      absolutePath,
+      exists: fs.existsSync(absolutePath),
+      legacyFeaturePath: cleaned.startsWith("features/"),
     };
   }
   return resolveWorkspacePath(repoRoot, cleaned);
 }
 
-function activeFeatureState(repoRoot, index, activeInitiative) {
-  const resolved = resolveActiveFeaturePath(repoRoot, index.activeFeaturePath, activeInitiative);
+function activePhaseState(repoRoot, index, activeInitiative) {
+  const resolved = resolveActivePhasePath(repoRoot, index.activePhasePath, activeInitiative);
   if (!resolved || !resolved.safe || !resolved.exists || !inspectPath(resolved.absolutePath)?.isDirectory()) {
     return {
-      raw: index.activeFeaturePath,
+      raw: index.activePhasePath,
       path: null,
       inferredPath: resolved?.safe ? resolved.relativePath : null,
       exists: Boolean(resolved?.exists),
@@ -977,10 +1040,12 @@ function activeFeatureState(repoRoot, index, activeInitiative) {
       sliceFiles: [],
       readinessPath: null,
       readinessExists: false,
+      legacyFeaturePath: Boolean(resolved?.legacyFeaturePath),
     };
   }
 
-  const specPath = path.join(resolved.absolutePath, "feature-spec.md");
+  const legacyFeaturePath = Boolean(resolved.legacyFeaturePath) || isLegacyFeaturePath(resolved.relativePath);
+  const specPath = path.join(resolved.absolutePath, legacyFeaturePath ? "feature-spec.md" : "phase-spec.md");
   const slicesPath = path.join(resolved.absolutePath, "slices");
   const readinessPath = path.join(resolved.absolutePath, "readiness.md");
   const sliceFiles = inspectPath(slicesPath)?.isDirectory()
@@ -991,7 +1056,7 @@ function activeFeatureState(repoRoot, index, activeInitiative) {
     : [];
 
   return {
-    raw: index.activeFeaturePath,
+    raw: index.activePhasePath,
     path: resolved.relativePath,
     inferredPath: resolved.relativePath,
     exists: true,
@@ -1001,10 +1066,11 @@ function activeFeatureState(repoRoot, index, activeInitiative) {
     sliceFiles,
     readinessPath: displayPath(readinessPath, repoRoot),
     readinessExists: Boolean(inspectPath(readinessPath)?.isFile()),
+    legacyFeaturePath,
   };
 }
 
-function activeSliceState(repoRoot, index, activeFeature) {
+function activeSliceState(repoRoot, index, activePhase) {
   const raw = index.activeSliceRaw;
   if (!raw || isPlaceholder(raw)) {
     return {
@@ -1024,8 +1090,8 @@ function activeSliceState(repoRoot, index, activeFeature) {
   }
 
   const cleaned = String(raw).trim().replace(/^`|`$/g, "").replace(/^\.\/+/, "");
-  if (activeFeature.path && !cleaned.includes("/")) {
-    const relativePath = posix(path.join(activeFeature.path, "slices", cleaned));
+  if (activePhase.path && !cleaned.includes("/")) {
+    const relativePath = posix(path.join(activePhase.path, "slices", cleaned));
     const absolutePath = path.join(repoRoot, relativePath);
     return {
       raw,
@@ -1041,19 +1107,20 @@ function activeSliceState(repoRoot, index, activeFeature) {
   };
 }
 
-function activeFeatureSliceDocs(activeFeature) {
-  return activeFeature.sliceFiles.filter((sourcePath) => SLICE_DOC_PATTERN.test(sourcePath));
+function activePhaseSliceDocs(activePhase) {
+  return activePhase.sliceFiles.filter((sourcePath) => SLICE_DOC_PATTERN.test(sourcePath));
 }
 
-function activeFeatureSliceIndexPath(activeFeature) {
-  return activeFeature.path ? `${activeFeature.path}/slices/index.md` : null;
+function activePhaseSliceIndexPath(activePhase) {
+  return activePhase.path ? `${activePhase.path}/slices/index.md` : null;
 }
 
-function featureStateFromPath(repoRoot, featurePath, raw = featurePath) {
-  const normalized = normalizeEvidencePath(featurePath);
+function phaseStateFromPath(repoRoot, phasePath, raw = phasePath) {
+  const normalized = normalizeEvidencePath(phasePath);
   const absolutePath = path.join(repoRoot, normalized);
-  if (!isFeaturePath(normalized) || !inspectPath(absolutePath)?.isDirectory()) return null;
-  const specPath = path.join(absolutePath, "feature-spec.md");
+  const legacyFeaturePath = isLegacyFeaturePath(normalized);
+  if ((!isPhasePath(normalized) && !legacyFeaturePath) || !inspectPath(absolutePath)?.isDirectory()) return null;
+  const specPath = path.join(absolutePath, legacyFeaturePath ? "feature-spec.md" : "phase-spec.md");
   const slicesPath = path.join(absolutePath, "slices");
   const readinessPath = path.join(absolutePath, "readiness.md");
   const sliceFiles = inspectPath(slicesPath)?.isDirectory()
@@ -1073,17 +1140,18 @@ function featureStateFromPath(repoRoot, featurePath, raw = featurePath) {
     sliceFiles,
     readinessPath: displayPath(readinessPath, repoRoot),
     readinessExists: Boolean(inspectPath(readinessPath)?.isFile()),
+    legacyFeaturePath,
   };
 }
 
-function inferredFeatureFromActiveSlice(repoRoot, activeSlice) {
+function inferredPhaseFromActiveSlice(repoRoot, activeSlice) {
   if (!activeSlice.path) return null;
   const normalized = normalizeEvidencePath(activeSlice.path);
-  const match = normalized.match(new RegExp(`^(${escapeRegExp(WORKSPACE_ROOT)}/initiatives/[^/]+/features/[^/]+)/slices/slice-\\d+[^/]*\\.md$`, "i"));
-  return match ? featureStateFromPath(repoRoot, match[1]) : null;
+  const match = normalized.match(new RegExp(`^(${escapeRegExp(WORKSPACE_ROOT)}/initiatives/[^/]+/(?:phases|features)/[^/]+)/slices/slice-\\d+[^/]*\\.md$`, "i"));
+  return match ? phaseStateFromPath(repoRoot, match[1]) : null;
 }
 
-function selectReviewEvidenceLocations(evidenceLocations, activeInitiative, activeFeature, activeSlice) {
+function selectReviewEvidenceLocations(evidenceLocations, activeInitiative, activePhase, activeSlice) {
   if (activeSlice.path && evidenceLocations.includes(activeSlice.path)) {
     return {
       scope: "active-slice",
@@ -1092,16 +1160,16 @@ function selectReviewEvidenceLocations(evidenceLocations, activeInitiative, acti
     };
   }
 
-  if (activeFeature.path) {
-    const featurePrefix = `${activeFeature.path}/`;
-    const featureLocations = evidenceLocations.filter((relativePath) => {
-      return relativePath === activeFeature.path || relativePath.startsWith(featurePrefix);
+  if (activePhase.path) {
+    const phasePrefix = `${activePhase.path}/`;
+    const phaseLocations = evidenceLocations.filter((relativePath) => {
+      return relativePath === activePhase.path || relativePath.startsWith(phasePrefix);
     });
-    if (featureLocations.length > 0) {
+    if (phaseLocations.length > 0) {
       return {
-        scope: "active-feature",
+        scope: "active-phase",
         usedFallback: Boolean(activeSlice.path),
-        locations: featureLocations,
+        locations: phaseLocations,
       };
     }
   }
@@ -1114,7 +1182,7 @@ function selectReviewEvidenceLocations(evidenceLocations, activeInitiative, acti
     if (initiativeLocations.length > 0) {
       return {
         scope: "active-initiative",
-        usedFallback: Boolean(activeSlice.path || activeFeature.path),
+        usedFallback: Boolean(activeSlice.path || activePhase.path),
         locations: initiativeLocations,
       };
     }
@@ -1141,15 +1209,15 @@ export function inspectAutoStrike(options = {}) {
   const index = parseIndex(indexText);
   const todo = parseTodo(todoText);
   const activeInitiative = activeInitiativeState(repoRoot, index);
-  const activeFeature = activeFeatureState(repoRoot, index, activeInitiative);
-  const activeSlice = activeSliceState(repoRoot, index, activeFeature);
-  const phaseLedger = findPhaseLedger(repoRoot, indexText, markdownFiles, activeInitiative);
+  const activePhase = activePhaseState(repoRoot, index, activeInitiative);
+  const activeSlice = activeSliceState(repoRoot, index, activePhase);
+  const modeLedger = findModeLedger(repoRoot, indexText, markdownFiles, activeInitiative);
   const initiativeDecisionsText = activeInitiative.decisionsPath
     ? readFileIfPresent(path.join(repoRoot, activeInitiative.decisionsPath))
     : null;
   const evidenceLocations = findEvidenceLocations(repoRoot, workspacePath, markdownFiles);
   const changedPaths = evidenceChangedPaths(repoRoot, evidenceLocations);
-  const reviewEvidence = selectReviewEvidenceLocations(evidenceLocations, activeInitiative, activeFeature, activeSlice);
+  const reviewEvidence = selectReviewEvidenceLocations(evidenceLocations, activeInitiative, activePhase, activeSlice);
   const reviewChangedPaths = evidenceChangedPaths(repoRoot, reviewEvidence.locations);
   const reviewVerifiedItems = evidenceVerifiedItems(repoRoot, reviewEvidence.locations);
   const reviewReviewedItems = evidenceReviewedItems(repoRoot, reviewEvidence.locations);
@@ -1174,9 +1242,10 @@ export function inspectAutoStrike(options = {}) {
     },
     docs: markdownFiles,
     activeInitiative,
-    activeFeature,
+    activePhase,
+    activeFeature: activePhase,
     activeSlice,
-    phaseLedger,
+    modeLedger,
     evidence: {
       locations: evidenceLocations,
       changedPaths,
@@ -1456,21 +1525,21 @@ function slicePlanningMessages(state) {
   const messages = [];
   if (!state.index.currentMode || !["slice", "build", "review", "readiness"].includes(state.index.currentMode)) return messages;
 
-  const activeFeature = state.activeFeature.exists
-    ? state.activeFeature
-    : inferredFeatureFromActiveSlice(state.repoRoot, state.activeSlice);
-  if (!activeFeature?.exists) return messages;
+  const activePhase = state.activePhase.exists
+    ? state.activePhase
+    : inferredPhaseFromActiveSlice(state.repoRoot, state.activeSlice);
+  if (!activePhase?.exists) return messages;
 
-  const sliceDocs = activeFeatureSliceDocs(activeFeature);
-  const sliceIndexPath = activeFeatureSliceIndexPath(activeFeature);
+  const sliceDocs = activePhaseSliceDocs(activePhase);
+  const sliceIndexPath = activePhaseSliceIndexPath(activePhase);
   const sliceIndexText = sliceIndexPath ? readFileIfPresent(path.join(state.repoRoot, sliceIndexPath)) : null;
 
   if (sliceDocs.length > 1 && !hasSliceMap(sliceIndexText ?? "")) {
-    messages.push(message("warning", "missing-slice-map", sliceIndexPath ?? state.activeFeature.slicesPath, "Multi-slice work should include a lightweight Slice Map with Slice, Size, Depends On, Unblocks, Risk, and Verification."));
+    messages.push(message("warning", "missing-slice-map", sliceIndexPath ?? state.activePhase.slicesPath, "Multi-slice work should include a lightweight Slice Map with Slice, Size, Depends On, Unblocks, Risk, and Verification."));
   }
 
   if (sliceDocs.length > 2 && !hasSliceCheckpoint(sliceIndexText ?? "")) {
-    messages.push(message("warning", "missing-slice-checkpoint", sliceIndexPath ?? state.activeFeature.slicesPath, "Multi-slice work should add a checkpoint after 2-3 slices or at a milestone boundary."));
+    messages.push(message("warning", "missing-slice-checkpoint", sliceIndexPath ?? state.activePhase.slicesPath, "Multi-slice work should add a checkpoint after 2-3 slices or at a milestone boundary."));
   }
 
   for (const slicePath of sliceDocs) {
@@ -1537,9 +1606,9 @@ function activeWorkPointerIsValid(index) {
 
 function activeWorkDocIsValid(text) {
   if (!text) return false;
-  const phaseTasks = extractSection(text, "Phase Tasks");
+  const modeTasks = extractSection(text, "Mode Tasks") || extractSection(text, "Phase Tasks");
   const exitEvidence = extractSection(text, "Exit Evidence");
-  return checkboxCount(phaseTasks) >= 2 &&
+  return checkboxCount(modeTasks) >= 2 &&
     sectionHasSubstance(exitEvidence) &&
     !sectionHasWeakPlanningText(exitEvidence);
 }
@@ -1570,7 +1639,7 @@ function activeWorkMessages(state) {
   }
 
   if (!activeWorkPointerIsValid(state.index)) {
-    messages.push(message("warning", "missing-active-work", `${WORKSPACE_ROOT}/index.md`, "Index should include Active Work with an initiative, explicit Current mode, active doc, and next action so fresh context can resume without reading every phase."));
+    messages.push(message("warning", "missing-active-work", `${WORKSPACE_ROOT}/index.md`, "Index should include Active Work with an initiative, explicit Current mode, active doc, and next action so fresh context can resume without reading every delivery phase."));
   }
 
   const docPath = state.index.activeWork?.docPath;
@@ -1596,7 +1665,7 @@ function activeWorkMessages(state) {
   } else if (activeWorkDocNeedsTaskPacket(resolved.relativePath)) {
     const activeDocText = readFileIfPresent(resolved.absolutePath);
     if (!activeWorkDocIsValid(activeDocText)) {
-      messages.push(message("warning", "weak-active-work-doc", resolved.relativePath, "Active phase doc should include checkbox Phase Tasks and concrete Exit Evidence."));
+      messages.push(message("warning", "weak-active-work-doc", resolved.relativePath, "Active mode doc should include checkbox Mode Tasks and concrete Exit Evidence."));
     }
   }
 
@@ -1605,9 +1674,9 @@ function activeWorkMessages(state) {
 
 function mentionsSpecArtifactCreation(text) {
   return /\b(write|create|draft|fill|produce|complete)\b.{0,80}\b(?:initiative\s+)?spec\b/i.test(text) ||
-    /\b(write|create|draft|fill|produce|complete)\b.{0,80}\bfeature[- ]spec\b/i.test(text) ||
+    /\b(write|create|draft|fill|produce|complete)\b.{0,80}\bphase[- ]spec\b/i.test(text) ||
     /\b(?:initiative\s+)?spec\b.{0,80}\b(write|create|draft|fill|produce|complete)\b/i.test(text) ||
-    /\bfeature[- ]spec\b.{0,80}\b(write|create|draft|fill|produce|complete)\b/i.test(text);
+    /\bphase[- ]spec\b.{0,80}\b(write|create|draft|fill|produce|complete)\b/i.test(text);
 }
 
 function mentionsSliceArtifactCreation(text) {
@@ -1625,7 +1694,7 @@ function mentionsBuildStart(text) {
     /\bbegin\s+(?:implementation|coding)\b/i.test(text);
 }
 
-function phaseBoundaryBatchingMessages(state) {
+function modeBoundaryBatchingMessages(state) {
   if (!state.index.present) return [];
 
   const next = normalizeText(state.index.activeWork?.next ?? "");
@@ -1637,75 +1706,75 @@ function phaseBoundaryBatchingMessages(state) {
   const messages = [];
 
   if (createsSpec && createsSlices) {
-    messages.push(message("warning", "batched-phase-next-action", `${WORKSPACE_ROOT}/index.md`, "Active Work Next batches spec and slice work. Close the current phase, then stop with the immediate next mode; do not promise or record spec + slicing in one next action."));
+    messages.push(message("warning", "batched-mode-next-action", `${WORKSPACE_ROOT}/index.md`, "Active Work Next batches spec and slice work. Close the current mode, then stop with the immediate next mode; do not promise or record spec + slicing in one next action."));
   }
   if (createsSlices && startsBuild) {
-    messages.push(message("warning", "batched-phase-next-action", `${WORKSPACE_ROOT}/index.md`, "Active Work Next batches slice artifact creation and build/implementation. Finish the current phase or slice closeout, then stop with the immediate next mode/action; do not write slice docs and implement them in the same next action."));
+    messages.push(message("warning", "batched-mode-next-action", `${WORKSPACE_ROOT}/index.md`, "Active Work Next batches slice artifact creation and build/implementation. Finish the current mode or slice closeout, then stop with the immediate next mode/action; do not write slice docs and implement them in the same next action."));
   }
 
   return messages;
 }
 
-function phaseLedgerRequiredPhases(state) {
+function modeLedgerRequiredModes(state) {
   const mode = state.index.currentMode;
-  if (state.index.currentModeExplicit && mode && PHASE_LEDGER_BY_MODE[mode]) {
-    return PHASE_LEDGER_BY_MODE[mode];
+  if (state.index.currentModeExplicit && mode && MODE_LEDGER_BY_MODE[mode]) {
+    return MODE_LEDGER_BY_MODE[mode];
   }
   if (state.evidence.reviewScope.reviewedItems.length > 0) {
-    return PHASE_LEDGER_BY_MODE.review;
+    return MODE_LEDGER_BY_MODE.review;
   }
   if (state.evidence.reviewScope.changedPaths.length > 0 || state.evidence.reviewScope.verifiedItems.length > 0) {
-    return PHASE_LEDGER_BY_MODE.build;
+    return MODE_LEDGER_BY_MODE.build;
   }
-  if (state.activeFeature.exists || state.activeFeature.sliceFiles.length > 0) {
-    return PHASE_LEDGER_BY_MODE.slice;
+  if (state.activePhase.exists || state.activePhase.sliceFiles.length > 0) {
+    return MODE_LEDGER_BY_MODE.slice;
   }
   return [];
 }
 
-function phaseLedgerValueIsWeak(value) {
+function modeLedgerValueIsWeak(value) {
   return !sectionHasSubstance(value) || sectionHasWeakPlanningText(value);
 }
 
-function phaseLedgerMessages(state) {
-  const requiredPhases = phaseLedgerRequiredPhases(state);
-  if (requiredPhases.length === 0) return [];
+function modeLedgerMessages(state) {
+  const requiredModes = modeLedgerRequiredModes(state);
+  if (requiredModes.length === 0) return [];
 
-  const ledgerPath = state.phaseLedger.path ?? state.activeInitiative.ideaPath ?? `${WORKSPACE_ROOT}/index.md`;
-  if (!state.phaseLedger.present) {
+  const ledgerPath = state.modeLedger.path ?? state.activeInitiative.ideaPath ?? `${WORKSPACE_ROOT}/index.md`;
+  if (!state.modeLedger.present) {
     return [
-      message("warning", "missing-phase-ledger", ledgerPath, "Active initiative has reached slice/build/review work without a Phase Ledger. Record each phase as done, compressed, or skipped with artifact and reason so phases are not silently skipped."),
+      message("warning", "missing-mode-ledger", ledgerPath, "Active initiative has reached slice/build/review/readiness work without a Mode Ledger. Record each mode as done, compressed, or skipped with artifact and reason so workflow modes are not silently skipped."),
     ];
   }
 
   const messages = [];
-  const duplicatePhases = Object.keys(state.phaseLedger.duplicates ?? {});
-  if (duplicatePhases.length > 0) {
-    messages.push(message("warning", "duplicate-phase-ledger-row", state.phaseLedger.path, `Phase Ledger has duplicate phase rows (${duplicatePhases.join(", ")}). Keep one row per phase and update it in place so phase state is not ambiguous.`));
+  const duplicateModes = Object.keys(state.modeLedger.duplicates ?? {});
+  if (duplicateModes.length > 0) {
+    messages.push(message("warning", "duplicate-mode-ledger-row", state.modeLedger.path, `Mode Ledger has duplicate mode rows (${duplicateModes.join(", ")}). Keep one row per mode and update it in place so workflow state is not ambiguous.`));
   }
 
   const weak = [];
-  const currentPhase = requiredPhases.at(-1);
-  for (const phase of requiredPhases) {
-    const row = state.phaseLedger.rows[phase];
+  const currentMode = requiredModes.at(-1);
+  for (const mode of requiredModes) {
+    const row = state.modeLedger.rows[mode];
     if (!row) {
-      weak.push(`${phase}: missing row`);
+      weak.push(`${mode}: missing row`);
       continue;
     }
-    const validStatuses = phase === currentPhase ? PHASE_LEDGER_ACTIVE_STATUSES : PHASE_LEDGER_COMPLETE_STATUSES;
+    const validStatuses = mode === currentMode ? MODE_LEDGER_ACTIVE_STATUSES : MODE_LEDGER_COMPLETE_STATUSES;
     if (!row.status || !validStatuses.has(row.status)) {
-      weak.push(`${phase}: weak status`);
+      weak.push(`${mode}: weak status`);
     }
-    if (phaseLedgerValueIsWeak(row.artifact)) {
-      weak.push(`${phase}: weak artifact`);
+    if (modeLedgerValueIsWeak(row.artifact)) {
+      weak.push(`${mode}: weak artifact`);
     }
-    if (phaseLedgerValueIsWeak(row.reason)) {
-      weak.push(`${phase}: weak reason`);
+    if (modeLedgerValueIsWeak(row.reason)) {
+      weak.push(`${mode}: weak reason`);
     }
   }
 
   if (weak.length > 0) {
-    messages.push(message("warning", "weak-phase-ledger", state.phaseLedger.path, `Phase Ledger should show completed or intentionally compressed/skipped prior phases with artifact and reason. Weak entries: ${weak.slice(0, 8).join("; ")}${weak.length > 8 ? "; ..." : ""}.`));
+    messages.push(message("warning", "weak-mode-ledger", state.modeLedger.path, `Mode Ledger should show completed or intentionally compressed/skipped prior modes with artifact and reason. Weak entries: ${weak.slice(0, 8).join("; ")}${weak.length > 8 ? "; ..." : ""}.`));
   }
   return messages;
 }
@@ -1728,11 +1797,11 @@ function activeWorkFreshnessMessages(state) {
   ].filter(Boolean).join("\n"));
 
   if (["brainstorm", "grill", "spec"].includes(mode) || /\b(brainstorm|grill|spec)\b/i.test(activeText)) {
-    messages.push(message("warning", "stale-active-work-mode", `${WORKSPACE_ROOT}/index.md`, "Implementation evidence exists, but Active Work still points at an early phase. Update index.md to the real active mode, feature, slice, state, and next action before claiming progress."));
+    messages.push(message("warning", "stale-active-work-mode", `${WORKSPACE_ROOT}/index.md`, "Implementation evidence exists, but Active Work still points at an early workflow mode. Update index.md to the real active mode, phase, slice, state, and next action before claiming progress."));
   }
 
-  if (!state.activeFeature.exists && state.activeInitiative.featureDirs.length > 0) {
-    messages.push(message("warning", "stale-active-feature-pointer", `${WORKSPACE_ROOT}/index.md`, "Implementation evidence exists and feature folders exist, but Active Work does not point to an existing active feature."));
+  if (!state.activePhase.exists && state.activeInitiative.phaseDirs.length > 0) {
+    messages.push(message("warning", "stale-active-phase-pointer", `${WORKSPACE_ROOT}/index.md`, "Implementation evidence exists and phase folders exist, but Active Work does not point to an existing active phase."));
   }
 
   const sliceDocs = state.docs.filter((sourcePath) => SLICE_DOC_PATTERN.test(sourcePath));
@@ -1752,9 +1821,9 @@ function activeWorkFreshnessMessages(state) {
 }
 
 function readinessIsClosed(state) {
-  if (!state.activeInitiative.readinessExists && !state.activeFeature.readinessExists) return false;
-  const validateRow = state.phaseLedger.rows?.validate;
-  if (validateRow?.status && PHASE_LEDGER_COMPLETE_STATUSES.has(validateRow.status)) return true;
+  if (!state.activeInitiative.readinessExists && !state.activePhase.readinessExists) return false;
+  const readinessRow = state.modeLedger.rows?.readiness;
+  if (readinessRow?.status && MODE_LEDGER_COMPLETE_STATUSES.has(readinessRow.status)) return true;
   const text = normalizeText([
     state.index.activeWork?.currentModeRaw,
     state.index.activeWork?.state,
@@ -1802,11 +1871,11 @@ function currentTruthMessages(state) {
   }
 
   if (!state.activeInitiative.specExists) {
-    messages.push(message("warning", "missing-initiative-spec", state.activeInitiative.specPath, "Each active initiative needs spec.md, even when minimal, before feature specs, slicing, or build work proceed."));
+    messages.push(message("warning", "missing-initiative-spec", state.activeInitiative.specPath, "Each active initiative needs spec.md, even when minimal, before phase specs, slicing, or build work proceed."));
   } else {
     const specText = readFileIfPresent(path.join(state.repoRoot, state.activeInitiative.specPath));
     if (!markdownDocHasSubstance(specText)) {
-      messages.push(message("warning", "weak-initiative-spec", state.activeInitiative.specPath, "Initiative spec.md exists but has no substantive current-truth overview, feature map, scope, or explicit draft note."));
+      messages.push(message("warning", "weak-initiative-spec", state.activeInitiative.specPath, "Initiative spec.md exists but has no substantive current-truth overview, phase map, scope, or explicit draft note."));
     }
   }
 
@@ -1867,70 +1936,70 @@ function grillDecisionDepthMessages(state) {
   return [];
 }
 
-function phaseLedgerRowText(row) {
+function modeLedgerRowText(row) {
   if (!row) return "";
   return normalizeText([row.statusRaw, row.artifact, row.reason, row.raw].filter(Boolean).join("\n"));
 }
 
 function rowShowsExplicitUserOptOut(row) {
-  const text = phaseLedgerRowText(row);
+  const text = modeLedgerRowText(row);
   return /\b(user|human)\b.*\b(opt(?:ed)?\s*out|skip(?:ped)?|move\s+along|no\s+questions?|proceed\s+without\s+questions?|use\s+judgment)\b/i.test(text) ||
     /\b(skip(?:ped)?|compress(?:ed)?)\b.*\b(user|human)\b/i.test(text) ||
     /\b(explicit(?:ly)?\s+(?:opted\s+out|skipped|asked\s+to\s+move\s+along))\b/i.test(text);
 }
 
 function rowShowsExplicitAnswers(row) {
-  const text = phaseLedgerRowText(row);
+  const text = modeLedgerRowText(row);
   return /\b(explicit(?:ly)?\s+(?:answered|stated|provided|confirmed)|explicit user (?:wording|answers?|decisions?)|user (?:already )?(?:answered|stated|confirmed|provided)|prompt explicitly)\b/i.test(text);
 }
 
 function rowShowsPriorArtifact(row) {
-  const text = phaseLedgerRowText(row);
+  const text = modeLedgerRowText(row);
   return /\b(prior|existing|previous|earlier|already completed)\b.*\b(artifact|docs?|documents?|decisions?|spec|grill|brainstorm|auto strike|repo context)\b/i.test(text) ||
     /\b(recorded in|carried from)\b.*\b(artifact|docs?|documents?|decisions?|spec|grill|brainstorm)\b/i.test(text);
 }
 
 function rowShowsNotApplicable(row) {
-  return /\b(not applicable|does not apply|n\/a|irrelevant)\b/i.test(phaseLedgerRowText(row));
+  return /\b(not applicable|does not apply|n\/a|irrelevant)\b/i.test(modeLedgerRowText(row));
 }
 
 function rowShowsInternalInference(row) {
-  return /\b(agent|model|assistant)\b.*\b(inferred|assumed|interpreted|decided)\b|\b(internal|privately)\b.*\b(inferred|assumed|interpreted|decided)\b|\bprompt (?:implied|suggested)\b/i.test(phaseLedgerRowText(row));
+  return /\b(agent|model|assistant)\b.*\b(inferred|assumed|interpreted|decided)\b|\b(internal|privately)\b.*\b(inferred|assumed|interpreted|decided)\b|\bprompt (?:implied|suggested)\b/i.test(modeLedgerRowText(row));
 }
 
 function rowShowsQuestionToolFailure(row) {
-  return /\b(AskUserQuestion|question tool|question ui|answer questions\?|tool (?:failed|failure|error|unavailable)|failed question|denied question|question denied|timeout|timed out|no answer|missing answer)\b/i.test(phaseLedgerRowText(row));
+  return /\b(AskUserQuestion|question tool|question ui|answer questions\?|tool (?:failed|failure|error|unavailable)|failed question|denied question|question denied|timeout|timed out|no answer|missing answer)\b/i.test(modeLedgerRowText(row));
 }
 
 function grillWasExplicitlyOptedOut(state) {
-  const grillRow = state.phaseLedger.rows?.grill;
+  const grillRow = state.modeLedger.rows?.grill;
   if (!grillRow) return false;
   return ["compressed", "skipped", "replaced"].includes(grillRow.status) && rowShowsExplicitUserOptOut(grillRow);
 }
 
-function phaseBypassMessages(state) {
-  if (!hasReachedSpecOrLater(state) || !state.phaseLedger.present) return [];
+function modeBypassMessages(state) {
+  if (!hasReachedSpecOrLater(state) || !state.modeLedger.present) return [];
 
   const messages = [];
-  for (const phase of ["brainstorm", "grill"]) {
-    const row = state.phaseLedger.rows?.[phase];
+  for (const mode of ["brainstorm", "grill"]) {
+    const row = state.modeLedger.rows?.[mode];
     if (!row) continue;
-    if (rowShowsQuestionToolFailure(row) && PHASE_LEDGER_COMPLETE_STATUSES.has(row.status)) {
-      messages.push(message("warning", "phase-completed-after-question-tool-failure", state.phaseLedger.path, `${phase} is recorded as complete/compressed/skipped after a failed or unavailable question mechanism. Ask in plain text and wait for the user instead of treating tool failure as permission to proceed.`));
+    if (rowShowsQuestionToolFailure(row) && MODE_LEDGER_COMPLETE_STATUSES.has(row.status)) {
+      messages.push(message("warning", "mode-completed-after-question-tool-failure", state.modeLedger.path, `${mode} mode is recorded as complete/compressed/skipped after a failed or unavailable question mechanism. Ask in plain text and wait for the user instead of treating tool failure as permission to proceed.`));
       continue;
     }
 
     if (rowShowsInternalInference(row)) {
-      messages.push(message("warning", "phase-completed-by-inference", state.phaseLedger.path, `${phase} is recorded as complete using agent inference. Run the phase with the user, cite explicit user answers/prior artifacts, or record explicit permission to skip.`));
+      messages.push(message("warning", "mode-completed-by-inference", state.modeLedger.path, `${mode} mode is recorded as complete using agent inference. Run the mode with the user, cite explicit user answers/prior artifacts, or record explicit permission to skip.`));
       continue;
     }
 
     if (row.status === "compressed" && !rowShowsExplicitUserOptOut(row) && !rowShowsExplicitAnswers(row) && !rowShowsPriorArtifact(row)) {
-      messages.push(message("warning", "phase-compressed-without-permission", state.phaseLedger.path, `${phase} is compressed without explicit user opt-out, explicit prior answers, or prior-artifact evidence.`));
+      messages.push(message("warning", "mode-compressed-without-permission", state.modeLedger.path, `${mode} mode is compressed without explicit user opt-out, explicit prior answers, or prior-artifact evidence.`));
     }
 
     if (row.status === "skipped" && !rowShowsExplicitUserOptOut(row) && !rowShowsNotApplicable(row)) {
-      messages.push(message("warning", "phase-skipped-without-permission", state.phaseLedger.path, `${phase} is skipped without explicit user opt-out, move-along request, or not-applicable reason.`));
+      messages.push(message("warning", "mode-skipped-without-permission", state.modeLedger.path, `${mode} mode is skipped without explicit user opt-out, move-along request, or not-applicable reason.`));
     }
   }
   return messages;
@@ -1938,15 +2007,18 @@ function phaseBypassMessages(state) {
 
 function activeInitiativeSliceDocs(state) {
   if (!state.activeInitiative.path) return [];
-  const prefix = `${state.activeInitiative.path}/features/`;
+  const prefixes = [
+    `${state.activeInitiative.path}/phases/`,
+    `${state.activeInitiative.path}/features/`,
+  ];
   return state.docs
-    .filter((sourcePath) => sourcePath.startsWith(prefix) && /\/slices\/.+\.md$/i.test(sourcePath))
+    .filter((sourcePath) => prefixes.some((prefix) => sourcePath.startsWith(prefix)) && /\/slices\/.+\.md$/i.test(sourcePath))
     .sort();
 }
 
-function specPhaseIsComplete(state) {
-  const row = state.phaseLedger.rows?.spec;
-  return Boolean(row?.status && PHASE_LEDGER_COMPLETE_STATUSES.has(row.status));
+function specModeIsComplete(state) {
+  const row = state.modeLedger.rows?.spec;
+  return Boolean(row?.status && MODE_LEDGER_COMPLETE_STATUSES.has(row.status));
 }
 
 function detailedSlicePlanningInText(text) {
@@ -1984,7 +2056,9 @@ function specDocsForState(state) {
   if (!state.activeInitiative.path) return [];
   return state.docs.filter((sourcePath) => {
     if (!sourcePath.startsWith(`${state.activeInitiative.path}/`)) return false;
-    return sourcePath.endsWith("/spec.md") || sourcePath.endsWith("/feature-spec.md");
+    return sourcePath.endsWith("/spec.md") ||
+      sourcePath.endsWith("/phase-spec.md") ||
+      sourcePath.endsWith("/feature-spec.md");
   });
 }
 
@@ -1993,11 +2067,11 @@ function specSliceBoundaryMessages(state) {
   if (!state.activeInitiative.exists) return messages;
 
   const inSpecMode = state.index.currentMode === "spec";
-  const specComplete = specPhaseIsComplete(state);
+  const specComplete = specModeIsComplete(state);
   const sliceDocs = activeInitiativeSliceDocs(state);
   const specDocs = specDocsForState(state);
   if ((inSpecMode || !specComplete) && sliceDocs.length > 0) {
-    messages.push(message("warning", "spec-phase-created-slice-artifacts", sliceDocs[0], "Spec phase should not create Slice Maps or slice files. Finish spec review and exit evidence first, then intentionally enter slice mode before writing slices."));
+    messages.push(message("warning", "spec-mode-created-slice-artifacts", sliceDocs[0], "Spec mode should not create Slice Maps or slice files. Finish spec review and exit evidence first, then intentionally enter slice mode before writing slices."));
   }
 
   if (inSpecMode || !specComplete) {
@@ -2021,23 +2095,23 @@ function specSliceBoundaryMessages(state) {
 
 function reachedSliceOrLater(state) {
   if (["slice", "build", "review", "readiness"].includes(state.index.currentMode)) return true;
-  if (state.activeFeature.sliceFiles.length > 0 || state.activeSlice.path) return true;
-  return ["slice", "build", "review", "validate"].some((phase) => {
-    const row = state.phaseLedger.rows?.[phase];
-    return row && PHASE_LEDGER_ACTIVE_STATUSES.has(row.status);
+  if (state.activePhase.sliceFiles.length > 0 || state.activeSlice.path) return true;
+  return ["slice", "build", "review", "readiness"].some((phase) => {
+    const row = state.modeLedger.rows?.[phase];
+    return row && MODE_LEDGER_ACTIVE_STATUSES.has(row.status);
   });
 }
 
 function reachedBuildOrLater(state) {
   if (["build", "review", "readiness"].includes(state.index.currentMode)) return true;
   if (hasImplementationEvidence(state)) return true;
-  return ["build", "review", "validate"].some((phase) => {
-    const row = state.phaseLedger.rows?.[phase];
-    return row && PHASE_LEDGER_ACTIVE_STATUSES.has(row.status);
+  return ["build", "review", "readiness"].some((phase) => {
+    const row = state.modeLedger.rows?.[phase];
+    return row && MODE_LEDGER_ACTIVE_STATUSES.has(row.status);
   });
 }
 
-function phaseExitGateMessages(state) {
+function modeExitGateMessages(state) {
   const messages = [];
 
   if (reachedSliceOrLater(state)) {
@@ -2054,17 +2128,17 @@ function phaseExitGateMessages(state) {
   }
 
   if (reachedBuildOrLater(state)) {
-    const activeFeature = state.activeFeature.exists
-      ? state.activeFeature
-      : inferredFeatureFromActiveSlice(state.repoRoot, state.activeSlice);
-    const sliceIndexPath = activeFeature?.exists ? activeFeatureSliceIndexPath(activeFeature) : null;
+    const activePhase = state.activePhase.exists
+      ? state.activePhase
+      : inferredPhaseFromActiveSlice(state.repoRoot, state.activeSlice);
+    const sliceIndexPath = activePhase?.exists ? activePhaseSliceIndexPath(activePhase) : null;
     if (sliceIndexPath) {
       const text = readFileIfPresent(path.join(state.repoRoot, sliceIndexPath));
       if (text && !sectionHasSubstance(extractSection(text, "Slice Review"))) {
-        messages.push(message("warning", "missing-slice-phase-review", sliceIndexPath, "Build started without a substantive Slice Review in slices/index.md. Review slice size, dependency order, risk placement, working-state guarantee, and verification coverage before build."));
+        messages.push(message("warning", "missing-slice-review", sliceIndexPath, "Build started without a substantive Slice Review in slices/index.md. Review slice size, dependency order, risk placement, working-state guarantee, and verification coverage before build."));
       }
       if (text && !sectionHasSubstance(extractSection(text, "Exit Evidence"))) {
-        messages.push(message("warning", "missing-slice-phase-exit-evidence", sliceIndexPath, "Build started without Slice Exit Evidence. Record why the feature can enter build one slice at a time before marking build in progress."));
+        messages.push(message("warning", "missing-slice-exit-evidence", sliceIndexPath, "Build started without Slice Exit Evidence. Record why the phase can enter build one slice at a time before marking build in progress."));
       }
     }
   }
@@ -2075,10 +2149,10 @@ function phaseExitGateMessages(state) {
 function hasReachedSpecOrLater(state) {
   const mode = state.index.currentMode;
   if (mode && MODES_REQUIRING_GRILL_CHECKPOINT.has(mode)) return true;
-  if (state.activeFeature.exists || state.activeFeature.sliceFiles.length > 0 || hasImplementationEvidence(state)) return true;
-  return ["spec", "slice", "build", "review", "validate"].some((phase) => {
-    const row = state.phaseLedger.rows?.[phase];
-    return row && PHASE_LEDGER_ACTIVE_STATUSES.has(row.status);
+  if (state.activePhase.exists || state.activePhase.sliceFiles.length > 0 || hasImplementationEvidence(state)) return true;
+  return ["spec", "slice", "build", "review", "readiness"].some((phase) => {
+    const row = state.modeLedger.rows?.[phase];
+    return row && MODE_LEDGER_ACTIVE_STATUSES.has(row.status);
   });
 }
 
@@ -2107,7 +2181,7 @@ function grillCheckpointMessages(state) {
 
   if (!state.activeInitiative.grillExists) {
     return [
-      message("warning", "missing-initiative-grill", state.activeInitiative.grillPath, "Initiative has reached spec/slice/build work without grill.md. Run a proper grill session with the user or record an explicit user opt-out before hardening scope, stack, dependencies, persistence, identity, or feature split."),
+      message("warning", "missing-initiative-grill", state.activeInitiative.grillPath, "Initiative has reached spec/slice/build/review/readiness work without grill.md. Run a proper grill session with the user or record an explicit user opt-out before hardening scope, stack, dependencies, persistence, identity, or delivery-phase split."),
     ];
   }
 
@@ -2115,7 +2189,7 @@ function grillCheckpointMessages(state) {
   const checkpoint = extractSection(grillText ?? "", "Decision Checkpoint");
   if (!sectionHasSubstance(checkpoint)) {
     return [
-      message("warning", "missing-grill-decision-checkpoint", state.activeInitiative.grillPath, "Grill should record a Decision Checkpoint before spec/slice/build so vague kickoff language and consequential assumptions are explicit."),
+      message("warning", "missing-grill-decision-checkpoint", state.activeInitiative.grillPath, "Grill should record a Decision Checkpoint before spec/slice/build/review/readiness so vague kickoff language and consequential assumptions are explicit."),
     ];
   }
 
@@ -2167,9 +2241,9 @@ function stripeScopeText(state) {
     state.activeInitiative.decisionsPath,
     state.activeInitiative.grillPath,
     state.activeInitiative.specPath,
-    state.activeFeature.specPath,
+    state.activePhase.specPath,
     state.activeSlice.path,
-    state.activeFeature.readinessPath,
+    state.activePhase.readinessPath,
     state.activeInitiative.readinessPath,
   ];
   const changedPaths = state.evidence.reviewScope.changedPaths.filter(isImplementationPath);
@@ -2214,7 +2288,7 @@ function stripeMessages(state) {
 
   const messages = [];
   const messagePath = state.activeSlice.path ??
-    state.activeFeature.path ??
+    state.activePhase.path ??
     state.activeInitiative.path ??
     `${WORKSPACE_ROOT}/index.md`;
 
@@ -2323,11 +2397,11 @@ function prematureNextSliceActivationMessages(state) {
   if (activeIndex === null || activeIndex === 0) return [];
   if (sliceDocHasBuildEvidence(state.repoRoot, activePath) || activeWorkShowsExplicitSliceContinuation(state)) return [];
 
-  const activeFeature = state.activeFeature.exists
-    ? state.activeFeature
-    : inferredFeatureFromActiveSlice(state.repoRoot, state.activeSlice);
-  if (!activeFeature?.exists) return [];
-  const priorCompleted = activeFeatureSliceDocs(activeFeature)
+  const activePhase = state.activePhase.exists
+    ? state.activePhase
+    : inferredPhaseFromActiveSlice(state.repoRoot, state.activeSlice);
+  if (!activePhase?.exists) return [];
+  const priorCompleted = activePhaseSliceDocs(activePhase)
     .filter((sourcePath) => {
       const index = sliceIndex(sourcePath);
       return index !== null && index < activeIndex && sliceHasCompletedCloseout(state.repoRoot, sourcePath);
@@ -2385,24 +2459,24 @@ function checkpointIsDue(heading, completedSliceIndices) {
   return completedSliceIndices.some((sliceIndex) => sliceIndex >= dueIndex);
 }
 
-function staleFeatureCheckpointMessages(state) {
+function stalePhaseCheckpointMessages(state) {
   const messages = [];
-  const completedSlicesByFeature = new Map();
+  const completedSlicesByPhase = new Map();
 
   for (const sourcePath of state.evidence.locations) {
-    const match = sourcePath.match(new RegExp(`^(${escapeRegExp(WORKSPACE_ROOT)}/initiatives/[^/]+/features/[^/]+)/slices/slice-(\\d+)[^/]*\\.md$`));
+    const match = sourcePath.match(new RegExp(`^(${escapeRegExp(WORKSPACE_ROOT)}/initiatives/[^/]+/(?:phases|features)/[^/]+)/slices/slice-(\\d+)[^/]*\\.md$`));
     if (!match) continue;
     if (!sliceDocHasBuildEvidence(state.repoRoot, sourcePath)) continue;
-    const featurePath = match[1];
+    const phasePath = match[1];
     const sliceIndex = Number.parseInt(match[2], 10);
-    const completed = completedSlicesByFeature.get(featurePath) ?? [];
+    const completed = completedSlicesByPhase.get(phasePath) ?? [];
     completed.push(sliceIndex);
-    completedSlicesByFeature.set(featurePath, completed);
+    completedSlicesByPhase.set(phasePath, completed);
   }
 
   for (const sourcePath of state.docs.filter((docPath) => docPath.endsWith("/slices/index.md"))) {
-    const featurePath = sourcePath.replace(/\/slices\/index\.md$/, "");
-    const completedSliceIndices = completedSlicesByFeature.get(featurePath) ?? [];
+    const phasePath = sourcePath.replace(/\/slices\/index\.md$/, "");
+    const completedSliceIndices = completedSlicesByPhase.get(phasePath) ?? [];
     if (completedSliceIndices.length === 0) continue;
     const text = readFileIfPresent(path.join(state.repoRoot, sourcePath));
     const unchecked = checkpointSections(text ?? "")
@@ -2462,22 +2536,22 @@ function claimsCompletedBrowserVerification(item) {
 
 function checkedCheckpointClaims(state) {
   const claims = [];
-  const completedSlicesByFeature = new Map();
+  const completedSlicesByPhase = new Map();
 
   for (const sourcePath of state.evidence.locations) {
-    const match = sourcePath.match(new RegExp(`^(${escapeRegExp(WORKSPACE_ROOT)}/initiatives/[^/]+/features/[^/]+)/slices/slice-(\\d+)[^/]*\\.md$`));
+    const match = sourcePath.match(new RegExp(`^(${escapeRegExp(WORKSPACE_ROOT)}/initiatives/[^/]+/(?:phases|features)/[^/]+)/slices/slice-(\\d+)[^/]*\\.md$`));
     if (!match) continue;
     if (!sliceDocHasBuildEvidence(state.repoRoot, sourcePath)) continue;
-    const featurePath = match[1];
+    const phasePath = match[1];
     const sliceIndex = Number.parseInt(match[2], 10);
-    const completed = completedSlicesByFeature.get(featurePath) ?? [];
+    const completed = completedSlicesByPhase.get(phasePath) ?? [];
     completed.push({ index: sliceIndex, path: sourcePath });
-    completedSlicesByFeature.set(featurePath, completed);
+    completedSlicesByPhase.set(phasePath, completed);
   }
 
   for (const sourcePath of state.docs.filter((docPath) => docPath.endsWith("/slices/index.md"))) {
-    const featurePath = sourcePath.replace(/\/slices\/index\.md$/, "");
-    const completedSlices = completedSlicesByFeature.get(featurePath) ?? [];
+    const phasePath = sourcePath.replace(/\/slices\/index\.md$/, "");
+    const completedSlices = completedSlicesByPhase.get(phasePath) ?? [];
     const completedSliceIndices = completedSlices.map((slice) => slice.index);
     const text = readFileIfPresent(path.join(state.repoRoot, sourcePath));
     for (const section of checkpointSections(text ?? "")) {
@@ -2634,7 +2708,7 @@ function resolveRepoReferencePath(repoRoot, rawPath) {
 export function validateAutoStrike(options = {}) {
   const state = inspectAutoStrike(options);
   const messages = [];
-  const { workspace, index, activeFeature } = state;
+  const { workspace, index, activePhase } = state;
   const explicitReviewMode = ["review", "readiness"].includes(index.currentMode ?? "");
   const reviewScope = state.evidence.reviewScope;
   const hasImplementationReviewEvidence = reviewScope.changedPaths.some(isImplementationPath) ||
@@ -2667,19 +2741,35 @@ export function validateAutoStrike(options = {}) {
   }
 
   messages.push(...activeWorkMessages(state));
-  messages.push(...phaseBoundaryBatchingMessages(state));
+  messages.push(...modeBoundaryBatchingMessages(state));
   messages.push(...activeWorkFreshnessMessages(state));
   messages.push(...finalIndexStateMessages(state));
   messages.push(...currentTruthMessages(state));
-  messages.push(...phaseLedgerMessages(state));
-  messages.push(...phaseBypassMessages(state));
+  messages.push(...modeLedgerMessages(state));
+  messages.push(...modeBypassMessages(state));
   messages.push(...specSliceBoundaryMessages(state));
-  messages.push(...phaseExitGateMessages(state));
+  messages.push(...modeExitGateMessages(state));
   messages.push(...grillDecisionDepthMessages(state));
   messages.push(...grillCheckpointMessages(state));
   messages.push(...stackToolingConstraintMessages(state));
   messages.push(...stripeMessages(state));
   messages.push(...referencedAutoStrikeDocMessages(state));
+
+  if (index.activeWork?.legacyFeatureRaw) {
+    messages.push(message("warning", "legacy-active-feature-label", `${WORKSPACE_ROOT}/index.md`, "Active Work uses the legacy Feature field. Use Phase instead so the delivery layer matches the initiative -> phases -> slices model."));
+  }
+
+  if (state.modeLedger.legacyName) {
+    messages.push(message("warning", "legacy-phase-ledger-name", state.modeLedger.path, "Use ## Mode Ledger instead of the legacy ## Phase Ledger heading so workflow modes are not confused with delivery phases."));
+  }
+
+  if (state.activeInitiative.legacyFeatureDirs.length > 0) {
+    messages.push(message("warning", "legacy-feature-directories", state.activeInitiative.legacyFeaturesPath, "Legacy features/ directories are still supported for this release, but new Auto Strike work should use phases/<phase-slug>/phase-spec.md."));
+  }
+
+  if (activePhase.legacyFeaturePath) {
+    messages.push(message("warning", "legacy-active-feature-path", activePhase.path ?? activePhase.inferredPath, "Active phase resolved through the legacy features/<slug>/feature-spec.md shape. Prefer phases/<phase-slug>/phase-spec.md for new work."));
+  }
 
   if (index.activeInitiativePath && isExplicitWorkspacePath(index.activeInitiativePath)) {
     const resolved = resolveWorkspacePath(state.repoRoot, index.activeInitiativePath);
@@ -2692,48 +2782,48 @@ export function validateAutoStrike(options = {}) {
     }
   }
 
-  if (index.activeFeaturePath && isExplicitWorkspacePath(index.activeFeaturePath)) {
-    const resolved = resolveWorkspacePath(state.repoRoot, index.activeFeaturePath);
+  if (index.activePhasePath && isExplicitWorkspacePath(index.activePhasePath)) {
+    const resolved = resolveWorkspacePath(state.repoRoot, index.activePhasePath);
     if (!resolved?.safe) {
-      messages.push(message("error", "unsafe-active-feature", index.activeFeaturePath, "Active feature path is unsafe."));
-    } else if (!isFeaturePath(resolved.relativePath)) {
-      messages.push(message("error", "invalid-active-feature-path", resolved.relativePath, "Active feature must point to auto-strike/initiatives/<initiative-slug>/features/<feature-slug>."));
+      messages.push(message("error", "unsafe-active-phase", index.activePhasePath, "Active phase path is unsafe."));
+    } else if (!isPhasePath(resolved.relativePath) && !isLegacyFeaturePath(resolved.relativePath)) {
+      messages.push(message("error", "invalid-active-phase-path", resolved.relativePath, "Active phase must point to auto-strike/initiatives/<initiative-slug>/phases/<phase-slug>."));
     } else if (!resolved.exists) {
-      messages.push(message("error", "missing-active-feature", resolved.relativePath, "Index declares an active feature path that does not exist."));
+      messages.push(message("error", "missing-active-phase", resolved.relativePath, "Index declares an active phase path that does not exist."));
     }
   }
 
-  if (index.activeFeaturePath && isFeatureShorthand(index.activeFeaturePath) && !state.activeInitiative.exists) {
-    messages.push(message("warning", "feature-shorthand-without-active-initiative", `${WORKSPACE_ROOT}/index.md`, "Feature shorthand can only resolve when Active Work names an existing active initiative."));
+  if (index.activePhasePath && isPhaseShorthand(index.activePhasePath) && !state.activeInitiative.exists) {
+    messages.push(message("warning", "phase-shorthand-without-active-initiative", `${WORKSPACE_ROOT}/index.md`, "Phase shorthand can only resolve when Active Work names an existing active initiative."));
   }
 
-  if (state.activeSlice.path && activeFeature.exists && !normalizeEvidencePath(state.activeSlice.path).startsWith(`${activeFeature.path}/slices/`)) {
-    messages.push(message("error", "invalid-active-slice-path", state.activeSlice.path, "Active slice must live under the active feature's slices/ directory."));
+  if (state.activeSlice.path && activePhase.exists && !normalizeEvidencePath(state.activeSlice.path).startsWith(`${activePhase.path}/slices/`)) {
+    messages.push(message("error", "invalid-active-slice-path", state.activeSlice.path, "Active slice must live under the active phase's slices/ directory."));
   }
 
-  if (index.currentMode && ["slice", "build", "review", "readiness"].includes(index.currentMode) && !activeFeature.exists) {
+  if (index.currentMode && ["slice", "build", "review", "readiness"].includes(index.currentMode) && !activePhase.exists) {
     const severity = isRecoveryBlockingMode(index.currentMode) ? "error" : "warning";
     const suffix = severity === "error" ? " Read references/recovery.md and repair Auto Strike state before continuing code work." : "";
-    messages.push(message(severity, "missing-active-feature", activeFeature.inferredPath ?? `${WORKSPACE_ROOT}/index.md`, `Slice/build/review/readiness mode should name an existing active feature inside the active initiative.${suffix}`));
+    messages.push(message(severity, "missing-active-phase", activePhase.inferredPath ?? `${WORKSPACE_ROOT}/index.md`, `Slice/build/review/readiness mode should name an existing active phase inside the active initiative.${suffix}`));
   }
 
-  if (index.currentMode && MODES_EXPECTING_SPEC.has(index.currentMode) && activeFeature.exists && !activeFeature.specExists) {
-    messages.push(message("warning", "missing-active-feature-spec", activeFeature.specPath, "Current mode usually expects an active feature-spec.md, but none was found."));
+  if (index.currentMode && MODES_EXPECTING_SPEC.has(index.currentMode) && activePhase.exists && !activePhase.specExists) {
+    messages.push(message("warning", "missing-active-phase-spec", activePhase.specPath, "Current mode usually expects an active phase-spec.md, but none was found."));
   }
 
-  if (index.currentMode && MODES_EXPECTING_SLICE.has(index.currentMode) && activeFeature.exists && activeFeature.sliceFiles.length === 0) {
+  if (index.currentMode && MODES_EXPECTING_SLICE.has(index.currentMode) && activePhase.exists && activePhase.sliceFiles.length === 0) {
     const severity = isRecoveryPointerRequiredMode(index.currentMode) ? "error" : "warning";
     const messageText = severity === "error"
       ? "Build/readiness mode needs an existing active slice doc. Read references/recovery.md and repair Auto Strike state before continuing code work."
       : "Review mode usually expects active slice docs, but none were found.";
-    messages.push(message(severity, "missing-active-slice", activeFeature.slicesPath, messageText));
+    messages.push(message(severity, "missing-active-slice", activePhase.slicesPath, messageText));
   }
 
   messages.push(...slicePlanningMessages(state));
   messages.push(...staleSliceTaskChecklistMessages(state));
   messages.push(...completedSliceEvidenceMessages(state));
   messages.push(...prematureNextSliceActivationMessages(state));
-  messages.push(...staleFeatureCheckpointMessages(state));
+  messages.push(...stalePhaseCheckpointMessages(state));
   messages.push(...completedCheckEvidenceContradictionMessages(state));
 
   const explicitSlicePrepMode = index.currentModeExplicit && index.currentMode && MODES_EXPECTING_SLICE_PREP.has(index.currentMode);
@@ -2750,10 +2840,10 @@ export function validateAutoStrike(options = {}) {
   if ((explicitReviewMode || hasImplementationReviewEvidence) && state.evidence.locations.length > 0) {
     const plan = recommendedReviewPlan(state);
     if (state.activeSlice.path && !state.evidence.locations.includes(state.activeSlice.path)) {
-      messages.push(message("warning", "missing-active-slice-evidence", state.activeSlice.path, "Active slice has reviewable implementation evidence elsewhere but does not contain evidence itself; review context may fall back to broader feature evidence."));
+      messages.push(message("warning", "missing-active-slice-evidence", state.activeSlice.path, "Active slice has reviewable implementation evidence elsewhere but does not contain evidence itself; review context may fall back to broader phase evidence."));
     }
-    if (activeFeature.exists && !["active-slice", "active-feature"].includes(state.evidence.reviewScope.scope)) {
-      messages.push(message("warning", "missing-active-feature-evidence", activeFeature.path, "Review context is using broader initiative/workspace evidence because no active feature evidence was found."));
+    if (activePhase.exists && !["active-slice", "active-phase"].includes(state.evidence.reviewScope.scope)) {
+      messages.push(message("warning", "missing-active-phase-evidence", activePhase.path, "Review context is using broader initiative/workspace evidence because no active phase evidence was found."));
     }
     if (state.evidence.reviewScope.changedPaths.length === 0) {
       messages.push(message("warning", "missing-review-changed-evidence", state.evidence.reviewScope.locations[0] ?? WORKSPACE_ROOT, "Review context has no active Changed list, so reviewer packets may miss implementation files."));
@@ -3188,12 +3278,12 @@ function renderInspectMarkdown(state) {
     "",
     "## Active",
     `- Initiative: ${state.activeInitiative.path ?? state.index.activeInitiativeRaw ?? "None"}`,
-    `- Feature: ${state.activeFeature.path ?? state.index.activeFeatureRaw ?? "None"}`,
+    `- Phase: ${state.activePhase.path ?? state.index.activePhaseRaw ?? "None"}`,
     `- Mode: ${state.index.currentMode ?? "Unknown"}`,
     `- Active doc: ${state.index.activeWork.docPath ?? "Unknown"}`,
     `- Active state: ${state.index.activeWork.state ?? "Unknown"}`,
-    `- Slice: ${state.index.activeSliceRaw ?? (state.activeFeature.sliceFiles[0] ?? "None")}`,
-    `- Phase ledger: ${state.phaseLedger.present ? state.phaseLedger.path : "Missing"}`,
+    `- Slice: ${state.index.activeSliceRaw ?? (state.activePhase.sliceFiles[0] ?? "None")}`,
+    `- Mode ledger: ${state.modeLedger.present ? state.modeLedger.path : "Missing"}`,
     `- Language: ${state.language.present ? state.language.path : "Missing"}`,
     `- Initiative decisions: ${state.activeInitiative.decisionsExists ? state.activeInitiative.decisionsPath : "Missing"}`,
     `- Next declared: ${state.index.nextBestAction ?? "None"}`,
@@ -3272,7 +3362,7 @@ function renderReviewContextMarkdown(packet) {
     "## Current State",
     `- Workspace: ${state.workspace.status} - ${state.workspace.reason}`,
     `- Active initiative: ${state.activeInitiative.path ?? state.index.activeInitiativeRaw ?? "None"}`,
-    `- Active feature: ${state.activeFeature.path ?? state.index.activeFeatureRaw ?? "None"}`,
+    `- Active phase: ${state.activePhase.path ?? state.index.activePhaseRaw ?? "None"}`,
     `- Current mode: ${state.index.currentMode ?? "Unknown"}`,
     `- Active doc: ${state.index.activeWork.docPath ?? "Unknown"}`,
     `- Active state: ${state.index.activeWork.state ?? "Unknown"}`,
@@ -3333,9 +3423,9 @@ function reviewSourcePathGroups(state) {
     state.activeInitiative.decisionsExists ? state.activeInitiative.decisionsPath : null,
     state.activeInitiative.grillExists ? state.activeInitiative.grillPath : null,
     state.activeInitiative.specExists ? state.activeInitiative.specPath : null,
-    state.activeFeature.specExists ? state.activeFeature.specPath : null,
+    state.activePhase.specExists ? state.activePhase.specPath : null,
     state.activeSlice.exists ? state.activeSlice.path : null,
-    state.activeFeature.readinessExists ? state.activeFeature.readinessPath : null,
+    state.activePhase.readinessExists ? state.activePhase.readinessPath : null,
     state.activeInitiative.readinessExists ? state.activeInitiative.readinessPath : null,
   ]);
   const usedPaths = new Set(activeDocs);
@@ -3356,7 +3446,7 @@ function reviewSourcePathGroups(state) {
     ...state.index.keyDocs.map((item) => resolveRepoReferencePath(state.repoRoot, item.path))
       .filter((item) => item?.exists)
       .map((item) => item.relativePath),
-    ...state.activeFeature.sliceFiles.filter((sourcePath) => sourcePath !== state.activeSlice.path),
+    ...state.activePhase.sliceFiles.filter((sourcePath) => sourcePath !== state.activeSlice.path),
   ]).filter((sourcePath) => !usedPaths.has(sourcePath));
 
   return [

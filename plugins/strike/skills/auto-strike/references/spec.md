@@ -12,21 +12,21 @@ hardening decisions go back to grill.
 Default paths:
 
 - `auto-strike/initiatives/<initiative-slug>/spec.md` for the initiative
-  overview, feature map, readiness target, cross-feature flows, constraints, and
+  overview, phase map, readiness target, cross-phase flows, constraints, and
   sequencing.
-- `auto-strike/initiatives/<initiative-slug>/features/<feature-slug>/feature-spec.md`
-  for each buildable feature that will be sliced.
+- `auto-strike/initiatives/<initiative-slug>/phases/<phase-slug>/phase-spec.md`
+  for each buildable phase that will be sliced.
 
-Use one feature folder when the initiative has one buildable capability. Split
-into multiple feature folders when the initiative combines independent outcomes,
+Use one phase folder when the initiative has one buildable capability. Split
+into multiple phase folders when the initiative combines independent outcomes,
 domains, roles, workflows, readiness targets, or releaseable capabilities.
 
-Spec mode stops at specs plus handoff. It may name the active feature, likely
+Spec mode stops at specs plus handoff. It may name the active phase, likely
 slice themes, high-risk boundaries, and verification expectations in `Slice
 Handoff`, but it must not create or link to future `slices/index.md`,
 `slices/slice-*.md`, a detailed Slice Map, numbered slice list, slice acceptance
 criteria, or slice execution tasks. When spec is ready, record `Spec Review` and
-`Exit Evidence`, update the Phase Ledger, and stop with slice mode as the next
+`Exit Evidence`, update the Mode Ledger, and stop with slice mode as the next
 action. Enter slice mode as a separate work unit and load `slice.md`.
 
 Useful initiative spec shape:
@@ -37,10 +37,10 @@ Useful initiative spec shape:
 ## Summary
 ## Who Or What This Serves
 ## Initiative Outcome
-## Feature Map
-| Feature | Purpose | Depends On | Readiness Target | Status |
+## Phase Map
+| Phase | Purpose | Depends On | Readiness Target | Status |
 | --- | --- | --- | --- | --- |
-## Cross-Feature Flows
+## Cross-Phase Flows
 ## Scope And Non-Goals
 ## Product Rules And Constraints
 ## Domain Language
@@ -51,16 +51,16 @@ Useful initiative spec shape:
 ### Live / Human
 ## Risks And Assumptions
 ## Open Questions
-## Feature Spec Handoff
-## Phase Tasks
+## Phase Spec Handoff
+## Mode Tasks
 ## Spec Review
 ## Exit Evidence
 ```
 
-Useful feature spec shape:
+Useful phase spec shape:
 
 ```md
-# [Feature] Spec
+# [Phase] Spec
 
 ## Summary
 ## Who Or What This Serves
@@ -78,7 +78,7 @@ Useful feature spec shape:
 ## Risks And Assumptions
 ## Open Questions
 ## Slice Handoff
-## Phase Tasks
+## Mode Tasks
 ## Spec Review
 ## Exit Evidence
 ```
@@ -90,12 +90,12 @@ human checks.
 During active spec work, keep the process sections concise:
 
 ```md
-## Phase Tasks
+## Mode Tasks
 - [ ] Pull current truth from idea, grill, root `UBIQUITOUS_LANGUAGE.md` if
       present, and initiative decisions.
 - [ ] Confirm grill has a Decision Checkpoint or an explicit user opt-out.
-- [ ] Write or update the initiative feature map.
-- [ ] Write feature specs for buildable capabilities.
+- [ ] Write or update the initiative phase map.
+- [ ] Write phase specs for buildable capabilities.
 - [ ] Write product behavior, scope, non-goals, rules, and flows.
 - [ ] Define repo-verifiable and live/human success checks.
 - [ ] Record risky surfaces, constraints, assumptions, and open questions.
@@ -113,13 +113,13 @@ During active spec work, keep the process sections concise:
 Do focused research before or during spec when current docs, codebase precedent,
 domain pitfalls, or architecture tradeoffs can change the decision. Use primary
 sources for unstable or external facts. Put initiative-wide findings in the
-initiative `research/` directory and feature-specific findings in the feature
+initiative `research/` directory and phase-specific findings in the phase
 `research/` directory.
 
 Before calling the spec ready, check it against the research discipline,
 dependency discipline when packages or setup are involved, and code quality
-checklist. Initiative specs should make the feature split, readiness target,
-dependencies, and cross-feature constraints clear. Feature specs should name the
+checklist. Initiative specs should make the phase split, readiness target,
+dependencies, and cross-phase constraints clear. Phase specs should name the
 expected code organization, architecture boundaries, risky shared surfaces, and
 blast radius where those choices matter. Specs must preserve declared
 tooling/security constraints; a runtime or package-manager change belongs back
@@ -129,10 +129,10 @@ slice one.
 
 Before moving from spec to slices, do a quick spec review. Check that scope,
 non-goals, success checks, domain language, data/state rules, permissions,
-failure paths, research implications, feature boundaries, and code organization
+failure paths, research implications, phase boundaries, and code organization
 are clear enough to slice without guessing. Fix obvious gaps in the specs; ask
 only for decisions that would change the product or risk.
-Update the initiative Phase Ledger before slicing. Brainstorm, grill, and spec
+Update the initiative Mode Ledger before slicing. Brainstorm, grill, and spec
 should be `done`, `compressed`, or `skipped` with artifact and reason; do not
 let a direct jump to slicing hide missing thinking.
 After spec review and exit evidence are recorded, do not create slice artifacts

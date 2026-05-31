@@ -1,8 +1,8 @@
 # Recovery
 
 Use this only when Auto Strike state is inconsistent, interrupted, partially
-missing, or contradicted by the filesystem. Recovery is not a normal phase; it
-is a short truth-finding pause before the agent resumes the right phase.
+missing, or contradicted by the filesystem. Recovery is not a normal workflow
+mode; it is a short truth-finding pause before the agent resumes the right mode.
 
 ## Recovery Triage
 
@@ -15,7 +15,7 @@ Stop broad coding and answer these from evidence:
 - What can be verified now?
 - What is the smallest correct place to resume?
 
-Classify each affected phase, feature, or slice:
+Classify each affected workflow mode, delivery phase, or slice:
 
 - Complete: artifact exists, evidence exists, and checks still pass or are
   clearly recorded.
@@ -28,7 +28,7 @@ Classify each affected phase, feature, or slice:
 ## Recovery Rules
 
 - Do not keep building, reviewing, or claiming readiness while `index.md`, Key
-  Docs, active feature, active slice, or active doc are incoherent.
+  Docs, active phase, active slice, or active doc are incoherent.
 - Do not assume a phase or slice is complete just because a doc says so.
 - Do not recreate product, scope, schema, permission, lifecycle, dependency, or
   validation decisions from imagination. If evidence is missing, ask the user.
@@ -39,11 +39,12 @@ Classify each affected phase, feature, or slice:
 
 ## Resume
 
-1. Inspect `auto-strike/index.md`, the active initiative, active feature, active
+1. Inspect `auto-strike/index.md`, the active initiative, active phase, active
    slice, Key Docs, relevant code, and current artifacts.
 2. Write or update a short recovery note in the active doc or `index.md`: what
    was trusted, repaired, still unverified, and why.
 3. Run the helper `validate` command when available.
-4. Resume from the earliest phase/slice that is not yet trustworthy.
+4. Resume from the earliest workflow mode, delivery phase, or slice that is not
+   yet trustworthy.
 5. If recovery cannot establish the current truth without guessing, stop with
    the blocker and the one user decision needed next.

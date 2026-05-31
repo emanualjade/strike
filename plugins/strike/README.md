@@ -46,7 +46,14 @@ language <term|project-slug|path>
 
 `auto-strike` is a standalone utility skill. It creates and uses a root
 `auto-strike/` workspace in the consuming repo and does not use the normal
-`docs/strike/` board/card workflow.
+`docs/strike/` board/card workflow. Its planning shape is initiative spec,
+delivery phase specs, then slices inside each phase:
+
+```txt
+auto-strike/initiatives/<initiative-slug>/spec.md
+auto-strike/initiatives/<initiative-slug>/phases/<phase-slug>/phase-spec.md
+auto-strike/initiatives/<initiative-slug>/phases/<phase-slug>/slices/slice-0-[name].md
+```
 
 `start` is the only normal user-facing Strike skill with double-dash options.
 Other skills use positional arguments, plain optional words such as `skip`, or

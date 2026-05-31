@@ -1,6 +1,6 @@
 ---
 name: auto-strike
-description: Use when the user asks for Auto Strike to turn an idea into a shipped feature or MVP with a standalone workspace.
+description: Use when the user asks for Auto Strike to turn an idea into a shipped change or MVP with a standalone workspace.
 argument-hint: "[idea]"
 disable-model-invocation: true
 allowed-tools: Read Write Edit MultiEdit Bash Grep Glob WebFetch WebSearch Agent
@@ -8,14 +8,16 @@ allowed-tools: Read Write Edit MultiEdit Bash Grep Glob WebFetch WebSearch Agent
 
 # Auto Strike
 
-Use this skill to move a fuzzy idea toward a shipped feature or MVP in any repo.
+Use this skill to move a fuzzy idea toward a shipped change or MVP in any repo.
 It borrows the highest-value Strike habits without using the normal Strike
 board/card workflow. From a cold start, create the root `auto-strike/`
 workspace and grow it from there.
 
 ## Boundaries
 
-- This skill is user-invoked only.
+- This skill is user-invocable as the standalone Auto Strike workflow; do not
+  route normal Strike board/card work into it unless the user asks for Auto
+  Strike.
 - This skill does not use `docs/strike/`, Strike board pointers, Strike cards,
   or handoffs to other Strike skills.
 - This skill creates and maintains a standalone root `auto-strike/` workspace in
@@ -58,7 +60,7 @@ current work safe. Resolve `references/*` paths relative to this `SKILL.md`:
 
 - `references/workspace.md`: cold start, resume, repeated run, workspace
   writes, doc shape.
-- Current phase ref: `references/brainstorm.md`, `references/grill.md`,
+- Current mode ref: `references/brainstorm.md`, `references/grill.md`,
   `references/spec.md`, `references/slice.md`, `references/build.md`,
   `references/review.md`, or `references/readiness.md`.
 - `references/research.md`: stack docs, standards, domain modeling,
@@ -82,8 +84,8 @@ At the start of every run:
    `inspect` when available.
 2. Identify the current mode from user intent plus the active artifact.
 3. Keep `auto-strike/index.md` as the small front door: initiative, mode,
-   feature, doc/slice, state, next action, blocker.
-4. Load the current phase ref and do that phase's work.
+   phase, doc/slice, state, next action, blocker.
+4. Load the current mode ref and do that mode's work.
 5. Before claiming done, run helper `validate` when available. Resolve errors.
    Treat warnings as prompts for judgment.
 6. If state is missing or contradictory, use `recovery.md` before build, review,
@@ -99,13 +101,20 @@ unless the user explicitly wants Auto Strike state.
 
 ## Mode Commitment
 
-Default phase order: brainstorm, grill, spec, slice, build, review, readiness.
+Vocabulary matters in this skill:
+
+- `workflow mode`: brainstorm, grill, spec, slice, build, review, readiness.
+- `delivery phase`: one buildable scope under
+  `auto-strike/initiatives/<initiative-slug>/phases/<phase-slug>/`.
+- `slice`: one small build packet inside a delivery phase.
+
+Default mode order: brainstorm, grill, spec, slice, build, review, readiness.
 This is the ideal workflow, not a blind waterfall. Move backward or sideways
 when judgment says it improves the work.
 
-Do not silently skip phases. Skip or compress a phase only when the user
+Do not silently skip workflow modes. Skip or compress a mode only when the user
 explicitly opts out, asks to move along, prior artifacts already satisfy it, or
-the phase truly does not apply. Record the artifact and reason.
+the mode truly does not apply. Record the artifact and reason.
 
 A real brainstorm or grill means user engagement or exact prior answers.
 Internal interpretation is not enough. If the question UI fails, ask in plain
@@ -113,8 +122,9 @@ text and stop. Tool failure, timeout, cancellation, or no answer is not
 permission to proceed.
 
 The kickoff prompt is input, not a spec. Extract facts, unknowns, assumptions,
-and consequential decisions into phase artifacts before hardening scope, stack,
-dependencies, persistence, auth/identity, feature count, or validation depth.
+and consequential decisions into mode artifacts before hardening scope, stack,
+dependencies, persistence, auth/identity, delivery-phase count, or validation
+depth.
 Words like `small`, `simple`, `MVP`, or `real workflow` are not settled
 requirements until brainstorm/grill translates them into constraints.
 
@@ -122,28 +132,28 @@ Treat user- or repo-named tooling as a hard constraint. Do not switch runtime,
 language, package manager, or build tool as a workaround unless the user
 explicitly approves the tradeoff.
 
-Do not blend phases. Broad "build/ship this" requests allow Auto Strike to
-continue phase by phase, not to combine brainstorm, grill, spec, slice, build,
-review, or readiness in one pass. A phase may leave a handoff, but it must
-record its own state, review/exit evidence, and next mode before the next phase
+Do not blend modes. Broad "build/ship this" requests allow Auto Strike to
+continue mode by mode, not to combine brainstorm, grill, spec, slice, build,
+review, or readiness in one pass. A mode may leave a handoff, but it must
+record its own state, review/exit evidence, and next mode before the next mode
 creates artifacts.
 
 After a slice closeout, name the next natural slice/action. Do not move Active
 Work to the next slice or create the next slice doc unless the user explicitly
 continues across that boundary.
 
-Keep the initiative Phase Ledger current once work reaches slice, build, review,
-or validation.
+Keep the initiative Mode Ledger current once work reaches slice, build, review,
+or readiness.
 
 | Mode | Load | Exit Evidence |
 | --- | --- | --- |
 | brainstorm | `references/brainstorm.md` | First useful outcome, target moment, constraints, and first-version non-goals are clear. |
 | grill | `references/grill.md` | Consequential product, domain, workflow, permission, data, integration, and success-check decisions are clear. |
-| spec | `references/spec.md`, `references/code-quality.md` | Initiative overview and feature specs are clear enough to slice without guessing; no slice map or slice files are created yet. |
-| slice | `references/slice.md`, `references/code-quality.md`, `references/verification.md` | Initiative feature split is explicit; active feature slices have size, dependencies, acceptance criteria, execution tasks, surfaces, checks, and checkpoints when needed. |
+| spec | `references/spec.md`, `references/code-quality.md` | Initiative overview and phase specs are clear enough to slice without guessing; no slice map or slice files are created yet. |
+| slice | `references/slice.md`, `references/code-quality.md`, `references/verification.md` | Initiative phase split is explicit; active phase slices have size, dependencies, acceptance criteria, execution tasks, surfaces, checks, and checkpoints when needed. |
 | build | `references/build.md`, `references/code-quality.md`, `references/verification.md` | One slice is implemented and evidence is recorded. |
 | review | `references/review.md`, `references/code-quality.md`, `references/verification.md` | Findings are returned to the main agent, evaluated, fixed or accepted, and recorded. |
-| readiness | `references/readiness.md`, `references/code-quality.md`, `references/verification.md`, `references/review.md` | The active feature or initiative passes spec, checks, representative flows, docs, and accepted residual-risk review. |
+| readiness | `references/readiness.md`, `references/code-quality.md`, `references/verification.md`, `references/review.md` | The active phase or initiative passes spec, checks, representative flows, docs, and accepted residual-risk review. |
 
 ## Helper Use
 
@@ -177,13 +187,13 @@ checks, not only planning docs.
 - If user input is needed and the host question UI fails, ask in plain text and
   wait. Do not interpret tool failure as a user opt-out.
 - Do not convert an initial prompt directly into a full build spec. Run the
-  phase docs and decision checkpoint first unless the user explicitly opts out
-  of questions or phases.
+  mode docs and decision checkpoint first unless the user explicitly opts out
+  of questions or workflow modes.
 - Keep docs current as source of truth, not ceremony. Add files only when the
   work needs them.
 - Keep `index.md` current as the resume pointer. Always record `Current mode`;
-  once feature/slice/build evidence exists, do not leave it pointing at
-  brainstorm, stale open decisions, no active feature/slice, or no verification.
+  once phase/slice/build evidence exists, do not leave it pointing at
+  brainstorm, stale open decisions, no active phase/slice, or no verification.
 - Keep root `UBIQUITOUS_LANGUAGE.md` current when durable language exists, and
   keep the active initiative's `decisions.md` and `spec.md` current, even when
   they are minimal.

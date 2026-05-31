@@ -1,22 +1,22 @@
 # Readiness
 
-Readiness is the final trust gate. Use it when a feature's slices have passed
-review, or when the user asks whether a feature, MVP, or initiative is done.
+Readiness is the final trust gate. Use it when a phase's slices have passed
+review, or when the user asks whether a phase, MVP, or initiative is done.
 
-Use feature readiness for one feature and initiative readiness for the whole
+Use phase readiness for one phase and initiative readiness for the whole
 request:
 
-- `auto-strike/initiatives/<initiative-slug>/features/<feature-slug>/readiness.md`
+- `auto-strike/initiatives/<initiative-slug>/phases/<phase-slug>/readiness.md`
 - `auto-strike/initiatives/<initiative-slug>/readiness.md`
 
-Feature readiness proves the feature's slices satisfy the feature spec.
-Initiative readiness proves cross-feature flows, dependencies, docs, accepted
+Phase readiness proves the phase's slices satisfy the phase spec.
+Initiative readiness proves cross-phase flows, dependencies, docs, accepted
 residual risk, and the initiative readiness target.
 
 Before closeout, update `auto-strike/index.md`: Active Work, Key Docs,
 Verification, State, and Next must describe the final truth. No stale active
 build/slice or planned-later language.
-Also update the initiative Phase Ledger so build, review, and readiness are not
+Also update the initiative Mode Ledger so build, review, and readiness are not
 left pending or in progress after the work is closed.
 
 ## Check
@@ -51,10 +51,10 @@ blockers, or missing required checks remain unresolved.
 ## Work Packet
 
 ```md
-# [Feature/Initiative] Readiness
+# [Phase/Initiative] Readiness
 
-## Phase Tasks
-- [ ] Compare built slices or feature readiness docs against accepted scope.
+## Mode Tasks
+- [ ] Compare built slices or phase readiness docs against accepted scope.
 - [ ] Run or confirm repo-verifiable success checks.
 - [ ] Check representative user/system flows end to end.
 - [ ] Confirm review findings are fixed, accepted, or moved to follow-up.
@@ -77,7 +77,7 @@ blockers, or missing required checks remain unresolved.
 - [Gap] - [reason, risk, follow-up]
 
 ## Exit Evidence
-- [Why the feature/initiative is ready or what blocks readiness.]
+- [Why the phase/initiative is ready or what blocks readiness.]
 
 ## Final Receipt
 Shipped:
@@ -106,11 +106,11 @@ Next:
 ```
 
 If readiness finds fixable issues, assign them to the smallest affected slice or
-feature and loop through fix, verify, review, and readiness once. Continue only
+phase and loop through fix, verify, review, and readiness once. Continue only
 for new or still-open blockers.
 
 Use the `Final Receipt` as the user-facing terminal summary when the whole
-feature or initiative is done. For a single completed slice, use the slice's
+phase or initiative is done. For a single completed slice, use the slice's
 `Closeout Summary` instead.
 
 If readiness changes code or docs, commit those changes before the final

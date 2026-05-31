@@ -28,7 +28,7 @@ standard path.
 
 ## Standards Before Bespoke
 
-When a feature touches a domain with established operational, financial,
+When a phase touches a domain with established operational, financial,
 security, legal, platform, or industry patterns, do not rely on intuition alone.
 Do a quick standards check before locking the model, workflow, or code approach.
 

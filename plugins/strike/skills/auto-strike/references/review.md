@@ -12,7 +12,7 @@ and browser/user-flow expectations.
 
 Do not create a separate review document by default. Keep review outcomes in the
 active slice's `Reviewed`, `Skipped`, and `Review Findings` evidence unless a
-feature or initiative readiness pass needs `readiness.md`.
+phase or initiative readiness pass needs `readiness.md`.
 
 ## When To Review
 
@@ -72,7 +72,7 @@ Required baseline lenses for meaningful slice work:
   size, dependency order, verticality, surfaces, sequencing, verification, and
   risk handling.
 - `functionality`: checks whether the behavior works end to end.
-- `spec-coverage`: checks idea, decisions, initiative spec, feature spec, slice,
+- `spec-coverage`: checks idea, decisions, initiative spec, phase spec, slice,
   success checks, non-goals, and accepted scope.
 - `code-quality`: checks maintainability, boundaries, blast radius, tests,
   dependencies, env/secrets, logging, and placement.
@@ -101,7 +101,7 @@ with evidence and recommended fixes to the main agent.
 
 The main agent evaluates each finding as valid, invalid, already handled,
 blocking, accepted risk, or follow-up. Fix blocking issues, verify again, and
-re-review. Do not use review as an excuse to redesign the feature unless the
+re-review. Do not use review as an excuse to redesign the phase unless the
 current design cannot meet the spec safely.
 
 Keep the loop bounded: after fixes, run one focused re-review. Continue only for

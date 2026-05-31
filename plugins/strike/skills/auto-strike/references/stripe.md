@@ -11,7 +11,7 @@ capability/requirement handling.
 Use current official Stripe docs and any installed official Stripe skills before
 making binding product, API, webhook, money-movement, billing, Connect, or
 subscription decisions. Record only decision-useful implications in the active
-initiative, feature spec, research note, or slice plan.
+initiative, phase spec, research note, or slice plan.
 
 For Stripe Connect, first use the installed `stripe-connect` skill when it is
 available. Treat it as the starting point for account type, onboarding,
@@ -51,7 +51,7 @@ verification when the user explicitly accepts that risk for the current slice.
 
 ## Readiness
 
-Before feature or initiative readiness, verify that every accepted Stripe path
+Before phase or initiative readiness, verify that every accepted Stripe path
 has sandbox evidence or an explicit user-accepted residual risk. Webhook,
 Connect, subscription, refund, dispute, tax, transfer, and payout paths need
 negative or lifecycle checks when they are inside accepted scope.

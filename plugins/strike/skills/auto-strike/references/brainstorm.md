@@ -3,8 +3,8 @@
 Turn the raw idea into a clearer opportunity. Start with the user, maintainer,
 operator, integration, or system moment, then work backward to the technology.
 The kickoff prompt is source material, not a finished spec. Separate explicit
-facts from assumptions before any stack, package, persistence, auth, or feature
-count becomes locked.
+facts from assumptions before any stack, package, persistence, auth, or
+delivery-phase count becomes locked.
 Do not skip a proper brainstorm with the user unless the user explicitly says to
 skip it, move along, or proceed without questions. If the user already answered
 the brainstorm questions, record the explicit answers and keep going.
@@ -42,8 +42,8 @@ Use `idea.md` as the brainstorm work packet:
 ```md
 # [Initiative] Idea
 
-## Phase Ledger
-| Phase | Status | Artifact | Reason |
+## Mode Ledger
+| Mode | Status | Artifact | Reason |
 | --- | --- | --- | --- |
 | Brainstorm | in progress | `idea.md` | First useful outcome is being clarified. |
 | Grill | pending |  |  |
@@ -51,9 +51,9 @@ Use `idea.md` as the brainstorm work packet:
 | Slice | pending |  |  |
 | Build | pending |  |  |
 | Review | pending |  |  |
-| Validate | pending |  |  |
+| Readiness | pending |  |  |
 
-## Phase Tasks
+## Mode Tasks
 - [ ] Separate explicit user facts from assumptions or inferred scope.
 - [ ] Capture the target user/system moment.
 - [ ] Name the painful moment, workaround, or workflow drag.
@@ -85,7 +85,7 @@ Use `idea.md` as the brainstorm work packet:
 - Suggested grill depth: Lean / Standard / Deep / Unknown.
 - Why:
 - Questions or decisions grill should pressure-test:
-- Feature candidates, if any:
+- Delivery phase candidates, if any:
 ```
 
 Exit when the first useful outcome, target user/system moment, constraints, and

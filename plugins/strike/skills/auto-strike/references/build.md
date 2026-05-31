@@ -8,7 +8,7 @@ For each slice:
 
 1. Set `index.md` to `Current mode: build` and point `Doc`/`Slice` at the active
    slice file before treating slice execution prep warnings as build blockers.
-2. Confirm the initiative Phase Ledger shows brainstorm, grill, spec, and slice
+2. Confirm the initiative Mode Ledger shows brainstorm, grill, spec, and slice
    as done, compressed, or skipped with artifact and reason.
 3. Confirm slice execution prep is done: implementation research is captured,
    the plan is concrete, and plan review findings are fixed or consciously
@@ -23,9 +23,9 @@ For each slice:
    `Review Findings:`. Keep it compact: files changed, checks run, skipped
    checks with reasons, important implementation choices, rollback notes, and
    review focus.
-7. Keep `index.md`, the Phase Ledger, and slice checkboxes current as the build
+7. Keep `index.md`, the Mode Ledger, and slice checkboxes current as the build
    advances. Once code exists, do not leave Active Work pointing at brainstorm,
-   stale open decisions, no active feature/slice, or "no code written".
+   stale open decisions, no active phase/slice, or "no code written".
 8. Use `review.md` for the required review pass. Completed meaningful slices
    MUST run a read-only review subagent.
 9. Fix blocking findings and run one focused re-review. Continue only for new
@@ -46,7 +46,7 @@ For each slice:
    unit unless the user explicitly asked to keep going across slice boundaries.
    Keep the completed slice as the active slice, record the next natural slice
    in `Next`, and stop with the closeout receipt.
-14. Do not add features that were not asked for. Do not remove existing features
+14. Do not add phases that were not asked for. Do not remove existing phases
    unless asked.
 
 For local servers, avoid blocking the final response on a long-running command.

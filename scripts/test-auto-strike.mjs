@@ -85,16 +85,16 @@ function testValidateUnrelatedWorkspaceCollision() {
   assert.ok(body.messages.some((item) => item.code === "workspace-unrelated" && item.severity === "error"));
 }
 
-function testSimpleFeatureSlugDoesNotHardFail() {
+function testSimplePhaseSlugDoesNotHardFail() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: tiny-copy-fix
+- Phase: tiny-copy-fix
 - Current mode: build
-- Doc: auto-strike/initiatives/main/features/tiny-copy-fix/slices/slice-0-copy.md
-- Slice: auto-strike/initiatives/main/features/tiny-copy-fix/slices/slice-0-copy.md
+- Doc: auto-strike/initiatives/main/phases/tiny-copy-fix/slices/slice-0-copy.md
+- Slice: auto-strike/initiatives/main/phases/tiny-copy-fix/slices/slice-0-copy.md
 - Next best action: Edit the button copy.
 
 ## Project State
@@ -109,44 +109,80 @@ function testSimpleFeatureSlugDoesNotHardFail() {
 ## Verification
 - Manual copy check.
 `);
-  write(repo, "auto-strike/initiatives/main/features/tiny-copy-fix/feature-spec.md", "# Tiny Copy Fix Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/tiny-copy-fix/slices/slice-0-copy.md", "# Slice 0: Copy\n");
+  write(repo, "auto-strike/initiatives/main/phases/tiny-copy-fix/phase-spec.md", "# Tiny Copy Fix Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/tiny-copy-fix/slices/slice-0-copy.md", "# Slice 0: Copy\n");
   write(repo, "auto-strike/todo.md", `# Todo
 
 - [ ] Update button copy.
 `);
 
   const result = run(repo, ["validate"]);
-  assertStatus(result, 0, "simple active feature slug should not hard fail");
+  assertStatus(result, 0, "simple active phase slug should not hard fail");
   const body = json(result);
-  assert.equal(body.activeFeature.raw, "tiny-copy-fix");
-  assert.equal(body.activeFeature.path, "auto-strike/initiatives/main/features/tiny-copy-fix");
-  assert.equal(body.activeFeature.inferredPath, "auto-strike/initiatives/main/features/tiny-copy-fix");
-  assert.ok(!body.messages.some((item) => item.code === "missing-active-feature"));
+  assert.equal(body.activePhase.raw, "tiny-copy-fix");
+  assert.equal(body.activePhase.path, "auto-strike/initiatives/main/phases/tiny-copy-fix");
+  assert.equal(body.activePhase.inferredPath, "auto-strike/initiatives/main/phases/tiny-copy-fix");
+  assert.ok(!body.messages.some((item) => item.code === "missing-active-phase"));
   assert.ok(!body.messages.some((item) => item.code === "missing-key-doc"));
 }
 
-function testValidateRejectsOldTopLevelFeaturePath() {
+function testValidateRejectsOldTopLevelPhasePath() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/features/legacy-feature
+- Phase: auto-strike/phases/legacy-phase
 - Current mode: slice
-- Next: Fix the feature path.
+- Next: Fix the phase path.
 - Blocked by: None.
 
 ## Open Decisions
 - None.
 `);
   write(repo, "auto-strike/initiatives/main/idea.md", "# Main Idea\n");
-  write(repo, "auto-strike/features/legacy-feature/spec.md", "# Legacy Spec\n");
+  write(repo, "auto-strike/phases/legacy-phase/spec.md", "# Legacy Spec\n");
 
   const result = run(repo, ["validate"]);
-  assertStatus(result, 1, "old top-level feature paths should be rejected");
+  assertStatus(result, 1, "old top-level phase paths should be rejected");
   const body = json(result);
-  assert.ok(body.messages.some((item) => item.code === "invalid-active-feature-path" && item.severity === "error"));
+  assert.ok(body.messages.some((item) => item.code === "invalid-active-phase-path" && item.severity === "error"));
+}
+
+function testLegacyFeatureShapeWarnsButStillResolves() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Feature: auto-strike/initiatives/main/features/legacy-phase
+- Current mode: build
+- Doc: auto-strike/initiatives/main/features/legacy-phase/slices/slice-0-legacy.md
+- Slice: auto-strike/initiatives/main/features/legacy-phase/slices/slice-0-legacy.md
+- Next: Rename this workspace when convenient.
+
+## Key Docs
+- \`auto-strike/initiatives/main/features/legacy-phase/feature-spec.md\` - legacy spec.
+
+## Open Decisions
+- None.
+
+## Verification
+- Existing evidence.
+`);
+  write(repo, "auto-strike/initiatives/main/features/legacy-phase/feature-spec.md", "# Legacy Phase Spec\n");
+  write(repo, "auto-strike/initiatives/main/features/legacy-phase/slices/slice-0-legacy.md", "# Slice 0: Legacy\n");
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "legacy feature shape should warn but remain readable for one release");
+  const body = json(result);
+  assert.equal(body.activePhase.path, "auto-strike/initiatives/main/features/legacy-phase");
+  assert.equal(body.activePhase.specPath, "auto-strike/initiatives/main/features/legacy-phase/feature-spec.md");
+  assert.equal(body.activeFeature.path, body.activePhase.path);
+  assert.ok(body.messages.some((item) => item.code === "legacy-active-feature-label" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "legacy-feature-directories" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "legacy-active-feature-path" && item.severity === "warning"));
+  assert.ok(!body.messages.some((item) => item.code === "invalid-active-phase-path"));
 }
 
 function testInitiativeInspectAndValidateWithEvidence() {
@@ -155,17 +191,17 @@ function testInitiativeInspectAndValidateWithEvidence() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/upload-mvp
+- Phase: auto-strike/initiatives/main/phases/upload-mvp
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/upload-mvp/slices/slice-0-upload-preview.md
+- Active slice: auto-strike/initiatives/main/phases/upload-mvp/slices/slice-0-upload-preview.md
 - Next best action: Review slice 0.
 
 ## Project State
 - Upload preview MVP is implemented.
 
 ## Key Docs
-- \`auto-strike/initiatives/main/features/upload-mvp/feature-spec.md\` - product scope.
-- \`auto-strike/initiatives/main/features/upload-mvp/slices/slice-0-upload-preview.md\` - build evidence.
+- \`auto-strike/initiatives/main/phases/upload-mvp/phase-spec.md\` - product scope.
+- \`auto-strike/initiatives/main/phases/upload-mvp/slices/slice-0-upload-preview.md\` - build evidence.
 
 ## Open Decisions
 - None.
@@ -177,9 +213,9 @@ function testInitiativeInspectAndValidateWithEvidence() {
 
 - [x] Build upload preview slice.
 `);
-  write(repo, "auto-strike/initiatives/main/features/upload-mvp/feature-spec.md", "# Upload MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/upload-mvp/phase-spec.md", "# Upload MVP Spec\n");
   write(repo, "app/upload/page.tsx", "export default function Page() { return null; }\n");
-  write(repo, "auto-strike/initiatives/main/features/upload-mvp/slices/slice-0-upload-preview.md", `# Slice 0: Upload Preview
+  write(repo, "auto-strike/initiatives/main/phases/upload-mvp/slices/slice-0-upload-preview.md", `# Slice 0: Upload Preview
 
 ## Evidence
 
@@ -196,10 +232,10 @@ Reviewed:
   const inspect = run(repo, ["inspect"]);
   assertStatus(inspect, 0, "inspect should succeed for initiative workspace");
   const inspectBody = json(inspect);
-  assert.equal(inspectBody.activeFeature.path, "auto-strike/initiatives/main/features/upload-mvp");
-  assert.equal(inspectBody.activeFeature.specExists, true);
-  assert.equal(inspectBody.activeFeature.sliceFiles.length, 1);
-  assert.deepEqual(inspectBody.evidence.locations, ["auto-strike/initiatives/main/features/upload-mvp/slices/slice-0-upload-preview.md"]);
+  assert.equal(inspectBody.activePhase.path, "auto-strike/initiatives/main/phases/upload-mvp");
+  assert.equal(inspectBody.activePhase.specExists, true);
+  assert.equal(inspectBody.activePhase.sliceFiles.length, 1);
+  assert.deepEqual(inspectBody.evidence.locations, ["auto-strike/initiatives/main/phases/upload-mvp/slices/slice-0-upload-preview.md"]);
   assert.deepEqual(inspectBody.evidence.changedPaths, ["app/upload/page.tsx"]);
 
   const validate = run(repo, ["validate"]);
@@ -213,16 +249,16 @@ function testValidateWarnsForMissingEvidence() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/search-mvp
+- Phase: auto-strike/initiatives/main/phases/search-mvp
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/search-mvp/slices/slice-0-search.md
+- Active slice: auto-strike/initiatives/main/phases/search-mvp/slices/slice-0-search.md
 - Next: Record review evidence.
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/search-mvp/feature-spec.md", "# Search MVP Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/search-mvp/slices/slice-0-search.md", "# Slice 0: Search\n");
+  write(repo, "auto-strike/initiatives/main/phases/search-mvp/phase-spec.md", "# Search MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/search-mvp/slices/slice-0-search.md", "# Slice 0: Search\n");
 
   const result = run(repo, ["validate"]);
   assertStatus(result, 0, "missing evidence should warn, not hard fail");
@@ -236,16 +272,16 @@ function testValidateBrokenKeyDocReference() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/search-mvp
+- Phase: auto-strike/initiatives/main/phases/search-mvp
 - Current mode: spec
 
 ## Key Docs
-- \`auto-strike/initiatives/main/features/search-mvp/feature-spec.md\` - product scope.
+- \`auto-strike/initiatives/main/phases/search-mvp/phase-spec.md\` - product scope.
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/search-mvp/extras/context.md", "# Context\n");
+  write(repo, "auto-strike/initiatives/main/phases/search-mvp/extras/context.md", "# Context\n");
 
   const result = run(repo, ["validate"]);
   assertStatus(result, 1, "explicit missing key docs should hard fail");
@@ -259,7 +295,7 @@ function testKeyDocsCanReferenceRepoDocs() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: None
+- Phase: None
 - Doc: auto-strike/initiatives/main/idea.md
 - State: Idea is being clarified.
 - Next: Read repo notes before grill.
@@ -273,7 +309,7 @@ function testKeyDocsCanReferenceRepoDocs() {
 `);
   write(repo, "auto-strike/initiatives/main/idea.md", `# Search Idea
 
-## Phase Tasks
+## Mode Tasks
 - [x] Capture repo context.
 - [ ] Clarify first useful outcome.
 
@@ -301,7 +337,7 @@ function testMarkdownLinksResolveToTargets() {
 
 ## Active Work
 - Initiative: [Main](auto-strike/initiatives/main)
-- Feature: None.
+- Phase: None.
 - Current mode: brainstorm
 - Doc: [Idea](auto-strike/initiatives/main/idea.md)
 - State: Idea is being clarified.
@@ -317,7 +353,7 @@ function testMarkdownLinksResolveToTargets() {
 `);
   write(repo, "auto-strike/initiatives/main/idea.md", `# Main Idea
 
-## Phase Tasks
+## Mode Tasks
 - [x] Capture initial idea.
 - [ ] Grill terminology.
 
@@ -346,15 +382,15 @@ function testReviewContextPacket() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/video-mvp
+- Phase: auto-strike/initiatives/main/phases/video-mvp
 - Current mode: review
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/phase-spec.md", "# Video MVP Spec\n");
   write(repo, "src/video/upload.ts", "export function upload() {}\n");
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
 
 ## Evidence
 
@@ -373,7 +409,7 @@ Verified:
   assert.match(body.instructions.join("\n"), /read-only review subagent/);
   assert.match(body.instructions.join("\n"), /Do not edit files/);
   assert.ok(body.focus.some((item) => /hostile inputs/i.test(item)));
-  assert.ok(body.state.docs.includes("auto-strike/initiatives/main/features/video-mvp/feature-spec.md"));
+  assert.ok(body.state.docs.includes("auto-strike/initiatives/main/phases/video-mvp/phase-spec.md"));
   assert.ok(body.state.evidence.changedPaths.includes("src/video/upload.ts"));
   assert.ok(body.sourcePaths.some((group) => group.title === "Changed Files From Active Evidence"));
 }
@@ -384,19 +420,19 @@ function testImplementationPlanReviewContext() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/video-mvp
+- Phase: auto-strike/initiatives/main/phases/video-mvp
 - Current mode: slice
-- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
+- Active slice: auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md
 
 ## Key Docs
-- \`auto-strike/initiatives/main/features/video-mvp/feature-spec.md\` - product scope.
-- \`auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md\` - implementation plan.
+- \`auto-strike/initiatives/main/phases/video-mvp/phase-spec.md\` - product scope.
+- \`auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md\` - implementation plan.
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/phase-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
 
 ## Implementation Research
 - Check current upload API docs before coding.
@@ -414,31 +450,31 @@ function testImplementationPlanReviewContext() {
   assert.equal(body.lens, "implementation-plan");
   assert.ok(body.focus.some((item) => /slice-specific research/i.test(item)));
   const activeDocs = body.sourcePaths.find((group) => group.title === "Active Docs");
-  assert.ok(activeDocs.paths.includes("auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md"));
+  assert.ok(activeDocs.paths.includes("auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md"));
 }
 
-function testReviewContextScopesChangedFilesToActiveFeature() {
+function testReviewContextScopesChangedFilesToActivePhase() {
   const repo = tempRepo();
   write(repo, "README.md", "# Dogfood Repo\n");
   write(repo, "auto-strike/index.md", `# Auto Strike
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/todo-dogfood
+- Phase: auto-strike/initiatives/main/phases/todo-dogfood
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/todo-dogfood/slices/slice-0-static-todo.md
+- Active slice: auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-0-static-todo.md
 
 ## Key Docs
 - \`README.md\` - repo context.
-- \`auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md\` - active spec.
-- \`auto-strike/initiatives/main/features/todo-dogfood/slices/slice-0-static-todo.md\` - active evidence.
-- \`auto-strike/initiatives/main/features/clip-notes/feature-spec.md\` - completed feature context.
+- \`auto-strike/initiatives/main/phases/todo-dogfood/phase-spec.md\` - active spec.
+- \`auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-0-static-todo.md\` - active evidence.
+- \`auto-strike/initiatives/main/phases/clip-notes/phase-spec.md\` - completed phase context.
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-0-static-todo.md", `# Slice 0: Static Todo
+  write(repo, "auto-strike/initiatives/main/phases/todo-dogfood/phase-spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-0-static-todo.md", `# Slice 0: Static Todo
 
 ## Evidence
 
@@ -450,8 +486,8 @@ Changed:
 Verified:
 - node scripts/todo-smoke.js - passed
 `);
-  write(repo, "auto-strike/initiatives/main/features/clip-notes/feature-spec.md", "# Clip Notes Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/clip-notes/slices/slice-1-review-brief.md", `# Slice 1: Review Brief
+  write(repo, "auto-strike/initiatives/main/phases/clip-notes/phase-spec.md", "# Clip Notes Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/clip-notes/slices/slice-1-review-brief.md", `# Slice 1: Review Brief
 
 ## Evidence
 
@@ -471,7 +507,7 @@ Verified:
   write(repo, "scripts/clip-notes-smoke.js", "console.log('clip');\n");
 
   const result = run(repo, ["review-context", "--lens", "code-quality"]);
-  assertStatus(result, 0, "review-context should scope changed files to the active feature");
+  assertStatus(result, 0, "review-context should scope changed files to the active phase");
   const body = json(result);
   assert.equal(body.state.evidence.reviewScope.scope, "active-slice");
   assert.deepEqual(body.state.evidence.reviewScope.changedPaths, [
@@ -496,15 +532,15 @@ function testValidateWarnsWhenReviewEvidenceLacksChangedAndVerified() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/search-mvp
+- Phase: auto-strike/initiatives/main/phases/search-mvp
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/search-mvp/slices/slice-0-search.md
+- Active slice: auto-strike/initiatives/main/phases/search-mvp/slices/slice-0-search.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/search-mvp/feature-spec.md", "# Search MVP Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/search-mvp/slices/slice-0-search.md", `# Slice 0: Search
+  write(repo, "auto-strike/initiatives/main/phases/search-mvp/phase-spec.md", "# Search MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/search-mvp/slices/slice-0-search.md", `# Slice 0: Search
 
 ## Evidence
 
@@ -525,15 +561,15 @@ function testValidateWarnsForWeakPreBuildSlicePrep() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/todo-dogfood
+- Phase: auto-strike/initiatives/main/phases/todo-dogfood
 - Current mode: build
-- Active slice: auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md
+- Active slice: auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-1-edit-task.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+  write(repo, "auto-strike/initiatives/main/phases/todo-dogfood/phase-spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
 
 ## Outcome
 Edit task labels.
@@ -562,15 +598,15 @@ function testValidateAcceptsConcretePreBuildSlicePrep() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/todo-dogfood
+- Phase: auto-strike/initiatives/main/phases/todo-dogfood
 - Current mode: build
-- Active slice: auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md
+- Active slice: auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-1-edit-task.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+  write(repo, "auto-strike/initiatives/main/phases/todo-dogfood/phase-spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
 
 ## Outcome
 Edit task labels.
@@ -602,7 +638,7 @@ function testValidateAcceptsActiveWorkPointer() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: None
+- Phase: None
 - Current mode: brainstorm
 - Doc: auto-strike/initiatives/main/idea.md
 - State: First-outcome decision is being clarified.
@@ -614,7 +650,7 @@ function testValidateAcceptsActiveWorkPointer() {
 `);
   write(repo, "auto-strike/initiatives/main/idea.md", `# Clip Notes Idea
 
-## Phase Tasks
+## Mode Tasks
 - [x] Capture the user, problem, and first useful outcome.
 - [ ] Confirm constraints and first-version non-goals.
 
@@ -634,13 +670,51 @@ User can save a short note for a selected clip.
   assert.ok(!body.messages.some((item) => item.code === "weak-active-work-doc"));
 }
 
+function testValidateWarnsForDocNameAsCurrentMode() {
+  const repo = tempRepo();
+  write(repo, "auto-strike/index.md", `# Auto Strike
+
+## Active Work
+- Initiative: auto-strike/initiatives/main
+- Phase: None
+- Current mode: idea
+- Doc: auto-strike/initiatives/main/idea.md
+- Slice: None
+- State: Idea is being shaped.
+- Next: Continue brainstorm.
+- Blocked by: None.
+
+## Key Docs
+- auto-strike/initiatives/main/idea.md - brainstorm packet.
+
+## Open Decisions
+- None.
+
+## Verification
+- None yet.
+`);
+  write(repo, "auto-strike/initiatives/main/idea.md", `# Main Idea
+
+## Mode Tasks
+- [ ] Capture initial idea.
+
+## Exit Evidence
+- Still brainstorming.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "doc names should warn when used as current mode");
+  const body = json(result);
+  assert.ok(body.messages.some((item) => item.code === "unknown-mode" && item.severity === "warning"));
+}
+
 function testValidateWarnsForMissingActiveWork() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: None
+- Phase: None
 - Current mode: brainstorm
 
 ## Open Decisions
@@ -648,7 +722,7 @@ function testValidateWarnsForMissingActiveWork() {
 `);
   write(repo, "auto-strike/initiatives/main/idea.md", `# Clip Notes Idea
 
-## Phase Tasks
+## Mode Tasks
 - [x] Capture the user, problem, and first useful outcome.
 - [ ] Confirm constraints and first-version non-goals.
 
@@ -670,9 +744,9 @@ function testValidateWarnsForWeakOrMissingActiveWorkDoc() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/clip-notes
+- Phase: auto-strike/initiatives/main/phases/clip-notes
 - Current mode: spec
-- Doc: auto-strike/initiatives/main/features/clip-notes/feature-spec.md
+- Doc: auto-strike/initiatives/main/phases/clip-notes/phase-spec.md
 - State: Spec acceptance checks are being drafted.
 - Next: Draft acceptance checks.
 - Blocked by: None.
@@ -680,9 +754,9 @@ function testValidateWarnsForWeakOrMissingActiveWorkDoc() {
 ## Open Decisions
 - None.
 `);
-  write(weakRepo, "auto-strike/initiatives/main/features/clip-notes/feature-spec.md", `# Clip Notes Spec
+  write(weakRepo, "auto-strike/initiatives/main/phases/clip-notes/phase-spec.md", `# Clip Notes Spec
 
-## Phase Tasks
+## Mode Tasks
 - [ ] Draft it later.
 
 ## Exit Evidence
@@ -698,7 +772,7 @@ function testValidateWarnsForWeakOrMissingActiveWorkDoc() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: None
+- Phase: None
 - Doc: auto-strike/initiatives/main/grill.md
 - State: Highest-risk user-flow question is unresolved.
 - Next: Resolve the highest-risk user-flow question.
@@ -720,10 +794,10 @@ function testValidateErrorsForMissingActiveWorkDocDuringBuild() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/tool-library
+- Phase: auto-strike/initiatives/main/phases/tool-library
 - Current mode: build
-- Doc: auto-strike/initiatives/main/features/tool-library/slices/slice-0-foundation.md
-- Slice: auto-strike/initiatives/main/features/tool-library/slices/slice-0-foundation.md
+- Doc: auto-strike/initiatives/main/phases/tool-library/slices/slice-0-foundation.md
+- Slice: auto-strike/initiatives/main/phases/tool-library/slices/slice-0-foundation.md
 - State: Building the foundation slice.
 - Next: Repair missing slice state before continuing build.
 - Blocked by: None.
@@ -731,7 +805,7 @@ function testValidateErrorsForMissingActiveWorkDocDuringBuild() {
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Feature\n");
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/phase-spec.md", "# Tool Library Phase\n");
 
   const result = run(repo, ["validate"]);
   assertStatus(result, 1, "missing active build doc should hard fail recovery-sensitive modes");
@@ -740,18 +814,18 @@ function testValidateErrorsForMissingActiveWorkDocDuringBuild() {
   assert.ok(body.messages.some((item) => item.code === "missing-active-slice" && item.severity === "error"));
 }
 
-function testValidateErrorsForMissingActiveFeatureDuringReview() {
+function testValidateErrorsForMissingActivePhaseDuringReview() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: missing-feature
+- Phase: missing-phase
 - Current mode: review
 - Doc: auto-strike/initiatives/main/review.md
 - Slice: None
 - State: Reviewing a completed slice.
-- Next: Repair missing feature pointer before continuing review.
+- Next: Repair missing phase pointer before continuing review.
 - Blocked by: None.
 
 ## Open Decisions
@@ -759,7 +833,7 @@ function testValidateErrorsForMissingActiveFeatureDuringReview() {
 `);
   write(repo, "auto-strike/initiatives/main/review.md", `# Review
 
-## Phase Tasks
+## Mode Tasks
 - [ ] Scope review.
 - [ ] Record findings.
 
@@ -768,20 +842,20 @@ function testValidateErrorsForMissingActiveFeatureDuringReview() {
 `);
 
   const result = run(repo, ["validate"]);
-  assertStatus(result, 1, "missing active feature should hard fail review recovery-sensitive mode");
-  assert.ok(json(result).messages.some((item) => item.code === "missing-active-feature" && item.severity === "error"));
+  assertStatus(result, 1, "missing active phase should hard fail review recovery-sensitive mode");
+  assert.ok(json(result).messages.some((item) => item.code === "missing-active-phase" && item.severity === "error"));
 }
 
-function testValidateWarnsForBatchedPhaseNextAction() {
+function testValidateWarnsForBatchedModeNextAction() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
 ## Active Work
 - Initiative: auto-strike/initiatives/tool-library
-- Feature: None
+- Phase: None
 - Doc: auto-strike/initiatives/tool-library/grill.md
 - State: Grill has one open business-rule decision.
-- Next: After the answer, close grill, write the spec and feature spec, and slice the build.
+- Next: After the answer, close grill, write the spec and phase spec, and slice the build.
 - Blocked by: User answer on conflict policy.
 
 ## Open Decisions
@@ -789,7 +863,7 @@ function testValidateWarnsForBatchedPhaseNextAction() {
 `);
   write(repo, "auto-strike/initiatives/tool-library/grill.md", `# Tool Library Grill
 
-## Phase Tasks
+## Mode Tasks
 - [x] Review brainstorm.
 - [ ] Resolve conflict policy.
 
@@ -799,7 +873,7 @@ function testValidateWarnsForBatchedPhaseNextAction() {
 
   const result = run(repo, ["validate"]);
   assertStatus(result, 0, "batched phase next action should warn, not fail");
-  assert.ok(json(result).messages.some((item) => item.code === "batched-phase-next-action" && item.severity === "warning"));
+  assert.ok(json(result).messages.some((item) => item.code === "batched-mode-next-action" && item.severity === "warning"));
 }
 
 function testValidateWarnsForNextSliceDocAndImplementationBatch() {
@@ -808,10 +882,10 @@ function testValidateWarnsForNextSliceDocAndImplementationBatch() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/tool-library
-- Feature: auto-strike/initiatives/tool-library/features/core
+- Phase: auto-strike/initiatives/tool-library/phases/core
 - Current mode: build
-- Doc: auto-strike/initiatives/tool-library/features/core/slices/slice-0-server-boot.md
-- Active slice: auto-strike/initiatives/tool-library/features/core/slices/slice-0-server-boot.md
+- Doc: auto-strike/initiatives/tool-library/phases/core/slices/slice-0-server-boot.md
+- Active slice: auto-strike/initiatives/tool-library/phases/core/slices/slice-0-server-boot.md
 - State: Slice 0 is closed.
 - Next: Write slice-1-json-store.md, add Implementation Research / Plan / Plan Review, then implement and verify.
 - Blocked by: None.
@@ -819,8 +893,8 @@ function testValidateWarnsForNextSliceDocAndImplementationBatch() {
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/tool-library/features/core/feature-spec.md", "# Core Spec\n");
-  write(repo, "auto-strike/initiatives/tool-library/features/core/slices/slice-0-server-boot.md", `# Slice 0: Server Boot
+  write(repo, "auto-strike/initiatives/tool-library/phases/core/phase-spec.md", "# Core Spec\n");
+  write(repo, "auto-strike/initiatives/tool-library/phases/core/slices/slice-0-server-boot.md", `# Slice 0: Server Boot
 
 ## Execution Tasks
 - [x] Research.
@@ -864,7 +938,7 @@ Next:
 
   const result = run(repo, ["validate"]);
   assertStatus(result, 0, "next-slice doc plus implementation next action should warn, not fail");
-  assert.ok(json(result).messages.some((item) => item.code === "batched-phase-next-action" && item.severity === "warning"));
+  assert.ok(json(result).messages.some((item) => item.code === "batched-mode-next-action" && item.severity === "warning"));
 }
 
 function testValidateAcceptsSingleBoundaryNextAction() {
@@ -873,7 +947,7 @@ function testValidateAcceptsSingleBoundaryNextAction() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/tool-library
-- Feature: None
+- Phase: None
 - Doc: auto-strike/initiatives/tool-library/grill.md
 - State: Grill has one open business-rule decision.
 - Next: After the answer, record the decision, close grill, and leave spec as the next action.
@@ -884,7 +958,7 @@ function testValidateAcceptsSingleBoundaryNextAction() {
 `);
   write(repo, "auto-strike/initiatives/tool-library/grill.md", `# Tool Library Grill
 
-## Phase Tasks
+## Mode Tasks
 - [x] Review brainstorm.
 - [ ] Resolve conflict policy.
 
@@ -894,7 +968,7 @@ function testValidateAcceptsSingleBoundaryNextAction() {
 
   const result = run(repo, ["validate"]);
   assertStatus(result, 0, "single boundary next action should not warn");
-  assert.ok(!json(result).messages.some((item) => item.code === "batched-phase-next-action"));
+  assert.ok(!json(result).messages.some((item) => item.code === "batched-mode-next-action"));
 }
 
 function writeBuildPhaseFixture(repo, ideaContent) {
@@ -902,9 +976,9 @@ function writeBuildPhaseFixture(repo, ideaContent) {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/checklist
+- Phase: auto-strike/initiatives/main/phases/checklist
 - Current mode: build
-- Doc: auto-strike/initiatives/main/features/checklist/slices/slice-0-static-app.md
+- Doc: auto-strike/initiatives/main/phases/checklist/slices/slice-0-static-app.md
 - State: Slice build is in progress.
 - Next: Implement the checklist behavior.
 - Blocked by: None.
@@ -914,8 +988,8 @@ function writeBuildPhaseFixture(repo, ideaContent) {
 `);
   write(repo, "auto-strike/initiatives/main/idea.md", ideaContent);
   write(repo, "auto-strike/initiatives/main/spec.md", "# Checklist Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/checklist/feature-spec.md", "# Checklist Feature Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/checklist/slices/index.md", `# Slices
+  write(repo, "auto-strike/initiatives/main/phases/checklist/phase-spec.md", "# Checklist Phase Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/checklist/slices/index.md", `# Slices
 
 ## Slice Map
 
@@ -923,7 +997,7 @@ function writeBuildPhaseFixture(repo, ideaContent) {
 | --- | --- | --- | --- | --- | --- |
 | 0. Static app | S | None | First usable checklist | Low | node --check app.js |
 `);
-  write(repo, "auto-strike/initiatives/main/features/checklist/slices/slice-0-static-app.md", `# Slice 0: Static App
+  write(repo, "auto-strike/initiatives/main/phases/checklist/slices/slice-0-static-app.md", `# Slice 0: Static App
 
 ## Size
 S
@@ -956,7 +1030,7 @@ S
 `);
 }
 
-function testValidateWarnsForMissingPhaseLedgerAfterSlicing() {
+function testValidateWarnsForMissingModeLedgerAfterSlicing() {
   const repo = tempRepo();
   writeBuildPhaseFixture(repo, `# Checklist Idea
 
@@ -965,36 +1039,63 @@ function testValidateWarnsForMissingPhaseLedgerAfterSlicing() {
 `);
 
   const result = run(repo, ["validate"]);
-  assertStatus(result, 0, "missing phase ledger should warn, not fail");
+  assertStatus(result, 0, "missing mode ledger should warn, not fail");
   const body = json(result);
-  assert.ok(body.messages.some((item) => item.code === "missing-phase-ledger" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "missing-mode-ledger" && item.severity === "warning"));
 }
 
-function testValidateWarnsForWeakPhaseLedgerAfterSlicing() {
+function testValidateWarnsForWeakModeLedgerAfterSlicing() {
   const repo = tempRepo();
   writeBuildPhaseFixture(repo, `# Checklist Idea
 
-## Phase Ledger
+## Mode Ledger
 
-| Phase | Status | Artifact | Reason |
+| Mode | Status | Artifact | Reason |
 | --- | --- | --- | --- |
 | Brainstorm | done | \`idea.md\` | First useful outcome is recorded. |
 | Grill | pending |  |  |
-| Spec | done | \`spec.md\`, \`features/checklist/feature-spec.md\` | Single feature is sliceable. |
-| Slice | done | \`features/checklist/slices/index.md\` | Slice 0 is selected. |
-| Build | in progress | \`features/checklist/slices/slice-0-static-app.md\` | Active slice is being implemented. |
+| Spec | done | \`spec.md\`, \`phases/checklist/phase-spec.md\` | Single phase is sliceable. |
+| Slice | done | \`phases/checklist/slices/index.md\` | Slice 0 is selected. |
+| Build | in progress | \`phases/checklist/slices/slice-0-static-app.md\` | Active slice is being implemented. |
 
 ## Current Shape
 - First useful outcome: local checklist.
 `);
 
   const result = run(repo, ["validate"]);
-  assertStatus(result, 0, "weak phase ledger should warn, not fail");
+  assertStatus(result, 0, "weak mode ledger should warn, not fail");
   const body = json(result);
-  assert.ok(body.messages.some((item) => item.code === "weak-phase-ledger" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "weak-mode-ledger" && item.severity === "warning"));
 }
 
-function testValidateAcceptsPhaseLedgerAfterSlicing() {
+function testValidateAcceptsModeLedgerAfterSlicing() {
+  const repo = tempRepo();
+  writeBuildPhaseFixture(repo, `# Checklist Idea
+
+## Mode Ledger
+
+| Mode | Status | Artifact | Reason |
+| --- | --- | --- | --- |
+| Brainstorm | done | \`idea.md\` | First useful outcome, user, constraints, and non-goals are recorded. |
+| Grill | compressed | \`idea.md\` | Prompt already answered core decisions; no consequential blockers were found. |
+| Spec | done | \`spec.md\`, \`phases/checklist/phase-spec.md\` | Single phase is sliceable. |
+| Slice | done | \`phases/checklist/slices/index.md\` | Slice 0 is sized, ordered, and dependency-free. |
+| Build | in progress | \`phases/checklist/slices/slice-0-static-app.md\` | Active slice is being implemented. |
+| Review | pending |  |  |
+| Readiness | pending |  |  |
+
+## Current Shape
+- First useful outcome: local checklist.
+`);
+
+  const result = run(repo, ["validate"]);
+  assertStatus(result, 0, "substantive mode ledger should pass validation");
+  const body = json(result);
+  assert.ok(!body.messages.some((item) => item.code === "missing-mode-ledger"));
+  assert.ok(!body.messages.some((item) => item.code === "weak-mode-ledger"));
+}
+
+function testValidateWarnsForLegacyPhaseLedgerName() {
   const repo = tempRepo();
   writeBuildPhaseFixture(repo, `# Checklist Idea
 
@@ -1004,30 +1105,28 @@ function testValidateAcceptsPhaseLedgerAfterSlicing() {
 | --- | --- | --- | --- |
 | Brainstorm | done | \`idea.md\` | First useful outcome, user, constraints, and non-goals are recorded. |
 | Grill | compressed | \`idea.md\` | Prompt already answered core decisions; no consequential blockers were found. |
-| Spec | done | \`spec.md\`, \`features/checklist/feature-spec.md\` | Single feature is sliceable. |
-| Slice | done | \`features/checklist/slices/index.md\` | Slice 0 is sized, ordered, and dependency-free. |
-| Build | in progress | \`features/checklist/slices/slice-0-static-app.md\` | Active slice is being implemented. |
-| Review | pending |  |  |
-| Validate | pending |  |  |
+| Spec | done | \`spec.md\`, \`phases/checklist/phase-spec.md\` | Single phase is sliceable. |
+| Slice | done | \`phases/checklist/slices/index.md\` | Slice 0 is sized, ordered, and dependency-free. |
+| Build | in progress | \`phases/checklist/slices/slice-0-static-app.md\` | Active slice is being implemented. |
 
 ## Current Shape
 - First useful outcome: local checklist.
 `);
 
   const result = run(repo, ["validate"]);
-  assertStatus(result, 0, "substantive phase ledger should pass validation");
+  assertStatus(result, 0, "legacy Phase Ledger heading should warn but remain readable");
   const body = json(result);
-  assert.ok(!body.messages.some((item) => item.code === "missing-phase-ledger"));
-  assert.ok(!body.messages.some((item) => item.code === "weak-phase-ledger"));
+  assert.ok(body.messages.some((item) => item.code === "legacy-phase-ledger-name" && item.severity === "warning"));
+  assert.ok(!body.messages.some((item) => item.code === "missing-mode-ledger"));
 }
 
-function testValidateAcceptsSpecPhaseLedgerWithFuturePendingRows() {
+function testValidateAcceptsSpecModeLedgerWithFuturePendingRows() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/tool-library
+- Phase: auto-strike/initiatives/main/phases/tool-library
 - Current mode: spec
 - Doc: auto-strike/initiatives/main/spec.md
 - State: Spec is being drafted.
@@ -1041,14 +1140,14 @@ function testValidateAcceptsSpecPhaseLedgerWithFuturePendingRows() {
   write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Stack\nDecision: Use a local server.\n");
   write(repo, "auto-strike/initiatives/main/spec.md", `# Spec
 
-## Phase Tasks
+## Mode Tasks
 - [x] Draft initiative spec.
 - [ ] Review spec before slicing.
 
 ## Exit Evidence
 - Spec is being drafted from completed grill decisions.
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/phase-spec.md", "# Tool Library Spec\n");
   write(repo, "auto-strike/initiatives/main/grill.md", `# Grill
 
 ## Decision Depth
@@ -1065,23 +1164,23 @@ Why: Default.
 `);
   write(repo, "auto-strike/initiatives/main/idea.md", `# Idea
 
-## Phase Ledger
+## Mode Ledger
 
-| Phase | Status | Artifact | Reason |
+| Mode | Status | Artifact | Reason |
 | --- | --- | --- | --- |
 | Brainstorm | done | \`idea.md\` | First useful outcome, user, constraints, and non-goals are recorded. |
 | Grill | done | \`grill.md\`, \`decisions.md\` | User-facing grill resolved hardening decisions. |
-| Spec | in progress | \`spec.md\`, \`features/tool-library/feature-spec.md\` | Spec is being drafted. |
+| Spec | in progress | \`spec.md\`, \`phases/tool-library/phase-spec.md\` | Spec is being drafted. |
 | Slice | pending |  |  |
 | Build | pending |  |  |
 | Review | pending |  |  |
-| Validate | pending |  |  |
+| Readiness | pending |  |  |
 `);
 
   const result = run(repo, ["validate"]);
   assertStatus(result, 0, "future pending ledger rows should not weaken active spec mode");
   const body = json(result);
-  assert.ok(!body.messages.some((item) => item.code === "weak-phase-ledger"));
+  assert.ok(!body.messages.some((item) => item.code === "weak-mode-ledger"));
 }
 
 function testValidateDoesNotInferBuildPrepFromSliceDocAlone() {
@@ -1090,9 +1189,9 @@ function testValidateDoesNotInferBuildPrepFromSliceDocAlone() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/tool-library
-- Doc: auto-strike/initiatives/main/features/tool-library/slices/slice-0-server-boot.md
-- Slice: auto-strike/initiatives/main/features/tool-library/slices/slice-0-server-boot.md
+- Phase: auto-strike/initiatives/main/phases/tool-library
+- Doc: auto-strike/initiatives/main/phases/tool-library/slices/slice-0-server-boot.md
+- Slice: auto-strike/initiatives/main/phases/tool-library/slices/slice-0-server-boot.md
 - State: Slice planning is done; build is next.
 - Next: Build slice 0.
 - Blocked by: None.
@@ -1119,18 +1218,18 @@ Why: Default.
 `);
   write(repo, "auto-strike/initiatives/main/idea.md", `# Idea
 
-## Phase Ledger
+## Mode Ledger
 
-| Phase | Status | Artifact | Reason |
+| Mode | Status | Artifact | Reason |
 | --- | --- | --- | --- |
 | Brainstorm | done | \`idea.md\` | First useful outcome, user, constraints, and non-goals are recorded. |
 | Grill | done | \`grill.md\`, \`decisions.md\` | User-facing grill resolved hardening decisions. |
-| Spec | done | \`spec.md\`, \`features/tool-library/feature-spec.md\` | Feature is ready to slice. |
-| Slice | done | \`features/tool-library/slices/index.md\`, \`features/tool-library/slices/slice-0-server-boot.md\` | Slices are sized and ordered; slice 0 is ready for build. |
+| Spec | done | \`spec.md\`, \`phases/tool-library/phase-spec.md\` | Phase is ready to slice. |
+| Slice | done | \`phases/tool-library/slices/index.md\`, \`phases/tool-library/slices/slice-0-server-boot.md\` | Slices are sized and ordered; slice 0 is ready for build. |
 | Build | pending |  |  |
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/index.md", `# Slices
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/phase-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/slices/index.md", `# Slices
 
 ## Slice Map
 
@@ -1142,9 +1241,9 @@ Why: Default.
 - pass - size, dependency order, and verification are clear.
 
 ## Exit Evidence
-- Feature can enter build one slice at a time without guessing.
+- Phase can enter build one slice at a time without guessing.
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-0-server-boot.md", `# Slice 0: Server Boot
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/slices/slice-0-server-boot.md", `# Slice 0: Server Boot
 
 ## Size
 S
@@ -1174,7 +1273,7 @@ S
   assert.ok(!body.messages.some((item) => item.code === "weak-slice-implementation-research"));
   assert.ok(!body.messages.some((item) => item.code === "weak-slice-plan"));
   assert.ok(!body.messages.some((item) => item.code === "weak-slice-plan-review"));
-  assert.ok(!body.messages.some((item) => item.code === "weak-phase-ledger" && /build/i.test(item.message)));
+  assert.ok(!body.messages.some((item) => item.code === "weak-mode-ledger" && /build/i.test(item.message)));
 }
 
 function testValidateWarnsForStaleActiveWorkAfterImplementationEvidence() {
@@ -1183,7 +1282,7 @@ function testValidateWarnsForStaleActiveWorkAfterImplementationEvidence() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/tool-library
-- Feature: None yet
+- Phase: None yet
 - Doc: auto-strike/initiatives/tool-library/idea.md
 - State: Brainstorm in progress.
 - Next: Resolve identity model.
@@ -1200,20 +1299,20 @@ function testValidateWarnsForStaleActiveWorkAfterImplementationEvidence() {
   write(repo, "auto-strike/initiatives/tool-library/spec.md", "# Spec\n\n## Overview\n- Build a local tool library.\n");
   write(repo, "auto-strike/initiatives/tool-library/idea.md", `# Idea
 
-## Phase Ledger
+## Mode Ledger
 
-| Phase | Status | Artifact | Reason |
+| Mode | Status | Artifact | Reason |
 | --- | --- | --- | --- |
 | Brainstorm | done | \`idea.md\` | Useful outcome captured. |
 | Grill | compressed | \`decisions.md\` | Core decisions are recorded. |
 | Spec | done | \`spec.md\` | Scope is sliceable. |
-| Slice | in progress | \`features/lending-workflow/slices/index.md\` | Slice map exists. |
+| Slice | in progress | \`phases/lending-workflow/slices/index.md\` | Slice map exists. |
 | Build | pending |  |  |
 | Review | pending |  |  |
-| Validate | pending |  |  |
+| Readiness | pending |  |  |
 `);
-  write(repo, "auto-strike/initiatives/tool-library/features/lending-workflow/feature-spec.md", "# Feature Spec\n");
-  write(repo, "auto-strike/initiatives/tool-library/features/lending-workflow/slices/slice-0-foundation.md", `# Slice 0
+  write(repo, "auto-strike/initiatives/tool-library/phases/lending-workflow/phase-spec.md", "# Phase Spec\n");
+  write(repo, "auto-strike/initiatives/tool-library/phases/lending-workflow/slices/slice-0-foundation.md", `# Slice 0
 
 ## Execution Tasks
 - [ ] Build the server.
@@ -1235,11 +1334,11 @@ Reviewed:
   assertStatus(result, 0, "stale active work should warn, not fail");
   const body = json(result);
   assert.ok(body.messages.some((item) => item.code === "stale-active-work-mode" && item.severity === "warning"));
-  assert.ok(body.messages.some((item) => item.code === "stale-active-feature-pointer" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "stale-active-phase-pointer" && item.severity === "warning"));
   assert.ok(body.messages.some((item) => item.code === "stale-active-slice-pointer" && item.severity === "warning"));
   assert.ok(body.messages.some((item) => item.code === "stale-index-verification" && item.severity === "warning"));
   assert.ok(body.messages.some((item) => item.code === "open-decisions-after-implementation" && item.severity === "warning"));
-  assert.ok(body.messages.some((item) => item.code === "weak-phase-ledger" && /build/i.test(item.message)));
+  assert.ok(body.messages.some((item) => item.code === "weak-mode-ledger" && /build/i.test(item.message)));
 }
 
 function testValidateWarnsForStaleFinalIndexState() {
@@ -1248,16 +1347,16 @@ function testValidateWarnsForStaleFinalIndexState() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/tool-library
+- Phase: auto-strike/initiatives/main/phases/tool-library
 - Current mode: readiness (closed)
 - Doc: auto-strike/initiatives/main/readiness.md
-- Slice: auto-strike/initiatives/main/features/tool-library/slices/slice-6-final.md (closed)
+- Slice: auto-strike/initiatives/main/phases/tool-library/slices/slice-6-final.md (closed)
 - State: Initiative complete.
 - Next: User can run the app.
 
 ## Key Docs
 - auto-strike/initiatives/main/readiness.md - final readiness.
-- auto-strike/initiatives/main/features/tool-library/slices/slice-6-final.md - active build target.
+- auto-strike/initiatives/main/phases/tool-library/slices/slice-6-final.md - active build target.
 
 ## Open Decisions
 - None.
@@ -1267,8 +1366,8 @@ function testValidateWarnsForStaleFinalIndexState() {
 `);
   write(repo, "auto-strike/initiatives/main/idea.md", `# Idea
 
-## Phase Ledger
-| Phase | Status | Artifact | Reason |
+## Mode Ledger
+| Mode | Status | Artifact | Reason |
 | --- | --- | --- | --- |
 | Brainstorm | done | \`idea.md\` | Done. |
 | Grill | done | \`decisions.md\` | Done. |
@@ -1276,19 +1375,19 @@ function testValidateWarnsForStaleFinalIndexState() {
 | Slice | done | \`slices/index.md\` | Done. |
 | Build | done | \`slices/slice-6-final.md\` | Done. |
 | Review | done | \`readiness.md\` | Done. |
-| Validate | done | \`readiness.md\` | Done. |
+| Readiness | done | \`readiness.md\` | Done. |
 `);
   write(repo, "auto-strike/initiatives/main/readiness.md", `# Readiness
 
-## Phase Tasks
+## Mode Tasks
 - [x] Run checks.
 - [x] Update docs.
 
 ## Exit Evidence
 - Ready.
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Feature Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-6-final.md", `# Slice 6: Final
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/phase-spec.md", "# Phase Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/slices/slice-6-final.md", `# Slice 6: Final
 
 ## Evidence
 Changed:
@@ -1314,9 +1413,9 @@ function testValidateWarnsForMissingReferencedAutoStrikeDoc() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/checklist
+- Phase: auto-strike/initiatives/main/phases/checklist
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/checklist/slices/slice-0-static-app.md
+- Active slice: auto-strike/initiatives/main/phases/checklist/slices/slice-0-static-app.md
 
 ## Open Decisions
 - None.
@@ -1324,8 +1423,8 @@ function testValidateWarnsForMissingReferencedAutoStrikeDoc() {
   write(repo, "UBIQUITOUS_LANGUAGE.md", "# Ubiquitous Language\n\n## Checklist\n- Item: A task.\n");
   write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Scope\n- Local checklist.\n");
   write(repo, "auto-strike/initiatives/main/spec.md", "# Spec\n\n## Overview\n- Local checklist.\n");
-  write(repo, "auto-strike/initiatives/main/features/checklist/feature-spec.md", "# Checklist Feature Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/checklist/slices/slice-0-static-app.md", `# Slice 0
+  write(repo, "auto-strike/initiatives/main/phases/checklist/phase-spec.md", "# Checklist Phase Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/checklist/slices/slice-0-static-app.md", `# Slice 0
 
 ## Evidence
 
@@ -1353,9 +1452,9 @@ function testValidateWarnsForStaleSliceTaskChecklist() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/checklist
+- Phase: auto-strike/initiatives/main/phases/checklist
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/checklist/slices/slice-0-static-app.md
+- Active slice: auto-strike/initiatives/main/phases/checklist/slices/slice-0-static-app.md
 
 ## Open Decisions
 - None.
@@ -1363,8 +1462,8 @@ function testValidateWarnsForStaleSliceTaskChecklist() {
   write(repo, "UBIQUITOUS_LANGUAGE.md", "# Ubiquitous Language\n\n## Checklist\n- Item: A task.\n");
   write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Scope\n- Local checklist.\n");
   write(repo, "auto-strike/initiatives/main/spec.md", "# Spec\n\n## Overview\n- Local checklist.\n");
-  write(repo, "auto-strike/initiatives/main/features/checklist/feature-spec.md", "# Checklist Feature Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/checklist/slices/slice-0-static-app.md", `# Slice 0
+  write(repo, "auto-strike/initiatives/main/phases/checklist/phase-spec.md", "# Checklist Phase Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/checklist/slices/slice-0-static-app.md", `# Slice 0
 
 ## Execution Tasks
 - [ ] Build the server.
@@ -1395,7 +1494,7 @@ function testValidateAllowsMissingRootLanguage() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: None
+- Phase: None
 - Doc: auto-strike/initiatives/main/idea.md
 - State: Brainstorm is starting.
 - Next: Capture the first useful outcome.
@@ -1406,7 +1505,7 @@ function testValidateAllowsMissingRootLanguage() {
 `);
   write(repo, "auto-strike/initiatives/main/idea.md", `# Main Idea
 
-## Phase Tasks
+## Mode Tasks
 - [x] Capture first useful outcome.
 - [ ] Record current truth.
 
@@ -1429,7 +1528,7 @@ function testValidateWarnsForWeakCurrentTruthDocs() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: None
+- Phase: None
 - Doc: auto-strike/initiatives/main/idea.md
 - State: Brainstorm is starting.
 - Next: Capture the first useful outcome.
@@ -1443,7 +1542,7 @@ function testValidateWarnsForWeakCurrentTruthDocs() {
   write(repo, "auto-strike/initiatives/main/spec.md", "# Main Spec\n");
   write(repo, "auto-strike/initiatives/main/idea.md", `# Main Idea
 
-## Phase Tasks
+## Mode Tasks
 - [x] Capture first useful outcome.
 - [ ] Record current truth.
 
@@ -1465,7 +1564,7 @@ function testValidateAcceptsMinimalCurrentTruthDocs() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: None
+- Phase: None
 - Doc: auto-strike/initiatives/main/idea.md
 - State: Brainstorm is starting.
 - Next: Capture the first useful outcome.
@@ -1491,7 +1590,7 @@ function testValidateAcceptsMinimalCurrentTruthDocs() {
 `);
   write(repo, "auto-strike/initiatives/main/idea.md", `# Main Idea
 
-## Phase Tasks
+## Mode Tasks
 - [x] Capture first useful outcome.
 - [ ] Record current truth.
 
@@ -1516,7 +1615,7 @@ function testValidateWarnsForMissingGrillDecisionDepth() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: None
+- Phase: None
 - Doc: auto-strike/initiatives/main/grill.md
 - State: Product workflow decisions are being pressure-tested.
 - Next: Resolve the active decision node.
@@ -1527,7 +1626,7 @@ function testValidateWarnsForMissingGrillDecisionDepth() {
 `);
   write(repo, "auto-strike/initiatives/main/grill.md", `# Bookings Grill
 
-## Phase Tasks
+## Mode Tasks
 - [x] Review the brainstorm handoff and repo context.
 - [ ] Resolve the active decision node.
 
@@ -1551,7 +1650,7 @@ function testValidateAcceptsStandardGrillDecisionDepth() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: None
+- Phase: None
 - Doc: auto-strike/initiatives/main/grill.md
 - State: Product workflow decisions are being pressure-tested.
 - Next: Resolve the active decision node.
@@ -1562,7 +1661,7 @@ function testValidateAcceptsStandardGrillDecisionDepth() {
 `);
   write(repo, "auto-strike/initiatives/main/grill.md", `# Bookings Grill
 
-## Phase Tasks
+## Mode Tasks
 - [x] Review the brainstorm handoff and repo context.
 - [ ] Resolve the active decision node.
 
@@ -1596,7 +1695,7 @@ function testValidateAcceptsDeepGrillDecisionDepthWithSuggestedChange() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: None
+- Phase: None
 - Doc: auto-strike/initiatives/main/grill.md
 - State: Payment decisions are being pressure-tested.
 - Next: Resolve payment failure behavior.
@@ -1607,7 +1706,7 @@ function testValidateAcceptsDeepGrillDecisionDepthWithSuggestedChange() {
 `);
   write(repo, "auto-strike/initiatives/main/grill.md", `# Payments Grill
 
-## Phase Tasks
+## Mode Tasks
 - [x] Review the brainstorm handoff and repo context.
 - [ ] Resolve payment failure behavior.
 
@@ -1641,7 +1740,7 @@ function testValidateWarnsForUnknownGrillDecisionDepth() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: None
+- Phase: None
 - Doc: auto-strike/initiatives/main/grill.md
 - State: Product workflow decisions are being pressure-tested.
 - Next: Resolve the active decision node.
@@ -1652,7 +1751,7 @@ function testValidateWarnsForUnknownGrillDecisionDepth() {
 `);
   write(repo, "auto-strike/initiatives/main/grill.md", `# Bookings Grill
 
-## Phase Tasks
+## Mode Tasks
 - [x] Review the brainstorm handoff and repo context.
 - [ ] Resolve the active decision node.
 
@@ -1676,7 +1775,7 @@ function testValidateRequiresDecisionDepthAfterGrillMode() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: None
+- Phase: None
 - Doc: auto-strike/initiatives/main/spec.md
 - State: Spec is being drafted from grill decisions.
 - Next: Draft acceptance criteria.
@@ -1687,7 +1786,7 @@ function testValidateRequiresDecisionDepthAfterGrillMode() {
 `);
   write(repo, "auto-strike/initiatives/main/spec.md", `# Bookings Spec
 
-## Phase Tasks
+## Mode Tasks
 - [x] Preserve grill decisions.
 - [ ] Draft acceptance criteria.
 
@@ -1696,7 +1795,7 @@ function testValidateRequiresDecisionDepthAfterGrillMode() {
 `);
   write(repo, "auto-strike/initiatives/main/grill.md", `# Bookings Grill
 
-## Phase Tasks
+## Mode Tasks
 - [x] Review the brainstorm handoff and repo context.
 - [x] Resolve the active decision node.
 
@@ -1718,10 +1817,10 @@ function testValidateWarnsForMissingGrillBeforeSpecOrSlice() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/tool-library
-- Doc: auto-strike/initiatives/main/features/tool-library/feature-spec.md
-- State: Feature has been specced and is being sliced.
-- Next: Slice the feature.
+- Phase: auto-strike/initiatives/main/phases/tool-library
+- Doc: auto-strike/initiatives/main/phases/tool-library/phase-spec.md
+- State: Phase has been specced and is being sliced.
+- Next: Slice the phase.
 - Blocked by: None.
 
 ## Open Decisions
@@ -1732,25 +1831,25 @@ function testValidateWarnsForMissingGrillBeforeSpecOrSlice() {
   write(repo, "auto-strike/initiatives/main/spec.md", "# Spec\n\n## Summary\nBuild a local tool library.\n");
   write(repo, "auto-strike/initiatives/main/idea.md", `# Idea
 
-## Phase Ledger
+## Mode Ledger
 
-| Phase | Status | Artifact | Reason |
+| Mode | Status | Artifact | Reason |
 | --- | --- | --- | --- |
 | Brainstorm | done | \`idea.md\` | First useful outcome, user, constraints, and non-goals are recorded. |
 | Grill | done | \`idea.md\` | Agent inferred decisions from the prompt. |
-| Spec | done | \`spec.md\`, \`features/tool-library/feature-spec.md\` | Feature is ready to slice. |
-| Slice | in progress | \`features/tool-library/slices/index.md\` | Slice plan is being drafted. |
+| Spec | done | \`spec.md\`, \`phases/tool-library/phase-spec.md\` | Phase is ready to slice. |
+| Slice | in progress | \`phases/tool-library/slices/index.md\` | Slice plan is being drafted. |
 | Build | pending |  |  |
 | Review | pending |  |  |
-| Validate | pending |  |  |
+| Readiness | pending |  |  |
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/phase-spec.md", "# Tool Library Spec\n");
 
   const result = run(repo, ["validate"]);
   assertStatus(result, 0, "missing real grill artifact should warn, not fail");
   const body = json(result);
   assert.ok(body.messages.some((item) => item.code === "missing-initiative-grill" && item.severity === "warning"));
-  assert.ok(body.messages.some((item) => item.code === "phase-completed-by-inference" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "mode-completed-by-inference" && item.severity === "warning"));
 }
 
 function testValidateAcceptsGrillDecisionCheckpointBeforeSpec() {
@@ -1759,10 +1858,10 @@ function testValidateAcceptsGrillDecisionCheckpointBeforeSpec() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: None
+- Phase: None
 - Doc: auto-strike/initiatives/main/spec.md
 - State: Spec is being drafted from grill decisions.
-- Next: Draft the feature map.
+- Next: Draft the phase map.
 - Blocked by: None.
 
 ## Open Decisions
@@ -1773,9 +1872,9 @@ function testValidateAcceptsGrillDecisionCheckpointBeforeSpec() {
   write(repo, "auto-strike/initiatives/main/spec.md", "# Spec\n\n## Summary\nBuild a local tool library.\n");
   write(repo, "auto-strike/initiatives/main/idea.md", `# Idea
 
-## Phase Ledger
+## Mode Ledger
 
-| Phase | Status | Artifact | Reason |
+| Mode | Status | Artifact | Reason |
 | --- | --- | --- | --- |
 | Brainstorm | done | \`idea.md\` | First useful outcome, user, constraints, and non-goals are recorded. |
 | Grill | done | \`grill.md\`, \`decisions.md\` | User-facing grill resolved hardening decisions. |
@@ -1783,7 +1882,7 @@ function testValidateAcceptsGrillDecisionCheckpointBeforeSpec() {
 `);
   write(repo, "auto-strike/initiatives/main/grill.md", `# Tool Library Grill
 
-## Phase Tasks
+## Mode Tasks
 - [x] Review the brainstorm handoff and repo context.
 - [x] Set or confirm Grill Decision Depth.
 - [x] Translate vague kickoff language into explicit constraints or questions.
@@ -1799,14 +1898,14 @@ Why: Default.
 - Stack / dependencies: Vanilla HTML plus a tiny local server; no third-party packages.
 - Data / persistence / state: JSON file persistence is enough for this prototype.
 - Auth / identity / permissions: Name-based member switcher; no real authentication.
-- Feature split / non-goals: Listing, browsing, request, pickup, return; no payments or messaging.
+- Phase split / non-goals: Listing, browsing, request, pickup, return; no payments or messaging.
 - Validation / browser or live checks: Browser walkthrough plus server smoke check; date windows require \`start <= end\`.
 - User-confirmed decisions: User accepted local prototype constraints in grill.
 - Accepted assumptions: Dates can be simple ISO date inputs.
 - Deferred decisions: Real auth and notifications.
 
 ## Exit Evidence
-- Scope, stack, persistence, identity, feature split, and validation are explicit enough to spec.
+- Scope, stack, persistence, identity, phase split, and validation are explicit enough to spec.
 `);
 
   const result = run(repo, ["validate"]);
@@ -1823,11 +1922,11 @@ function testValidateWarnsForToolingConstraintRuntimeConflict() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: None
+- Phase: None
 - Current mode: spec
 - Doc: auto-strike/initiatives/main/spec.md
 - State: Spec is being drafted.
-- Next: Draft the feature map.
+- Next: Draft the phase map.
 - Blocked by: None.
 
 ## Open Decisions
@@ -1838,8 +1937,8 @@ function testValidateWarnsForToolingConstraintRuntimeConflict() {
 ## Current Shape
 - Constraint: Do not use npm or npx; use pnpm only if a package command is needed.
 
-## Phase Ledger
-| Phase | Status | Artifact | Reason |
+## Mode Ledger
+| Mode | Status | Artifact | Reason |
 | --- | --- | --- | --- |
 | Brainstorm | done | \`idea.md\` | First useful outcome and constraints are recorded. |
 | Grill | done | \`grill.md\`, \`decisions.md\` | User-facing grill resolved hardening decisions. |
@@ -1876,15 +1975,15 @@ Decision: Use Python 3 stdlib because it avoids npm, npx, and pnpm package insta
   assert.ok(body.messages.some((item) => item.code === "possible-tooling-constraint-runtime-conflict" && item.severity === "warning"));
 }
 
-function testValidateWarnsWhenSpecPhaseCreatesSliceArtifacts() {
+function testValidateWarnsWhenSpecModeCreatesSliceArtifacts() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/tool-library
+- Phase: auto-strike/initiatives/main/phases/tool-library
 - Current mode: spec
-- Doc: auto-strike/initiatives/main/features/tool-library/feature-spec.md
+- Doc: auto-strike/initiatives/main/phases/tool-library/phase-spec.md
 - State: Spec is being drafted.
 - Next: Finish spec review.
 - Blocked by: None.
@@ -1897,7 +1996,7 @@ function testValidateWarnsWhenSpecPhaseCreatesSliceArtifacts() {
   write(repo, "auto-strike/initiatives/main/grill.md", `# Grill
 
 ## Decision Checkpoint
-- Scope / size: One feature.
+- Scope / size: One phase.
 - Stack / dependencies: Local app.
 - Data / persistence / state: SQLite.
 - Auth / identity / permissions: Seed members.
@@ -1906,17 +2005,17 @@ function testValidateWarnsWhenSpecPhaseCreatesSliceArtifacts() {
 `);
   write(repo, "auto-strike/initiatives/main/idea.md", `# Idea
 
-## Phase Ledger
+## Mode Ledger
 
-| Phase | Status | Artifact | Reason |
+| Mode | Status | Artifact | Reason |
 | --- | --- | --- | --- |
 | Brainstorm | done | \`idea.md\` | First useful outcome, user, constraints, and non-goals are recorded. |
 | Grill | done | \`grill.md\`, \`decisions.md\` | User-facing grill resolved hardening decisions. |
-| Spec | in progress | \`spec.md\`, \`features/tool-library/feature-spec.md\` | Spec is being drafted. |
+| Spec | in progress | \`spec.md\`, \`phases/tool-library/phase-spec.md\` | Spec is being drafted. |
 | Slice | pending |  |  |
 `);
   write(repo, "auto-strike/initiatives/main/spec.md", "# Spec\n\n## Summary\nBuild a local tool library.\n");
-  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", `# Tool Library Spec
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/phase-spec.md", `# Tool Library Spec
 
 ## Summary
 Build the core tool library.
@@ -1924,7 +2023,7 @@ Build the core tool library.
 ## Slice Handoff
 - Slice next after spec is reviewed.
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/index.md", `# Slices
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/slices/index.md", `# Slices
 
 ## Slice Map
 
@@ -1936,7 +2035,7 @@ Build the core tool library.
   const result = run(repo, ["validate"]);
   assertStatus(result, 0, "slice artifacts during spec should warn, not fail");
   const body = json(result);
-  assert.ok(body.messages.some((item) => item.code === "spec-phase-created-slice-artifacts" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "spec-mode-created-slice-artifacts" && item.severity === "warning"));
 }
 
 function testValidateWarnsForDetailedSlicePlanningInsideSpec() {
@@ -1945,9 +2044,9 @@ function testValidateWarnsForDetailedSlicePlanningInsideSpec() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/tool-library
+- Phase: auto-strike/initiatives/main/phases/tool-library
 - Current mode: spec
-- Doc: auto-strike/initiatives/main/features/tool-library/feature-spec.md
+- Doc: auto-strike/initiatives/main/phases/tool-library/phase-spec.md
 - State: Spec is being drafted.
 - Next: Finish spec review.
 - Blocked by: None.
@@ -1960,7 +2059,7 @@ function testValidateWarnsForDetailedSlicePlanningInsideSpec() {
   write(repo, "auto-strike/initiatives/main/grill.md", `# Grill
 
 ## Decision Checkpoint
-- Scope / size: One feature.
+- Scope / size: One phase.
 - Stack / dependencies: Local app.
 - Data / persistence / state: SQLite.
 - Auth / identity / permissions: Seed members.
@@ -1969,16 +2068,16 @@ function testValidateWarnsForDetailedSlicePlanningInsideSpec() {
 `);
   write(repo, "auto-strike/initiatives/main/idea.md", `# Idea
 
-## Phase Ledger
+## Mode Ledger
 
-| Phase | Status | Artifact | Reason |
+| Mode | Status | Artifact | Reason |
 | --- | --- | --- | --- |
 | Brainstorm | done | \`idea.md\` | First useful outcome, user, constraints, and non-goals are recorded. |
 | Grill | done | \`grill.md\`, \`decisions.md\` | User-facing grill resolved hardening decisions. |
-| Spec | in progress | \`spec.md\`, \`features/tool-library/feature-spec.md\` | Spec is being drafted. |
+| Spec | in progress | \`spec.md\`, \`phases/tool-library/phase-spec.md\` | Spec is being drafted. |
 `);
   write(repo, "auto-strike/initiatives/main/spec.md", "# Spec\n\n## Summary\nBuild a local tool library.\n");
-  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", `# Tool Library Spec
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/phase-spec.md", `# Tool Library Spec
 
 ## Summary
 Build the core tool library.
@@ -2002,9 +2101,9 @@ function testValidateAllowsConciseSliceHandoffInsideSpec() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/tool-library
+- Phase: auto-strike/initiatives/main/phases/tool-library
 - Current mode: spec
-- Doc: auto-strike/initiatives/main/features/tool-library/feature-spec.md
+- Doc: auto-strike/initiatives/main/phases/tool-library/phase-spec.md
 - State: Spec is being drafted.
 - Next: Finish spec review.
 - Blocked by: None.
@@ -2017,7 +2116,7 @@ function testValidateAllowsConciseSliceHandoffInsideSpec() {
   write(repo, "auto-strike/initiatives/main/grill.md", `# Grill
 
 ## Decision Checkpoint
-- Scope / size: One feature.
+- Scope / size: One phase.
 - Stack / dependencies: Local app.
 - Data / persistence / state: SQLite.
 - Auth / identity / permissions: Seed members.
@@ -2026,16 +2125,16 @@ function testValidateAllowsConciseSliceHandoffInsideSpec() {
 `);
   write(repo, "auto-strike/initiatives/main/idea.md", `# Idea
 
-## Phase Ledger
+## Mode Ledger
 
-| Phase | Status | Artifact | Reason |
+| Mode | Status | Artifact | Reason |
 | --- | --- | --- | --- |
 | Brainstorm | done | \`idea.md\` | First useful outcome, user, constraints, and non-goals are recorded. |
 | Grill | done | \`grill.md\`, \`decisions.md\` | User-facing grill resolved hardening decisions. |
-| Spec | in progress | \`spec.md\`, \`features/tool-library/feature-spec.md\` | Spec is being drafted. |
+| Spec | in progress | \`spec.md\`, \`phases/tool-library/phase-spec.md\` | Spec is being drafted. |
 `);
   write(repo, "auto-strike/initiatives/main/spec.md", "# Spec\n\n## Summary\nBuild a local tool library.\n");
-  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", `# Tool Library Spec
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/phase-spec.md", `# Tool Library Spec
 
 ## Summary
 Build the core tool library.
@@ -2048,7 +2147,7 @@ Build the core tool library.
   const result = run(repo, ["validate"]);
   assertStatus(result, 0, "concise slice handoff inside spec should be allowed");
   const body = json(result);
-  assert.ok(!body.messages.some((item) => item.code === "spec-phase-created-slice-artifacts"));
+  assert.ok(!body.messages.some((item) => item.code === "spec-mode-created-slice-artifacts"));
   assert.ok(!body.messages.some((item) => item.code === "detailed-slice-planning-in-spec"));
 }
 
@@ -2058,9 +2157,9 @@ function testValidateWarnsForDetailedSliceHandoffAfterSpecIsMarkedDone() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/tool-library
+- Phase: auto-strike/initiatives/main/phases/tool-library
 - Current mode: build
-- Active slice: auto-strike/initiatives/main/features/tool-library/slices/slice-0-scaffold.md
+- Active slice: auto-strike/initiatives/main/phases/tool-library/slices/slice-0-scaffold.md
 
 ## Open Decisions
 - None.
@@ -2074,7 +2173,7 @@ Level: Standard
 Why: Default.
 
 ## Decision Checkpoint
-- Scope / size: One feature.
+- Scope / size: One phase.
 - Stack / dependencies: Local app.
 - Data / persistence / state: JSON file.
 - Auth / identity / permissions: Seed members.
@@ -2083,15 +2182,15 @@ Why: Default.
 `);
   write(repo, "auto-strike/initiatives/main/idea.md", `# Idea
 
-## Phase Ledger
+## Mode Ledger
 
-| Phase | Status | Artifact | Reason |
+| Mode | Status | Artifact | Reason |
 | --- | --- | --- | --- |
 | Brainstorm | done | \`idea.md\` | First useful outcome, user, constraints, and non-goals are recorded. |
 | Grill | done | \`grill.md\`, \`decisions.md\` | User-facing grill resolved hardening decisions. |
-| Spec | done | \`spec.md\`, \`features/tool-library/feature-spec.md\` | Spec is ready to slice. |
-| Slice | done | \`features/tool-library/slices/index.md\` | Slice plan is ready. |
-| Build | in progress | \`features/tool-library/slices/slice-0-scaffold.md\` | Build started. |
+| Spec | done | \`spec.md\`, \`phases/tool-library/phase-spec.md\` | Spec is ready to slice. |
+| Slice | done | \`phases/tool-library/slices/index.md\` | Slice plan is ready. |
+| Build | in progress | \`phases/tool-library/slices/slice-0-scaffold.md\` | Build started. |
 `);
   write(repo, "auto-strike/initiatives/main/spec.md", `# Spec
 
@@ -2099,29 +2198,29 @@ Why: Default.
 Build a local tool library.
 
 ## Spec Review
-- pass - scope and feature boundary are clear.
+- pass - scope and phase boundary are clear.
 
 ## Exit Evidence
 - Spec can be sliced without guessing.
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", `# Tool Library Spec
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/phase-spec.md", `# Tool Library Spec
 
 ## Summary
 Build the core tool library.
 
 ## Slice Handoff
-- Three slices planned (see \`features/tool-library/slices/index.md\`):
+- Three slices planned (see \`phases/tool-library/slices/index.md\`):
   - Slice 0: scaffold and identity.
   - Slice 1: tool listings.
   - Slice 2: borrow lifecycle.
 
 ## Spec Review
-- pass - feature behavior is clear.
+- pass - phase behavior is clear.
 
 ## Exit Evidence
-- Feature can be sliced without guessing.
+- Phase can be sliced without guessing.
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/index.md", `# Slices
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/slices/index.md", `# Slices
 
 ## Slice Map
 
@@ -2135,7 +2234,7 @@ Build the core tool library.
 ## Exit Evidence
 - Build can start with slice 0.
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-0-scaffold.md", `# Slice 0: Scaffold
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/slices/slice-0-scaffold.md", `# Slice 0: Scaffold
 
 ## Size
 S
@@ -2156,15 +2255,15 @@ S
   assert.ok(body.messages.some((item) => item.code === "slice-handoff-too-detailed" && item.severity === "warning"));
 }
 
-function testValidateWarnsForMissingPhaseExitGatesBeforeBuild() {
+function testValidateWarnsForMissingModeExitGatesBeforeBuild() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/tool-library
+- Phase: auto-strike/initiatives/main/phases/tool-library
 - Current mode: build
-- Active slice: auto-strike/initiatives/main/features/tool-library/slices/slice-0-scaffold.md
+- Active slice: auto-strike/initiatives/main/phases/tool-library/slices/slice-0-scaffold.md
 
 ## Open Decisions
 - None.
@@ -2178,7 +2277,7 @@ Level: Standard
 Why: Default.
 
 ## Decision Checkpoint
-- Scope / size: One feature.
+- Scope / size: One phase.
 - Stack / dependencies: Local app.
 - Data / persistence / state: JSON file.
 - Auth / identity / permissions: Seed members.
@@ -2187,19 +2286,19 @@ Why: Default.
 `);
   write(repo, "auto-strike/initiatives/main/idea.md", `# Idea
 
-## Phase Ledger
+## Mode Ledger
 
-| Phase | Status | Artifact | Reason |
+| Mode | Status | Artifact | Reason |
 | --- | --- | --- | --- |
 | Brainstorm | done | \`idea.md\` | First useful outcome, user, constraints, and non-goals are recorded. |
 | Grill | done | \`grill.md\`, \`decisions.md\` | User-facing grill resolved hardening decisions. |
-| Spec | done | \`spec.md\`, \`features/tool-library/feature-spec.md\` | Spec is ready. |
-| Slice | done | \`features/tool-library/slices/index.md\` | Slices are ready. |
-| Build | in progress | \`features/tool-library/slices/slice-0-scaffold.md\` | Build started. |
+| Spec | done | \`spec.md\`, \`phases/tool-library/phase-spec.md\` | Spec is ready. |
+| Slice | done | \`phases/tool-library/slices/index.md\` | Slices are ready. |
+| Build | in progress | \`phases/tool-library/slices/slice-0-scaffold.md\` | Build started. |
 `);
   write(repo, "auto-strike/initiatives/main/spec.md", "# Spec\n\n## Summary\nBuild a local tool library.\n");
-  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n\n## Summary\nBuild the core tool library.\n");
-  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/index.md", `# Slices
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/phase-spec.md", "# Tool Library Spec\n\n## Summary\nBuild the core tool library.\n");
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/slices/index.md", `# Slices
 
 ## Slice Map
 
@@ -2207,7 +2306,7 @@ Why: Default.
 | --- | --- | --- | --- | --- | --- |
 | 0. scaffold | S | None | 1 | Low | App starts |
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-0-scaffold.md", `# Slice 0: Scaffold
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/slices/slice-0-scaffold.md", `# Slice 0: Scaffold
 
 ## Size
 S
@@ -2227,8 +2326,8 @@ S
   const body = json(result);
   assert.ok(body.messages.some((item) => item.code === "missing-spec-review" && item.severity === "warning"));
   assert.ok(body.messages.some((item) => item.code === "missing-spec-exit-evidence" && item.severity === "warning"));
-  assert.ok(body.messages.some((item) => item.code === "missing-slice-phase-review" && item.severity === "warning"));
-  assert.ok(body.messages.some((item) => item.code === "missing-slice-phase-exit-evidence" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "missing-slice-review" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "missing-slice-exit-evidence" && item.severity === "warning"));
 }
 
 function testValidateAcceptsExplicitUserOptOutOfGrill() {
@@ -2237,10 +2336,10 @@ function testValidateAcceptsExplicitUserOptOutOfGrill() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/tool-library
-- Doc: auto-strike/initiatives/main/features/tool-library/feature-spec.md
+- Phase: auto-strike/initiatives/main/phases/tool-library
+- Doc: auto-strike/initiatives/main/phases/tool-library/phase-spec.md
 - State: User asked to skip grill and move along to implementation planning.
-- Next: Slice the feature.
+- Next: Slice the phase.
 - Blocked by: None.
 
 ## Open Decisions
@@ -2251,16 +2350,16 @@ function testValidateAcceptsExplicitUserOptOutOfGrill() {
   write(repo, "auto-strike/initiatives/main/spec.md", "# Spec\n\n## Summary\nBuild a local tool library.\n");
   write(repo, "auto-strike/initiatives/main/idea.md", `# Idea
 
-## Phase Ledger
+## Mode Ledger
 
-| Phase | Status | Artifact | Reason |
+| Mode | Status | Artifact | Reason |
 | --- | --- | --- | --- |
 | Brainstorm | done | \`idea.md\` | First useful outcome, user, constraints, and non-goals are recorded. |
 | Grill | skipped | \`idea.md\`, \`decisions.md\` | User explicitly asked to skip grill and move along; assumptions are recorded. |
-| Spec | done | \`spec.md\`, \`features/tool-library/feature-spec.md\` | Feature is ready to slice. |
-| Slice | in progress | \`features/tool-library/slices/index.md\` | Slice plan is being drafted. |
+| Spec | done | \`spec.md\`, \`phases/tool-library/phase-spec.md\` | Phase is ready to slice. |
+| Slice | in progress | \`phases/tool-library/slices/index.md\` | Slice plan is being drafted. |
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/phase-spec.md", "# Tool Library Spec\n");
 
   const result = run(repo, ["validate"]);
   assertStatus(result, 0, "explicit user opt-out should not require grill artifact");
@@ -2269,14 +2368,14 @@ function testValidateAcceptsExplicitUserOptOutOfGrill() {
   assert.ok(!body.messages.some((item) => item.code === "missing-grill-decision-checkpoint"));
 }
 
-function testValidateWarnsForPhaseCompletedAfterQuestionToolFailure() {
+function testValidateWarnsForModeCompletedAfterQuestionToolFailure() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/tool-library
-- Doc: auto-strike/initiatives/main/features/tool-library/slices/slice-0-static-app.md
+- Phase: auto-strike/initiatives/main/phases/tool-library
+- Doc: auto-strike/initiatives/main/phases/tool-library/slices/slice-0-static-app.md
 - State: Slice planning has started.
 - Next: Build the first slice.
 - Blocked by: None.
@@ -2289,14 +2388,14 @@ function testValidateWarnsForPhaseCompletedAfterQuestionToolFailure() {
   write(repo, "auto-strike/initiatives/main/spec.md", "# Spec\n\n## Summary\nBuild a local tool library.\n");
   write(repo, "auto-strike/initiatives/main/idea.md", `# Idea
 
-## Phase Ledger
+## Mode Ledger
 
-| Phase | Status | Artifact | Reason |
+| Mode | Status | Artifact | Reason |
 | --- | --- | --- | --- |
 | Brainstorm | done | \`idea.md\` | First useful outcome, user, constraints, and non-goals are recorded. |
 | Grill | compressed | \`grill.md\`, \`decisions.md\` | AskUserQuestion returned "Answer questions?", so the agent picked defaults and proceeded. |
-| Spec | done | \`spec.md\`, \`features/tool-library/feature-spec.md\` | Feature is ready to slice. |
-| Slice | in progress | \`features/tool-library/slices/index.md\` | Slice plan is being drafted. |
+| Spec | done | \`spec.md\`, \`phases/tool-library/phase-spec.md\` | Phase is ready to slice. |
+| Slice | in progress | \`phases/tool-library/slices/index.md\` | Slice plan is being drafted. |
 `);
   write(repo, "auto-strike/initiatives/main/grill.md", `# Grill
 
@@ -2305,12 +2404,12 @@ function testValidateWarnsForPhaseCompletedAfterQuestionToolFailure() {
 - Stack / dependencies: no packages.
 - Data / persistence / state: JSON file.
 - Auth / identity / permissions: pre-seeded picker.
-- Feature split / non-goals: one feature, no auth.
+- Phase split / non-goals: one phase, no auth.
 - Validation / browser or live checks: browser walkthrough.
 - Accepted assumptions: Chosen after question tool failure.
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-0-static-app.md", `# Slice 0: Static App
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/phase-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/slices/slice-0-static-app.md", `# Slice 0: Static App
 
 ## Size
 S
@@ -2328,7 +2427,7 @@ S
   const result = run(repo, ["validate"]);
   assertStatus(result, 0, "phase completed after question tool failure should warn, not fail");
   const body = json(result);
-  assert.ok(body.messages.some((item) => item.code === "phase-completed-after-question-tool-failure" && item.severity === "warning"));
+  assert.ok(body.messages.some((item) => item.code === "mode-completed-after-question-tool-failure" && item.severity === "warning"));
 }
 
 function testValidateAcceptsSliceMapDependenciesAndCheckpoint() {
@@ -2337,15 +2436,15 @@ function testValidateAcceptsSliceMapDependenciesAndCheckpoint() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/auth-mvp
+- Phase: auto-strike/initiatives/main/phases/auth-mvp
 - Current mode: slice
-- Active slice: auto-strike/initiatives/main/features/auth-mvp/slices/slice-1-register-user.md
+- Active slice: auto-strike/initiatives/main/phases/auth-mvp/slices/slice-1-register-user.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/auth-mvp/feature-spec.md", "# Auth MVP Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/auth-mvp/slices/index.md", `# Slices
+  write(repo, "auto-strike/initiatives/main/phases/auth-mvp/phase-spec.md", "# Auth MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/auth-mvp/slices/index.md", `# Slices
 
 ## Slice Map
 
@@ -2362,7 +2461,7 @@ function testValidateAcceptsSliceMapDependenciesAndCheckpoint() {
 - [ ] Review findings are resolved or accepted.
 - [ ] Human decision needed? If yes, pause and ask.
 `);
-  write(repo, "auto-strike/initiatives/main/features/auth-mvp/slices/slice-0-session-baseline.md", `# Slice 0: Session Baseline
+  write(repo, "auto-strike/initiatives/main/phases/auth-mvp/slices/slice-0-session-baseline.md", `# Slice 0: Session Baseline
 
 ## Size
 S
@@ -2391,7 +2490,7 @@ Session plumbing is ready for user auth flows.
 - Reason: reduces auth/session risk before user-facing registration.
 - Next vertical slice: Slice 1 Register User.
 `);
-  write(repo, "auto-strike/initiatives/main/features/auth-mvp/slices/slice-1-register-user.md", `# Slice 1: Register User
+  write(repo, "auto-strike/initiatives/main/phases/auth-mvp/slices/slice-1-register-user.md", `# Slice 1: Register User
 
 ## Size
 M
@@ -2419,7 +2518,7 @@ User can create an account.
 - [ ] Review plan and resolve findings.
 - [ ] Verify acceptance criteria with register flow smoke.
 `);
-  write(repo, "auto-strike/initiatives/main/features/auth-mvp/slices/slice-2-login-user.md", `# Slice 2: Login User
+  write(repo, "auto-strike/initiatives/main/phases/auth-mvp/slices/slice-2-login-user.md", `# Slice 2: Login User
 
 ## Size
 M
@@ -2471,16 +2570,16 @@ function testValidateAllowsAndSliceTitleWithSmallRationale() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/tool-library
+- Phase: auto-strike/initiatives/main/phases/tool-library
 - Current mode: slice
-- Active slice: auto-strike/initiatives/main/features/tool-library/slices/slice-0-borrow-request-and-approval.md
+- Active slice: auto-strike/initiatives/main/phases/tool-library/slices/slice-0-borrow-request-and-approval.md
 - Next: Build slice 0.
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-0-borrow-request-and-approval.md", `# Slice 0: Borrow Request and Approval
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/phase-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/slices/slice-0-borrow-request-and-approval.md", `# Slice 0: Borrow Request and Approval
 
 ## Size
 M
@@ -2520,14 +2619,14 @@ function testValidateWarnsForMissingSliceMapDependenciesAndCheckpoint() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/auth-mvp
+- Phase: auto-strike/initiatives/main/phases/auth-mvp
 - Current mode: slice
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/auth-mvp/feature-spec.md", "# Auth MVP Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/auth-mvp/slices/slice-0-session.md", `# Slice 0: Session
+  write(repo, "auto-strike/initiatives/main/phases/auth-mvp/phase-spec.md", "# Auth MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/auth-mvp/slices/slice-0-session.md", `# Slice 0: Session
 
 ## Size
 S
@@ -2535,12 +2634,12 @@ S
 ## Depends On
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/auth-mvp/slices/slice-1-register.md", `# Slice 1: Register
+  write(repo, "auto-strike/initiatives/main/phases/auth-mvp/slices/slice-1-register.md", `# Slice 1: Register
 
 ## Size
 M
 `);
-  write(repo, "auto-strike/initiatives/main/features/auth-mvp/slices/slice-2-login.md", `# Slice 2: Login
+  write(repo, "auto-strike/initiatives/main/phases/auth-mvp/slices/slice-2-login.md", `# Slice 2: Login
 
 ## Size
 M
@@ -2564,14 +2663,14 @@ function testValidateWarnsForOversizedBatchedAndWeakNonVerticalSlice() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/auth-mvp
+- Phase: auto-strike/initiatives/main/phases/auth-mvp
 - Current mode: slice
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/auth-mvp/feature-spec.md", "# Auth MVP Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/auth-mvp/slices/slice-0-full-mvp.md", `# Slice 0: Full MVP Setup Frontend and Backend
+  write(repo, "auto-strike/initiatives/main/phases/auth-mvp/phase-spec.md", "# Auth MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/auth-mvp/slices/slice-0-full-mvp.md", `# Slice 0: Full MVP Setup Frontend and Backend
 
 ## Size
 XL
@@ -2613,15 +2712,15 @@ function testValidateRequiresWhyNotSplitForLargeSlice() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/tool-library
+- Phase: auto-strike/initiatives/main/phases/tool-library
 - Current mode: slice
-- Active slice: auto-strike/initiatives/main/features/tool-library/slices/slice-1-tools.md
+- Active slice: auto-strike/initiatives/main/phases/tool-library/slices/slice-1-tools.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-1-tools.md", `# Slice 1: Tools
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/phase-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/slices/slice-1-tools.md", `# Slice 1: Tools
 
 ## Size
 L
@@ -2657,15 +2756,15 @@ function testValidateWarnsForBroadStackSliceWithoutStrongWhyNotSplit() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/tool-library
+- Phase: auto-strike/initiatives/main/phases/tool-library
 - Current mode: slice
-- Active slice: auto-strike/initiatives/main/features/tool-library/slices/slice-1-tools.md
+- Active slice: auto-strike/initiatives/main/phases/tool-library/slices/slice-1-tools.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-1-tools.md", `# Slice 1: Tools
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/phase-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/slices/slice-1-tools.md", `# Slice 1: Tools
 
 ## Size
 M
@@ -2701,15 +2800,15 @@ function testValidateAcceptsBroadStackSliceWithStrongWhyNotSplit() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/tool-library
+- Phase: auto-strike/initiatives/main/phases/tool-library
 - Current mode: slice
-- Active slice: auto-strike/initiatives/main/features/tool-library/slices/slice-1-tools.md
+- Active slice: auto-strike/initiatives/main/phases/tool-library/slices/slice-1-tools.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-1-tools.md", `# Slice 1: Tools
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/phase-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/slices/slice-1-tools.md", `# Slice 1: Tools
 
 ## Size
 M
@@ -2749,9 +2848,9 @@ function testValidateWarnsForDuplicateActiveWorkAndStillChecksSlices() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: None
-- Feature: auto-strike/initiatives/main/features/tool-library
-- Doc: auto-strike/initiatives/main/features/tool-library/slices/index.md
+- Phase: None
+- Phase: auto-strike/initiatives/main/phases/tool-library
+- Doc: auto-strike/initiatives/main/phases/tool-library/slices/index.md
 - Slice: None
 - State: Slice map written.
 - Next: Build slice 0.
@@ -2764,26 +2863,26 @@ function testValidateWarnsForDuplicateActiveWorkAndStillChecksSlices() {
   write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Status\n- Decided.\n");
   write(repo, "auto-strike/initiatives/main/idea.md", `# Main Idea
 
-## Phase Ledger
-| Phase | Status | Artifact | Reason |
+## Mode Ledger
+| Mode | Status | Artifact | Reason |
 | --- | --- | --- | --- |
 | Brainstorm | done | \`idea.md\` | First useful outcome and constraints are recorded. |
 | Grill | done | \`grill.md\` | Stack, persistence, permissions, and verification are decided. |
-| Spec | done | \`spec.md\`, \`features/tool-library/feature-spec.md\` | Feature is explicit and sliceable. |
-| Slice | done | \`features/tool-library/slices/index.md\` | Slice map is complete. |
+| Spec | done | \`spec.md\`, \`phases/tool-library/phase-spec.md\` | Phase is explicit and sliceable. |
+| Slice | done | \`phases/tool-library/slices/index.md\` | Slice map is complete. |
 | Build | pending |  |  |
 | Review | pending |  |  |
-| Validate | pending |  |  |
+| Readiness | pending |  |  |
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/index.md", `# Slices
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/phase-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/slices/index.md", `# Slices
 
 ## Slice Map
 | Slice | Size | Depends On | Unblocks | Risk | Verification |
 | --- | --- | --- | --- | --- | --- |
 | 0. Scaffold + domain | M | None | Persona shell | High | Typecheck |
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-0-scaffold.md", `# Slice 0: Scaffold + domain core
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/slices/slice-0-scaffold.md", `# Slice 0: Scaffold + domain core
 
 ## Size
 M
@@ -2815,11 +2914,11 @@ M
   const result = run(repo, ["validate"]);
   assertStatus(result, 0, "duplicate active work should warn but still validate slices");
   const body = json(result);
-  assert.equal(body.activeFeature.path, "auto-strike/initiatives/main/features/tool-library");
+  assert.equal(body.activePhase.path, "auto-strike/initiatives/main/phases/tool-library");
   assert.ok(body.messages.some((item) => item.code === "duplicate-active-work-field" && item.severity === "warning"));
   assert.ok(body.messages.some((item) => item.code === "too-many-slice-acceptance-criteria" && item.severity === "warning"));
   assert.ok(body.messages.some((item) => item.code === "too-many-slice-surfaces" && item.severity === "warning"));
-  assert.ok(!body.messages.some((item) => item.code === "missing-active-feature"));
+  assert.ok(!body.messages.some((item) => item.code === "missing-active-phase"));
 }
 
 function writeCheckpointDueFixture(repo, activeSliceIndex) {
@@ -2827,10 +2926,10 @@ function writeCheckpointDueFixture(repo, activeSliceIndex) {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/tool-library
+- Phase: auto-strike/initiatives/main/phases/tool-library
 - Current mode: build
-- Doc: auto-strike/initiatives/main/features/tool-library/slices/slice-${activeSliceIndex}-done.md
-- Active slice: auto-strike/initiatives/main/features/tool-library/slices/slice-${activeSliceIndex}-done.md
+- Doc: auto-strike/initiatives/main/phases/tool-library/slices/slice-${activeSliceIndex}-done.md
+- Active slice: auto-strike/initiatives/main/phases/tool-library/slices/slice-${activeSliceIndex}-done.md
 - State: Slice ${activeSliceIndex} has implementation evidence.
 - Next: Close slice ${activeSliceIndex}.
 - Blocked by: None.
@@ -2838,8 +2937,8 @@ function writeCheckpointDueFixture(repo, activeSliceIndex) {
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/index.md", `# Slices
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/phase-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/slices/index.md", `# Slices
 
 ## Slice Map
 | Slice | Size | Depends On | Unblocks | Risk | Verification |
@@ -2856,7 +2955,7 @@ function writeCheckpointDueFixture(repo, activeSliceIndex) {
 ## Checkpoint: After Slice 4
 - [ ] Borrow approval works end to end.
 `);
-  write(repo, `auto-strike/initiatives/main/features/tool-library/slices/slice-${activeSliceIndex}-done.md`, `# Slice ${activeSliceIndex}: Done
+  write(repo, `auto-strike/initiatives/main/phases/tool-library/slices/slice-${activeSliceIndex}-done.md`, `# Slice ${activeSliceIndex}: Done
 
 ## Size
 S
@@ -2928,15 +3027,15 @@ function testValidateWarnsForDueSliceCheckpoint() {
   assert.ok(json(result).messages.some((item) => item.code === "stale-slice-checkpoint-checklist" && item.severity === "warning"));
 }
 
-function testValidateWarnsForDuplicatePhaseLedgerRowsWithoutFalseSpecSliceBoundary() {
+function testValidateWarnsForDuplicateModeLedgerRowsWithoutFalseSpecSliceBoundary() {
   const repo = tempRepo();
   write(repo, "auto-strike/index.md", `# Auto Strike
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/tool-library
-- Doc: auto-strike/initiatives/main/features/tool-library/slices/index.md
-- Slice: auto-strike/initiatives/main/features/tool-library/slices/slice-0-scaffold.md
+- Phase: auto-strike/initiatives/main/phases/tool-library
+- Doc: auto-strike/initiatives/main/phases/tool-library/slices/index.md
+- Slice: auto-strike/initiatives/main/phases/tool-library/slices/slice-0-scaffold.md
 - State: Slice map written.
 - Next: Build slice 0.
 - Blocked by: None.
@@ -2948,29 +3047,29 @@ function testValidateWarnsForDuplicatePhaseLedgerRowsWithoutFalseSpecSliceBounda
   write(repo, "auto-strike/initiatives/main/decisions.md", "# Decisions\n\n## Status\n- Decided.\n");
   write(repo, "auto-strike/initiatives/main/idea.md", `# Main Idea
 
-## Phase Ledger
-| Phase | Status | Artifact | Reason |
+## Mode Ledger
+| Mode | Status | Artifact | Reason |
 | --- | --- | --- | --- |
 | Brainstorm | done | \`idea.md\` | First useful outcome and constraints are recorded. |
 | Grill | done | \`grill.md\` | Stack, persistence, permissions, and verification are decided. |
-| Spec | done | \`spec.md\`, \`features/tool-library/feature-spec.md\` | Feature is explicit and sliceable. |
-| Slice | done | \`features/tool-library/slices/index.md\` | Slice map is complete. |
-| Build | in progress | \`features/tool-library/slices/slice-0-scaffold.md\` | Slice 0 is active. |
+| Spec | done | \`spec.md\`, \`phases/tool-library/phase-spec.md\` | Phase is explicit and sliceable. |
+| Slice | done | \`phases/tool-library/slices/index.md\` | Slice map is complete. |
+| Build | in progress | \`phases/tool-library/slices/slice-0-scaffold.md\` | Slice 0 is active. |
 | Spec | pending |  |  |
 | Slice | pending |  |  |
 | Build | pending |  |  |
 | Review | pending |  |  |
-| Validate | pending |  |  |
+| Readiness | pending |  |  |
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/index.md", `# Slices
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/phase-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/slices/index.md", `# Slices
 
 ## Slice Map
 | Slice | Size | Depends On | Unblocks | Risk | Verification |
 | --- | --- | --- | --- | --- | --- |
 | 0. Scaffold | S | None | Persona shell | Medium | Typecheck |
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-0-scaffold.md", `# Slice 0: Scaffold
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/slices/slice-0-scaffold.md", `# Slice 0: Scaffold
 
 ## Size
 S
@@ -2994,8 +3093,8 @@ S
   const result = run(repo, ["validate"]);
   assertStatus(result, 0, "duplicate phase rows should warn without false spec boundary warning");
   const body = json(result);
-  assert.ok(body.messages.some((item) => item.code === "duplicate-phase-ledger-row" && item.severity === "warning"));
-  assert.ok(!body.messages.some((item) => item.code === "spec-phase-created-slice-artifacts"));
+  assert.ok(body.messages.some((item) => item.code === "duplicate-mode-ledger-row" && item.severity === "warning"));
+  assert.ok(!body.messages.some((item) => item.code === "spec-mode-created-slice-artifacts"));
 }
 
 function testReviewPlanRecommendsUiRegressionForUiChanges() {
@@ -3004,15 +3103,15 @@ function testReviewPlanRecommendsUiRegressionForUiChanges() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/todo-dogfood
+- Phase: auto-strike/initiatives/main/phases/todo-dogfood
 - Current mode: build
-- Active slice: auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md
+- Active slice: auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-1-edit-task.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+  write(repo, "auto-strike/initiatives/main/phases/todo-dogfood/phase-spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
 
 ## Evidence
 
@@ -3056,15 +3155,15 @@ function testUiReviewEvidenceSuppressesUiReviewWarning() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/todo-dogfood
+- Phase: auto-strike/initiatives/main/phases/todo-dogfood
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md
+- Active slice: auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-1-edit-task.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+  write(repo, "auto-strike/initiatives/main/phases/todo-dogfood/phase-spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
 
 ## Browser Verification Capability
 - Applies: yes, this slice changes a visible edit input.
@@ -3109,15 +3208,15 @@ function testUiRegressionReviewAloneDoesNotSuppressBrowserWarning() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/todo-dogfood
+- Phase: auto-strike/initiatives/main/phases/todo-dogfood
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md
+- Active slice: auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-1-edit-task.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+  write(repo, "auto-strike/initiatives/main/phases/todo-dogfood/phase-spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
 
 ## Evidence
 
@@ -3151,15 +3250,15 @@ function testCurlLocalhostDoesNotSuppressBrowserWarning() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/todo-dogfood
+- Phase: auto-strike/initiatives/main/phases/todo-dogfood
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md
+- Active slice: auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-1-edit-task.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+  write(repo, "auto-strike/initiatives/main/phases/todo-dogfood/phase-spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
 
 ## Evidence
 
@@ -3193,15 +3292,15 @@ function testPackageOnlyBrowserSkipDoesNotSuppressBrowserWarning() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/todo-dogfood
+- Phase: auto-strike/initiatives/main/phases/todo-dogfood
 - Current mode: build
-- Active slice: auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md
+- Active slice: auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-1-edit-task.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+  write(repo, "auto-strike/initiatives/main/phases/todo-dogfood/phase-spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
 
 ## Evidence
 
@@ -3239,15 +3338,15 @@ function testValidateWarnsForMissingVerificationCapabilityOnSkippedUiChecks() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/todo-dogfood
+- Phase: auto-strike/initiatives/main/phases/todo-dogfood
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md
+- Active slice: auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-1-edit-task.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+  write(repo, "auto-strike/initiatives/main/phases/todo-dogfood/phase-spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
 
 ## Evidence
 
@@ -3285,15 +3384,15 @@ function testValidateAcceptsVerificationCapabilityForSkippedUiChecks() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/todo-dogfood
+- Phase: auto-strike/initiatives/main/phases/todo-dogfood
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md
+- Active slice: auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-1-edit-task.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+  write(repo, "auto-strike/initiatives/main/phases/todo-dogfood/phase-spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
 
 ## Browser Verification Capability
 - Applies: yes, this slice changes a visible edit input.
@@ -3340,15 +3439,15 @@ function testValidateAcceptsRealBrowserVerificationForUiChecks() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/todo-dogfood
+- Phase: auto-strike/initiatives/main/phases/todo-dogfood
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md
+- Active slice: auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-1-edit-task.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+  write(repo, "auto-strike/initiatives/main/phases/todo-dogfood/phase-spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
 
 ## Browser Verification Capability
 - Applies: yes, this slice changes the visible edit flow.
@@ -3391,15 +3490,15 @@ function testValidateDoesNotContradictGenericTasksWhenBrowserBlocked() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/todo-dogfood
+- Phase: auto-strike/initiatives/main/phases/todo-dogfood
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md
+- Active slice: auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-1-edit-task.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+  write(repo, "auto-strike/initiatives/main/phases/todo-dogfood/phase-spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
 
 ## Execution Tasks
 - [x] Verify the acceptance criteria and any required browser/user-flow checks.
@@ -3447,15 +3546,15 @@ function testValidateDoesNotContradictCompletedBrowserTaskWhenFallbackBrowserRan
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/todo-dogfood
+- Phase: auto-strike/initiatives/main/phases/todo-dogfood
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md
+- Active slice: auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-1-edit-task.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+  write(repo, "auto-strike/initiatives/main/phases/todo-dogfood/phase-spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
 
 ## Execution Tasks
 - [x] For UI/user-flow work, record browser verification capability per \`verification.md\`.
@@ -3504,15 +3603,15 @@ function testValidateWarnsForMissingSliceCloseoutSummary() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/video-mvp
+- Phase: auto-strike/initiatives/main/phases/video-mvp
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-caption.md
+- Active slice: auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-caption.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-caption.md", `# Slice 0: Caption
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/phase-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-caption.md", `# Slice 0: Caption
 
 ## Evidence
 
@@ -3543,15 +3642,15 @@ function testValidateAcceptsSliceCloseoutSummary() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/video-mvp
+- Phase: auto-strike/initiatives/main/phases/video-mvp
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-caption.md
+- Active slice: auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-caption.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-caption.md", `# Slice 0: Caption
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/phase-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-caption.md", `# Slice 0: Caption
 
 ## Evidence
 
@@ -3589,7 +3688,7 @@ Skipped / residual risk:
 - None.
 
 Docs:
-- auto-strike/initiatives/main/features/video-mvp/slices/slice-0-caption.md
+- auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-caption.md
 
 Next:
 - Slice 1: Caption editing.
@@ -3608,15 +3707,15 @@ function testValidateAcceptsCloseoutSummaryWithValidationAlias() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/video-mvp
+- Phase: auto-strike/initiatives/main/phases/video-mvp
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-caption.md
+- Active slice: auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-caption.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-caption.md", `# Slice 0: Caption
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/phase-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-caption.md", `# Slice 0: Caption
 
 ## Evidence
 
@@ -3651,7 +3750,7 @@ Skipped residual risk:
 - None.
 
 Docs:
-- auto-strike/initiatives/main/features/video-mvp/slices/slice-0-caption.md
+- auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-caption.md
 
 Next:
 - Slice 1: Caption editing.
@@ -3670,15 +3769,15 @@ function testValidateDoesNotRequireCloseoutForInProgressBuildSlice() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/video-mvp
+- Phase: auto-strike/initiatives/main/phases/video-mvp
 - Current mode: build
-- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-caption.md
+- Active slice: auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-caption.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-caption.md", `# Slice 0: Caption
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/phase-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-caption.md", `# Slice 0: Caption
 
 ## Evidence
 
@@ -3702,15 +3801,15 @@ function testValidateWarnsForMissingRequiredReviewLenses() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/video-mvp
+- Phase: auto-strike/initiatives/main/phases/video-mvp
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
+- Active slice: auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/phase-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
 
 ## Implementation Research
 - Local precedent: src/video/upload.ts owns upload behavior.
@@ -3751,15 +3850,15 @@ function testValidateAcceptsReviewedAndSkippedRequiredReviewLenses() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/todo-dogfood
+- Phase: auto-strike/initiatives/main/phases/todo-dogfood
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md
+- Active slice: auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-1-edit-task.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/feature-spec.md", "# Todo Dogfood Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
+  write(repo, "auto-strike/initiatives/main/phases/todo-dogfood/phase-spec.md", "# Todo Dogfood Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/todo-dogfood/slices/slice-1-edit-task.md", `# Slice 1: Edit Task
 
 ## Implementation Research
 - Local precedent: todo/todo.js owns task state changes; plan impact: add updateTask beside addTask/toggleTask.
@@ -3806,15 +3905,15 @@ function testValidateErrorsForSingleSliceWithoutReviewSubagentEvidence() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/video-mvp
+- Phase: auto-strike/initiatives/main/phases/video-mvp
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
+- Active slice: auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/phase-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
 
 ## Implementation Research
 - Local precedent: src/video/upload.ts owns upload behavior.
@@ -3852,15 +3951,15 @@ function testValidateRejectsSkippedReviewSubagentEvidence() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/video-mvp
+- Phase: auto-strike/initiatives/main/phases/video-mvp
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
+- Active slice: auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/phase-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
 
 ## Implementation Research
 - Local precedent: src/video/upload.ts owns upload behavior.
@@ -3901,15 +4000,15 @@ function testValidateErrorsForMissingReviewedSubagentEvidence() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/video-mvp
+- Phase: auto-strike/initiatives/main/phases/video-mvp
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
+- Active slice: auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/phase-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
 
 ## Evidence
 
@@ -3933,15 +4032,15 @@ function testValidateRejectsPendingReviewSubagentEvidence() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/video-mvp
+- Phase: auto-strike/initiatives/main/phases/video-mvp
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
+- Active slice: auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/phase-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
 
 ## Evidence
 
@@ -3968,15 +4067,15 @@ function testValidateRejectsMainAgentSelfReviewSubagentEvidence() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/video-mvp
+- Phase: auto-strike/initiatives/main/phases/video-mvp
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
+- Active slice: auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/phase-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
 
 ## Evidence
 
@@ -4003,15 +4102,15 @@ function testValidateErrorsForMultiSliceWithoutReviewSubagentEvidence() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/video-mvp
+- Phase: auto-strike/initiatives/main/phases/video-mvp
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
+- Active slice: auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-1-caption.md", `# Slice 1: Caption
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/phase-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/slices/slice-1-caption.md", `# Slice 1: Caption
 
 ## Size
 S
@@ -4025,7 +4124,7 @@ S
 - [ ] Review plan and resolve findings.
 - [ ] Verify caption behavior.
 `);
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
 
 ## Implementation Research
 - Local precedent: src/video/upload.ts owns upload behavior.
@@ -4063,15 +4162,15 @@ function testValidateAcceptsMultiSliceReviewSubagentEvidence() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/video-mvp
+- Phase: auto-strike/initiatives/main/phases/video-mvp
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
+- Active slice: auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-1-caption.md", `# Slice 1: Caption
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/phase-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/slices/slice-1-caption.md", `# Slice 1: Caption
 
 ## Size
 S
@@ -4085,7 +4184,7 @@ S
 - [ ] Review plan and resolve findings.
 - [ ] Verify caption behavior.
 `);
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
 
 ## Implementation Research
 - Local precedent: src/video/upload.ts owns upload behavior.
@@ -4127,15 +4226,15 @@ function testValidateWarnsWhenCheckedTodoConflictsWithSkippedEvidence() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/video-mvp
+- Phase: auto-strike/initiatives/main/phases/video-mvp
 - Current mode: build
-- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
+- Active slice: auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/phase-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
 
 ## Evidence
 
@@ -4162,15 +4261,15 @@ function testValidateWarnsWhenCheckedCheckpointLacksBrowserEvidence() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/video-mvp
+- Phase: auto-strike/initiatives/main/phases/video-mvp
 - Current mode: build
-- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
+- Active slice: auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/index.md", `# Slices
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/phase-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/slices/index.md", `# Slices
 
 ## Slice Map
 | Slice | Size | Depends On | Unblocks | Risk | Verification |
@@ -4180,7 +4279,7 @@ function testValidateWarnsWhenCheckedCheckpointLacksBrowserEvidence() {
 ## Checkpoint: After Slice 0
 - [x] Browser walkthrough works end to end.
 `);
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
 
 ## Evidence
 
@@ -4204,15 +4303,15 @@ function testValidateWarnsWhenCheckedExecutionTaskConflictsWithSkippedEvidence()
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/video-mvp
+- Phase: auto-strike/initiatives/main/phases/video-mvp
 - Current mode: build
-- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
+- Active slice: auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/phase-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
 
 ## Execution Tasks
 - [x] Verify browser walkthrough.
@@ -4242,15 +4341,15 @@ function testValidateWarnsWhenVerifiedEvidenceDidNotRun() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/video-mvp
+- Phase: auto-strike/initiatives/main/phases/video-mvp
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
+- Active slice: auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/phase-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
 
 ## Evidence
 
@@ -4278,15 +4377,15 @@ function testValidateDoesNotCompareChangedEvidenceAgainstRepoDiff() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/video-mvp
+- Phase: auto-strike/initiatives/main/phases/video-mvp
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-1-caption.md
+- Active slice: auto-strike/initiatives/main/phases/video-mvp/slices/slice-1-caption.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/phase-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
 
 ## Evidence
 
@@ -4319,12 +4418,12 @@ Skipped / residual risk:
 - None.
 
 Docs:
-- auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
+- auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md
 
 Next:
 - Slice 1: Caption.
 `);
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-1-caption.md", `# Slice 1: Caption
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/slices/slice-1-caption.md", `# Slice 1: Caption
 
 ## Evidence
 
@@ -4355,16 +4454,16 @@ function testValidateWarnsForPrematureNextSliceActivation() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/tool-library
+- Phase: auto-strike/initiatives/main/phases/tool-library
 - Current mode: build
-- Active slice: auto-strike/initiatives/main/features/tool-library/slices/slice-1-requests.md
+- Active slice: auto-strike/initiatives/main/phases/tool-library/slices/slice-1-requests.md
 - Next: Build slice 1.
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-0-listings.md", `# Slice 0: Listings
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/phase-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/slices/slice-0-listings.md", `# Slice 0: Listings
 
 ## Evidence
 
@@ -4397,12 +4496,12 @@ Skipped / residual risk:
 - None.
 
 Docs:
-- auto-strike/initiatives/main/features/tool-library/slices/slice-0-listings.md
+- auto-strike/initiatives/main/phases/tool-library/slices/slice-0-listings.md
 
 Next:
 - Slice 1: Requests.
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-1-requests.md", `# Slice 1: Requests
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/slices/slice-1-requests.md", `# Slice 1: Requests
 
 ## Size
 M
@@ -4430,9 +4529,9 @@ function testValidateWarnsForDocPathNextSliceWithProseSliceLabel() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/tool-library
+- Phase: auto-strike/initiatives/main/phases/tool-library
 - Current mode: build
-- Doc: auto-strike/initiatives/main/features/tool-library/slices/slice-1-requests.md
+- Doc: auto-strike/initiatives/main/phases/tool-library/slices/slice-1-requests.md
 - Slice: Slice 1 (Requests)
 - State: Slice 0 implemented and verified. Build mode continues on Slice 1.
 - Next: Implement Slice 1.
@@ -4441,8 +4540,8 @@ function testValidateWarnsForDocPathNextSliceWithProseSliceLabel() {
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-0-listings.md", `# Slice 0: Listings
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/phase-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/slices/slice-0-listings.md", `# Slice 0: Listings
 
 ## Evidence
 
@@ -4475,12 +4574,12 @@ Skipped / residual risk:
 - None.
 
 Docs:
-- auto-strike/initiatives/main/features/tool-library/slices/slice-0-listings.md
+- auto-strike/initiatives/main/phases/tool-library/slices/slice-0-listings.md
 
 Next:
 - Slice 1: Requests.
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-1-requests.md", `# Slice 1: Requests
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/slices/slice-1-requests.md", `# Slice 1: Requests
 
 ## Size
 M
@@ -4508,7 +4607,7 @@ M
   const result = run(repo, ["validate"]);
   assertStatus(result, 0, "doc path should resolve active slice even when Slice label is prose");
   const body = json(result);
-  assert.equal(body.activeSlice.path, "auto-strike/initiatives/main/features/tool-library/slices/slice-1-requests.md");
+  assert.equal(body.activeSlice.path, "auto-strike/initiatives/main/phases/tool-library/slices/slice-1-requests.md");
   assert.ok(body.messages.some((item) => item.code === "premature-next-slice-activation" && item.severity === "warning"));
 }
 
@@ -4518,16 +4617,16 @@ function testValidateWarnsForCompletedSliceCloseoutWithoutEvidence() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/tool-library
+- Phase: auto-strike/initiatives/main/phases/tool-library
 - Current mode: build
-- Active slice: auto-strike/initiatives/main/features/tool-library/slices/slice-0-listings.md
+- Active slice: auto-strike/initiatives/main/phases/tool-library/slices/slice-0-listings.md
 - Next: Close slice 0.
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-0-listings.md", `# Slice 0: Listings
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/phase-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/slices/slice-0-listings.md", `# Slice 0: Listings
 
 ## Closeout Summary
 Implemented Slice 0: Listings.
@@ -4546,7 +4645,7 @@ Skipped / residual risk:
 - None.
 
 Docs:
-- auto-strike/initiatives/main/features/tool-library/slices/slice-0-listings.md
+- auto-strike/initiatives/main/phases/tool-library/slices/slice-0-listings.md
 
 Next:
 - Slice 1: Requests.
@@ -4569,17 +4668,17 @@ function testValidateAcceptsNextSliceActivationWhenUserExplicitlyContinued() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/tool-library
+- Phase: auto-strike/initiatives/main/phases/tool-library
 - Current mode: build
-- Active slice: auto-strike/initiatives/main/features/tool-library/slices/slice-1-requests.md
+- Active slice: auto-strike/initiatives/main/phases/tool-library/slices/slice-1-requests.md
 - State: User explicitly asked to continue to the next slice after Slice 0 closeout.
 - Next: Build slice 1.
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/feature-spec.md", "# Tool Library Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-0-listings.md", `# Slice 0: Listings
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/phase-spec.md", "# Tool Library Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/slices/slice-0-listings.md", `# Slice 0: Listings
 
 ## Evidence
 
@@ -4612,12 +4711,12 @@ Skipped / residual risk:
 - None.
 
 Docs:
-- auto-strike/initiatives/main/features/tool-library/slices/slice-0-listings.md
+- auto-strike/initiatives/main/phases/tool-library/slices/slice-0-listings.md
 
 Next:
 - Slice 1: Requests.
 `);
-  write(repo, "auto-strike/initiatives/main/features/tool-library/slices/slice-1-requests.md", `# Slice 1: Requests
+  write(repo, "auto-strike/initiatives/main/phases/tool-library/slices/slice-1-requests.md", `# Slice 1: Requests
 
 ## Size
 M
@@ -4655,15 +4754,15 @@ function testValidateWarnsForStaleChangedEvidencePath() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/video-mvp
+- Phase: auto-strike/initiatives/main/phases/video-mvp
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md
+- Active slice: auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/feature-spec.md", "# Video MVP Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/phase-spec.md", "# Video MVP Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/video-mvp/slices/slice-0-upload.md", `# Slice 0: Upload
 
 ## Implementation Research
 - Local precedent: src/video/upload.ts owns upload behavior.
@@ -4703,15 +4802,15 @@ function testReviewPlanDetectsBrowserScriptUiChanges() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/vanilla-ui
+- Phase: auto-strike/initiatives/main/phases/vanilla-ui
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/vanilla-ui/slices/slice-0-click.md
+- Active slice: auto-strike/initiatives/main/phases/vanilla-ui/slices/slice-0-click.md
 
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/vanilla-ui/feature-spec.md", "# Vanilla UI Spec\n");
-  write(repo, "auto-strike/initiatives/main/features/vanilla-ui/slices/slice-0-click.md", `# Slice 0: Click
+  write(repo, "auto-strike/initiatives/main/phases/vanilla-ui/phase-spec.md", "# Vanilla UI Spec\n");
+  write(repo, "auto-strike/initiatives/main/phases/vanilla-ui/slices/slice-0-click.md", `# Slice 0: Click
 
 ## Evidence
 
@@ -4736,9 +4835,9 @@ function testReviewPlanDoesNotInferUiFromScriptPathOnly() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/backend-route
+- Phase: auto-strike/initiatives/main/phases/backend-route
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/backend-route/slices/slice-0-handler.md
+- Active slice: auto-strike/initiatives/main/phases/backend-route/slices/slice-0-handler.md
 - State: Backend route helper is ready for review.
 - Next: Review backend route helper.
 - Blocked by: None.
@@ -4746,7 +4845,7 @@ function testReviewPlanDoesNotInferUiFromScriptPathOnly() {
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/backend-route/slices/slice-0-handler.md", `# Slice 0: Handler
+  write(repo, "auto-strike/initiatives/main/phases/backend-route/slices/slice-0-handler.md", `# Slice 0: Handler
 
 ## Evidence
 Changed:
@@ -4771,9 +4870,9 @@ function testValidateErrorsForStripeWorkWithoutCliSandboxEvidence() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/checkout
+- Phase: auto-strike/initiatives/main/phases/checkout
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/checkout/slices/slice-0-payment-intent.md
+- Active slice: auto-strike/initiatives/main/phases/checkout/slices/slice-0-payment-intent.md
 - State: Stripe PaymentIntent slice is ready for review.
 - Next: Review Stripe sandbox evidence.
 - Blocked by: None.
@@ -4781,8 +4880,8 @@ function testValidateErrorsForStripeWorkWithoutCliSandboxEvidence() {
 ## Open Decisions
 - None.
 `);
-  write(repo, "auto-strike/initiatives/main/features/checkout/feature-spec.md", "# Checkout Spec\n\n## Summary\nCreate a Stripe PaymentIntent checkout path.\n");
-  write(repo, "auto-strike/initiatives/main/features/checkout/slices/slice-0-payment-intent.md", `# Slice 0: Payment Intent
+  write(repo, "auto-strike/initiatives/main/phases/checkout/phase-spec.md", "# Checkout Spec\n\n## Summary\nCreate a Stripe PaymentIntent checkout path.\n");
+  write(repo, "auto-strike/initiatives/main/phases/checkout/slices/slice-0-payment-intent.md", `# Slice 0: Payment Intent
 
 ## Evidence
 Changed:
@@ -4808,9 +4907,9 @@ function testValidateAcceptsStripeCliSandboxEvidence() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: auto-strike/initiatives/main/features/checkout
+- Phase: auto-strike/initiatives/main/phases/checkout
 - Current mode: review
-- Active slice: auto-strike/initiatives/main/features/checkout/slices/slice-0-payment-intent.md
+- Active slice: auto-strike/initiatives/main/phases/checkout/slices/slice-0-payment-intent.md
 - State: Stripe PaymentIntent slice is ready for review.
 - Next: Review Stripe sandbox evidence.
 - Blocked by: None.
@@ -4821,8 +4920,8 @@ function testValidateAcceptsStripeCliSandboxEvidence() {
 ## Verification
 - stripe --version - passed in sandbox/test account.
 `);
-  write(repo, "auto-strike/initiatives/main/features/checkout/feature-spec.md", "# Checkout Spec\n\n## Summary\nCreate a Stripe PaymentIntent checkout path.\n");
-  write(repo, "auto-strike/initiatives/main/features/checkout/slices/slice-0-payment-intent.md", `# Slice 0: Payment Intent
+  write(repo, "auto-strike/initiatives/main/phases/checkout/phase-spec.md", "# Checkout Spec\n\n## Summary\nCreate a Stripe PaymentIntent checkout path.\n");
+  write(repo, "auto-strike/initiatives/main/phases/checkout/slices/slice-0-payment-intent.md", `# Slice 0: Payment Intent
 
 ## Evidence
 Changed:
@@ -4849,7 +4948,7 @@ function testValidateWarnsForStripeConnectWithoutSkillResearch() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: None.
+- Phase: None.
 - Current mode: spec
 - Doc: auto-strike/initiatives/main/spec.md
 - State: Stripe Connect onboarding is being specified.
@@ -4864,7 +4963,7 @@ function testValidateWarnsForStripeConnectWithoutSkillResearch() {
 ## Summary
 Create Stripe Connect connected accounts with account links and requested capabilities.
 
-## Phase Tasks
+## Mode Tasks
 - [x] Draft Connect scope.
 - [ ] Record Connect research.
 
@@ -4883,7 +4982,7 @@ function testValidateAcceptsStripeConnectSkillResearchNote() {
 
 ## Active Work
 - Initiative: auto-strike/initiatives/main
-- Feature: None.
+- Phase: None.
 - Current mode: spec
 - Doc: auto-strike/initiatives/main/spec.md
 - State: Stripe Connect onboarding is being specified.
@@ -4901,7 +5000,7 @@ Create Stripe Connect connected accounts with account links and requested capabi
 ## Research Notes
 - Used installed stripe-connect skill to choose hosted onboarding, requested capabilities, and webhook scope.
 
-## Phase Tasks
+## Mode Tasks
 - [x] Draft Connect scope.
 - [x] Record Connect research.
 
@@ -4929,8 +5028,9 @@ function testHelpWorksWithoutCommand() {
 
 testInspectAbsentWorkspace();
 testValidateUnrelatedWorkspaceCollision();
-testSimpleFeatureSlugDoesNotHardFail();
-testValidateRejectsOldTopLevelFeaturePath();
+testSimplePhaseSlugDoesNotHardFail();
+testValidateRejectsOldTopLevelPhasePath();
+testLegacyFeatureShapeWarnsButStillResolves();
 testInitiativeInspectAndValidateWithEvidence();
 testValidateWarnsForMissingEvidence();
 testValidateBrokenKeyDocReference();
@@ -4938,22 +5038,24 @@ testKeyDocsCanReferenceRepoDocs();
 testMarkdownLinksResolveToTargets();
 testReviewContextPacket();
 testImplementationPlanReviewContext();
-testReviewContextScopesChangedFilesToActiveFeature();
+testReviewContextScopesChangedFilesToActivePhase();
 testValidateWarnsWhenReviewEvidenceLacksChangedAndVerified();
 testValidateWarnsForWeakPreBuildSlicePrep();
 testValidateAcceptsConcretePreBuildSlicePrep();
 testValidateAcceptsActiveWorkPointer();
+testValidateWarnsForDocNameAsCurrentMode();
 testValidateWarnsForMissingActiveWork();
 testValidateWarnsForWeakOrMissingActiveWorkDoc();
 testValidateErrorsForMissingActiveWorkDocDuringBuild();
-testValidateErrorsForMissingActiveFeatureDuringReview();
-testValidateWarnsForBatchedPhaseNextAction();
+testValidateErrorsForMissingActivePhaseDuringReview();
+testValidateWarnsForBatchedModeNextAction();
 testValidateWarnsForNextSliceDocAndImplementationBatch();
 testValidateAcceptsSingleBoundaryNextAction();
-testValidateWarnsForMissingPhaseLedgerAfterSlicing();
-testValidateWarnsForWeakPhaseLedgerAfterSlicing();
-testValidateAcceptsPhaseLedgerAfterSlicing();
-testValidateAcceptsSpecPhaseLedgerWithFuturePendingRows();
+testValidateWarnsForMissingModeLedgerAfterSlicing();
+testValidateWarnsForWeakModeLedgerAfterSlicing();
+testValidateAcceptsModeLedgerAfterSlicing();
+testValidateWarnsForLegacyPhaseLedgerName();
+testValidateAcceptsSpecModeLedgerWithFuturePendingRows();
 testValidateDoesNotInferBuildPrepFromSliceDocAlone();
 testValidateWarnsForStaleActiveWorkAfterImplementationEvidence();
 testValidateWarnsForStaleFinalIndexState();
@@ -4970,13 +5072,13 @@ testValidateRequiresDecisionDepthAfterGrillMode();
 testValidateWarnsForMissingGrillBeforeSpecOrSlice();
 testValidateAcceptsGrillDecisionCheckpointBeforeSpec();
 testValidateWarnsForToolingConstraintRuntimeConflict();
-testValidateWarnsWhenSpecPhaseCreatesSliceArtifacts();
+testValidateWarnsWhenSpecModeCreatesSliceArtifacts();
 testValidateWarnsForDetailedSlicePlanningInsideSpec();
 testValidateAllowsConciseSliceHandoffInsideSpec();
 testValidateWarnsForDetailedSliceHandoffAfterSpecIsMarkedDone();
-testValidateWarnsForMissingPhaseExitGatesBeforeBuild();
+testValidateWarnsForMissingModeExitGatesBeforeBuild();
 testValidateAcceptsExplicitUserOptOutOfGrill();
-testValidateWarnsForPhaseCompletedAfterQuestionToolFailure();
+testValidateWarnsForModeCompletedAfterQuestionToolFailure();
 testValidateAcceptsSliceMapDependenciesAndCheckpoint();
 testValidateAllowsAndSliceTitleWithSmallRationale();
 testValidateWarnsForMissingSliceMapDependenciesAndCheckpoint();
@@ -4987,7 +5089,7 @@ testValidateRequiresWhyNotSplitForLargeSlice();
 testValidateWarnsForBroadStackSliceWithoutStrongWhyNotSplit();
 testValidateAcceptsBroadStackSliceWithStrongWhyNotSplit();
 testValidateWarnsForDuplicateActiveWorkAndStillChecksSlices();
-testValidateWarnsForDuplicatePhaseLedgerRowsWithoutFalseSpecSliceBoundary();
+testValidateWarnsForDuplicateModeLedgerRowsWithoutFalseSpecSliceBoundary();
 testReviewPlanRecommendsUiRegressionForUiChanges();
 testUiReviewEvidenceSuppressesUiReviewWarning();
 testUiRegressionReviewAloneDoesNotSuppressBrowserWarning();

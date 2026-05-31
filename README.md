@@ -25,8 +25,17 @@ Strike also includes `auto-strike`, a standalone utility skill for moving a
 fuzzy idea toward a working MVP without the full board/card workflow.
 
 Use it when you want the agent to create a root `auto-strike/` workspace, refine
-the idea, research where useful, write a compact spec, slice the work, build,
-review, fix, and verify toward an MVP.
+the idea, research where useful, write an initiative spec, split the initiative
+into delivery phases with `phase-spec.md` files, then build and review small
+slices inside each phase.
+
+Auto Strike's planning shape is:
+
+```text
+auto-strike/initiatives/<initiative-slug>/spec.md
+auto-strike/initiatives/<initiative-slug>/phases/<phase-slug>/phase-spec.md
+auto-strike/initiatives/<initiative-slug>/phases/<phase-slug>/slices/slice-0-[name].md
+```
 
 Example:
 

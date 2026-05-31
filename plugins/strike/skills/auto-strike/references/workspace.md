@@ -46,9 +46,9 @@ auto-strike/
       todo.md
       research/
       extras/
-      features/
-        <feature-slug>/
-          feature-spec.md
+      phases/
+        <phase-slug>/
+          phase-spec.md
           readiness.md
           research/
           extras/
@@ -63,7 +63,7 @@ Use the lowest level that owns the decision:
   across normal Strike, Auto Strike, and repo work.
 - `initiatives/<slug>/`: one Auto Strike request, session, campaign, MVP, or
   milestone.
-- `features/<slug>/`: one buildable capability with its own feature spec,
+- `phases/<slug>/`: one delivery phase with its own phase spec,
   slices, and readiness.
 - `research/`: source-backed findings.
 - `extras/`: supporting notes such as schema, routes, architecture, diagrams, or
@@ -71,11 +71,14 @@ Use the lowest level that owns the decision:
 
 Do not put primary workflow state in `extras/`.
 
-## Initiatives And Features
+## Initiatives And Phases
+
+In Auto Strike, `phase` means a delivery phase inside an initiative. Brainstorm,
+grill, spec, slice, build, review, and readiness are workflow modes.
 
 Create a new initiative only when starting a meaningfully separate Auto Strike
 request. A later request like "add image generation" gets its own initiative;
-decomposing an existing request creates feature folders inside that initiative,
+decomposing an existing request creates phase folders inside that initiative,
 not new initiatives.
 
 Every active initiative owns `decisions.md`, `grill.md`, and `spec.md` once it
@@ -85,30 +88,30 @@ reaches spec or later, even if they are brief:
   dependency, validation, and risk decisions.
 - `grill.md`: decision pressure-test, Decision Checkpoint, or explicit user
   opt-out.
-- `spec.md`: initiative overview and feature map before feature specs, slices,
+- `spec.md`: initiative overview and phase map before phase specs, slices,
   or build work proceed.
 
-Inside an initiative, create `features/<feature-slug>/` when the work has
+Inside an initiative, create `phases/<phase-slug>/` when the work has
 separable outcomes, workflows, roles, domains, readiness targets, or subsystems.
 If it looks like a separate initiative, ask the user before creating it.
 
-For multi-slice feature work, `features/<feature-slug>/slices/index.md` carries
+For multi-slice phase work, `phases/<phase-slug>/slices/index.md` carries
 the lightweight Slice Map, checkpoints, slice review, and exit evidence. Use
 `slice.md` for the slice index and slice document templates.
 
-## Phase Ledger
+## Mode Ledger
 
-Each initiative keeps one small `## Phase Ledger`, usually in `idea.md`. It
-makes phase compression visible so brainstorm, grill, spec, slice, build,
+Each initiative keeps one small `## Mode Ledger`, usually in `idea.md`. It
+makes mode compression visible so brainstorm, grill, spec, slice, build,
 review, and readiness are not silently skipped.
 
-Update the row when entering or leaving a phase. Replace rows in place; do not
-append duplicate `Spec`, `Slice`, or `Build` rows.
+Update the row when entering or leaving a workflow mode. Replace rows in place;
+do not append duplicate `Spec`, `Slice`, or `Build` rows.
 
 ```md
-## Phase Ledger
+## Mode Ledger
 
-| Phase | Status | Artifact | Reason |
+| Mode | Status | Artifact | Reason |
 | --- | --- | --- | --- |
 | Brainstorm | done | `idea.md` | First useful outcome, user, constraints, and non-goals are recorded. |
 | Grill | in progress | `grill.md` | Decisions are being pressure-tested. |
@@ -124,17 +127,17 @@ Allowed statuses: `in progress`, `done`, `compressed`, `skipped`, `blocked`,
 
 Rules:
 
-- Before slicing or building, earlier phases should be `done`, `compressed`, or
-  `skipped` with artifact and reason.
+- Before slicing or building, earlier workflow modes should be `done`,
+  `compressed`, or `skipped` with artifact and reason.
 - Use `compressed` only when prior artifacts or explicit user wording already
-  answer the phase.
-- Use `skipped` only when the user opts out, asks to move along, or the phase
+  answer the mode.
+- Use `skipped` only when the user opts out, asks to move along, or the mode
   truly does not apply.
 - A detailed kickoff prompt is not enough to skip brainstorm or grill.
-- If the question tool failed or no answer was received, keep the phase blocked
+- If the question tool failed or no answer was received, keep the mode blocked
   or in progress and record the plain-text question to ask next.
-- Do not mark multiple major phases complete in one work unit unless the user
-  explicitly skipped that boundary.
+- Do not mark multiple major workflow modes complete in one work unit unless
+  the user explicitly skipped that boundary.
 - After implementation evidence exists, the ledger and `index.md` must not still
   look like brainstorm or planning.
 
@@ -150,7 +153,7 @@ Use it internally when available:
 - `review-context --lens <lens>`: create compact read-only reviewer packets.
 
 The helper audits state. It does not initialize folders, choose scope, advance
-phases, dispatch reviewers, or replace judgment. If it cannot run, inspect
+modes, dispatch reviewers, or replace judgment. If it cannot run, inspect
 manually and keep moving.
 
 ## Index
@@ -162,10 +165,10 @@ Use `auto-strike/index.md` as the front door for resume:
 
 ## Active Work
 - Initiative: `auto-strike/initiatives/[initiative-slug]`
-- Feature: `auto-strike/initiatives/[initiative-slug]/features/[feature-slug]` / None
+- Phase: `auto-strike/initiatives/[initiative-slug]/phases/[phase-slug]` / None
 - Current mode: brainstorm / grill / spec / slice / build / review / readiness
 - Doc: `auto-strike/initiatives/[initiative-slug]/[active-doc].md`
-- Slice: `auto-strike/initiatives/[initiative-slug]/features/[feature-slug]/slices/[slice].md` / None
+- Slice: `auto-strike/initiatives/[initiative-slug]/phases/[phase-slug]/slices/[slice].md` / None
 - State: [one short current truth]
 - Next: [one concrete action]
 - Blocked by: [decision/check/dependency, or "None."]
@@ -182,14 +185,14 @@ Use `auto-strike/index.md` as the front door for resume:
 
 Keep `index.md` short. It is a pointer, not the source of truth.
 
-Refresh it whenever initiative, feature, slice, mode, blocker, or next action
+Refresh it whenever initiative, phase, slice, mode, blocker, or next action
 changes. Replace old Active Work values in place. Do not append a second
-`Feature`, `Current mode`, `Doc`, `Slice`, `State`, or `Next`.
+`Phase`, `Current mode`, `Doc`, `Slice`, `State`, or `Next`.
 
 Concrete `auto-strike/.../*.md` links should exist. If a future doc is not
 needed yet, mention it without linking a missing path.
 
-If `index.md`, Key Docs, the active feature, active slice, or active doc point
+If `index.md`, Key Docs, the active phase, active slice, or active doc point
 to missing or contradictory state, read `recovery.md`. Repair enough truth to
 resume safely before build, review, or readiness.
 
@@ -201,7 +204,7 @@ Use `auto-strike/todo.md` as one flat operational checklist:
 # Todo
 
 - [ ] Clarify first useful outcome.
-- [ ] Write initiative spec and feature specs.
+- [ ] Write initiative spec and phase specs.
 - [ ] Slice implementation.
 - [ ] Build and verify slice 1.
 ```
@@ -212,7 +215,8 @@ or evidence already preserve the decision. If a slice records `Changed:` and
 follow-up, blocker, or skipped/residual-risk evidence.
 
 After context compression, the agent should be able to read `index.md`, open the
-active doc, and continue one small task without loading unrelated phase detail.
+active doc, and continue one small task without loading unrelated delivery-phase
+detail.
 
 ## Evidence
 
@@ -220,7 +224,7 @@ Record evidence where it best fits the scale:
 
 - contained changes: `index.md`, `todo.md`, or the active slice
 - sliced work: `slices/slice-[n]-[name].md`
-- feature completion: feature `readiness.md`
+- phase completion: phase `readiness.md`
 - initiative completion: initiative `readiness.md`
 
 Use compact evidence, not a diary:
@@ -300,8 +304,8 @@ When docs disagree, prefer current-truth artifacts in this order:
 
 1. active initiative `decisions.md` for decisions
 2. root `UBIQUITOUS_LANGUAGE.md` for durable terms
-3. active initiative `spec.md` for initiative scope and feature map
-4. feature `feature-spec.md` for buildable feature scope
+3. active initiative `spec.md` for initiative scope and phase map
+4. phase `phase-spec.md` for buildable phase scope
 5. slice files for current implementation work
 6. `index.md` for navigation/status
 
@@ -309,12 +313,12 @@ Fix contradictions when found.
 
 ## Repeated Runs
 
-Auto Strike should get smarter as the repo gains feature history.
+Auto Strike should get smarter as the repo gains delivery-phase history.
 
 Start by reading `index.md`, `todo.md`, root `UBIQUITOUS_LANGUAGE.md` if it
 exists, and the active initiative's `decisions.md` and `spec.md`. Then decide
 whether the new idea belongs to an existing initiative, extends an existing
-feature or slice, or deserves a new initiative.
+phase or slice, or deserves a new initiative.
 
 Reuse language, decisions, architecture notes, and verification patterns.
 Restructure lightly when the layout gets in the way: rename vague files, split

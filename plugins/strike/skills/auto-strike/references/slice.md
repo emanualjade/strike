@@ -1,22 +1,22 @@
 # Slice
 
-Slice mode turns a ready spec into feature folders and small build packets.
+Slice mode turns a ready phase spec into a Slice Map and small build packets.
 Default to vertical slices: observable user/system behavior that can be planned,
 built, reviewed, verified, and fixed in one focused loop.
 
 Before slicing:
 
 - Confirm brainstorm, grill, and spec are done, explicitly skipped, or compressed
-  with artifact evidence in the initiative Phase Ledger.
+  with artifact evidence in the initiative Mode Ledger.
 - Confirm spec review and exit evidence exist. Spec may leave a short `Slice
-  Handoff`; slice mode creates `features/.../slices`.
-- Confirm the initiative feature map. Slices belong to one feature folder inside
-  the active initiative.
-- Split into multiple feature folders when the initiative has independent
-  outcomes, workflows, roles, domains, readiness targets, or subsystems.
+  Handoff`; slice mode creates `phases/.../slices`.
+- Confirm the initiative phase map and the active phase spec. Slices belong to
+  one phase folder inside the active initiative.
+- If the phase split or phase spec is missing, stale, or too vague, return to
+  spec mode instead of inventing phase scope inside slice mode.
 - Do not create new initiatives in slice mode. If the work looks like a separate
   initiative, ask the user.
-- Choose one active feature. Do not hide multiple features inside one slice map.
+- Choose one active phase. Do not hide multiple phases inside one slice map.
 
 ## Sizing
 
@@ -71,9 +71,9 @@ assumptions happen early, and each slice leaves the app in a working state. Use
 - [ ] Review findings are resolved or accepted.
 - [ ] Human decision needed? If yes, pause and ask.
 
-## Phase Tasks
+## Mode Tasks
 - [ ] Confirm spec review and exit evidence exist.
-- [ ] Confirm the active feature and feature spec.
+- [ ] Confirm the active phase and phase spec.
 - [ ] Draft the Slice Map and dependency order.
 - [ ] Split or justify any L/XL, batched, or non-vertical slice.
 - [ ] Create the slice docs with execution tasks.
@@ -84,16 +84,16 @@ assumptions happen early, and each slice leaves the app in a working state. Use
 - [pass/blocker/warning] - [size, dependency, risk, working-state, or verification finding]
 
 ## Exit Evidence
-- [Why this feature can enter build one slice at a time without guessing.]
+- [Why this phase can enter build one slice at a time without guessing.]
 ```
 
 ## Slice Doc
 
 Default paths:
 
-- `auto-strike/initiatives/<initiative-slug>/features/<feature-slug>/slices/index.md`
-- `auto-strike/initiatives/<initiative-slug>/features/<feature-slug>/slices/slice-0-[name].md`
-- `auto-strike/initiatives/<initiative-slug>/features/<feature-slug>/slices/slice-1-[name].md`
+- `auto-strike/initiatives/<initiative-slug>/phases/<phase-slug>/slices/index.md`
+- `auto-strike/initiatives/<initiative-slug>/phases/<phase-slug>/slices/slice-0-[name].md`
+- `auto-strike/initiatives/<initiative-slug>/phases/<phase-slug>/slices/slice-1-[name].md`
 
 Use this template:
 
