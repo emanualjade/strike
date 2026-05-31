@@ -1,55 +1,65 @@
 # Mermaid Reference
 
-Use Mermaid when the user wants diagrams that are readable in Markdown, easy to paste into GitHub docs, and quick to preview visually.
+Use Mermaid for fast, Markdown-native diagrams that agents can paste into
+GitHub docs, issue comments, and Mermaid Live.
 
-## When to use Mermaid
+## Mode rules
 
-Use Mermaid for:
+- Use Mermaid for quick architecture sketches, process/data flows, runtime
+  sequences, lifecycles, simple ER diagrams, and lightweight class/domain views.
+- Prefer DBML for durable database models, Structurizr/C4 for whole-system
+  architecture, and OpenAPI/AsyncAPI for API or event contracts.
+- One diagram should answer one question. Split runtime, schema, deployment, and
+  dependency concerns instead of crowding them into one chart.
+- Preserve source names when known. Mark gaps as `UNKNOWN`, `TODO`, or
+  `ASSUMPTION`; do not invent services, tables, actors, or flows.
+- Use `references/visual-preview-links.md` for the `View this visually` block.
 
-- quick system overview diagrams
-- runtime sequence diagrams
-- state lifecycle diagrams
-- simple ER diagrams
-- simple class/domain diagrams
-- repo documentation that GitHub can render
+## Quick basics
 
-## Rendering links
+- Wrap output in a `mermaid` code fence.
+- Start with the diagram type: `flowchart LR`, `sequenceDiagram`,
+  `stateDiagram-v2`, `erDiagram`, or `classDiagram`.
+- Use short stable IDs and readable labels: `api[API Server]`, `db[(Database)]`.
+- Label system arrows with the data, event, call, or responsibility crossing the
+  boundary.
+- Use subgraphs only for real boundaries such as apps, services, domains, or
+  layers.
+- Keep syntax plain unless an advanced feature clearly improves comprehension.
 
-Use `references/visual-preview-links.md` for the `View this visually` block.
+## Common diagram types
 
-Default link: https://mermaid.live
+| Need | Use |
+|---|---|
+| App/service overview, process, data movement | `flowchart LR` or `flowchart TD` |
+| Runtime interaction over time | `sequenceDiagram` |
+| Status/lifecycle transitions | `stateDiagram-v2` |
+| Quick schema sketch | `erDiagram` |
+| Lightweight domain or class relationships | `classDiagram` |
 
-## Flowchart template
+### Flowchart
 
-Use for high-level app, service, or data flow.
+Use for high-level system, process, or data-flow diagrams. Prefer `LR` for
+architecture and `TD` for step-by-step processes.
 
 ```mermaid
-flowchart TD
+flowchart LR
   user[User]
   web[Web App]
   api[API Server]
   db[(Database)]
   external[External Service]
 
-  user -->|action/request| web
+  user -->|uses| web
   web -->|HTTP request| api
   api -->|read/write| db
   api -->|API call| external
 ```
 
-Quality rules:
+### Sequence diagram
 
-- Use `flowchart TD` or `flowchart LR`.
-- Prefer `LR` for left-to-right architecture diagrams.
-- Prefer `TD` for process flows.
-- Label arrows with what moves across the boundary.
-- Use database cylinder syntax `[(Database)]` for data stores.
-- Use subgraphs for domains/layers when helpful.
-- Do not create a huge hairball. Split large diagrams.
-
-## Sequence diagram template
-
-Use for runtime interactions over time.
+Use for request paths, webhooks, async events, and cross-service conversations.
+Use `alt` / `else` when failure paths matter.
 
 ```mermaid
 sequenceDiagram
@@ -57,114 +67,77 @@ sequenceDiagram
   participant Web as Web App
   participant API as API Server
   participant DB as Database
-  participant Stripe as Stripe
+  participant Payment as Payment Provider
 
-  User->>Web: Submit registration form
-  Web->>API: POST /registrations
-  API->>DB: Create pending registration
-  API->>Stripe: Create checkout session
-  Stripe-->>API: checkout.session.completed webhook
-  API->>DB: Mark registration paid
-  API-->>Web: Return confirmation
-```
-
-Quality rules:
-
-- Use actor for humans.
-- Use participants for systems/services.
-- Use `->>` for calls and `-->>` for async returns/events.
-- Include key failure branches with `alt` / `else` when relevant.
-
-Failure branch example:
-
-```mermaid
-sequenceDiagram
-  actor User
-  participant Web
-  participant API
-  participant Payment
-
-  User->>Web: Submit payment
+  User->>Web: Submit checkout
   Web->>API: POST /checkout
-  API->>Payment: Create payment session
+  API->>DB: Create pending order
+  API->>Payment: Create checkout session
   alt Payment succeeds
-    Payment-->>API: payment.completed
-    API-->>Web: Show success
+    Payment-->>API: payment.completed webhook
+    API->>DB: Mark order paid
+    API-->>Web: Show confirmation
   else Payment fails
-    Payment-->>API: payment.failed
+    Payment-->>API: payment.failed webhook
     API-->>Web: Show retry path
   end
 ```
 
-## State diagram template
+### State diagram
 
-Use for lifecycle/status transitions.
+Use for lifecycles, statuses, and valid transitions.
 
 ```mermaid
 stateDiagram-v2
   [*] --> Draft
-  Draft --> PendingPayment: submit registration
+  Draft --> PendingPayment: submit
   PendingPayment --> Paid: payment completed
-  PendingPayment --> Expired: payment window expires
-  Paid --> Cancelled: user/admin cancels
-  Paid --> Refunded: refund issued
+  PendingPayment --> Expired: timeout
+  Paid --> Cancelled: cancel
+  Paid --> Refunded: refund
   Cancelled --> [*]
   Refunded --> [*]
   Expired --> [*]
 ```
 
-Quality rules:
+### ER diagram
 
-- Include terminal states.
-- Include failure/timeout/cancellation states when relevant.
-- Label transitions with trigger events.
-
-## ER diagram template
-
-Use for simple schema diagrams when the user wants Markdown-native output.
+Use for a quick Markdown-rendered schema sketch. Use DBML instead when the user
+needs reusable schema documentation.
 
 ```mermaid
 erDiagram
-  USER ||--o{ REGISTRATION : creates
-  EVENT ||--o{ REGISTRATION : receives
-  REGISTRATION ||--o| PAYMENT : has
+  USER ||--o{ ORDER : places
+  ORDER ||--o{ ORDER_ITEM : contains
+  PRODUCT ||--o{ ORDER_ITEM : appears_in
 
   USER {
     uuid id PK
     string email
-    datetime created_at
   }
 
-  EVENT {
-    uuid id PK
-    string title
-    datetime starts_at
-  }
-
-  REGISTRATION {
+  ORDER {
     uuid id PK
     uuid user_id FK
-    uuid event_id FK
     string status
   }
 
-  PAYMENT {
+  ORDER_ITEM {
+    uuid order_id FK
+    uuid product_id FK
+    integer quantity
+  }
+
+  PRODUCT {
     uuid id PK
-    uuid registration_id FK
-    integer amount_cents
-    string status
+    string name
   }
 ```
 
-Quality rules:
+### Class / domain diagram
 
-- Use DBML instead when the user wants a reusable database modeling language.
-- Use Mermaid ER when the user wants quick GitHub/Markdown rendering.
-- Mark uncertain cardinality with notes outside the diagram.
-
-## Class/domain diagram template
-
-Use sparingly for domain objects or code-level classes.
+Use sparingly for domain objects, code-level classes, or ownership
+relationships.
 
 ```mermaid
 classDiagram
@@ -173,22 +146,40 @@ classDiagram
     +string email
   }
 
-  class Registration {
+  class Order {
     +uuid id
     +string status
     +submit()
     +cancel()
   }
 
-  User "1" --> "many" Registration : creates
+  User "1" --> "*" Order : places
 ```
 
-## Common mistakes
+## Quality rules
 
-Avoid:
+- Keep diagrams small enough to scan. Split large systems into focused views.
+- Label every meaningful relationship. Unlabeled arrows usually signal unclear
+  scope or missing context.
+- Show error, timeout, cancellation, and retry paths when they affect the
+  user's understanding.
+- Use humans as `actor` in sequence diagrams; use participants for systems.
+- Use `[(Database)]` or explicit data-store labels for persisted state.
+- Do not mix logical, runtime, deployment, and database views unless the user
+  explicitly wants a rough all-in-one sketch.
+- Exclude secrets, tokens, private credentials, and sensitive user data.
+- Validate that the diagram renders before presenting it when practical.
 
-- unlabeled arrows in system diagrams
-- too many nodes in one diagram
-- mixing deployment, runtime, and database concerns in one crowded chart
-- inventing services or tables not present in source material
-- using Mermaid ER as a replacement for detailed database documentation when DBML is a better fit
+## Advanced Features
+
+Use advanced Mermaid features only when they clarify the diagram. For deeper
+syntax, check the official docs:
+
+- [Mermaid syntax reference](https://mermaid.js.org/intro/syntax-reference.html)
+- [Flowcharts](https://mermaid.js.org/syntax/flowchart.html)
+- [Sequence diagrams](https://mermaid.js.org/syntax/sequenceDiagram.html)
+- [State diagrams](https://mermaid.js.org/syntax/stateDiagram.html)
+- [Entity relationship diagrams](https://mermaid.js.org/syntax/entityRelationshipDiagram.html)
+- [Class diagrams](https://mermaid.js.org/syntax/classDiagram.html)
+- [Configuration](https://mermaid.js.org/config/configuration.html)
+- [Themes](https://mermaid.js.org/config/theming.html)

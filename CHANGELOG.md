@@ -2,6 +2,11 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.32 - 2026-05-31
+
+- Expanded System Visualizer diagram-mode references so each supported mode has
+  concise basics, quality guidance, and links for deeper syntax/features.
+
 ## 0.8.31 - 2026-05-31
 
 - Added the manual-only `system-visualizer` utility skill for reusable

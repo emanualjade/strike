@@ -1,52 +1,43 @@
-# Structurizr DSL / C4 Reference
+# Structurizr DSL / C4 Mode Reference
 
-Use Structurizr DSL when the user wants durable software architecture documentation rather than a one-off diagram.
+Use Structurizr DSL when the user needs durable software architecture
+documentation with multiple views from one model. Prefer Mermaid for quick
+Markdown-only sketches.
 
-## When to use Structurizr/C4
+## Quick basics
 
-Use Structurizr DSL for:
+- A Structurizr file is a `workspace` with a `model` and `views`.
+- The `model` defines people, software systems, containers, components, and
+  relationships.
+- `views` choose what to show from the model; at least one view is required.
+- Assign identifiers to elements you will reference, and define elements before
+  using them in relationships.
+- Use `autoLayout` for generated diagrams unless the user requested manual
+  layout.
 
-- whole-system architecture
-- C4 system context, container, and component views
-- team architecture docs
-- consistent multiple views from one model
-- architecture diagrams that should evolve with the codebase
+## Model/view pattern
 
-## Rendering links
-
-Use `references/visual-preview-links.md` for the `View this visually` block.
-
-Default quick link: https://playground.structurizr.com/
-
-Private/local link: https://docs.structurizr.com/local
-
-## Basic workspace template
+Model the stable truth first, then create focused views:
 
 ```structurizr
-workspace "Example System" "Software architecture model generated from available source material." {
-
+workspace "Example System" "Architecture model." {
   model {
-    customer = person "Customer" "A person using the web application."
+    customer = person "Customer" "Uses the product."
 
-    system = softwareSystem "Example Web App" "Allows customers to register and pay." {
-      web = container "Web App" "Browser-facing user interface." "Next.js"
-      api = container "API Server" "Handles application requests and domain logic." "Node.js"
-      db = container "Database" "Stores users, registrations, and payments." "PostgreSQL" {
+    system = softwareSystem "Example Web App" "Helps customers register and pay." {
+      web = container "Web App" "Browser-facing UI." "Next.js"
+      api = container "API" "Handles product requests." "Node.js"
+      db = container "Database" "Stores product data." "PostgreSQL" {
         tags "Database"
       }
-      worker = container "Background Worker" "Processes async jobs and webhooks." "Node.js"
     }
 
-    stripe = softwareSystem "Stripe" "Processes payments."
-    email = softwareSystem "Email Service" "Sends transactional emails."
+    payments = softwareSystem "Payment Provider" "Processes payments."
 
     customer -> web "Uses"
-    web -> api "Makes API requests to"
+    web -> api "Calls"
     api -> db "Reads from and writes to"
-    api -> stripe "Creates checkout sessions with"
-    stripe -> worker "Sends payment webhooks to"
-    worker -> db "Updates payment and registration status in"
-    worker -> email "Sends confirmation emails via"
+    api -> payments "Creates checkout sessions with"
   }
 
   views {
@@ -71,27 +62,46 @@ workspace "Example System" "Software architecture model generated from available
 }
 ```
 
-## C4 view choices
+## C4 levels
 
-Use these levels:
-
-1. **System Context** — people and external systems around the system.
-2. **Container** — apps, services, databases, workers, queues inside the system boundary.
-3. **Component** — major components inside one container.
-4. **Code** — classes/functions; usually avoid unless requested.
+- **System Context:** the system, users, and external systems around it.
+- **Container:** deployable/runnable parts inside the system boundary, such as
+  web apps, APIs, workers, databases, queues, and mobile apps.
+- **Component:** important internal parts of one container. Use only when it
+  clarifies implementation structure.
+- **Code:** classes, functions, or source-level detail. Usually avoid unless the
+  user explicitly asks.
 
 ## Quality rules
 
-- Define people, software systems, containers, and relationships in the model.
-- Add at least one view; otherwise there may be nothing to render.
-- Use `autoLayout` for generated diagrams.
-- Separate system context from container-level details.
-- Use external systems for third-party services such as Stripe, SendGrid, S3, Auth0, etc.
-- Use containers for deployable/runnable units: web app, API server, worker, database, queue.
-- Do not model every file/function as a component unless requested.
-- Mark unknown technologies as `UNKNOWN` or omit the technology field.
-- Avoid forward references: define elements before using them in relationships.
+- Keep each view at one abstraction level; do not mix container internals into
+  a system context view.
+- Use external `softwareSystem` elements for third-party services such as
+  Stripe, SendGrid, S3, Auth0, or GitHub.
+- Use containers for things that run, store data, or communicate across process
+  boundaries.
+- Relationship labels should be short verb phrases: `Calls`, `Publishes events
+  to`, `Reads from and writes to`.
+- Do not invent architecture. Mark uncertain parts as `UNKNOWN`, `TODO`, or
+  `ASSUMPTION`.
+- Do not model every file, route, table, or function unless the requested level
+  requires it.
+- Prefer clear names over clever styling. Use tags/styles sparingly for
+  semantic distinctions such as databases, queues, or external systems.
 
-## Useful companion
+## Rendering links
 
-For users who want a quick Markdown view too, add a Mermaid flowchart companion after the Structurizr DSL.
+Use `references/visual-preview-links.md` for the `View this visually` block.
+
+- Quick preview: https://playground.structurizr.com/
+- Private/local rendering: https://docs.structurizr.com/local
+
+## Advanced features
+
+For deeper features such as groups, deployment views, dynamic views,
+perspectives, themes, documentation blocks, includes, scripts, and workspace
+extension, read the official docs instead of guessing:
+
+- Structurizr DSL docs: https://docs.structurizr.com/dsl
+- Structurizr DSL language reference: https://docs.structurizr.com/dsl/language
+- C4 model docs: https://c4model.com/

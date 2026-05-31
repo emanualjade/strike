@@ -1,16 +1,15 @@
-# DBML Reference
+# DBML Mode Reference
 
-Use DBML when the user wants a database-first representation: tables, fields, relationships, indexes, enums, and schema rules.
+Use DBML when the user wants a database-first diagram: tables, fields, keys, relationships, indexes, enums, and schema notes that can be pasted into dbdiagram.io.
 
-## When to use DBML
+## Use DBML for
 
-Use DBML for:
+- Prisma, SQL, Drizzle, Rails, Django, or migration schema visualization
+- entity relationship diagrams that need real table and column names
+- registration, payment, membership, tenant, or content schemas
+- schema review, data modeling, and database documentation
 
-- Prisma/SQL/Drizzle/Rails/Django model visualization
-- database schema review
-- entity relationships
-- registration/payment/membership schemas
-- schema documentation that can be pasted into dbdiagram.io
+Use Mermaid ER instead when the user needs quick Markdown-native rendering. Use OpenAPI, AsyncAPI, Mermaid sequence/flowchart, or BPMN for APIs, events, runtime flows, or business processes.
 
 ## Rendering links
 
@@ -18,7 +17,7 @@ Use `references/visual-preview-links.md` for the `View this visually` block.
 
 Default link: https://dbdiagram.io/d
 
-## Basic DBML template
+## Quick basics
 
 ```dbml
 Project app_schema {
@@ -36,99 +35,110 @@ Enum registration_status {
 Table users {
   id uuid [pk]
   email varchar [not null, unique]
-  name varchar
-  created_at timestamp [not null]
-}
-
-Table events {
-  id uuid [pk]
-  title varchar [not null]
-  starts_at timestamp
-  capacity integer
   created_at timestamp [not null]
 }
 
 Table registrations {
   id uuid [pk]
   user_id uuid [not null]
-  event_id uuid [not null]
-  status registration_status [not null]
+  status registration_status [not null, note: 'Use confirmed statuses only']
   created_at timestamp [not null]
 
   indexes {
-    (user_id, event_id) [unique]
-    event_id
-    status
+    user_id
+    (user_id, status)
   }
 }
 
-Table payments {
-  id uuid [pk]
-  registration_id uuid [not null, unique]
-  amount_cents integer [not null]
-  currency varchar [not null]
-  status varchar [not null]
-  created_at timestamp [not null]
-}
-
 Ref: registrations.user_id > users.id
-Ref: registrations.event_id > events.id
-Ref: payments.registration_id > registrations.id
 ```
 
-## Relationship direction
+## Core patterns
 
-Use these patterns:
+### Tables and columns
 
 ```dbml
-Ref: orders.user_id > users.id              // many orders belong to one user
-Ref: profiles.user_id - users.id            // one-to-one relationship
-Ref: memberships.organization_id > organizations.id
+Table table_name {
+  id uuid [pk]
+  required_text varchar [not null]
+  optional_text varchar
+  created_at timestamp [not null, default: `now()`]
+
+  Note: 'ASSUMPTION: business rule that does not fit a field setting.'
+}
 ```
 
-If cardinality is uncertain, use a note:
+- Preserve real database names and casing when known.
+- Use practical SQL-ish types from the source schema; do not normalize every type into generic strings.
+- Put uncertainty in `note`, `Note`, `TODO`, `UNKNOWN`, or `ASSUMPTION`, not in invented columns.
+
+### Relationships
+
+```dbml
+Ref: orders.user_id > users.id                  // many orders belong to one user
+Ref: profiles.user_id - users.id                // one-to-one
+Ref: memberships.organization_id > organizations.id
+Ref: memberships.user_id > users.id
+```
+
+- Prefer explicit `Ref:` lines for generated diagrams; they are easier to scan and edit.
+- Model many-to-many relationships with a join table when the join has fields, indexes, timestamps, roles, or business meaning.
+- Use direct `<>` many-to-many only for simple conceptual diagrams.
+- If cardinality or optionality is unclear, keep the relationship and mark the assumption in a note.
+
+### Indexes and constraints
 
 ```dbml
 Table memberships {
-  id uuid [pk]
-  user_id uuid [not null, note: 'ASSUMPTION: user can have many memberships']
+  user_id uuid [not null]
+  organization_id uuid [not null]
+  role varchar [not null]
+
+  indexes {
+    (user_id, organization_id) [unique]
+    organization_id
+    role
+  }
 }
 ```
 
-## Notes and assumptions
+- Include primary keys, unique constraints, and important lookup indexes when known.
+- Use composite indexes for join tables and natural uniqueness.
+- Do not invent performance indexes unless clearly marked as assumptions.
 
-Use `Note` for business rules, uncertainty, and source limitations.
+### Enums
 
 ```dbml
-Table registrations {
-  id uuid [pk]
-  status varchar [not null, note: 'TODO: replace with enum if statuses are confirmed']
+Enum payment_status {
+  pending
+  succeeded
+  failed
+  refunded
+}
 
-  Note: 'ASSUMPTION: a registration belongs to exactly one event and one user.'
+Table payments {
+  status payment_status [not null]
 }
 ```
+
+- Use enums only when values are confirmed or explicitly marked as assumptions.
+- Keep enum names lowercase snake_case unless the source uses a different convention.
 
 ## Quality rules
 
-- Include primary keys.
-- Include foreign keys.
-- Include join tables.
-- Include uniqueness and important indexes when known.
-- Include enums when status values are known.
-- Do not invent indexes unless marked as assumptions.
-- Preserve real table/field names from the codebase when available.
-- Prefer snake_case if the database uses snake_case.
-- Add notes for business rules that are not expressible as fields/refs.
-- If source schema is incomplete, mark missing pieces as `TODO` or `UNKNOWN`.
+- Answer the user's schema question; avoid dumping every table if a focused subset is clearer.
+- Include all known primary keys, foreign keys, join tables, uniqueness rules, and key indexes.
+- Preserve source table, field, enum, and status names.
+- Separate database structure from runtime/service flow concerns.
+- Keep large systems split into focused diagrams by bounded context or feature area.
+- Add notes for source gaps, inferred relationships, optional cardinality, and business rules.
+- Exclude secrets, credentials, sample user data, and irrelevant seed data.
+- Make the output pasteable as one `dbml` code fence.
 
-## When not to use DBML
+## Advanced features
 
-Do not use DBML for:
+For deeper syntax, use official docs instead of guessing:
 
-- runtime request flow
-- web app architecture
-- external API contracts
-- event-driven payload contracts
-- business process approval flows
-
-Use Mermaid sequence/flowchart, Structurizr/C4, OpenAPI/AsyncAPI, or BPMN instead.
+- [DBML syntax](https://dbml.dbdiagram.io/docs) for schemas, aliases, checks, defaults, composite keys, composite refs, relationship settings, table partials, and records.
+- [dbdiagram DBML docs](https://docs.dbdiagram.io/dbml) for dbdiagram-specific usage.
+- [dbdiagram relationships](https://docs.dbdiagram.io/relationships/) for visual relationship behavior and inline relationship examples.

@@ -250,7 +250,7 @@ Alternative:
 - Use Camunda Modeler/Web Modeler if this process may become executable.
 ```
 
-## IDEF0 / DFD-style text
+## IDEF0
 
 There is no single default paste-in viewer for simple IDEF0-style text.
 
@@ -263,6 +263,23 @@ Suggested block:
 
 Fastest option:
 - IDEF0/DFD text is mainly a structured explanation.
+- Use the companion Mermaid/D2 diagram above for a visual preview.
+- For Mermaid, open https://mermaid.live and paste the Mermaid code.
+```
+
+## DFD-style text
+
+There is no single default paste-in viewer for DFD-style text.
+
+When the user wants a visual result, provide a Mermaid or D2 companion diagram.
+
+Suggested block:
+
+```markdown
+## View this visually
+
+Fastest option:
+- DFD text is mainly a structured data-movement explanation.
 - Use the companion Mermaid/D2 diagram above for a visual preview.
 - For Mermaid, open https://mermaid.live and paste the Mermaid code.
 ```

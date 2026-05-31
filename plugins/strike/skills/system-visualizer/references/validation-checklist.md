@@ -79,10 +79,21 @@ Use this before finalizing a diagram/model output.
 - Diagram starts with `@startuml` and ends with `@enduml`.
 - Diagram type matches the user's goal: sequence, component, class, activity, or state.
 
-## IDEF0 / DFD / BPMN checks
+## IDEF0 checks
 
 - IDEF0 includes Inputs, Controls, Outputs, Mechanisms, and Downstream.
+- Function names are active verb-noun phrases.
+- Controls, mechanisms, and inputs are not mixed together.
+
+## DFD checks
+
 - DFD uses external entities, processes, data stores, and labeled data flows.
+- Every process has at least one input and one output.
+- Data stores connect through processes, not directly to entities or other
+  stores.
+
+## BPMN checks
+
 - BPMN text includes start/end events, tasks, gateways, lanes/pools when useful, and exception paths.
 - BPMN XML is only generated when specifically requested.
 - A Mermaid/D2 companion is included when the user needs immediate visual preview.

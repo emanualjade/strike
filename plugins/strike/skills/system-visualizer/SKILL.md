@@ -95,9 +95,14 @@ Reference mapping:
 - Mermaid: `references/mermaid.md`
 - DBML: `references/dbml.md`
 - Structurizr/C4: `references/structurizr-c4.md`
-- OpenAPI or AsyncAPI: `references/openapi-asyncapi.md`
-- D2, Graphviz DOT, or PlantUML: `references/d2-graphviz-plantuml.md`
-- IDEF0, DFD, or BPMN: `references/idef0-dfd-bpmn.md`
+- OpenAPI: `references/openapi.md`
+- AsyncAPI: `references/asyncapi.md`
+- D2: `references/d2.md`
+- Graphviz DOT: `references/graphviz.md`
+- PlantUML: `references/plantuml.md`
+- IDEF0: `references/idef0.md`
+- DFD: `references/dfd.md`
+- BPMN: `references/bpmn.md`
 - Repo-local rendering: `references/render-notes.md`
 
 ## Natural Strike Use
