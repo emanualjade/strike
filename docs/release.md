@@ -5,6 +5,18 @@ users.
 
 ## Normal Work
 
+If `pnpm run ...` reports `ERR_PNPM_VERIFY_DEPS_BEFORE_RUN`, the local pnpm
+workspace receipt is stale. Refresh it before continuing:
+
+```bash
+pnpm install --frozen-lockfile --ignore-scripts
+```
+
+This command is for local metadata refresh only. If it wants to change the
+lockfile, download packages outside the lockfile, run dependency build scripts,
+or otherwise do more than refresh the existing install state, stop and inspect
+the change before continuing.
+
 Before committing ordinary changes, run:
 
 ```bash
@@ -38,9 +50,17 @@ Release only after the version and changelog changes are committed and pushed.
    `plugins/strike/.claude-plugin/plugin.json`, and
    `.claude-plugin/marketplace.json`. Do not add a version to
    `.agents/plugins/marketplace.json`.
-2. Commit the release changes.
-3. Push the commit to GitHub.
-4. Run:
+2. If package metadata changed since the last local install, refresh stale pnpm
+   workspace metadata with:
+
+```bash
+pnpm install --frozen-lockfile --ignore-scripts
+```
+
+3. Run `pnpm run test` and `pnpm run validate:publish` locally when practical.
+4. Commit the release changes.
+5. Push the commit to GitHub.
+6. Run:
 
 ```bash
 pnpm run release:check
@@ -49,7 +69,7 @@ pnpm run release:check
 This validates the repo, validates the Claude plugin and marketplace manifests,
 and asks Claude to rehearse the tag creation with `--dry-run`.
 
-5. Confirm the pushed release commit has green GitHub Actions checks:
+7. Confirm the pushed release commit has green GitHub Actions checks:
 
 - `CI`
 - `Host Smoke - Claude Code`

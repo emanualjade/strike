@@ -59,6 +59,12 @@ This repository publishes Strike as a cross-agent plugin and skills marketplace.
 - Use the normal `pnpm` command so local Socket Firewall aliases or wrappers can apply. Do not bypass wrappers with `command pnpm` or an absolute pnpm binary path.
 - Use standalone `pnpm` for this repo. Do not use Corepack commands such as `corepack`, `corepack pnpm`, `corepack enable`, or `corepack prepare`. If pnpm reports a version mismatch, stop and alert the user. Do not try to resolve it.
 - Do not run local package installs unless the user explicitly approves. If pnpm is missing or the version is wrong, ask the user to install or enable standalone pnpm 11.
+- If `pnpm run ...` fails with `ERR_PNPM_VERIFY_DEPS_BEFORE_RUN` because local
+  workspace metadata is stale, explain the issue in plain language and ask for
+  approval to refresh it. With approval, run only
+  `pnpm install --frozen-lockfile --ignore-scripts`. If pnpm wants to change the
+  lockfile, download packages outside the lockfile, run dependency build scripts,
+  or otherwise do more than refresh local install metadata, stop and ask.
 - Never approve pnpm dependency build scripts unilaterally. If pnpm asks for build-script approval, stop and work with the user to validate each package before allowlisting it.
 - Run `pnpm run validate` after moving in skills or editing manifests. Before publishing, run `pnpm run validate:publish` and every available host-native validator. Treat `skills-ref` as an optional research/debugging tool unless it gains a documented way to handle useful host-specific fields.
 
