@@ -15,7 +15,8 @@
     "readiness-review",
     "retro",
     "demo",
-    "language"
+    "language",
+    "system-visualizer"
   ],
   "entryPoints": {
     "global": {
@@ -210,6 +211,17 @@
         "when to ask before changing UBIQUITOUS_LANGUAGE.md"
       ],
       "boundary": "Do not apply uncertain glossary changes without user approval."
+    },
+    "system-visualizer": {
+      "title": "System Visualizer",
+      "target": "how system-visualizer chooses diagram/model formats and presents visual outputs",
+      "ideas": [
+        "preferred diagram or model formats",
+        "privacy and repo-local rendering defaults",
+        "how much source inspection to do before diagramming",
+        "style for assumptions, unknowns, viewer links, and useful next moves"
+      ],
+      "boundary": "Do not turn system-visualizer into implementation work, Strike board movement, or production architecture decisions without user approval."
     }
   }
 }

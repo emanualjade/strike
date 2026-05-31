@@ -42,6 +42,7 @@ readiness-review <project-slug>
 retro <project-slug>
 demo <project-slug> "<what the demo should explore>"
 language <term|project-slug|path>
+system-visualizer <project-slug|path|goal>
 ```
 
 `auto-strike` is a standalone utility skill. It creates and uses a root
@@ -59,6 +60,11 @@ auto-strike/initiatives/<initiative-slug>/phases/<phase-slug>/slices/slice-0-[na
 Other skills use positional arguments, plain optional words such as `skip`, or
 the `phase:<phase-slug>` token for phase-scoped work.
 
+`system-visualizer` is a standalone utility skill. Use it when a Strike project,
+Auto Strike initiative, phase, slice, existing repo, schema, API, workflow, or
+architecture needs a diagram/model in a reusable text-first format such as
+Mermaid, DBML, Structurizr/C4, OpenAPI, AsyncAPI, D2, Graphviz, or PlantUML.
+
 Use `init` before normal Strike workflow skills. It installs Strike-managed
 runtime files under `strike/customize/system/` and creates user customization
 files under `strike/customize/user/`. Rerun it after updating Strike when you
@@ -67,7 +73,7 @@ need to refresh those managed runtime files.
 Use `customize` when you want Strike to work more like you do in a repo. Add
 instructions under `strike/customize/user/` for things like brainstorm style,
 research standards, spec detail, review lenses, phase planning, build/fix
-habits, readiness strictness, demos, or project language.
+habits, readiness strictness, demos, project language, or system visualization.
 Run `customize check-setup` to make sure the setup is healthy and
 `customize review-instructions <entry|all>` to ask Strike whether the
 instructions are safe for the workflow.
@@ -105,6 +111,7 @@ Claude Code examples:
 /strike:retro <project-slug>
 /strike:demo <project-slug> "<what the demo should explore>"
 /strike:language <term|project-slug|path>
+/strike:system-visualizer <project-slug|path|goal>
 ```
 
 See `references/invocation.md` for the shared handoff format and host-specific

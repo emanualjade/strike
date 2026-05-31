@@ -783,12 +783,15 @@ skip` or `go <project-slug> verbose`.
 - `retro`: record what happened and move ready work to done.
 - `language`: keep repo terminology consistent.
 - `demo`: create a small planning demo for a card.
+- `system-visualizer`: create reusable diagrams/models for systems, schemas,
+  APIs, workflows, dependencies, and architecture.
 
 ## Customize Strike
 
 You can customize each step in Strike so it works the way you like in this
 repo. Give Strike extra instructions for how to brainstorm, research, write
-specs, review, plan phases, build, fix, make demos, or handle project language.
+specs, review, plan phases, build, fix, make demos, handle project language, or
+visualize systems.
 
 For example, you can tell Strike:
 
@@ -799,6 +802,7 @@ For example, you can tell Strike:
 - how strict build verification and readiness review should be
 - what focused review lenses should check
 - what tone or terminology to use in this repo
+- what diagram formats, privacy defaults, or source-inspection depth to use
 
 Strike still follows its normal workflow, required files, checks, and stage
 gates. Your customization gives it extra guidance for how to do the work.

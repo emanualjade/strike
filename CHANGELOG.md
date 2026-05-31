@@ -2,6 +2,15 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.8.31 - 2026-05-31
+
+- Added the manual-only `system-visualizer` utility skill for reusable
+  diagram/model code across systems, schemas, APIs, workflows, dependencies,
+  and architecture.
+- Added System Visualizer to Strike customization so repos can set diagram
+  format preferences, privacy defaults, source-inspection depth, and output
+  style.
+
 ## 0.8.30 - 2026-05-31
 
 - Renamed Auto Strike's intermediate planning layer from features to delivery phases, making `phases/<phase-slug>/phase-spec.md` the canonical path between initiative specs and slices.

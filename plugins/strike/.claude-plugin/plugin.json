@@ -1,7 +1,7 @@
 {
   "name": "strike",
-  "version": "0.8.30",
-  "description": "Workflow skills and a standalone MVP utility for scoped agent-assisted project delivery.",
+  "version": "0.8.31",
+  "description": "Workflow and utility skills for scoped agent-assisted project delivery.",
   "author": {
     "name": "Emanual Jade"
   },

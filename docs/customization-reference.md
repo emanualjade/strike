@@ -23,6 +23,7 @@ strike/customize/user/readiness-review/readiness-review.md
 strike/customize/user/retro/retro.md
 strike/customize/user/demo/demo.md
 strike/customize/user/language/language.md
+strike/customize/user/system-visualizer/system-visualizer.md
 ```
 
 Review skills also support optional read-only review lenses:
