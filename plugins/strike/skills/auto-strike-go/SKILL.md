@@ -1,0 +1,506 @@
+---
+name: auto-strike-go
+description: Use when the user asks Auto Strike to continue or resume the active initiative from existing workflow state.
+argument-hint: "[optional context]"
+disable-model-invocation: true
+allowed-tools: Read Write Edit MultiEdit Bash Grep Glob WebFetch WebSearch Agent
+---
+
+# Auto Strike Go
+
+Continue the active Auto Strike initiative from existing state. Do not create a
+new initiative in this skill.
+
+## The Workflow Skills
+
+- `refine-idea/SKILL.md` - clarify the raw idea into a useful first outcome.
+- `grill-idea/SKILL.md` - pressure-test key decisions before specs.
+- `create-main-spec/SKILL.md` - define the whole feature or MVP at a durable level.
+- `create-development-phases/SKILL.md` - split the main spec into buildable phases.
+- `create-phase-spec/SKILL.md` - define one phase clearly enough to slice.
+- `create-phase-slices/SKILL.md` - split one phase into small implementation slices.
+- `research-slice/SKILL.md` - research one slice before planning.
+- `plan-slice/SKILL.md` - plan one researched slice before coding.
+- `verify-slice-plan/SKILL.md` - check that one slice plan is ready to build.
+- `build-slice/SKILL.md` - implement one verified slice plan.
+- `verify-slice-build/SKILL.md` - test, review, and close one built slice.
+- `verify-phase/SKILL.md` - confirm all slices satisfy the phase spec.
+- `verify-main-spec/SKILL.md` - confirm all phases satisfy the main spec.
+
+## Repair Skill
+
+- `fix` (`fix/SKILL.md`) repairs issues from a failed verification pass, then
+  returns to the same verifier.
+
+## Running Order
+
+Start at the first workflow skill and move down the list one skill at a time.
+
+Workflow skills are unaware of Auto Strike mechanics except for the canonical
+workflow artifact path named in their own instructions. When using them inside
+Auto Strike, pass the relevant context and completion check as skill arguments.
+
+When a verifier fails, run `fix` with the failed verification artifact, then
+run the same verifier again. Keep the current verification check incomplete
+until that verifier passes.
+
+A workflow skill may still send Auto Strike back to an earlier skill when its
+output reveals a real decision, scope, research, spec, or plan problem that
+cannot honestly be repaired in the verification loop.
+
+Do not move forward until the current workflow skill has produced its required
+output, route-back instructions, or a clear unresolved decision.
+
+## Go Behavior
+
+At the start of every run, inspect the existing Auto Strike workspace.
+
+If `auto-strike/state.json` exists, run:
+
+```text
+node auto-strike/scripts/state.mjs current
+```
+
+If there is an active initiative, resume from the returned workflow skill unless
+the user asks to jump, revisit, or repair an earlier step.
+
+If there is no workflow state, tell the user to start with
+`auto-strike-new-initiative`.
+
+If state exists but no initiative is active, run:
+
+```text
+node auto-strike/scripts/state.mjs list-initiatives
+```
+
+Then ask which initiative to activate or whether to start a new initiative.
+
+If the current state is unclear, repair it with the helper when possible or
+surface the specific state question before continuing.
+
+## State
+
+Auto Strike stores workflow facts in `auto-strike/state.json`.
+
+Example:
+
+```json
+{
+  "version": 1,
+  "initiatives": [
+    {
+      "id": "gallery",
+      "name": "Gallery",
+      "status": "active",
+      "initiativeWorkflow": [
+        { "skill": "refine-idea", "verified": { "ideaRefined": true } },
+        { "skill": "grill-idea", "verified": { "decisionsResolved": true } },
+        { "skill": "create-main-spec", "verified": { "specCreated": true } },
+        { "skill": "create-development-phases", "verified": { "phasesCreated": true } },
+        { "skill": "verify-main-spec", "verified": { "allPhasesVerified": false } }
+      ],
+      "phases": [
+        {
+          "id": "phase-01",
+          "name": "Upload and display",
+          "phaseWorkflow": [
+            { "skill": "create-phase-spec", "verified": { "phaseSpecCreated": true } },
+            { "skill": "create-phase-slices", "verified": { "slicesCreated": true } },
+            { "skill": "verify-phase", "verified": { "allSlicesVerified": false } }
+          ],
+          "slices": [
+            {
+              "id": "slice-01",
+              "name": "Upload image",
+              "sliceWorkflow": [
+                { "skill": "research-slice", "verified": { "researchComplete": true } },
+                { "skill": "plan-slice", "verified": { "planCreated": true } },
+                { "skill": "verify-slice-plan", "verified": { "planVerified": true } },
+                { "skill": "build-slice", "verified": { "implemented": true } },
+                { "skill": "verify-slice-build", "verified": { "buildVerified": true } }
+              ]
+            },
+            {
+              "id": "slice-02",
+              "name": "Display gallery",
+              "sliceWorkflow": [
+                { "skill": "research-slice", "verified": { "researchComplete": false } },
+                { "skill": "plan-slice", "verified": { "planCreated": false } },
+                { "skill": "verify-slice-plan", "verified": { "planVerified": false } },
+                { "skill": "build-slice", "verified": { "implemented": false } },
+                { "skill": "verify-slice-build", "verified": { "buildVerified": false } }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+Markdown files store the actual artifacts. `state.json` stores progress facts.
+
+The helper derives the current workflow position from the verification matrices.
+
+## Workspace Helper
+
+The first new-initiative run creates:
+
+```text
+PROJECT_LANGUAGE.md
+auto-strike/
+  state.json
+  scripts/state.mjs
+  initiatives/
+```
+
+It runs the packaged helper once:
+
+```text
+node <auto-strike-new-initiative skill dir>/scripts/state.mjs init <initiative-id> [name]
+```
+
+This creates starter state and copies the helper to
+`auto-strike/scripts/state.mjs`.
+
+After bootstrap, use the workspace helper:
+
+```text
+node auto-strike/scripts/state.mjs current
+node auto-strike/scripts/state.mjs list-initiatives
+node auto-strike/scripts/state.mjs set-active <initiative-id>
+node auto-strike/scripts/state.mjs finish-initiative [initiative-id]
+node auto-strike/scripts/state.mjs complete-check <check-name>
+node auto-strike/scripts/state.mjs reopen-check <check-name>
+node auto-strike/scripts/state.mjs reopen-phase-check <phase-id> <check-name>
+node auto-strike/scripts/state.mjs reopen-slice-check <phase-id> <slice-id> <check-name>
+node auto-strike/scripts/state.mjs add-phase <phase-id> [name]
+node auto-strike/scripts/state.mjs add-slice <phase-id> <slice-id> [name]
+```
+
+## IDs
+
+Use canonical IDs for generated phases and slices:
+
+- initiatives: `gallery`, `payment-system`, `checkout-redesign`
+- phases: `phase-01`, `phase-02`, `phase-03-b`
+- slices: `slice-01`, `slice-02`, `slice-03-b`
+
+IDs are not titles. Put human names in the optional name argument:
+
+```text
+node auto-strike/scripts/state.mjs add-phase phase-01 "Upload and display"
+node auto-strike/scripts/state.mjs add-slice phase-01 slice-01 "Upload image"
+```
+
+The helper normalizes common numeric inputs such as `1`, `01`, `phase-1`, and
+`1-b`. It stores phases and slices in canonical ID order even when they are
+registered out of order. It rejects human names such as `payments`; use those
+as display names.
+
+## Artifacts
+
+Workflow artifacts live under:
+
+```text
+auto-strike/initiatives/<initiative-id>/
+```
+
+Default outputs:
+
+- `refine-idea` -> `idea.md`
+- `grill-idea` -> `decisions.md`
+- `create-main-spec` -> `main-spec.md`
+- `create-development-phases` -> `development-plan.md`, `phases/<phase-id>/phase.md`, and `state.json` phase entries
+- `create-phase-spec` -> `phases/<phase-id>/phase-spec.md`
+- `create-phase-slices` -> `phases/<phase-id>/slices/<slice-id>/slice.md` and `state.json` slice entries
+- `research-slice` -> `phases/<phase-id>/slices/<slice-id>/research.md`
+- `plan-slice` -> `phases/<phase-id>/slices/<slice-id>/plan.md`
+- `verify-slice-plan` -> `phases/<phase-id>/slices/<slice-id>/plan-verification.md`
+- `build-slice` -> implementation files and `phases/<phase-id>/slices/<slice-id>/build.md`
+- `verify-slice-build` -> `phases/<phase-id>/slices/<slice-id>/build-verification.md`
+- `fix` -> the next local `fixes/fix-001.md`, `fix-002.md`, etc. beside the failed verification evidence
+- `verify-phase` -> `phases/<phase-id>/verification.md`
+- `verify-main-spec` -> `verification.md`
+
+Slice research is a required workflow artifact. Additional initiative or phase
+research files are optional; create one only when source-backed findings affect
+decisions at that scope.
+
+## State Helper
+
+Use the state helper for workflow state:
+
+```text
+node auto-strike/scripts/state.mjs current
+node auto-strike/scripts/state.mjs complete-check <check-name>
+node auto-strike/scripts/state.mjs reopen-check <check-name>
+node auto-strike/scripts/state.mjs reopen-phase-check <phase-id> <check-name>
+node auto-strike/scripts/state.mjs reopen-slice-check <phase-id> <slice-id> <check-name>
+```
+
+The helper should own:
+
+- creating starter state
+- calculating current workflow position
+- resolving artifact paths for the current workflow skill
+- adding phases and slices
+- marking verification items complete
+- reopening verification items when a later verification routes back
+- reopening a specific phase check from main-spec verification
+- reopening a specific slice check from phase-level verification
+- listing missing verification items
+
+Edit `state.json` directly only when the helper does not support the needed
+operation yet. Keep the same state shape.
+
+## Running A Workflow Skill
+
+Use the workspace helper to get the current skill, missing check, and artifact
+path:
+
+```text
+node auto-strike/scripts/state.mjs current
+```
+
+Run the current workflow skill with the returned context and artifact path. Use
+the first value in `missing` as the completion check for that step. If the host
+cannot invoke a skill from inside this skill, read that skill's `SKILL.md` from
+the installed Strike plugin and follow it directly with the same arguments.
+
+After the artifact is created and checked, complete the matching check:
+
+```text
+node auto-strike/scripts/state.mjs complete-check <check-name>
+```
+
+Do not complete `researchComplete` unless `research.md` says
+`Ready for planning: yes`. If it says `Ready for planning: no`, follow the
+research output: split the slice, route back, or surface the unresolved
+decision from `Reason` and `## Questions Or Blockers`.
+
+Do not complete `planCreated` if `plan.md` says `Split Recommendation` is
+`Needed: yes`. Split the active slice, add any replacement slice stubs with
+`add-slice`, run `reopen-check researchComplete`, then continue from `current`.
+
+Do not complete `phasesCreated` until `development-plan.md` exists, each
+planned phase has a phase stub, and each planned phase has been added with
+`add-phase`.
+
+Do not complete `slicesCreated` until each planned slice has a slice stub and
+has been added with `add-slice`.
+
+Do not complete `implemented` unless `build.md` says `Built: yes`. If it says
+`Built: no` and `Route Back` says `Needed: yes`, run the named route-back
+`Command` with its `Phase`, `Slice`, and `Check`.
+
+Do not complete `planVerified` unless `plan-verification.md` says `Ready: yes`.
+If it says `Ready: no` and `Fix Needed: yes`, run `fix`, then run
+`verify-slice-plan` again.
+
+Do not complete `buildVerified` unless `build-verification.md` says
+`Verified: yes`. If it says `Verified: no` and `Fix Needed: yes`, run `fix`,
+then run `verify-slice-build` again.
+
+After completing `buildVerified`, complete the slice git checkpoint before
+moving to the next slice.
+
+Do not complete `allSlicesVerified` unless `verification.md` says
+`Ready: yes`. If it says `Ready: no` and `Fix Needed: yes`, run `fix`, then
+run `verify-phase` again.
+
+Do not complete `allPhasesVerified` unless the initiative `verification.md`
+says `Ready: yes`. If it says `Ready: no` and `Fix Needed: yes`, run `fix`,
+then run `verify-main-spec` again.
+
+After completing `allPhasesVerified`, run:
+
+```text
+node auto-strike/scripts/state.mjs finish-initiative
+```
+
+This marks the initiative complete so future `list-initiatives` output does
+not show finished work as active.
+
+## Failed Verification Loop
+
+When a verification skill returns `Ready: no` or `Verified: no`, do not
+complete the current check.
+
+If its artifact says `Fix Needed: yes`, run `fix` with:
+
+```text
+- the failed verifier name
+- the failed verification artifact path
+- the relevant initiative, phase, and slice artifacts
+- prior fix reports for the same verifier, when present
+```
+
+After `fix` writes `Fixed: yes`, run the same verifier again. Repeat only for
+new or still-open `Must Fix` issues inside accepted scope.
+
+The verifier owns issue judgment. It categorizes findings as `Must Fix`,
+`Follow-Up`, or `Accepted Risk`. `fix` repairs `Must Fix` items and records what
+changed. The same verifier decides whether the repair passes.
+
+Use severity only to clarify priority: `P0` and `P1` issues normally belong in
+`Must Fix`; `P2` and `P3` issues normally become `Follow-Up` or
+`Accepted Risk` unless they are required by accepted scope.
+
+Do not let the loop expand the feature. `Follow-Up` and `Accepted Risk` items
+do not keep the loop alive unless they are required by the current spec or
+acceptance criteria.
+
+If `fix` writes `Fixed: no` and `Route Back` says `Needed: yes`, run the named
+route-back `Command` with its `Phase`, `Slice`, and `Check`, then continue from
+`current`. If `fix` writes `Fixed: no` without route-back, surface the
+unresolved decision without broadening the feature.
+
+## Slice Git Checkpoint
+
+After `buildVerified` is complete for a slice, commit and push that slice
+before moving to the next slice when the workspace is a git repository and push
+is available.
+
+- Include only changes from that completed slice.
+- Use a concise message naming the slice ID and outcome.
+- If commit or push is unavailable because the workspace is not a git
+  repository, no remote exists, auth is blocked, or user/project rules forbid
+  it, record the reason and continue according to user/project rules.
+- Do not prescribe extra git inspection commands; let the agent use normal
+  judgment.
+
+## Route-Back Handling
+
+Route back only when the issue cannot honestly be repaired inside the current
+verification loop.
+
+When any artifact's `Route Back` says `Needed: yes`, run its named `Command`
+with its `Phase`, `Slice`, and `Check`, then continue from the helper's next
+current state.
+
+For current-scope route-back:
+
+```text
+node auto-strike/scripts/state.mjs reopen-check <owning-check-name>
+node auto-strike/scripts/state.mjs current
+```
+
+For a specific slice route-back:
+
+```text
+node auto-strike/scripts/state.mjs reopen-slice-check <phase-id> <slice-id> <owning-check-name>
+node auto-strike/scripts/state.mjs current
+```
+
+For a specific phase route-back:
+
+```text
+node auto-strike/scripts/state.mjs reopen-phase-check <phase-id> <owning-check-name>
+node auto-strike/scripts/state.mjs current
+```
+
+Use route-back for missing decisions, changed accepted scope, untrustworthy
+research/spec/plan artifacts, or repeated blockers that no longer look like a
+contained repair.
+
+`reopen-check` reopens the named check and all later checks in the same workflow
+scope. It also reopens dependent phase, slice, or main verification checks when
+the reopened item could make downstream work stale. `reopen-phase-check` and
+`reopen-slice-check` do the same for targeted phase and slice route-backs.
+
+Common route backs:
+
+- missing or weak slice research -> `reopen-check researchComplete`
+- weak slice plan -> `reopen-check planCreated`
+- oversized slice discovered before build -> edit the current slice into the
+  first smaller replacement slice, create additional replacement slice stubs,
+  run `add-slice <phase-id> <slice-id> [name]` for each added slice, then rerun
+  `reopen-check researchComplete`. Do not force the oversized slice through
+  build.
+- weak slice build -> `reopen-check implemented`
+- phase verification finds weak slice build verification -> `reopen-slice-check <phase-id> <slice-id> buildVerified`
+- main verification finds weak phase verification -> `reopen-phase-check <phase-id> allSlicesVerified`
+- main verification finds weak phase shape -> `reopen-phase-check <phase-id> phaseSpecCreated`
+
+When splitting an active slice, preserve the original slice ID as the first
+smaller slice whenever possible. Use canonical suffix IDs such as `slice-03-b`
+and `slice-03-c` for the additional slices so workflow state can keep moving in
+order.
+
+If the owning earlier check is already open, `current` should already point at
+the owning skill; run that skill instead of editing state by hand.
+
+## Workflow Handoff Pattern
+
+Run `current`, invoke the returned skill with the relevant artifact paths, then
+complete the returned check only after the step's artifact passes its gate.
+
+Initiative setup:
+
+- `refine-idea`: pass the raw request; write `idea.md`; complete
+  `ideaRefined`.
+- `grill-idea`: pass `idea.md`; write `decisions.md`; complete
+  `decisionsResolved`.
+- `create-main-spec`: pass `idea.md` and `decisions.md`; write
+  `main-spec.md`; complete `specCreated`.
+- `create-development-phases`: pass `main-spec.md`; write
+  `development-plan.md` and phase stubs. Run `add-phase <phase-id> [name]` for
+  every phase, then complete `phasesCreated`.
+
+Phase setup:
+
+- `create-phase-spec`: pass `main-spec.md`, `development-plan.md`, and the
+  phase stub; write the phase's `phase-spec.md`; complete `phaseSpecCreated`.
+- `create-phase-slices`: pass the phase spec; write one `slice.md` per slice.
+  Run `add-slice <phase-id> <slice-id> [name]` for every slice, then complete
+  `slicesCreated`.
+
+Slice loop:
+
+- `research-slice`: pass `main-spec.md`, `phase-spec.md`, and `slice.md`; write
+  `research.md`; complete `researchComplete` only when it says
+  `Ready for planning: yes`.
+- `plan-slice`: pass `main-spec.md`, `phase-spec.md`, `slice.md`, and
+  `research.md`; write `plan.md` with a focused `Test Plan`; complete
+  `planCreated` only when `Split Recommendation` is `Needed: no`.
+- `verify-slice-plan`: pass the slice artifacts; write
+  `plan-verification.md`; complete `planVerified` only when it says
+  `Ready: yes`.
+- `build-slice`: pass `plan.md`, `plan-verification.md`, and repo files named
+  by the plan; implement the work, add/update planned tests, run focused checks,
+  and write `build.md`; complete `implemented` only when it says `Built: yes`.
+- `verify-slice-build`: pass the slice artifacts and changed files; write
+  `build-verification.md`; confirm focused test evidence; complete
+  `buildVerified` only when it says `Verified: yes`, then commit and push that
+  completed slice before moving on.
+
+Verification gates:
+
+- `verify-phase`: pass the phase spec and all slice artifacts for the phase;
+  write the phase's `verification.md`; complete `allSlicesVerified` only when
+  it says `Ready: yes`.
+- `verify-main-spec`: pass the main spec, development plan, and every phase
+  verification; write the initiative `verification.md`; complete
+  `allPhasesVerified` only when it says `Ready: yes`, then run
+  `finish-initiative`.
+
+## Basic Rule
+
+Auto Strike owns the workflow. Each workflow skill owns one step.
+
+## Ownership
+
+Auto Strike owns:
+
+- choosing the next workflow skill
+- passing the right context to that skill
+- saving workflow state and artifacts
+- deciding whether the workflow can advance
+
+Workflow skills own:
+
+- doing one step well
+- asking any unresolved question for that step
+- returning the artifact, decision, unresolved issue, or exit evidence for that step

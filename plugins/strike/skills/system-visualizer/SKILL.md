@@ -10,12 +10,9 @@ allowed-tools: Read Write Edit MultiEdit Bash Grep Glob
 
 ## Communication
 
-When speaking to the user or asking questions, use relaxed, friendly language,
-like two friends talking through the work over coffee. Explain things in simple
-terms without assumptions, guide with context, and simplify concepts so the
-conversation feels easy to follow. Keep the conversation centered on the
-system, flow, or model being visualized; avoid explaining Strike mechanics
-unless that context helps the user decide what to do next.
+Keep the conversation centered on the system, flow, or model being visualized.
+Explain the diagram choice in practical terms and avoid exposing workflow
+mechanics unless that context helps the user decide what to do next.
 
 ## Purpose
 
@@ -25,28 +22,10 @@ diagram or model.
 
 The goal is not merely to draw a diagram. The goal is to help the user pick the right representation, produce reusable diagram/model code, and immediately show the user where they can view it visually.
 
-This is a standalone Strike utility, not a workflow stage. It may be called
-directly by the user, or recommended by other Strike skills when a visual model
-would clarify a project, initiative, spec, phase, slice, review, or existing
-repository system.
+This is a standalone Strike utility. It may be called directly by the user, or
+recommended by Auto Strike when a visual model would clarify an initiative,
+spec, phase, slice, review, or existing repository system.
 
-## Host Invocation
-
-When showing follow-up Strike skills, use the plugin package's
-`references/invocation.md` to render the current host's syntax. Do not copy
-`/strike:*` examples unchanged unless the current host is Claude Code. When
-the host is unknown, show the skill name and arguments as a plain next action
-without raw field labels.
-
-## User Customization
-
-Before doing any material system visualization work, you MUST run the repo-local
-customization loader from the consuming repository root:
-
-```bash
-test -f strike/customize/system/customize.mjs || { echo 'Strike is not initialized in this repo yet. Run the Strike `init` skill first.'; exit 1; }
-node strike/customize/system/customize.mjs --repo-root <repo-root> preview system-visualizer
-```
 
 ## When to use this skill
 
@@ -107,34 +86,23 @@ Reference mapping:
 
 ## Natural Strike Use
 
-This is a utility, not a workflow stage. Do not move board pointers, create
-required stage outputs, claim readiness, or route the project to another stage.
-
-When called with a Strike project slug:
-
-- read the board pointer if present
-- read `docs/strike/cards/<project-slug>/card.md`
-- read relevant planning outputs that exist, especially spec, slice, phase,
-  demo, and review files
-- produce diagrams inline unless the user asks to save them
+This is a utility, not an Auto Strike workflow step. Do not edit Auto Strike
+state or workflow artifacts unless the user explicitly asks to link or save the
+visualization there.
 
 When called from an Auto Strike initiative context:
 
-- read `auto-strike/initiatives/<initiative-slug>/spec.md`
+- read `auto-strike/state.json`
+- read `auto-strike/initiatives/<initiative-slug>/main-spec.md`
 - read relevant phase specs and slice docs under
   `auto-strike/initiatives/<initiative-slug>/phases/`
-- do not edit active-work, mode ledger/task, readiness, or closeout files
 - produce diagrams inline unless the user asks to save them
 
 When saving project-specific visualizations, prefer:
 
-- `docs/strike/cards/<project-slug>/visuals/<topic>.<ext>` for card-local
-  planning visuals
 - `auto-strike/initiatives/<initiative-slug>/visuals/<topic>.<ext>` for
   initiative-local Auto Strike visuals
-- `strike/user-docs/<project-slug>/system-visualizer/...` for user-requested
-  durable docs/assets
-- `strike/user-docs/shared/...` for shared or ongoing visual docs
+- `docs/visuals/<topic>.<ext>` for standalone repo-local visual docs
 - another repo-safe path the current user explicitly provides or confirms
 
 Create folders only when saving a requested artifact. Do not edit repo source

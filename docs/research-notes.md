@@ -8,10 +8,9 @@ The [Agent Skills specification](https://agentskills.io/specification) defines s
 
 The repo follows that model by keeping production skills under `plugins/strike/skills/<skill-name>/SKILL.md` and keeping templates outside `skills/`. It also requires explicit `name` and `description` frontmatter as portable repo policy, even where a host can infer or omit some metadata.
 
-The Strike plugin also keeps shared board/workflow references under
-`plugins/strike/references/`. Those files are package support material for
-skills to cite explicitly; they are not treated as a host-discovered component
-directory.
+The Strike plugin also keeps shared package references under
+`plugins/strike/references/`. Those files are support material for skills to
+cite explicitly; they are not treated as a host-discovered component directory.
 
 2026-05-20 reference-validation update: the
 [Agent Skills specification](https://agentskills.io/specification) defines the
@@ -143,17 +142,26 @@ and `@` plugin/bundled-skill selection, while Codex CLI documents `/skills` and
 `/clear`. Codex does not document custom `/strike:*` slash commands for plugin
 skills.
 
-Strike therefore treats the stable handoff as `Next Strike skill` plus
-`Arguments`, with host-specific rendering documented in
-`plugins/strike/references/invocation.md`.
+Strike therefore keeps host-specific invocation syntax in README/docs, not in
+portable skill instructions. Auto Strike uses its state helper to determine the
+next workflow skill.
 
 2026-05-25 utility skill note: Agent Skills do not require every skill to be a
 Strike board/card workflow step. Standalone utility skills can still live in
 `plugins/strike/skills/<skill-name>/SKILL.md` when they are useful as plugin
-capabilities and do not participate in `Next Strike skill` handoffs. The repo
-validator therefore allows explicitly named standalone utilities, currently
-`handoff`, to omit Strike-specific host invocation guidance while still
-requiring portable frontmatter and Codex `agents/openai.yaml` metadata.
+capabilities. The repo validator requires portable frontmatter and Codex
+`agents/openai.yaml` metadata without forcing host invocation boilerplate into
+each skill.
+
+2026-05-31 Auto Strike package decision: Strike `0.9.0` removes the retired
+board/card step skills and keeps Auto Strike plus standalone utility skills:
+`demo`, `system-visualizer`, `language`, and `handoff`. This keeps the
+host-supported plugin structure from the official Codex and Claude docs:
+`.codex-plugin/plugin.json` and `.claude-plugin/plugin.json` remain at the
+plugin root metadata directories, with skill folders under plugin-root
+`skills/`. The removed `init`/`customize` workflow was not used by Auto Strike
+and would have kept a setup ceremony around utilities, so retained utilities no
+longer require repo-local customization runtime before they run.
 
 ## Design Decision
 
@@ -182,7 +190,7 @@ frontmatter in that portable form and the repo validator rejects comma-separated
 
 ## Validation
 
-`pnpm run validate` is a repo-shape smoke test for our combined layout. It is not a substitute for host-native validation or current official docs. It intentionally enforces stricter repo policy for portability and release hygiene in a few places, including explicit skill frontmatter, space-separated `allowed-tools`, version alignment, Codex `agents/openai.yaml` metadata, host invocation references, known next-skill handoff targets, balanced Markdown fences, and avoiding Claude-only `/strike:<skill>` or `/clear` instructions inside portable skill docs and shared stage contracts. Use `pnpm run validate:publish` before release so empty skill packages fail, and then run available host validators such as `claude plugin validate`.
+`pnpm run validate` is a repo-shape smoke test for our combined layout. It is not a substitute for host-native validation or current official docs. It intentionally enforces stricter repo policy for portability and release hygiene in a few places, including explicit skill frontmatter, space-separated `allowed-tools`, version alignment, Codex `agents/openai.yaml` metadata, balanced Markdown fences, and avoiding Claude-only `/strike:<skill>` or `/clear` instructions inside portable skill docs. Use `pnpm run validate:publish` before release so empty skill packages fail, and then run available host validators such as `claude plugin validate`.
 
 ## Package Manager Hardening
 
@@ -285,11 +293,16 @@ installed Strike `0.8.8` successfully, but `auto-strike` was not advertised to
 the model while every Strike skill used `allow_implicit_invocation: false`.
 Auto Strike is the primary user-invoked standalone workflow, so its Codex
 metadata now keeps it visible with `allow_implicit_invocation: true` plus
-`interface` display metadata, while the smaller board/card step skills remain
+`interface` display metadata, while smaller companion utilities stay
 manual-only. Source checked: https://developers.openai.com/codex/skills
 
-2026-05-31 correction: the shipped `auto-strike/agents/openai.yaml` and the repo
-validator now enforce `allow_implicit_invocation: true` for Auto Strike. The
+2026-05-31 correction: the shipped Auto Strike entrypoint metadata and the repo
+validator enforce `allow_implicit_invocation: true` for Auto Strike. The
 portable `SKILL.md` still carries Claude's `disable-model-invocation: true`, so
 Claude slash-command behavior remains manually invoked while Codex can surface
 Auto Strike as the primary entry point.
+
+2026-06-01 update: the ambiguous `auto-strike` entrypoint split into
+`auto-strike-new-initiative` for starting new work and `auto-strike-go` for
+continuing the active initiative. Both top-level entrypoints keep Codex
+interface metadata and `allow_implicit_invocation: true`.

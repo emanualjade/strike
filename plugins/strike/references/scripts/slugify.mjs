@@ -4,25 +4,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
-export const PROJECT_BODY_MAX = 48;
-export const ARTIFACT_BODY_MAX = 40;
-
-const TASK_VERBS = new Set([
-  "add",
-  "allow",
-  "build",
-  "create",
-  "enable",
-  "fix",
-  "implement",
-  "improve",
-  "make",
-  "remove",
-  "support",
-  "update",
-]);
-
-const ARTICLES = new Set(["a", "an", "the"]);
+export const DEMO_BODY_MAX = 40;
 
 export function normalizeText(value) {
   return String(value ?? "")
@@ -38,19 +20,6 @@ export function slugifyText(value) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .replace(/-+/g, "-");
-}
-
-export function dropLeadingProjectWords(slug) {
-  const parts = slug.split("-");
-  if (parts.length < 2 || !TASK_VERBS.has(parts[0])) {
-    return slug;
-  }
-
-  const withoutVerb = parts.slice(1);
-  if (withoutVerb.length >= 2 && ARTICLES.has(withoutVerb[0])) {
-    return withoutVerb.slice(1).join("-");
-  }
-  return withoutVerb.join("-");
 }
 
 export function shortenSlug(slug, maxLength) {
@@ -113,43 +82,14 @@ function normalizeExtension(ext) {
   return normalized;
 }
 
-export function createProjectSlug(text, options = {}) {
-  const taken = new Set(options.taken ?? []);
-  const dropLeadingWords = options.dropLeadingWords ?? true;
-  let body = slugifyText(text);
-
-  if (dropLeadingWords) {
-    body = dropLeadingProjectWords(body);
-  }
-  body = shortenSlug(body, PROJECT_BODY_MAX);
-  requireSlug(body, "project");
-  body = dedupeBody(body, PROJECT_BODY_MAX, taken, (candidate) => candidate);
-
-  return { slug: body };
-}
-
-export function createPhaseSlug(text, options = {}) {
-  const taken = new Set(options.taken ?? []);
-  const prefix = indexPrefix(options.index);
-  let body = shortenSlug(slugifyText(text), ARTIFACT_BODY_MAX);
-
-  requireSlug(body, "phase");
-  body = dedupeBody(body, ARTIFACT_BODY_MAX, taken, (candidate) => `${prefix}-${candidate}`);
-
-  return {
-    slug: `${prefix}-${body}`,
-    body,
-  };
-}
-
 export function createDemoSlug(text, options = {}) {
   const taken = new Set(options.taken ?? []);
   const prefix = indexPrefix(options.index);
   const ext = normalizeExtension(options.ext);
-  let body = shortenSlug(slugifyText(text), ARTIFACT_BODY_MAX);
+  let body = shortenSlug(slugifyText(text), DEMO_BODY_MAX);
 
   requireSlug(body, "demo");
-  body = dedupeBody(body, ARTIFACT_BODY_MAX, taken, (candidate) => `${prefix}-${candidate}.${ext}`);
+  body = dedupeBody(body, DEMO_BODY_MAX, taken, (candidate) => `${prefix}-${candidate}.${ext}`);
 
   const slug = `${prefix}-${body}`;
   return {
@@ -165,8 +105,8 @@ function parseCliArgs(argv) {
     taken: [],
   };
 
-  if (!["project", "phase", "demo"].includes(mode)) {
-    throw new Error("Usage: slugify.mjs <project|phase|demo> --text <text> [--index <n>] [--taken <value>]...");
+  if (mode !== "demo") {
+    throw new Error("Usage: slugify.mjs demo --text <text> --index <n> [--taken <value>]... [--ext <ext>]");
   }
 
   for (let index = 1; index < argv.length; index += 1) {
@@ -192,9 +132,6 @@ function parseCliArgs(argv) {
         if (index >= argv.length) throw new Error("--ext requires a value.");
         options.ext = argv[index];
         break;
-      case "--keep-leading-words":
-        options.dropLeadingWords = false;
-        break;
       default:
         throw new Error(`Unknown argument: ${arg}`);
     }
@@ -215,11 +152,7 @@ function printKeyValues(result) {
 
 export function runCli(argv = process.argv.slice(2)) {
   const { mode, options } = parseCliArgs(argv);
-  if (mode === "project") {
-    printKeyValues(createProjectSlug(options.text, options));
-  } else if (mode === "phase") {
-    printKeyValues(createPhaseSlug(options.text, options));
-  } else {
+  if (mode === "demo") {
     printKeyValues(createDemoSlug(options.text, options));
   }
 }

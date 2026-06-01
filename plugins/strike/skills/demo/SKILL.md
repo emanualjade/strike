@@ -1,7 +1,7 @@
 ---
 name: demo
-description: Create a small self-contained HTML planning demo for a Strike card.
-argument-hint: "[project-slug] \"<what the demo should explore>\""
+description: Create a small self-contained HTML planning demo for an Auto Strike initiative, repo path, or idea.
+argument-hint: "[initiative-slug|path|idea] \"<what the demo should explore>\""
 disable-model-invocation: true
 allowed-tools: Read Write Edit MultiEdit Bash Grep Glob
 ---
@@ -10,45 +10,25 @@ allowed-tools: Read Write Edit MultiEdit Bash Grep Glob
 
 ## Communication
 
-When speaking to the user or asking questions, use relaxed, friendly language,
-like two friends talking through the work over coffee. Explain things in simple
-terms without assumptions, guide with context, and simplify concepts so the
-conversation feels easy to follow. Keep the conversation centered on the work
-in progress; avoid explaining Strike mechanics unless that context helps the
-user decide what to do next.
+Keep the conversation centered on the concept being explored. Explain the demo
+in user-facing terms, and avoid exposing workflow mechanics unless that context
+helps the user make a decision.
 
 ## Purpose
 
 Create one small static HTML planning demo when seeing something would help the
-user think, compare, or decide.
+user think, compare, or decide during Auto Strike work or standalone planning.
 
 This skill is a thin entrance to its bundled demo guidance. Most demo standards
 live in this skill's `references/html-demos.md`.
 
-## Host Invocation
-
-When showing follow-up Strike skills, use the plugin package's
-`references/invocation.md` to render the current host's syntax. Do not copy
-`/strike:*` examples unchanged unless the current host is Claude Code. When
-the host is unknown, show the skill name and arguments as a plain next action
-without raw field labels.
-
-## User Customization
-
-Before doing any material demo work, you MUST run the repo-local customization
-loader from the consuming repository root:
-
-```bash
-test -f strike/customize/system/customize.mjs || { echo 'Strike is not initialized in this repo yet. Run the Strike `init` skill first.'; exit 1; }
-node strike/customize/system/customize.mjs --repo-root <repo-root> preview demo
-```
 
 ## Use When
 
 - The user explicitly asks for an HTML demo, visual sketch, interactive
   explainer, or option comparison.
-- A Strike planning skill has reached a visual or spatial decision that text
-  is handling poorly.
+- Auto Strike has reached a visual or spatial decision that text is handling
+  poorly.
 
 Good demo topics include UI options, flow comparisons, before/after states,
 decision maps, state explainers, command output comparisons, API contract
@@ -57,22 +37,21 @@ interactive choices.
 
 ## Reads
 
-- the board pointer and `cards/<project-slug>/card.md`
-- relevant current planning artifact when it exists
+- relevant Auto Strike initiative, phase, or slice docs when they exist
+- relevant source docs or paths the user names
 - bundled `references/html-demos.md`
 - bundled `templates/demo.html` as a starting point when helpful
 
 ## Writes
 
-- `docs/strike/cards/<project-slug>/demos/<nn-topic>.html`
-- optional `docs/strike/cards/<project-slug>/demos/README.md`
-- optional user-requested docs/assets under
-  `strike/user-docs/<project-slug>/demo/...`, `strike/user-docs/shared/...`, or
-  another repo-safe path the current user explicitly provides or confirms
+- `auto-strike/initiatives/<initiative-slug>/demos/<nn-topic>.html` when the
+  demo belongs to an Auto Strike initiative
+- `docs/demos/<nn-topic>.html` for standalone repo-local planning demos
+- another repo-safe path the current user explicitly provides or confirms
 
-Create the `demos/` folder if it does not exist.
-Before creating a demo file, run the bundled slug helper by absolute path from
-the plugin package:
+Create the `demos/` folder only when saving a requested artifact. Before
+creating a demo file, run the bundled slug helper by absolute path from the
+plugin package:
 
 ```bash
 node <plugin-root>/references/scripts/slugify.mjs demo \
@@ -81,9 +60,9 @@ node <plugin-root>/references/scripts/slugify.mjs demo \
   --taken <existing-demo-file>
 ```
 
-Pass every existing demo filename under `cards/<project-slug>/demos/` as a
-separate `--taken` value. Use the returned `filename=` value as the demo file
-name. Follow `references/slug-policy.md`; do not hand-roll demo filename rules.
+Pass every existing demo filename in the target demos folder as a separate
+`--taken` value. Use the returned `filename=` value as the demo file name.
+Follow `references/slug-policy.md`; do not hand-roll demo filename rules.
 
 ## Boundaries
 
@@ -92,8 +71,9 @@ name. Follow `references/slug-policy.md`; do not hand-roll demo filename rules.
 - Do not use external CDNs, fonts, scripts, or image URLs.
 - Use mock data only.
 - Keep demos self-contained.
-- Do not move board pointers.
-- Do not make demos required for any stage.
+- Do not edit Auto Strike state or workflow artifacts unless the user
+  explicitly asks to link the demo from them.
+- Do not make demos required for Auto Strike verification.
 
 ## Output
 
@@ -104,4 +84,4 @@ Keep the response short and user-facing:
 - the feedback question the user should answer
 
 If this was created inside another Strike conversation, route back to the
-current stage rather than changing board state.
+current Auto Strike workflow skill rather than changing workflow state.

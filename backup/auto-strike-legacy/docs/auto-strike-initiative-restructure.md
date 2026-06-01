@@ -117,9 +117,7 @@ auto-strike/
 ## Validation Notes
 
 - [x] `node scripts/test-slugify.mjs`
-- [x] `node scripts/test-customize.mjs`
-- [x] `node scripts/test-auto-strike.mjs`
-- [x] `bash scripts/test-start-card.sh`
+- [x] `node backup/auto-strike-legacy/tests/test-auto-strike.mjs`
 - [x] `node scripts/validate.mjs`
 - [x] `node scripts/validate.mjs --publish`
 - [x] `git diff --check`

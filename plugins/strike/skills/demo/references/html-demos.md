@@ -29,11 +29,17 @@ decisions unless a simple diagram would materially help.
 
 ## Where Demos Live
 
-Save demos under the project card:
+Save demos where they will be useful without turning them into production
+assets:
 
 ```txt
-docs/strike/cards/<project-slug>/demos/
+auto-strike/initiatives/<initiative-slug>/demos/
+docs/demos/
 ```
+
+Use the Auto Strike path when the demo belongs to an initiative. Use
+`docs/demos/` for standalone repo-local planning demos, or another repo-safe
+path the user explicitly provides or confirms.
 
 Use numbered semantic filenames:
 
@@ -56,7 +62,7 @@ and use the returned `filename=` value.
 - Do not use external CDNs, fonts, scripts, or image URLs.
 - Use mock data.
 - Keep the file self-contained: HTML, CSS, optional tiny JS.
-- Label the page clearly as a Strike planning demo.
+- Label the page clearly as a planning demo.
 - Show two or three options when the user is choosing direction.
 - Show states when behavior matters: empty, loading, success, error, edge.
 - Keep the demo focused on one question.
@@ -81,7 +87,7 @@ Keep it simple and good:
 - restrained color palette with one accent
 - no lorem ipsum
 - no blurry atmospheric hero images
-- no production-brand claims unless the project card already establishes them
+- no production-brand claims unless existing docs already establish them
 
 The demo should feel like a useful product thinking artifact, not a throwaway
 wireframe and not a polished production promise.

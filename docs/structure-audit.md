@@ -1,6 +1,6 @@
 # Structure Audit
 
-Last checked: 2026-05-19.
+Last checked: 2026-05-31.
 
 This file records the "is this grounded, invented, and idiomatic?" pass for the scaffold.
 
@@ -32,10 +32,13 @@ The Agent Skills spec and Codex docs name these optional directories. Claude Cod
 
 - Grounded in research: Partly.
 - Made up or over-structured: No, because multiple Strike skills share these
-  board/workflow references.
+  lightweight package references.
 - Idiomatic: Acceptable as package support material, not as a host-discovered component path.
 
-The Strike plugin uses root `references/` for shared board and stage contracts cited by multiple skills. Hosts should not be expected to discover this directory automatically; skills and README files should point to specific files when they matter.
+The Strike plugin uses root `references/` for lightweight package support
+material cited by multiple skills. Hosts should not be expected to discover
+this directory automatically; skills and README files should point to specific
+files when they matter.
 
 2026-05-17 update: `plugins/strike/references/scripts/` is allowed for shared
 deterministic package helpers that multiple skills call by explicit absolute
@@ -44,32 +47,60 @@ replace skill-local `scripts/` for behavior that belongs to exactly one skill.
 
 2026-05-28 update: `plugins/strike/references/language.md` is the shared
 Strike language contract. It is package support material, not a host-discovered
-component. Normal Strike and Auto Strike both point to it and use the consuming
-repo root `UBIQUITOUS_LANGUAGE.md` as the single durable glossary. This is
-Strike workflow policy, not a host schema requirement.
+component. Auto Strike and utility skills point to it and use the consuming repo
+root `PROJECT_LANGUAGE.md` as the durable project language file. This is Strike
+workflow policy, not a host schema requirement.
 
-2026-05-31 update: Auto Strike's runtime workspace now uses
-`auto-strike/initiatives/<initiative-slug>/phases/<phase-slug>/phase-spec.md`
-as the canonical delivery-phase layer between initiative specs and slices. The
-workflow progress terms are now `Mode Ledger` and `Mode Tasks` so brainstorm,
-grill, spec, slice, build, review, and readiness are not confused with delivery
-phases. Legacy `features/<feature-slug>/feature-spec.md`, `Feature:` Active
-Work fields, and `Phase Ledger` headings remain read-compatible with warnings
-for one release. This is Strike workflow policy, not a host schema requirement;
-see `docs/auto-strike-initiative-restructure.md` and
-`plugins/strike/skills/auto-strike/references/workspace.md`.
+2026-06-01 update: Auto Strike now uses a lean staged workflow orchestrator
+with `auto-strike/state.json` as the progress source of truth and Markdown
+artifacts under `auto-strike/initiatives/<initiative-id>/`. The old long-form
+Auto Strike runtime, mode-ledger guidance, and related restructure notes are
+preserved under `backup/auto-strike-legacy/` and are not part of the active
+plugin package. The user-facing entrypoints are explicit:
+`auto-strike-new-initiative` starts new work and `auto-strike-go` resumes the
+active initiative. This is Strike workflow policy, not a host schema
+requirement.
 
-### `plugins/strike/references/invocation.md`
+2026-06-01 update: Slice research is now a first-class Auto Strike workflow
+step. `research-slice` runs before `plan-slice`, writes compact research to the
+slice's `research.md`, and the slice plan verification step checks that research
+was either used or explicitly unnecessary.
+
+2026-06-01 update: Auto Strike now has explicit route-back mechanics. Workflow
+artifacts should return `Ready: no`, `Built: no`, or `Verified: no` plus
+`Route Back` when an earlier artifact is missing or weak. The state helper
+exposes `reopen-check <check-name>` to move the active scope back without
+hand-editing `state.json`, `reopen-phase-check <phase-id> <check-name>` lets
+main verification route back to a specific phase, and `reopen-slice-check
+<phase-id> <slice-id> <check-name>` lets phase or main verification route back
+to a specific slice. Reopening a check also reopens later dependent checks so
+research, plans, builds, phase verification, and main verification are not
+trusted after upstream work changes.
+
+2026-05-31 update: Strike `0.9.0` removes the retired board/card workflow
+skills and keeps Auto Strike plus standalone utility skills. Root references
+are now limited to shared language, demo slug policy, and the slug helper.
+`plugins/strike/references/customization/`,
+`board-model.md`, and `stage-contracts.md` were removed because no retained
+skill depends on them. This remains idiomatic: Codex and Claude both load
+skills from the plugin-root `skills/` directory, and arbitrary support files are
+read only when a skill explicitly points to them.
+
+2026-06-01 update: `plugins/strike/references/invocation.md` was removed.
+Host invocation syntax is docs/package guidance, not runtime skill behavior.
+Active skills should describe their own work and outputs; Auto Strike routing
+comes from `auto-strike/state.json` and the state helper.
+
+### Host Invocation Documentation
 
 - Grounded in research: Yes.
 - Made up or over-structured: No.
-- Idiomatic: Yes as package guidance for a cross-host workflow.
+- Idiomatic: Yes when kept in README/docs instead of every skill.
 
 Claude Code plugin skills use `/plugin-name:skill-name`. Codex app uses `$`
 skill mentions and `@` plugin or bundled-skill selection; Codex CLI uses
-`/skills` for skill browsing and `/clear` for a fresh chat. Strike keeps
-`/strike:*` only as Claude Code rendering and records portable handoffs as
-`Next Strike skill` plus `Arguments`.
+`/skills` for skill browsing. Strike keeps `/strike:*` only in Claude Code
+examples, not as portable skill instructions.
 
 ### `.codex-plugin/plugin.json`
 
@@ -142,7 +173,7 @@ Plugin hosts discover known component directories inside the plugin root. Templa
 - Made up or over-structured: No, because it guards the known host structures without inventing runtime behavior.
 - Idiomatic: Acceptable repo tooling.
 
-The hosts provide some validation, but not one command that checks the combined Codex, Claude, and Agent Skills layout. `pnpm run validate` is repo-local quality control, not a host-schema validator or proof of publishability. It intentionally enforces some stricter repo policies, such as version alignment, Codex skill metadata presence, space-separated `allowed-tools`, explicit host invocation guidance in skills, known next-skill handoff targets, balanced Markdown fences, and host-neutral Strike handoffs in skills and stage contracts, even when a host schema marks equivalent fields optional. Use `pnpm run validate:publish` and host-native validators before release.
+The hosts provide some validation, but not one command that checks the combined Codex, Claude, and Agent Skills layout. `pnpm run validate` is repo-local quality control, not a host-schema validator or proof of publishability. It intentionally enforces some stricter repo policies, such as version alignment, Codex skill metadata presence, space-separated `allowed-tools`, explicit host invocation guidance in skills, known next-skill handoff targets, balanced Markdown fences, and host-neutral Strike handoffs in skills, even when a host schema marks equivalent fields optional. Use `pnpm run validate:publish` and host-native validators before release.
 
 ## Things We Should Not Add By Default
 

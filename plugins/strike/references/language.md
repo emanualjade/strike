@@ -3,7 +3,7 @@
 Strike uses one durable project glossary at the consuming repo root:
 
 ```txt
-UBIQUITOUS_LANGUAGE.md
+PROJECT_LANGUAGE.md
 ```
 
 The file names shared domain language for code, UI, docs, planning, and
@@ -20,7 +20,7 @@ Keep the glossary lean. Group terms by context headings and include only fields
 that clarify future work.
 
 ```md
-# Ubiquitous Language
+# Project Language
 
 This file names durable project language. It is a glossary, not a spec,
 implementation guide, ADR, or planning scratchpad.
@@ -42,7 +42,7 @@ sections are `Relationships`, `Domain Events`, `Example Dialogue`, and
 
 ## During The Session
 
-- Challenge conflicts with `UBIQUITOUS_LANGUAGE.md` immediately and ask which
+- Challenge conflicts with `PROJECT_LANGUAGE.md` immediately and ask which
   meaning is intended.
 - Sharpen vague or overloaded terms before planning, modeling, or naming around
   them.
@@ -51,7 +51,7 @@ sections are `Relationships`, `Domain Events`, `Example Dialogue`, and
 - Cross-reference code when the existing implementation may contradict stated
   language.
 - Keep candidate terms in planning artifacts until stable; promote only durable
-  language to `UBIQUITOUS_LANGUAGE.md`.
+  language to `PROJECT_LANGUAGE.md`.
 
 ## Promotion Rules
 

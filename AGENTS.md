@@ -54,17 +54,18 @@ This repository publishes Strike as a cross-agent plugin and skills marketplace.
 - Bump versions when behavior changes, skills are added or removed, or install/update behavior changes.
 - Keep host plugin manifests aligned unless a host-specific schema requires a difference.
 - When this repo intentionally requires stricter metadata than a host schema, document it as repo policy rather than a host requirement.
-- Treat `/strike:*` as Claude Code invocation syntax. Portable skill handoffs should use `Next Strike skill` plus `Arguments` and render host-specific commands through `plugins/strike/references/invocation.md`.
+- Treat `/strike:*` as Claude Code invocation syntax. Keep portable skill instructions free of host-specific invocation details; put host-specific examples in README or host docs.
 - Local workstation package work uses pnpm only. Never use `npm` or `npx` locally for repo scripts, installs, or one-off package execution. Use `pnpm run` for scripts and `pnpm exec` for installed binaries.
 - Use the normal `pnpm` command so local Socket Firewall aliases or wrappers can apply. Do not bypass wrappers with `command pnpm` or an absolute pnpm binary path.
 - Use standalone `pnpm` for this repo. Do not use Corepack commands such as `corepack`, `corepack pnpm`, `corepack enable`, or `corepack prepare`. If pnpm reports a version mismatch, stop and alert the user. Do not try to resolve it.
 - Do not run local package installs unless the user explicitly approves. If pnpm is missing or the version is wrong, ask the user to install or enable standalone pnpm 11.
 - If `pnpm run ...` fails with `ERR_PNPM_VERIFY_DEPS_BEFORE_RUN` because local
-  workspace metadata is stale, explain the issue in plain language and ask for
-  approval to refresh it. With approval, run only
-  `pnpm install --frozen-lockfile --ignore-scripts`. If pnpm wants to change the
-  lockfile, download packages outside the lockfile, run dependency build scripts,
-  or otherwise do more than refresh local install metadata, stop and ask.
+  workspace metadata is stale, Codex may run
+  `pnpm install --frozen-lockfile --ignore-scripts` without separate approval,
+  only to refresh local install metadata. If pnpm wants to change the lockfile,
+  download packages outside the lockfile, run dependency build scripts, use a
+  different pnpm version, or otherwise do more than refresh local install
+  metadata, stop and ask.
 - Never approve pnpm dependency build scripts unilaterally. If pnpm asks for build-script approval, stop and work with the user to validate each package before allowlisting it.
 - Run `pnpm run validate` after moving in skills or editing manifests. Before publishing, run `pnpm run validate:publish` and every available host-native validator. Treat `skills-ref` as an optional research/debugging tool unless it gains a documented way to handle useful host-specific fields.
 
@@ -101,7 +102,7 @@ This repository publishes Strike as a cross-agent plugin and skills marketplace.
 
 - Treat `pnpm run validate` as repo-shape validation, not proof that every host schema accepts the package.
 - Keep Codex and Claude manifest/source rules separate; shared skills are portable, plugin packaging is host-specific.
-- Keep host invocation syntax separate too: `/strike:*` is Claude Code plugin syntax, not a universal Strike command language.
+- Keep host invocation syntax separate too: `/strike:*` is Claude Code plugin syntax, not a universal Strike command language or skill instruction.
 - Label host requirements separately from portable repo policy. Do not turn a stricter local convention into a claimed platform rule.
 - Do not publish an empty plugin. `plugins/strike/skills/` needs at least one real skill directory before release.
 - Prefer official/reference validators over custom confidence whenever a host or spec provides one.

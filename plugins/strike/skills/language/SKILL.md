@@ -1,6 +1,6 @@
 ---
 name: language
-description: Assess and update repo language discovered during Strike work.
+description: Assess and update repo language discovered during Auto Strike work, utility work, or source inspection.
 argument-hint: "[term|project-slug|path] [assess|trace|add|update|remove|clarify|apply]"
 disable-model-invocation: true
 allowed-tools: Read Write Edit MultiEdit Bash Grep Glob
@@ -10,40 +10,20 @@ allowed-tools: Read Write Edit MultiEdit Bash Grep Glob
 
 ## Communication
 
-When speaking to the user or asking questions, use relaxed, friendly language,
-like two friends talking through the work over coffee. Explain things in simple
-terms without assumptions, guide with context, and simplify concepts so the
-conversation feels easy to follow. Keep the conversation centered on the work
-in progress; avoid explaining Strike mechanics unless that context helps the
-user decide what to do next.
+Keep the conversation centered on the term, model, UI wording, or source
+language being clarified. Avoid explaining workflow mechanics unless that
+context helps the user decide what to do next.
 
 ## Purpose
 
 Keep product, code, workflow, UI, docs, and planning language precise. This is
-a standalone Strike utility, and it is also a soft helper that other Strike
-skills may use when language affects Project planning.
+a standalone Strike utility, and it is also a soft helper Auto Strike may use
+when language affects planning or implementation.
 
 Language work should feel natural: challenge confusing words when they matter,
 sharpen names before they spread, and update the glossary only when a term is
 actually resolved.
 
-## Host Invocation
-
-When showing follow-up Strike skills, use the plugin package's
-`references/invocation.md` to render the current host's syntax. Do not copy
-`/strike:*` examples unchanged unless the current host is Claude Code. When
-the host is unknown, show the skill name and arguments as a plain next action
-without raw field labels.
-
-## User Customization
-
-Before doing any material language work, you MUST run the repo-local customization
-loader from the consuming repository root:
-
-```bash
-test -f strike/customize/system/customize.mjs || { echo 'Strike is not initialized in this repo yet. Run the Strike `init` skill first.'; exit 1; }
-node strike/customize/system/customize.mjs --repo-root <repo-root> preview language
-```
 
 ## Source Of Truth
 
@@ -53,16 +33,16 @@ Use the shared language contract in the plugin package:
 references/language.md
 ```
 
-The consuming repo's durable glossary is the repo root file:
+The consuming repo's project language file is:
 
 ```txt
-UBIQUITOUS_LANGUAGE.md
+PROJECT_LANGUAGE.md
 ```
 
 Follow the contract's file shape, session behavior, and promotion rules. If
-`UBIQUITOUS_LANGUAGE.md` is missing, offer to create it only after a concrete
-term, accepted alias, or meaningful ambiguity has been resolved. Do not create
-an empty glossary.
+`PROJECT_LANGUAGE.md` is missing during standalone use, offer to create it
+only after a concrete term, accepted alias, or meaningful ambiguity has been
+resolved. Do not create an empty glossary during standalone language work.
 
 ## Jobs
 
@@ -82,8 +62,8 @@ Read the glossary and answer with:
 
 ### Assess
 
-Use when the user asks to check a Strike Project card, planning artifact, source path,
-diff, branch, spec, slice, or PR for language issues.
+Use when the user asks to check an Auto Strike artifact, source path, diff,
+branch, spec, slice, or PR for language issues.
 
 Read the glossary and the target artifact. Search code only as needed. Report:
 
@@ -131,25 +111,24 @@ End by asking whether to apply the proposal. Do not edit the glossary yet.
 Use when the user clearly approves a specific glossary edit, or when they gave
 exact text and asked you to apply it.
 
-Edit only `UBIQUITOUS_LANGUAGE.md` unless the user explicitly asks for code or
+Edit only `PROJECT_LANGUAGE.md` unless the user explicitly asks for code or
 docs renames too. Preserve the simple glossary format. After editing, report the
 terms changed and any follow-up language risks.
 
 ## Natural Strike Use
 
-This is a utility, not a workflow stage. Do not move board pointers or create
-stage outputs.
+This is a utility, not an Auto Strike workflow step. Do not edit Auto Strike
+state or workflow artifacts unless the user explicitly asks to link a language
+decision there.
 
-When called with a Strike project slug:
+When called from an Auto Strike context:
 
-- read the board pointer if present
-- read `docs/strike/cards/<project-slug>/card.md`
-- read relevant planning outputs that exist, especially brainstorm, grill, spec,
-  and slice files
-- compare important repo language against `UBIQUITOUS_LANGUAGE.md`
+- read `auto-strike/state.json` when present
+- read relevant initiative, phase, and slice docs
+- compare important repo language against `PROJECT_LANGUAGE.md`
 
-When another Strike skill is working and a language issue appears, the skill
-should handle the light version inline using the shared language contract.
+When Auto Strike is working and a language issue appears, Auto Strike should
+handle the light version inline using the shared language contract.
 
 Use the `language` skill for deeper work: term tracing, glossary updates,
 branch/path scans, or messy conflicts.
@@ -200,12 +179,10 @@ Do not add:
 
 ## Writes
 
-- `UBIQUITOUS_LANGUAGE.md` only when the user approves a concrete glossary
+- `PROJECT_LANGUAGE.md` only when the user approves a concrete glossary
   change or provides exact text to apply
-- optional user-requested docs/assets under
-  `strike/user-docs/<project-slug>/language/...`,
-  `strike/user-docs/shared/...`, or another repo-safe path the current user
-  explicitly provides or confirms
+- optional user-requested docs/assets under `docs/language/...` or another
+  repo-safe path the current user explicitly provides or confirms
 
 ## Output
 
@@ -214,14 +191,13 @@ Keep responses compact and user-facing:
 - what you checked
 - what language issue you found, if any
 - recommended term or glossary change
-- whether `UBIQUITOUS_LANGUAGE.md` was changed
+- whether `PROJECT_LANGUAGE.md` was changed
 - next useful action, only when one exists
 
 ## Gates
 
-- Do not move Strike board pointers.
-- Do not write brainstorm, grill, spec, slice, implementation, review,
-  readiness, or retro outputs.
+- Do not write Auto Strike workflow outputs such as idea, decision, spec,
+  phase, slice, plan, build, or verification artifacts.
 - Do not edit implementation files unless the user explicitly asks for code
   renames and confirms the scope.
 - Do not apply uncertain glossary changes without user approval.

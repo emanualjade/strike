@@ -9,17 +9,14 @@ allowed-tools: Read Write Edit MultiEdit Bash Grep Glob WebFetch WebSearch Agent
 # Auto Strike
 
 Use this skill to move a fuzzy idea toward a shipped change or MVP in any repo.
-It borrows the highest-value Strike habits without using the normal Strike
-board/card workflow. From a cold start, create the root `auto-strike/`
-workspace and grow it from there.
+From a cold start, create the root `auto-strike/` workspace and grow it from
+there.
 
 ## Boundaries
 
-- This skill is user-invocable as the standalone Auto Strike workflow; do not
-  route normal Strike board/card work into it unless the user asks for Auto
-  Strike.
-- This skill does not use `docs/strike/`, Strike board pointers, Strike cards,
-  or handoffs to other Strike skills.
+- This skill is user-invocable as the standalone Auto Strike workflow.
+- This skill does not use legacy `docs/strike/`, board pointers, cards, or
+  handoffs to removed board/card workflow skills.
 - This skill creates and maintains a standalone root `auto-strike/` workspace in
   the consuming repo.
 - The user only needs to invoke `auto-strike` and provide the idea; this skill
@@ -236,6 +233,6 @@ Keep responses short and user-facing. Report:
 - blockers, human/live checks, or skipped checks with reasons
 - the next best action
 
-Do not show raw workflow mechanics. Do not route to normal Strike board/card
-skills. If continuing later would help, show the current host's `auto-strike`
-prompt form using plugin-root `../../references/invocation.md`.
+Do not show raw workflow mechanics. If continuing later would help, show the
+current host's `auto-strike` prompt form using plugin-root
+`../../references/invocation.md`.

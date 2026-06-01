@@ -2,6 +2,29 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.10.0 - 2026-05-31
+
+- Added the draft lean Auto Strike orchestrator file and state helper for
+  workflow-matrix based progress tracking.
+- Added standalone workflow skills for idea refinement, grilling, specs,
+  development phases, phase specs, phase slices, slice planning/building, and
+  slice/phase/main verification gates.
+- Added `PROJECT_LANGUAGE.md` bootstrap behavior for new Auto Strike
+  workspaces and aligned early workflow skills on durable language updates.
+- Added state-helper tests and host-smoke coverage for bootstrap, current state,
+  artifact resolution, phase/slice creation, and completion checks.
+
+## 0.9.0 - 2026-05-31
+
+- Removed the retired board/card workflow skills and repo-local
+  `init`/`customize` setup path.
+- Kept Strike focused on Auto Strike plus standalone `demo`,
+  `system-visualizer`, `language`, and `handoff` utilities.
+- De-boardified retained utilities so they no longer require `docs/strike/`
+  state or the removed customization runtime.
+- Updated manifests, docs, validation, and host smoke checks for the new
+  Auto Strike-centered package shape.
+
 ## 0.8.32 - 2026-05-31
 
 - Expanded System Visualizer diagram-mode references so each supported mode has
@@ -54,7 +77,7 @@ All notable changes to Strike will be recorded here.
 ## 0.8.26 - 2026-05-28
 
 - Added a shared Strike language contract and aligned normal Strike plus Auto
-  Strike on root `UBIQUITOUS_LANGUAGE.md` as the only durable glossary.
+  Strike on root `PROJECT_LANGUAGE.md` as the durable project language file.
 - Removed Auto Strike's `auto-strike/language.md` requirement and stopped
   warning when no glossary exists yet.
 - Aligned local package-manager policy on standalone pnpm `11.4.0`, with pnpm

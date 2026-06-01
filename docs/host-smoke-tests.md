@@ -155,8 +155,8 @@ marketplace plugins into a versioned cache, so the workflow should assert:
 - cached version matches `package.json`
 - representative skill files exist under the cached plugin root
 - installed runtime support files exist under the cached plugin root
-- installed `init`, repo-local `customize check-setup`, and installed `start`
-  run successfully in a temp consumer repository
+- installed Auto Strike helper commands, the new state helper bootstrap/current
+  path, and the demo slug helper run successfully in a temp consumer repository
 
 ### Codex
 
@@ -184,8 +184,8 @@ output:
 - cached version matches `package.json`
 - representative skill files and deterministic runtime support files exist
   under the cached plugin root
-- installed `init`, repo-local `customize check-setup`, and installed `start`
-  run successfully in a temp consumer repository
+- installed Auto Strike helper commands, the new state helper bootstrap/current
+  path, and the demo slug helper run successfully in a temp consumer repository
 
 ## Proposed Workflows
 
@@ -275,11 +275,10 @@ prove:
 - the installed plugin has the expected version from `package.json`
 - representative skills and deterministic runtime support files exist in the
   installed plugin copy
-- installed `init` creates Strike's repo-local customization runtime in a temp
-  consumer repository
-- the copied repo-local `customize.mjs check-setup` reports `Result: pass`
-- installed `start` creates a `csv-export` card and first brainstorm board
-  pointer in the temp consumer repository
+- installed `state.mjs init` creates `PROJECT_LANGUAGE.md`,
+  `auto-strike/state.json`, and `auto-strike/scripts/state.mjs`; the copied
+  workspace helper can report current state and complete the first check
+- installed `slugify.mjs demo` returns a deterministic demo filename
 - update and uninstall commands complete without leaving the workflow broken
 
 ## Local Reproduction

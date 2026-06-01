@@ -1,139 +1,138 @@
 # Strike Plugin
 
-Strike is a board-and-card workflow for agent-assisted project delivery. It
-keeps durable state in the consuming repository under `docs/strike/`, while the
-workflow skills and bundled references live in this plugin package.
+Strike packages Auto Strike plus focused planning utilities for
+agent-assisted delivery.
 
-In Strike, a Project is the unit of work moving through the board. It can be a
-small change like `CSV Export`, a docs pass like `Docs Refresh`, or a larger
-effort like `Payments` with smaller capabilities inside the spec. It lives
-inside an existing repository; it is not a new repo.
+## Auto Strike
+
+Auto Strike is the core workflow. It automates an idea toward a
+feature-complete change by moving through staged skills.
+
+It creates and maintains a workspace in the consuming repository:
+
+```text
+auto-strike/
+PROJECT_LANGUAGE.md
+```
+
+`auto-strike/state.json` stores workflow progress. Markdown files under
+`auto-strike/initiatives/<initiative-id>/` store idea, decision, spec, phase,
+slice, research, plan, build, and verification artifacts.
+
+The workflow is:
+
+```text
+refine-idea
+grill-idea
+create-main-spec
+create-development-phases
+create-phase-spec
+create-phase-slices
+research-slice
+plan-slice
+verify-slice-plan
+build-slice
+verify-slice-build
+fix (only when verification fails)
+verify-phase
+verify-main-spec
+```
 
 ## Skills
 
-Strike skills are portable; each host renders the same skill differently.
+### Main Workflow
+
+- `auto-strike-new-initiative`: start a fresh initiative from a new idea.
+- `auto-strike-go`: continue the active initiative from workflow state.
+
+### Useful Standalone Planning Skills
+
+Call these directly when you want one focused planning artifact without running
+the whole Auto Strike workflow.
+
+- `refine-idea`: clarify a raw idea into a useful first outcome.
+- `grill-idea`: pressure-test decisions, assumptions, and blockers.
+- `create-main-spec`: write a durable main spec.
+- `create-development-phases`: split a main spec into buildable phases.
+
+### Auto Strike Stage Skills
+
+Auto Strike uses these as workflow stages. They are exposed so the workflow
+stays modular; in normal use, let Auto Strike call them with the right context
+and output paths.
+
+- `create-phase-spec`: define one phase clearly enough to slice.
+- `create-phase-slices`: split one phase into implementation slices.
+- `research-slice`: research one implementation slice before planning.
+- `plan-slice`: create one concrete implementation plan.
+- `verify-slice-plan`: check that a slice plan is ready to build.
+- `build-slice`: implement one planned slice.
+- `verify-slice-build`: verify one built slice.
+- `fix`: fix issues from a failed verification pass, then return to the same verifier.
+- `verify-phase`: verify one completed phase.
+- `verify-main-spec`: verify the completed main spec.
+
+### Utilities
+
+These are useful to call on their own, with or without an Auto Strike workflow.
+
+- `demo`: create a small self-contained HTML planning demo.
+- `system-visualizer`: create diagram or model code for systems and workflows.
+- `language`: assess and update durable project language in
+  `PROJECT_LANGUAGE.md`.
+- `handoff`: compact the current conversation into a handoff document.
+
+Common direct invocations:
+
+```txt
+auto-strike-new-initiative <idea>
+auto-strike-go [optional context]
+demo [initiative-slug|path|idea] "<what the demo should explore>"
+system-visualizer [initiative-slug|path|goal]
+language [term|path|initiative-slug] [assess|trace|add|update|remove|clarify|apply]
+handoff <next-session focus>
+```
+
+## Calling Skills
+
+Strike skills are portable; call them with the current host's normal skill
+syntax.
 
 | Host | Invocation form |
 | --- | --- |
-| Claude Code plugin | `/strike:<skill> <args>`; when a handoff says `Reset context first: yes`, run `/clear` first. |
-| Codex | App: type `$` to select the installed Strike skill, or `@` to choose Strike or one of its bundled skills. CLI: use `/skills` to browse and `/clear` when a handoff asks for reset. The short prompt form is `$<skill> <args>`; namespaced `$strike:<skill> <args>` may appear. |
+| Claude Code plugin | `/strike:<skill> <args>` |
+| Codex | App: type `$` to select an installed skill, or `@` to choose Strike or one of its bundled skills. CLI: use `/skills` to browse. The short prompt form is `$<skill> <args>`; namespaced `$strike:<skill> <args>` may appear. |
 
-Canonical skill names:
-
-```txt
-auto-strike <idea>
-init
-customize list|check-setup|review-instructions <entry|all>|preview <supported-skill>
-start <project name words> [--slug <slug>] [--description <description words>]
-go <project-slug>
-brainstorm <project-slug>
-grill <project-slug>
-research <project-slug>
-spec <project-slug>
-spec-review <project-slug>
-slice <project-slug>
-slice-review <project-slug>
-phase-research <project-slug> phase:<phase-slug>
-phase-plan <project-slug> phase:<phase-slug>
-phase-build <project-slug> phase:<phase-slug>
-phase-review <project-slug> phase:<phase-slug>
-phase-fix <project-slug> phase:<phase-slug>
-readiness-review <project-slug>
-retro <project-slug>
-demo <project-slug> "<what the demo should explore>"
-language <term|project-slug|path>
-system-visualizer <project-slug|path|goal>
-```
-
-`auto-strike` is a standalone utility skill. It creates and uses a root
-`auto-strike/` workspace in the consuming repo and does not use the normal
-`docs/strike/` board/card workflow. Its planning shape is initiative spec,
-delivery phase specs, then slices inside each phase:
+Examples:
 
 ```txt
-auto-strike/initiatives/<initiative-slug>/spec.md
-auto-strike/initiatives/<initiative-slug>/phases/<phase-slug>/phase-spec.md
-auto-strike/initiatives/<initiative-slug>/phases/<phase-slug>/slices/slice-0-[name].md
+auto-strike-new-initiative Build an MVP for this idea
+auto-strike-go Continue the active initiative
+demo auto-strike/initiatives/my-idea "Compare onboarding options"
+system-visualizer auto-strike/initiatives/my-idea
+language checkout clarify
 ```
-
-`start` is the only normal user-facing Strike skill with double-dash options.
-Other skills use positional arguments, plain optional words such as `skip`, or
-the `phase:<phase-slug>` token for phase-scoped work.
-
-`system-visualizer` is a standalone utility skill. Use it when a Strike project,
-Auto Strike initiative, phase, slice, existing repo, schema, API, workflow, or
-architecture needs a diagram/model in a reusable text-first format such as
-Mermaid, DBML, Structurizr/C4, OpenAPI, AsyncAPI, D2, Graphviz, or PlantUML.
-
-Use `init` before normal Strike workflow skills. It installs Strike-managed
-runtime files under `strike/customize/system/` and creates user customization
-files under `strike/customize/user/`. Rerun it after updating Strike when you
-need to refresh those managed runtime files.
-
-Use `customize` when you want Strike to work more like you do in a repo. Add
-instructions under `strike/customize/user/` for things like brainstorm style,
-research standards, spec detail, review lenses, phase planning, build/fix
-habits, readiness strictness, demos, project language, or system visualization.
-Run `customize check-setup` to make sure the setup is healthy and
-`customize review-instructions <entry|all>` to ask Strike whether the
-instructions are safe for the workflow.
-
-Review skills can load optional read-only lens files under
-`strike/customize/user/<review-skill>/reviews/*.md`. The active Strike skill
-still owns all writes, routing, and final synthesis.
-
-If customization asks Strike to create extra docs/assets, say whether they are
-per-project or shared, and give a save path. Useful defaults are
-`strike/user-docs/<project-slug>/<skill>/...` and
-`strike/user-docs/shared/...`.
-
-Claude Code examples:
-
-```txt
-/strike:auto-strike Build an MVP for this idea
-/strike:init
-/strike:customize review-instructions brainstorm
-/strike:start Add user profile page
-/strike:go <project-slug>
-/strike:brainstorm <project-slug>
-/strike:grill <project-slug>
-/strike:research <project-slug>
-/strike:spec <project-slug>
-/strike:spec-review <project-slug>
-/strike:slice <project-slug>
-/strike:slice-review <project-slug>
-/strike:phase-research <project-slug> phase:<phase-slug>
-/strike:phase-plan <project-slug> phase:<phase-slug>
-/strike:phase-build <project-slug> phase:<phase-slug>
-/strike:phase-review <project-slug> phase:<phase-slug>
-/strike:phase-fix <project-slug> phase:<phase-slug>
-/strike:readiness-review <project-slug>
-/strike:retro <project-slug>
-/strike:demo <project-slug> "<what the demo should explore>"
-/strike:language <term|project-slug|path>
-/strike:system-visualizer <project-slug|path|goal>
-```
-
-See `references/invocation.md` for the shared handoff format and host-specific
-rendering rules.
 
 ## Runtime State
 
-Strike creates and updates runtime state in the repository where it runs:
+Auto Strike creates and updates runtime state in the repository where it runs:
 
-```txt
-docs/strike/board/
-docs/strike/cards/
+```text
+auto-strike/
+PROJECT_LANGUAGE.md
 ```
 
-The plugin does not ship active board cards. Consuming repositories only need
-the packaged workflow files listed below.
+`auto-strike/state.json` stores workflow progress. Markdown files under
+`auto-strike/initiatives/<initiative-id>/` store the artifacts for each staged
+skill. `PROJECT_LANGUAGE.md` is the project language file that Auto
+Strike and the `language` utility keep current as durable language
+crystallizes. The plugin does not ship runtime project artifacts.
 
 ## Portability
 
 The portable plugin package is this directory:
 
-```txt
+```text
 .claude-plugin/
 .codex-plugin/
 skills/
@@ -141,37 +140,26 @@ references/
 README.md
 ```
 
-It can be moved into its own repository as-is. Runtime board/card files,
+It can be moved into its own repository as-is. Runtime Auto Strike files,
 repo-local marketplace files, and repo-local skill folders are not part of the
 portable package.
 
-The plugin has no package-manager install step. The bundled `start` skill uses
-its included shell script plus common local tools such as `bash`, `find`, `sed`,
-`mkdir`, and `touch`. The `customize` utility and slug helpers use the bundled
-Node scripts and require Node.js 18 or newer.
+The plugin has no package-manager install step. Bundled helpers use Node.js 18
+or newer.
 
 ## Local Development
 
-Claude Code can load the plugin directly. From a standalone plugin repository,
-run:
-
-```bash
-claude --plugin-dir .
-```
-
-When the plugin is nested in another repo at `plugins/strike`, run:
+Claude Code can load the plugin directly:
 
 ```bash
 claude --plugin-dir ./plugins/strike
 ```
 
-Codex can load the plugin through a local marketplace entry that points to the
-plugin checkout path. In this app repo, that path is `./plugins/strike`; in a
-standalone plugin repo or a different checkout layout, point the marketplace
-entry at that location instead. When dogfooding this repo on a machine that
-also has the published Strike plugin installed, use a separate local
-marketplace name such as `strike-dev` so `strike@strike-dev` does not disturb
-the normal `strike@strike` install.
+Codex can load the plugin through a local marketplace entry that points to this
+plugin checkout path. When dogfooding this repo on a machine that also has the
+published Strike plugin installed, use a separate local marketplace name such
+as `strike-dev` so `strike@strike-dev` does not disturb the normal
+`strike@strike` install.
 
 When iterating in Codex, remember that local plugins are installed into Codex's
 plugin cache. Refresh or reinstall the local plugin with `codex plugin add` if

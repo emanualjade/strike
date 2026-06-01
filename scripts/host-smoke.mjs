@@ -421,11 +421,10 @@ function assertInstalledRuntime(pluginRoot, ctx, label) {
   );
 
   const installedFiles = [
-    "skills/init/scripts/init.mjs",
-    "skills/start/scripts/start-card.sh",
-    "references/scripts/customize.mjs",
+    "skills/auto-strike-go/scripts/state.mjs",
+    "references/language.md",
     "references/scripts/slugify.mjs",
-    "references/customization/entry-points.json",
+    "references/slug-policy.md",
   ];
   for (const relativePath of installedFiles) {
     assertFile(path.join(realPluginRoot, relativePath), `${ctx.host} ${label} installed runtime`);
@@ -436,71 +435,76 @@ function assertInstalledRuntime(pluginRoot, ctx, label) {
   mkdirSync(consumerRepo, { recursive: true });
 
   try {
-    const initScript = path.join(realPluginRoot, "skills/init/scripts/init.mjs");
-    runCommand(ctx, `${label}-runtime-init`, process.execPath, [initScript, "--repo-root", consumerRepo], {
-      cwd: consumerRepo,
-    });
-
-    const initializedFiles = [
-      "strike/customize/system/customize.mjs",
-      "strike/customize/system/manifest.json",
-      "strike/customize/system/references/customization/entry-points.json",
-      "strike/customize/user/global/global.md",
-      "strike/customize/user/brainstorm/brainstorm.md",
-    ];
-    for (const relativePath of initializedFiles) {
-      assertFile(path.join(consumerRepo, relativePath), `${ctx.host} ${label} initialized runtime`);
-    }
-    assertDirectory(
-      path.join(consumerRepo, "strike/customize/user/readiness-review/reviews"),
-      `${ctx.host} ${label} initialized runtime`,
-    );
-
-    const customizeScript = path.join(consumerRepo, "strike/customize/system/customize.mjs");
-    const checkSetup = runCommand(
+    const slugifyScript = path.join(realPluginRoot, "references/scripts/slugify.mjs");
+    const slugResult = runCommand(
       ctx,
-      `${label}-runtime-check-setup`,
+      `${label}-slugify-demo`,
       process.execPath,
-      [customizeScript, "--repo-root", consumerRepo, "check-setup"],
-      { cwd: consumerRepo },
-    );
-    assert(
-      /Result: pass/.test(checkSetup.stdout),
-      `${ctx.host} ${label} customize check-setup did not report Result: pass.`,
-    );
-
-    const startScript = path.join(realPluginRoot, "skills/start/scripts/start-card.sh");
-    const startResult = runCommand(
-      ctx,
-      `${label}-runtime-start`,
-      startScript,
       [
-        "--repo-root",
-        consumerRepo,
-        "Add CSV export",
-        "--description",
-        "Let users export report data.",
+        slugifyScript,
+        "demo",
+        "--text",
+        "Mobile flow options",
+        "--index",
+        "1",
       ],
       {
         cwd: consumerRepo,
-        env: { STRIKE_NODE: process.execPath },
       },
     );
-    assertFile(
-      path.join(consumerRepo, "docs/strike/cards/csv-export/card.md"),
-      `${ctx.host} ${label} start card`,
-    );
-    assertFile(
-      path.join(consumerRepo, "docs/strike/board/01-brainstorm/csv-export.md"),
-      `${ctx.host} ${label} start board`,
-    );
     assert(
-      /^next_args=csv-export$/m.test(startResult.stdout),
-      `${ctx.host} ${label} start output did not include next_args=csv-export.`,
+      /^filename=01-mobile-flow-options\.html$/m.test(slugResult.stdout),
+      `${ctx.host} ${label} slugify output did not include the expected demo filename.`,
     );
+
+    const stateScript = path.join(realPluginRoot, "skills/auto-strike-go/scripts/state.mjs");
+    const stateInitResult = runCommand(
+      ctx,
+      `${label}-state-init`,
+      process.execPath,
+      [stateScript, "init", "gallery", "Gallery"],
+      {
+        cwd: consumerRepo,
+      },
+    );
+    const stateInitJson = parseJson(stateInitResult.stdout, `${label} state init`);
     assert(
-      /^next_skill=brainstorm$/m.test(startResult.stdout),
-      `${ctx.host} ${label} start output did not include next_skill=brainstorm.`,
+      stateInitJson.current?.skill === "refine-idea",
+      `${ctx.host} ${label} state init did not start at refine-idea.`,
+    );
+    assertFile(path.join(consumerRepo, "PROJECT_LANGUAGE.md"), `${ctx.host} ${label} state init`);
+    assertFile(path.join(consumerRepo, "auto-strike/state.json"), `${ctx.host} ${label} state init`);
+    assertFile(path.join(consumerRepo, "auto-strike/scripts/state.mjs"), `${ctx.host} ${label} state init`);
+
+    const workspaceStateScript = path.join(consumerRepo, "auto-strike/scripts/state.mjs");
+    const stateCurrentResult = runCommand(
+      ctx,
+      `${label}-state-current`,
+      process.execPath,
+      [workspaceStateScript, "current"],
+      {
+        cwd: consumerRepo,
+      },
+    );
+    const stateCurrentJson = parseJson(stateCurrentResult.stdout, `${label} state current`);
+    assert(
+      stateCurrentJson.artifacts?.includes("auto-strike/initiatives/gallery/idea.md"),
+      `${ctx.host} ${label} state current did not resolve the refine-idea artifact.`,
+    );
+
+    const stateCompleteResult = runCommand(
+      ctx,
+      `${label}-state-complete-check`,
+      process.execPath,
+      [workspaceStateScript, "complete-check", "ideaRefined"],
+      {
+        cwd: consumerRepo,
+      },
+    );
+    const stateCompleteJson = parseJson(stateCompleteResult.stdout, `${label} state complete-check`);
+    assert(
+      stateCompleteJson.skill === "grill-idea",
+      `${ctx.host} ${label} complete-check did not advance to grill-idea.`,
     );
   } finally {
     writeFileSync(

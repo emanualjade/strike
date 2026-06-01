@@ -3,14 +3,14 @@
   "owner": {
     "name": "Emanual Jade"
   },
-  "description": "A Claude Code marketplace for the Strike board-and-card workflow plugin.",
-  "version": "0.8.32",
+  "description": "A Claude Code marketplace for the Auto Strike workflow and planning utilities plugin.",
+  "version": "0.10.0",
   "plugins": [
     {
       "name": "strike",
       "source": "./plugins/strike",
-      "description": "Workflow and utility skills for scoped agent-assisted project delivery.",
-      "version": "0.8.32",
+      "description": "Auto Strike workflow plus focused planning utilities for agent-assisted delivery.",
+      "version": "0.10.0",
       "author": {
         "name": "Emanual Jade"
       },

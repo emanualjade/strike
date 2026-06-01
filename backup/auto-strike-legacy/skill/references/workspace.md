@@ -60,7 +60,7 @@ auto-strike/
 Use the lowest level that owns the decision:
 
 - `UBIQUITOUS_LANGUAGE.md` at repo root: durable glossary and domain language
-  across normal Strike, Auto Strike, and repo work.
+  across Auto Strike, utility skills, and repo work.
 - `initiatives/<slug>/`: one Auto Strike request, session, campaign, MVP, or
   milestone.
 - `phases/<slug>/`: one delivery phase with its own phase spec,
@@ -260,10 +260,10 @@ Done claims need evidence or a clear skipped-check reason. Record `Changed:` and
 
 Follow the shared language contract in the plugin package's
 `references/language.md`. Use the repo root `UBIQUITOUS_LANGUAGE.md` as the
-only durable glossary for Auto Strike and normal Strike. If it exists, read it
-before naming, modeling, or planning around domain terms. If it is missing,
-create it only when durable language, an accepted alias, or a meaningful
-ambiguity has crystallized.
+only durable glossary for Auto Strike, utility skills, and repo work. If it
+exists, read it before naming, modeling, or planning around domain terms. If it
+is missing, create it only when durable language, an accepted alias, or a
+meaningful ambiguity has crystallized.
 
 Keep it lean. Challenge conflicts with the glossary, sharpen overloaded terms,
 stress-test domain boundaries with concrete scenarios, cross-reference code

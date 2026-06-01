@@ -59,16 +59,16 @@ plugin users; this file tracks release, validation, and setup work.
   - Owner: Codex.
   - When it matters: only if `skills-ref` can validate portability without
     requiring us to remove useful host behavior from the shipped plugin.
-- [ ] Reconsider host-specific generated skill packages only if the portable
-  customization loader becomes insufficient.
+- [ ] Reconsider host-specific generated skill packages only if active utility
+  skills need host-specific behavior that cannot stay portable.
   - Owner: Codex.
-  - When it matters: if a supported host offers a clearly better, documented way
-    to preload repo-local customization without weakening portability.
+  - When it matters: if a supported host offers a clearly better, documented
+    behavior that cannot be expressed in shared `SKILL.md` content.
 - [ ] Decide whether custom executable review scripts should exist.
   - Owner: Codex.
   - When it matters: only if Markdown review lenses are not enough.
   - Notes: define trust, allowlist, execution, and validation rules before adding
-    any executable customization surface.
+    any executable review surface.
 
 ## Release Checklist
 

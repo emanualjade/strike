@@ -1,7 +1,7 @@
 {
   "name": "strike",
-  "version": "0.8.32",
-  "description": "Workflow and utility skills for scoped agent-assisted project delivery.",
+  "version": "0.10.0",
+  "description": "Auto Strike workflow plus focused planning utilities for agent-assisted delivery.",
   "author": {
     "name": "Emanual Jade"
   },
@@ -16,8 +16,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Strike",
-    "shortDescription": "Project workflow skills for durable planning, implementation, review, and readiness",
-    "longDescription": "Strike packages a board-and-card workflow plus focused utilities for agent-assisted project delivery. Use it to start project cards, sharpen rough ideas, make decisions, research only where useful, write specs, slice implementation phases, build, review phases, check readiness, capture retros, make planning demos, keep language consistent, and visualize systems while keeping runtime state in the consuming repository.",
+    "shortDescription": "Auto Strike turns ideas into shipped changes with companion planning utilities",
+    "longDescription": "Strike packages Auto Strike plus focused utilities for agent-assisted delivery. Use Auto Strike to refine an idea, create durable initiative docs, split delivery phases into slices, build, review, verify, and close readiness. Companion utilities create planning demos, visualize systems, sharpen domain language, and write handoffs while keeping runtime state in the consuming repository.",
     "developerName": "Emanual Jade",
     "category": "Coding",
     "capabilities": [
@@ -26,9 +26,8 @@
       "Write"
     ],
     "defaultPrompt": [
-      "Start a Strike card for this project idea.",
-      "Show the next Strike step for this card.",
-      "Use Strike to plan and implement this project.",
+      "Use Auto Strike to build and ship this idea.",
+      "Create a planning demo for this idea.",
       "Visualize this system with Strike."
     ],
     "brandColor": "#DC2626",

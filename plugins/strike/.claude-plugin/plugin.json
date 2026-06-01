@@ -1,7 +1,7 @@
 {
   "name": "strike",
-  "version": "0.8.32",
-  "description": "Workflow and utility skills for scoped agent-assisted project delivery.",
+  "version": "0.10.0",
+  "description": "Auto Strike workflow plus focused planning utilities for agent-assisted delivery.",
   "author": {
     "name": "Emanual Jade"
   },
