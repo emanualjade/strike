@@ -8,46 +8,46 @@ Strike helps AI coding agents turn fuzzy feature ideas into planned, sliced, res
 
 Strike is still early, so you may not want to depend on it for critical production work yet. But the goal is clear: make AI coding agents better at turning rough ideas into finished, verified features.
 
-* ✅ **From fuzzy idea to build path:**<br>
+✅ **From fuzzy idea to build path:**<br>
 Strike helps turn a loose feature idea into a refined plan, clear decisions, a durable spec, phases, and buildable slices.
 
-* ✅ **Better decisions before code:**<br>
+✅ **Better decisions before code:**<br>
 Strike forces early refinement and decision grilling so the agent does not rush into implementation with vague requirements.
 
-* ✅ **Thin slices agents can actually finish:**<br>
+✅ **Thin slices agents can actually finish:**<br>
 Large features are broken into phases and small vertical slices that fit the way LLM coding agents work best.
 
-* ✅ **Research before planning:**<br>
+✅ **Research before planning:**<br>
 Each slice has an explicit research step so the agent checks docs, standards, examples, and known patterns before guessing.
 
-* ✅ **Durable artifacts, not disposable chat:**<br>
+✅ **Durable artifacts, not disposable chat:**<br>
 Strike writes the idea, decisions, specs, plans, research, and verification notes into files so progress survives context loss.
 
-* ✅ **Workflow state you can resume:**<br>
+✅ **Workflow state you can resume:**<br>
 Strike tracks where the initiative is, what is complete, and what still needs to happen, so work can stop and resume cleanly.
 
-* ✅ **Plan verification before build:**<br>
+✅ **Plan verification before build:**<br>
 Slice plans are checked before coding starts, reducing the chance that the agent builds from a weak or incomplete plan.
 
-* ✅ **Verification and fix loops:**<br>
+✅ **Verification and fix loops:**<br>
 Strike does not pretend work is done. Failed verification routes through a fix loop, then runs the same verifier again.
 
-* ✅ **Phase and spec-level validation:**<br>
+✅ **Phase and spec-level validation:**<br>
 Strike verifies not only individual slices, but also completed phases and the full main spec.
 
-* ✅ **Project language consistency:**<br>
+✅ **Project language consistency:**<br>
 Strike tracks important naming, domain terms, and language choices so the project stays coherent as it grows.
 
-* ✅ **Customizable to your project:**<br>
+✅ **Customizable to your project:**<br>
 Teach Strike your coding preferences, review expectations, and local patterns so it gets better at working the way your project works.
 
-* ✅ **Useful checkpoints:**<br>
+✅ **Useful checkpoints:**<br>
 Verified slices can be committed and pushed before moving on, keeping work reviewable and recoverable.
 
-* ✅ **Standalone utilities included:**<br>
+✅ **Standalone utilities included:**<br>
 Strike also includes focused tools for demos, system visualization, project language, and handoff documents.
 
-* ✅ **Portable across agent tools:**<br>
+✅ **Portable across agent tools:**<br>
 Strike is designed as one portable skill package that works across Codex and Claude Code.
 
 
