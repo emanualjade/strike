@@ -102,6 +102,47 @@ Auto Strike creates and maintains its own workspace:
 
 ```text
 auto-strike/
+PROJECT_LANGUAGE.md
+```
+
+`auto-strike/state.json` tracks workflow progress. Markdown files under
+`auto-strike/initiatives/<initiative-id>/` store the artifacts.
+
+```text
+auto-strike/state.json
+auto-strike/initiatives/<initiative-id>/idea.md
+auto-strike/initiatives/<initiative-id>/decisions.md
+auto-strike/initiatives/<initiative-id>/main-spec.md
+auto-strike/initiatives/<initiative-id>/development-plan.md
+auto-strike/initiatives/<initiative-id>/phases/phase-01/phase.md
+auto-strike/initiatives/<initiative-id>/phases/phase-01/phase-spec.md
+auto-strike/initiatives/<initiative-id>/phases/phase-01/slices/slice-01/slice.md
+auto-strike/initiatives/<initiative-id>/phases/phase-01/slices/slice-01/research.md
+auto-strike/initiatives/<initiative-id>/phases/phase-01/slices/slice-01/plan.md
+```
+
+## Customize strike
+
+Strike is meant to get more useful the longer you work with it. If it makes a
+choice you do not like twice, you should not have to keep correcting it in chat.
+Write the preference down once, in the project, and future Auto Strike stages
+can pick it up.
+
+Use implementation discipline files for how you want work done. These are good
+for things like where shared utilities belong, how much surrounding code to
+inspect before editing, what package manager rules matter, or what your team
+considers a clean boundary.
+
+Use review lens files for extra scrutiny you want during verification. These are
+good for things like caller-impact checks, accessibility passes, security review
+for sensitive flows, or "any shared schema change needs downstream consumers
+checked before this passes."
+
+Auto Strike reads `global.md` for guidance that always matters, plus the file
+for the current stage:
+
+```text
+auto-strike/
   user-guidance/
     implementation-discipline/
       global.md
@@ -118,42 +159,28 @@ auto-strike/
       verify-slice-build.md
       verify-phase.md
       verify-main-spec.md
-PROJECT_LANGUAGE.md
 ```
 
-`auto-strike/state.json` tracks workflow progress. Markdown files under
-`auto-strike/initiatives/<initiative-id>/` store the artifacts.
-`auto-strike/user-guidance/implementation-discipline/` contains user-owned
-project-specific coding guidance that Auto Strike reads during planning,
-building, fixing, and verification. `auto-strike/user-guidance/review-lenses/`
-contains user-owned additive review guidance. Stages read `global.md` plus
-their own stage file:
+For example, you might add this to
+`auto-strike/user-guidance/implementation-discipline/build-slice.md`:
 
-```text
-auto-strike/state.json
-auto-strike/user-guidance/implementation-discipline/global.md
-auto-strike/user-guidance/implementation-discipline/plan-slice.md
-auto-strike/user-guidance/implementation-discipline/build-slice.md
-auto-strike/user-guidance/implementation-discipline/fix.md
-auto-strike/user-guidance/implementation-discipline/verify-slice-plan.md
-auto-strike/user-guidance/implementation-discipline/verify-slice-build.md
-auto-strike/user-guidance/implementation-discipline/verify-phase.md
-auto-strike/user-guidance/implementation-discipline/verify-main-spec.md
-auto-strike/user-guidance/review-lenses/global.md
-auto-strike/user-guidance/review-lenses/verify-slice-plan.md
-auto-strike/user-guidance/review-lenses/verify-slice-build.md
-auto-strike/user-guidance/review-lenses/verify-phase.md
-auto-strike/user-guidance/review-lenses/verify-main-spec.md
-auto-strike/initiatives/<initiative-id>/idea.md
-auto-strike/initiatives/<initiative-id>/decisions.md
-auto-strike/initiatives/<initiative-id>/main-spec.md
-auto-strike/initiatives/<initiative-id>/development-plan.md
-auto-strike/initiatives/<initiative-id>/phases/phase-01/phase.md
-auto-strike/initiatives/<initiative-id>/phases/phase-01/phase-spec.md
-auto-strike/initiatives/<initiative-id>/phases/phase-01/slices/slice-01/slice.md
-auto-strike/initiatives/<initiative-id>/phases/phase-01/slices/slice-01/research.md
-auto-strike/initiatives/<initiative-id>/phases/phase-01/slices/slice-01/plan.md
+```md
+- Before creating a utility, search the existing utility folders first. If a new
+  shared utility is needed, place it where this repo already keeps that kind of
+  code.
 ```
+
+And this to
+`auto-strike/user-guidance/review-lenses/verify-slice-build.md`:
+
+```md
+- If shared utilities, schemas, adapters, or public APIs changed, run a
+  caller-impact review and do not pass verification until likely downstream
+  consumers were checked.
+```
+
+The files are yours. Keep them short, plain, and opinionated. Strike's built-in
+checks still run; your guidance just gives it better local taste.
 
 ## Skills
 
