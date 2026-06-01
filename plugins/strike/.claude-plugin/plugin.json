@@ -1,7 +1,7 @@
 {
   "name": "strike",
-  "version": "0.10.5",
-  "description": "Auto Strike workflow plus focused planning utilities for agent-assisted delivery.",
+  "version": "0.10.6",
+  "description": "Strike workflow plus focused planning utilities for agent-assisted delivery.",
   "author": {
     "name": "Emanual Jade"
   },

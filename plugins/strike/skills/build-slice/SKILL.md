@@ -16,16 +16,16 @@ Implement one planned slice.
 - plan verification from the current slice's `plan-verification.md`
 - repo files named by the plan
 - user implementation guidance from
-  `auto-strike/user-guidance/implementation-discipline/global.md` and
-  `auto-strike/user-guidance/implementation-discipline/build-slice.md`
+  `strike/user-guidance/implementation-discipline/global.md` and
+  `strike/user-guidance/implementation-discipline/build-slice.md`
 - optional slice, research, or phase-spec context only when the verified plan is
   unclear, stale, or appears to conflict with the repo
 
 ## Process
 
 - Treat `plan.md` as the primary build handoff.
-- Read `auto-strike/user-guidance/implementation-discipline/global.md` and
-  `auto-strike/user-guidance/implementation-discipline/build-slice.md` if they
+- Read `strike/user-guidance/implementation-discipline/global.md` and
+  `strike/user-guidance/implementation-discipline/build-slice.md` if they
   exist, and apply the relevant guidance while editing.
 - If `plan-verification.md` does not say `Ready: yes`, write `Built: no` with
   route back to `verify-slice-plan` and do not edit implementation files.
@@ -63,7 +63,7 @@ Make the implementation changes in the repo.
 Write build evidence to the current slice's `build.md`:
 
 ```text
-auto-strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/build.md
+strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/build.md
 ```
 
 Use this shape:
@@ -111,7 +111,7 @@ Reason:
 - Keep work inside one slice.
 - Do not broaden the slice to include unrelated cleanup or future work.
 - Do not improvise around a bad plan; write `Built: no` and route back to the
-  owning workflow step so Auto Strike can continue.
+  owning workflow step so Strike can continue.
 - Do not re-evaluate whether the slice is well-shaped. That was handled by
   research, planning, and plan verification.
 - Do not route back for ordinary implementation choices that fit the verified
@@ -120,8 +120,8 @@ Reason:
   verified plan.
 - When `Built: yes`, write `Needed: no`, `Command: None`, `Phase: None`,
   `Slice: None`, and `Check: None`.
-- After writing `Built: yes`, Auto Strike can run
-  `node auto-strike/scripts/state.mjs complete-check implemented`.
+- After writing `Built: yes`, Strike can run
+  `node strike/scripts/state.mjs complete-check implemented`.
 - Do not claim verification.
 - Preserve unrelated user work.
 - Follow the repo's package manager, test, security, and editing rules.

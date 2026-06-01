@@ -46,7 +46,7 @@ making things up.
 Write the slice research to the current slice's `research.md`:
 
 ```text
-auto-strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/research.md
+strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/research.md
 ```
 
 Use this shape:
@@ -97,7 +97,7 @@ better.
   facts.
 - If research shows the slice is too broad, too risky, or hiding multiple
   independent behaviors, write `Too broad: yes`, suggest smaller replacement
-  slices, and write `Ready for planning: no`. Auto Strike should edit the
+  slices, and write `Ready for planning: no`. Strike should edit the
   current slice into the first smaller slice and add any extra slices before
   rerunning research.
 - In `## Ready For Planning`, write `Ready for planning: yes` only when the

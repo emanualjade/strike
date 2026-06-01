@@ -62,24 +62,24 @@ Strike is designed as one portable skill package that works across Codex and Cla
 
 <sub>Start something new. Strike will clarify the idea, then continue through the build workflow.</sub>
 ```text
-$strike:auto-strike-new-initiative Add password reset to this app
+$strike:new-initiative Add password reset to this app
 ```
 
 <sub>Resume later from the same repo, even in a new chat window. Pick up where you left off without losing context.</sub>
 ```text
-$strike:auto-strike-go
+$strike:go
 ```
 
 #### Claude Code Example
 
 <sub>Start something new. Strike will clarify the idea, then continue through the build workflow.</sub>
 ```text
-/strike:auto-strike-new-initiative Add password reset to this app
+/strike:new-initiative Add password reset to this app
 ```
 
 <sub>Resume later from the same repo, even in a new chat window. Pick up where you left off without losing context.</sub>
 ```text
-/strike:auto-strike-go
+/strike:go
 ```
 
 ## How Strike Works
@@ -101,34 +101,34 @@ The workflow moves through the following steps:
 
 ## Under the hood
 
-Auto Strike creates and maintains its own workspace:
+Strike creates and maintains its own workspace:
 
 ```text
-auto-strike/
+strike/
 PROJECT_LANGUAGE.md
 ```
 
-`auto-strike/state.json` tracks workflow progress. Markdown files under
-`auto-strike/initiatives/<initiative-id>/` store the artifacts.
+`strike/state.json` tracks workflow progress. Markdown files under
+`strike/initiatives/<initiative-id>/` store the artifacts.
 
 ```text
-auto-strike/state.json
-auto-strike/initiatives/<initiative-id>/idea.md
-auto-strike/initiatives/<initiative-id>/decisions.md
-auto-strike/initiatives/<initiative-id>/main-spec.md
-auto-strike/initiatives/<initiative-id>/development-plan.md
-auto-strike/initiatives/<initiative-id>/phases/phase-01/phase.md
-auto-strike/initiatives/<initiative-id>/phases/phase-01/phase-spec.md
-auto-strike/initiatives/<initiative-id>/phases/phase-01/slices/slice-01/slice.md
-auto-strike/initiatives/<initiative-id>/phases/phase-01/slices/slice-01/research.md
-auto-strike/initiatives/<initiative-id>/phases/phase-01/slices/slice-01/plan.md
+strike/state.json
+strike/initiatives/<initiative-id>/idea.md
+strike/initiatives/<initiative-id>/decisions.md
+strike/initiatives/<initiative-id>/main-spec.md
+strike/initiatives/<initiative-id>/development-plan.md
+strike/initiatives/<initiative-id>/phases/phase-01/phase.md
+strike/initiatives/<initiative-id>/phases/phase-01/phase-spec.md
+strike/initiatives/<initiative-id>/phases/phase-01/slices/slice-01/slice.md
+strike/initiatives/<initiative-id>/phases/phase-01/slices/slice-01/research.md
+strike/initiatives/<initiative-id>/phases/phase-01/slices/slice-01/plan.md
 ```
 
 ## Customize strike
 
 Strike is meant to get more useful the longer you work with it. If it makes a
 choice you do not like twice, you should not have to keep correcting it in chat.
-Write the preference down once, in the project, and future Auto Strike stages
+Write the preference down once, in the project, and future Strike stages
 can pick it up.
 
 Use **implementation discipline files** for how you want work done. These are
@@ -144,11 +144,11 @@ good place to say things like:
 - look extra carefully at auth, payments, privacy, or destructive actions
 - make sure schema changes account for downstream consumers
 
-Auto Strike reads `global.md` for guidance that always matters, plus the file
+Strike reads `global.md` for guidance that always matters, plus the file
 for the current stage:
 
 ```text
-auto-strike/
+strike/
   user-guidance/
     implementation-discipline/
       global.md
@@ -168,7 +168,7 @@ auto-strike/
 ```
 
 For example, you might add this to
-`auto-strike/user-guidance/implementation-discipline/build-slice.md`:
+`strike/user-guidance/implementation-discipline/build-slice.md`:
 
 ```md
 - Before creating a utility, search the existing utility folders first. If a new
@@ -177,7 +177,7 @@ For example, you might add this to
 ```
 
 And this to
-`auto-strike/user-guidance/review-lenses/verify-slice-build.md`:
+`strike/user-guidance/review-lenses/verify-slice-build.md`:
 
 ```md
 - If shared utilities, schemas, adapters, or public APIs changed, run a
@@ -192,23 +192,23 @@ checks still run; your guidance just gives it better local taste.
 
 ### Main Workflow
 
-- `auto-strike-new-initiative`: start a fresh initiative from a new idea.
-- `auto-strike-go`: continue the active initiative from workflow state.
+- `new-initiative`: start a fresh initiative from a new idea.
+- `go`: continue the active initiative from workflow state.
 
 ### Useful Standalone Planning Skills
 
 Call these directly when you want one focused planning artifact without running
-the whole Auto Strike workflow.
+the whole Strike workflow.
 
 - `refine-idea`: clarify a raw idea into a useful first outcome.
 - `grill-idea`: pressure-test decisions, assumptions, and blockers.
 - `create-main-spec`: write a durable main spec.
 - `create-development-phases`: split a main spec into buildable phases.
 
-### Auto Strike Stage Skills
+### Strike Stage Skills
 
-Auto Strike uses these as workflow stages. They are exposed so the workflow
-stays modular; in normal use, let Auto Strike call them with the right context
+Strike uses these as workflow stages. They are exposed so the workflow
+stays modular; in normal use, let Strike call them with the right context
 and output paths.
 
 - `create-phase-spec`: define one phase clearly enough to slice.
@@ -224,7 +224,7 @@ and output paths.
 
 ### Utilities
 
-These are useful to call on their own, with or without an Auto Strike workflow.
+These are useful to call on their own, with or without a Strike workflow.
 
 - `demo`: create a small self-contained HTML planning demo.
 - `system-visualizer`: create diagram or model code for systems and workflows.
@@ -266,10 +266,10 @@ Invoke bundled skills with the namespaced `$strike:<skill>` form or choose
 Strike with `@`:
 
 ```text
-$strike:auto-strike-new-initiative Build an MVP for this idea: ...
-$strike:auto-strike-go Continue the active initiative.
-$strike:demo auto-strike/initiatives/my-idea "Compare onboarding options"
-$strike:system-visualizer auto-strike/initiatives/my-idea
+$strike:new-initiative Build an MVP for this idea: ...
+$strike:go Continue the active initiative.
+$strike:demo strike/initiatives/my-idea "Compare onboarding options"
+$strike:system-visualizer strike/initiatives/my-idea
 $strike:language checkout clarify
 ```
 
@@ -362,10 +362,10 @@ Refresh active Claude Code plugins after install:
 Claude Code plugin skills are namespaced:
 
 ```text
-/strike:auto-strike-new-initiative Build an MVP for this idea
-/strike:auto-strike-go Continue the active initiative
-/strike:demo auto-strike/initiatives/my-idea "Compare onboarding options"
-/strike:system-visualizer auto-strike/initiatives/my-idea
+/strike:new-initiative Build an MVP for this idea
+/strike:go Continue the active initiative
+/strike:demo strike/initiatives/my-idea "Compare onboarding options"
+/strike:system-visualizer strike/initiatives/my-idea
 /strike:language checkout clarify
 ```
 

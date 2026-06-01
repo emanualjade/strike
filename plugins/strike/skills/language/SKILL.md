@@ -1,6 +1,6 @@
 ---
 name: language
-description: Assess and update repo language discovered during Auto Strike work, utility work, or source inspection.
+description: Assess and update repo language discovered during Strike work, utility work, or source inspection.
 argument-hint: "[term|project-slug|path] [assess|trace|add|update|remove|clarify|apply]"
 disable-model-invocation: true
 allowed-tools: Read Write Edit MultiEdit Bash Grep Glob
@@ -17,7 +17,7 @@ context helps the user decide what to do next.
 ## Purpose
 
 Keep product, code, workflow, UI, docs, and planning language precise. This is
-a standalone Strike utility, and it is also a soft helper Auto Strike may use
+a standalone Strike utility, and it is also a soft helper Strike may use
 when language affects planning or implementation.
 
 Language work should feel natural: challenge confusing words when they matter,
@@ -62,7 +62,7 @@ Read the glossary and answer with:
 
 ### Assess
 
-Use when the user asks to check an Auto Strike artifact, source path, diff,
+Use when the user asks to check a Strike artifact, source path, diff,
 branch, spec, slice, or PR for language issues.
 
 Read the glossary and the target artifact. Search code only as needed. Report:
@@ -117,17 +117,17 @@ terms changed and any follow-up language risks.
 
 ## Natural Strike Use
 
-This is a utility, not an Auto Strike workflow step. Do not edit Auto Strike
+This is a utility, not a Strike workflow step. Do not edit Strike
 state or workflow artifacts unless the user explicitly asks to link a language
 decision there.
 
-When called from an Auto Strike context:
+When called from a Strike context:
 
-- read `auto-strike/state.json` when present
+- read `strike/state.json` when present
 - read relevant initiative, phase, and slice docs
 - compare important repo language against `PROJECT_LANGUAGE.md`
 
-When Auto Strike is working and a language issue appears, Auto Strike should
+When Strike is working and a language issue appears, Strike should
 handle the light version inline using the shared language contract.
 
 Use the `language` skill for deeper work: term tracing, glossary updates,
@@ -196,7 +196,7 @@ Keep responses compact and user-facing:
 
 ## Gates
 
-- Do not write Auto Strike workflow outputs such as idea, decision, spec,
+- Do not write Strike workflow outputs such as idea, decision, spec,
   phase, slice, plan, build, or verification artifacts.
 - Do not edit implementation files unless the user explicitly asks for code
   renames and confirms the scope.

@@ -6,8 +6,8 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 const SCRIPT_FILE = fileURLToPath(import.meta.url);
-const DEFAULT_STATE_PATH = "auto-strike/state.json";
-const WORKSPACE_ROOT = "auto-strike";
+const DEFAULT_STATE_PATH = "strike/state.json";
+const WORKSPACE_ROOT = "strike";
 const LANGUAGE_FILE = "PROJECT_LANGUAGE.md";
 const USER_GUIDANCE_DIR = "user-guidance";
 const IMPLEMENTATION_DISCIPLINE_DIR = "implementation-discipline";
@@ -17,7 +17,7 @@ const IMPLEMENTATION_DISCIPLINE_TEMPLATES = new Map([
     "global.md",
     `# Global Implementation Discipline
 
-User/project-specific coding guidance for every Auto Strike implementation
+User/project-specific coding guidance for every Strike implementation
 stage. Use this file for rare always-on implementation preferences.
 Stage-specific guidance belongs in the matching stage file.
 
@@ -110,7 +110,7 @@ const REVIEW_LENS_TEMPLATES = new Map([
     "global.md",
     `# Global Review Lenses
 
-User/project-specific review lenses that apply to every Auto Strike verifier.
+User/project-specific review lenses that apply to every Strike verifier.
 Use this file for rare always-on review requirements. Stage-specific guidance
 belongs in the matching verifier file.
 
@@ -301,7 +301,7 @@ function pauseActiveInitiatives(state) {
 export function getCurrentState(state) {
   const initiative = getActiveInitiative(state);
   if (!initiative) {
-    return { status: "blocked", reason: "No active initiative." };
+    return { status: "idle", reason: "No active initiative." };
   }
 
   const initiativeScope = { initiativeId: initiative.id };

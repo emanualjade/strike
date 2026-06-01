@@ -1,0 +1,6 @@
+policy:
+  allow_implicit_invocation: true
+interface:
+  display_name: "Strike: Go"
+  short_description: "Continue the active Strike initiative from existing workflow state."
+  default_prompt: "$strike:go Continue the active Strike initiative."

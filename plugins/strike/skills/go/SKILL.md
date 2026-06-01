@@ -1,14 +1,14 @@
 ---
-name: auto-strike-go
-description: Use when the user asks Auto Strike to continue or resume the active initiative from existing workflow state.
+name: go
+description: Use when the user asks Strike to continue or resume the active initiative from existing workflow state.
 argument-hint: "[optional context]"
 disable-model-invocation: true
 allowed-tools: Read Write Edit MultiEdit Bash Grep Glob WebFetch WebSearch Agent
 ---
 
-# Auto Strike Go
+# Go
 
-Continue the active Auto Strike initiative from existing state. Do not create a
+Continue the active Strike initiative from existing state. Do not create a
 new initiative in this skill.
 
 ## The Workflow Skills
@@ -36,15 +36,15 @@ new initiative in this skill.
 
 Start at the first workflow skill and move down the list one skill at a time.
 
-Workflow skills are unaware of Auto Strike mechanics except for the canonical
+Workflow skills are unaware of Strike mechanics except for the canonical
 workflow artifact path named in their own instructions. When using them inside
-Auto Strike, pass the relevant context and completion check as skill arguments.
+Strike, pass the relevant context and completion check as skill arguments.
 
 When a verifier fails, run `fix` with the failed verification artifact, then
 run the same verifier again. Keep the current verification check incomplete
 until that verifier passes.
 
-A workflow skill may still send Auto Strike back to an earlier skill when its
+A workflow skill may still send Strike back to an earlier skill when its
 output reveals a real decision, scope, research, spec, or plan problem that
 cannot honestly be repaired in the verification loop.
 
@@ -53,24 +53,25 @@ output, route-back instructions, or a clear unresolved decision.
 
 ## Go Behavior
 
-At the start of every run, inspect the existing Auto Strike workspace.
+At the start of every run, inspect the existing Strike workspace.
 
-If `auto-strike/state.json` exists, run:
+If `strike/state.json` exists, run:
 
 ```text
-node auto-strike/scripts/state.mjs current
+node strike/scripts/state.mjs current
 ```
 
-If there is an active initiative, resume from the returned workflow skill unless
-the user asks to jump, revisit, or repair an earlier step.
+If `current` returns `status: "active"`, resume from the returned workflow
+skill unless the user asks to jump, revisit, or repair an earlier step.
 
 If there is no workflow state, tell the user to start with
-`auto-strike-new-initiative`.
+`new-initiative`.
 
-If state exists but no initiative is active, run:
+If state exists but no initiative is active, `current` returns
+`status: "idle"`. Run:
 
 ```text
-node auto-strike/scripts/state.mjs list-initiatives
+node strike/scripts/state.mjs list-initiatives
 ```
 
 Then ask which initiative to activate or whether to start a new initiative.
@@ -80,7 +81,7 @@ surface the specific state question before continuing.
 
 ## State
 
-Auto Strike stores workflow facts in `auto-strike/state.json`.
+Strike stores workflow facts in `strike/state.json`.
 
 Example:
 
@@ -143,13 +144,28 @@ Markdown files store the actual artifacts. `state.json` stores progress facts.
 
 The helper derives the current workflow position from the verification matrices.
 
+## Step Discipline
+
+Move one Strike workflow step at a time.
+
+- Run `node strike/scripts/state.mjs current`.
+- Do the one workflow skill returned by `current`.
+- Complete only the first check named in that `current.missing` list.
+- Run `node strike/scripts/state.mjs current` again before doing another
+  workflow skill.
+
+Do not batch multiple `complete-check` commands together. Do not mark later
+checks complete just because their artifacts already exist. If you created more
+than one artifact while working, still re-enter through `current` after each
+completed check and let the helper decide the next step.
+
 ## Workspace Helper
 
 The first new-initiative run creates:
 
 ```text
 PROJECT_LANGUAGE.md
-auto-strike/
+strike/
   user-guidance/
     implementation-discipline/
       global.md
@@ -174,12 +190,12 @@ auto-strike/
 It runs the packaged helper once:
 
 ```text
-node <auto-strike-new-initiative skill dir>/scripts/state.mjs init <initiative-id> [name]
+node <new-initiative skill dir>/scripts/state.mjs init <initiative-id> [name]
 ```
 
 This creates starter state, copies the helper to
-`auto-strike/scripts/state.mjs`, and initializes `auto-strike/user-guidance/`
-as user-owned workflow guidance. Auto Strike stages that plan, build, fix, or
+`strike/scripts/state.mjs`, and initializes `strike/user-guidance/`
+as user-owned workflow guidance. Strike stages that plan, build, fix, or
 verify code should read implementation discipline `global.md` plus their own
 stage file. Verifiers should also read review-lenses `global.md` plus their own
 stage file.
@@ -187,16 +203,16 @@ stage file.
 After bootstrap, use the workspace helper:
 
 ```text
-node auto-strike/scripts/state.mjs current
-node auto-strike/scripts/state.mjs list-initiatives
-node auto-strike/scripts/state.mjs set-active <initiative-id>
-node auto-strike/scripts/state.mjs finish-initiative [initiative-id]
-node auto-strike/scripts/state.mjs complete-check <check-name>
-node auto-strike/scripts/state.mjs reopen-check <check-name>
-node auto-strike/scripts/state.mjs reopen-phase-check <phase-id> <check-name>
-node auto-strike/scripts/state.mjs reopen-slice-check <phase-id> <slice-id> <check-name>
-node auto-strike/scripts/state.mjs add-phase <phase-id> [name]
-node auto-strike/scripts/state.mjs add-slice <phase-id> <slice-id> [name]
+node strike/scripts/state.mjs current
+node strike/scripts/state.mjs list-initiatives
+node strike/scripts/state.mjs set-active <initiative-id>
+node strike/scripts/state.mjs finish-initiative [initiative-id]
+node strike/scripts/state.mjs complete-check <check-name>
+node strike/scripts/state.mjs reopen-check <check-name>
+node strike/scripts/state.mjs reopen-phase-check <phase-id> <check-name>
+node strike/scripts/state.mjs reopen-slice-check <phase-id> <slice-id> <check-name>
+node strike/scripts/state.mjs add-phase <phase-id> [name]
+node strike/scripts/state.mjs add-slice <phase-id> <slice-id> [name]
 ```
 
 ## IDs
@@ -210,8 +226,8 @@ Use canonical IDs for generated phases and slices:
 IDs are not titles. Put human names in the optional name argument:
 
 ```text
-node auto-strike/scripts/state.mjs add-phase phase-01 "Upload and display"
-node auto-strike/scripts/state.mjs add-slice phase-01 slice-01 "Upload image"
+node strike/scripts/state.mjs add-phase phase-01 "Upload and display"
+node strike/scripts/state.mjs add-slice phase-01 slice-01 "Upload image"
 ```
 
 The helper normalizes common numeric inputs such as `1`, `01`, `phase-1`, and
@@ -224,7 +240,7 @@ as display names.
 Workflow artifacts live under:
 
 ```text
-auto-strike/initiatives/<initiative-id>/
+strike/initiatives/<initiative-id>/
 ```
 
 Default outputs:
@@ -253,11 +269,11 @@ decisions at that scope.
 Use the state helper for workflow state:
 
 ```text
-node auto-strike/scripts/state.mjs current
-node auto-strike/scripts/state.mjs complete-check <check-name>
-node auto-strike/scripts/state.mjs reopen-check <check-name>
-node auto-strike/scripts/state.mjs reopen-phase-check <phase-id> <check-name>
-node auto-strike/scripts/state.mjs reopen-slice-check <phase-id> <slice-id> <check-name>
+node strike/scripts/state.mjs current
+node strike/scripts/state.mjs complete-check <check-name>
+node strike/scripts/state.mjs reopen-check <check-name>
+node strike/scripts/state.mjs reopen-phase-check <phase-id> <check-name>
+node strike/scripts/state.mjs reopen-slice-check <phase-id> <slice-id> <check-name>
 ```
 
 The helper should own:
@@ -281,7 +297,7 @@ Use the workspace helper to get the current skill, missing check, and artifact
 path:
 
 ```text
-node auto-strike/scripts/state.mjs current
+node strike/scripts/state.mjs current
 ```
 
 Run the current workflow skill with the returned context and artifact path. Use
@@ -292,8 +308,12 @@ the installed Strike plugin and follow it directly with the same arguments.
 After the artifact is created and checked, complete the matching check:
 
 ```text
-node auto-strike/scripts/state.mjs complete-check <check-name>
+node strike/scripts/state.mjs complete-check <check-name>
 ```
+
+Complete only that one returned check, then run
+`node strike/scripts/state.mjs current` again. Do not chain multiple
+`complete-check` commands in one shell command.
 
 Do not complete `researchComplete` unless `research.md` says
 `Ready for planning: yes`. If it says `Ready for planning: no`, follow the
@@ -337,7 +357,7 @@ then run `verify-main-spec` again.
 After completing `allPhasesVerified`, run:
 
 ```text
-node auto-strike/scripts/state.mjs finish-initiative
+node strike/scripts/state.mjs finish-initiative
 ```
 
 This marks the initiative complete so future `list-initiatives` output does
@@ -403,22 +423,22 @@ current state.
 For current-scope route-back:
 
 ```text
-node auto-strike/scripts/state.mjs reopen-check <owning-check-name>
-node auto-strike/scripts/state.mjs current
+node strike/scripts/state.mjs reopen-check <owning-check-name>
+node strike/scripts/state.mjs current
 ```
 
 For a specific slice route-back:
 
 ```text
-node auto-strike/scripts/state.mjs reopen-slice-check <phase-id> <slice-id> <owning-check-name>
-node auto-strike/scripts/state.mjs current
+node strike/scripts/state.mjs reopen-slice-check <phase-id> <slice-id> <owning-check-name>
+node strike/scripts/state.mjs current
 ```
 
 For a specific phase route-back:
 
 ```text
-node auto-strike/scripts/state.mjs reopen-phase-check <phase-id> <owning-check-name>
-node auto-strike/scripts/state.mjs current
+node strike/scripts/state.mjs reopen-phase-check <phase-id> <owning-check-name>
+node strike/scripts/state.mjs current
 ```
 
 Use route-back for missing decisions, changed accepted scope, untrustworthy
@@ -508,11 +528,11 @@ Verification gates:
 
 ## Basic Rule
 
-Auto Strike owns the workflow. Each workflow skill owns one step.
+Strike owns the workflow. Each workflow skill owns one step.
 
 ## Ownership
 
-Auto Strike owns:
+Strike owns:
 
 - choosing the next workflow skill
 - passing the right context to that skill

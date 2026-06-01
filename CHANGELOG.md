@@ -2,6 +2,16 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.10.6 - 2026-06-01
+
+- Simplified the primary Strike entry skills to `new-initiative` and `go`.
+- Aligned generated workspace paths, docs, tests, and validators on `strike/`.
+- Added workflow step-discipline guidance so agents complete one current check
+  and rerun `current` before continuing.
+- Changed finished/no-active workflow state from `blocked` to `idle`.
+- Removed the retired workflow backup tree so the repo keeps one active Strike
+  shape.
+
 ## 0.10.5 - 2026-06-01
 
 - Published README customization polish in the release tag, including the new
@@ -10,7 +20,7 @@ All notable changes to Strike will be recorded here.
 ## 0.10.4 - 2026-06-01
 
 - Consolidated user-owned workflow guidance under
-  `auto-strike/user-guidance/`.
+  `strike/user-guidance/`.
 - Added stage-specific implementation discipline and additive review lens files,
   with each stage reading `global.md` plus its own file.
 - Updated planning, build, fix, and verification stages to apply user guidance
@@ -19,19 +29,19 @@ All notable changes to Strike will be recorded here.
 
 ## 0.10.1 - 2026-06-01
 
-- Refreshed README positioning and usage examples for the new Auto Strike
+- Refreshed README positioning and usage examples for the new Strike
   workflow.
 - Clarified Codex `$strike:<skill>` invocation syntax and the split between
   plugin runtime Node requirements and repo development Node requirements.
 
 ## 0.10.0 - 2026-05-31
 
-- Added the draft lean Auto Strike orchestrator file and state helper for
+- Added the draft lean staged workflow orchestrator file and state helper for
   workflow-matrix based progress tracking.
 - Added standalone workflow skills for idea refinement, grilling, specs,
   development phases, phase specs, phase slices, slice planning/building, and
   slice/phase/main verification gates.
-- Added `PROJECT_LANGUAGE.md` bootstrap behavior for new Auto Strike
+- Added `PROJECT_LANGUAGE.md` bootstrap behavior for new Strike
   workspaces and aligned early workflow skills on durable language updates.
 - Added state-helper tests and host-smoke coverage for bootstrap, current state,
   artifact resolution, phase/slice creation, and completion checks.
@@ -40,12 +50,12 @@ All notable changes to Strike will be recorded here.
 
 - Removed the retired board/card workflow skills and repo-local
   `init`/`customize` setup path.
-- Kept Strike focused on Auto Strike plus standalone `demo`,
+- Kept Strike focused on the core workflow plus standalone `demo`,
   `system-visualizer`, `language`, and `handoff` utilities.
 - De-boardified retained utilities so they no longer require `docs/strike/`
   state or the removed customization runtime.
 - Updated manifests, docs, validation, and host smoke checks for the new
-  Auto Strike-centered package shape.
+  Strike-centered package shape.
 
 ## 0.8.32 - 2026-05-31
 
@@ -63,9 +73,9 @@ All notable changes to Strike will be recorded here.
 
 ## 0.8.30 - 2026-05-31
 
-- Renamed Auto Strike's intermediate planning layer from features to delivery phases, making `phases/<phase-slug>/phase-spec.md` the canonical path between initiative specs and slices.
-- Renamed Auto Strike workflow progress docs from Phase Ledger/Phase Tasks to Mode Ledger/Mode Tasks so brainstorm, spec, build, review, and readiness are clearly workflow modes rather than delivery phases.
-- Aligned Auto Strike helper warnings, readiness ledger parsing, and allowed `Current mode` values with the canonical workflow modes.
+- Renamed Strike's intermediate planning layer from features to delivery phases, making `phases/<phase-slug>/phase-spec.md` the canonical path between initiative specs and slices.
+- Renamed Strike workflow progress docs from Phase Ledger/Phase Tasks to Mode Ledger/Mode Tasks so brainstorm, spec, build, review, and readiness are clearly workflow modes rather than delivery phases.
+- Aligned Strike helper warnings, readiness ledger parsing, and allowed `Current mode` values with the canonical workflow modes.
 - Kept one-release compatibility warnings for legacy `Feature:` fields, `features/<feature-slug>/feature-spec.md` paths, and `Phase Ledger` headings.
 
 ## 0.8.29 - 2026-05-31
@@ -75,32 +85,32 @@ All notable changes to Strike will be recorded here.
   clean reinstall troubleshooting.
 - Added a non-colliding `strike-dev` local dogfood workflow for testing this
   checkout without disturbing a normal published `strike@strike` install.
-- Made Auto Strike visible as the primary Codex entry skill with
+- Made Strike visible as the primary Codex entry skill with
   `allow_implicit_invocation: true` while keeping smaller Strike workflow step
   skills manual-only.
 
 ## 0.8.28 - 2026-05-29
 
-- Added Auto Strike Stripe guidance for official-docs research, Stripe CLI
+- Added Strike Stripe guidance for official-docs research, Stripe CLI
   sandbox verification, and required webhook/Stripe object evidence.
-- Added Stripe Connect handling that tells Auto Strike to start from an
+- Added Stripe Connect handling that tells Strike to start from an
   installed `stripe-connect` skill when available.
 - Added helper validation for missing Stripe CLI sandbox evidence and missing
   Stripe Connect skill research notes.
 
 ## 0.8.27 - 2026-05-29
 
-- Fixed Auto Strike helper parsing for normal Markdown links in `Active Work`
+- Fixed Strike helper parsing for normal Markdown links in `Active Work`
   and `Key Docs`, so links resolve to their target paths instead of labels.
-- Reduced Auto Strike UI review false positives for plain `.js` / `.ts` files
+- Reduced Strike UI review false positives for plain `.js` / `.ts` files
   that live under UI-shaped directories but do not contain browser-facing code.
-- Aligned Auto Strike inspect output with the canonical `Next:` field wording.
+- Aligned Strike inspect output with the canonical `Next:` field wording.
 
 ## 0.8.26 - 2026-05-28
 
-- Added a shared Strike language contract and aligned normal Strike plus Auto
-  Strike on root `PROJECT_LANGUAGE.md` as the durable project language file.
-- Removed Auto Strike's `auto-strike/language.md` requirement and stopped
+- Added a shared Strike language contract and aligned workflow and utility
+  skills on root `PROJECT_LANGUAGE.md` as the durable project language file.
+- Removed Strike's `strike/language.md` requirement and stopped
   warning when no glossary exists yet.
 - Aligned local package-manager policy on standalone pnpm `11.4.0`, with pnpm
   downloading the declared version and failing rather than auto-installing stale
@@ -111,24 +121,24 @@ All notable changes to Strike will be recorded here.
 
 ## 0.8.25 - 2026-05-27
 
-- Bounded Auto Strike review loops: after fixes, agents run one focused
+- Bounded Strike review loops: after fixes, agents run one focused
   re-review and continue only for new or still-open blockers.
 - Made review lens coverage explicit: meaningful slices require at least one
   read-only review subagent for baseline lenses, with surface-specific lenses
   added when touched.
-- Kept Auto Strike slice/readiness commits mandatory while making push
+- Kept Strike slice/readiness commits mandatory while making push
   conditional on user request, repo policy, or release flow.
-- Set Auto Strike host metadata to explicit user invocation only.
+- Set Strike host metadata to explicit user invocation only.
 
 ## 0.8.24 - 2026-05-26
 
-- Reissued the Auto Strike quality-gate release under a fresh plugin version so
+- Reissued the Strike quality-gate release under a fresh plugin version so
   host installs and caches pick up the `playwright-cli`-only browser guidance
   instead of stale `0.8.23` skill content.
 
 ## 0.8.23 - 2026-05-26
 
-- Made Auto Strike UI/browser verification first-class with a dedicated
+- Made Strike UI/browser verification first-class with a dedicated
   `Browser Verification Capability` record for UI/user-flow slices.
 - Standardized UI/browser verification on `playwright-cli` as the only approved
   browser path unless the user explicitly overrides it.
@@ -147,16 +157,16 @@ All notable changes to Strike will be recorded here.
 
 ## 0.8.22 - 2026-05-26
 
-- Tightened Auto Strike stack/setup guidance so user- or repo-named tooling
+- Tightened Strike stack/setup guidance so user- or repo-named tooling
   constraints, especially security-driven pnpm/no-npm policies, cannot be
   bypassed by choosing a different runtime or package manager as a no-install
   workaround.
-- Added helper validation for possible runtime/tooling conflicts when Auto
-  Strike docs combine pnpm/no-npm constraints with non-matching stack decisions.
+- Added helper validation for possible runtime/tooling conflicts when Strike
+  docs combine pnpm/no-npm constraints with non-matching stack decisions.
 
 ## 0.8.21 - 2026-05-25
 
-- Made Auto Strike review subagents mandatory for completed meaningful slices:
+- Made Strike review subagents mandatory for completed meaningful slices:
   missing read-only review subagent evidence is now a validation error.
 - Tightened UI/user-flow verification guidance so browser checks are explicit
   and curl, static HTML, and code review are not treated as browser evidence.
@@ -167,7 +177,7 @@ All notable changes to Strike will be recorded here.
 
 ## 0.8.20 - 2026-05-25
 
-- Added an Auto Strike recovery reference for interrupted, missing, stale, or
+- Added a Strike recovery reference for interrupted, missing, stale, or
   contradictory workspace state.
 - Tightened helper validation so build/review/readiness modes treat missing
   active docs, features, or slice docs as recovery blockers instead of ordinary
@@ -189,7 +199,7 @@ All notable changes to Strike will be recorded here.
 
 ## 0.8.18 - 2026-05-25
 
-- Tightened Auto Strike slice closeout validation so next-slice skeletons after
+- Tightened Strike slice closeout validation so next-slice skeletons after
   a completed slice warn unless execution prep has actually begun.
 - Reduced multi-slice dogfood noise by treating completed slice `Changed`
   evidence as accounted for when checking uncommitted Git changes.
@@ -202,22 +212,22 @@ All notable changes to Strike will be recorded here.
 
 ## 0.8.17 - 2026-05-25
 
-- Tightened Auto Strike phase-boundary language so agents do not ask for one
+- Tightened Strike phase-boundary language so agents do not ask for one
   decision and promise to close grill, write specs, and slice the build in the
   same next action.
-- Added a helper warning when `auto-strike/index.md` records a batched next
+- Added a helper warning when `strike/index.md` records a batched next
   action that combines spec and slice work, or slice planning and build work.
 - Tightened build closeout boundaries so completed slices stop with a receipt
   instead of activating the next slice, and refined checkpoint warnings so
   future slice milestones do not fire before their due slice is complete.
-- Required explicit `Current mode` in Auto Strike Active Work and stopped the
+- Required explicit `Current mode` in Strike Active Work and stopped the
   helper from inferring build-mode slice prep from a slice doc path alone.
 - Reduced false-positive helper warnings for future Phase Ledger rows and
   legitimate grill checkpoint syntax such as date comparisons.
 
 ## 0.8.16 - 2026-05-25
 
-- Strengthened Auto Strike phase boundaries so brainstorm, grill, spec, slice,
+- Strengthened Strike phase boundaries so brainstorm, grill, spec, slice,
   and build are not collapsed into one pass; completed phases should stop with
   a receipt and next action unless the user explicitly skips the boundary.
 - Tightened spec and slice guidance so specs cannot include numbered slice
@@ -229,7 +239,7 @@ All notable changes to Strike will be recorded here.
 
 ## 0.8.15 - 2026-05-25
 
-- Tightened Auto Strike dependency guidance so pnpm-only repos must use
+- Tightened Strike dependency guidance so pnpm-only repos must use
   `pnpm view` or official docs/registry pages even for read-only package
   metadata checks; agents should not use `npm` or `npx` as a shortcut.
 - Added helper warnings for duplicate Active Work fields and duplicate Phase
@@ -240,7 +250,7 @@ All notable changes to Strike will be recorded here.
 
 ## 0.8.14 - 2026-05-25
 
-- Tightened Auto Strike phase boundaries so spec mode can write specs and a
+- Tightened Strike phase boundaries so spec mode can write specs and a
   concise Slice Handoff, but not create Slice Maps or slice files before spec
   exit evidence.
 - Added helper warnings when detailed slice planning appears inside spec docs,
@@ -248,7 +258,7 @@ All notable changes to Strike will be recorded here.
 
 ## 0.8.13 - 2026-05-25
 
-- Clarified Auto Strike invocation-reference resolution so agents use the
+- Clarified Strike invocation-reference resolution so agents use the
   plugin-root `references/invocation.md` file instead of looking under the
   skill-local references folder.
 - Added a small skill-local invocation pointer as a fallback for hosts or agents
@@ -256,7 +266,7 @@ All notable changes to Strike will be recorded here.
 
 ## 0.8.12 - 2026-05-25
 
-- Clarified Auto Strike question handling so failed or unavailable host question
+- Clarified Strike question handling so failed or unavailable host question
   tooling must fall back to a plain-text user question and stop, rather than
   being treated as permission to accept defaults or proceed.
 - Added helper warnings when brainstorm or grill phases are completed,
@@ -264,7 +274,7 @@ All notable changes to Strike will be recorded here.
 
 ## 0.8.11 - 2026-05-25
 
-- Tightened Auto Strike phase commitment so meaningful feature/MVP work must
+- Tightened Strike phase commitment so meaningful feature/MVP work must
   run brainstorm and grill with the user unless the user explicitly opts out,
   asks to move along, or prior artifacts already answer the phase.
 - Clarified that the kickoff prompt is source material, not a finished spec;
@@ -277,10 +287,10 @@ All notable changes to Strike will be recorded here.
 
 ## 0.8.10 - 2026-05-25
 
-- Tightened Auto Strike validation after dogfood so implementation evidence now
+- Tightened Strike validation after dogfood so implementation evidence now
   warns when `index.md` still points at early phases, missing active
   feature/slice pointers, stale open decisions, or "no code written".
-- Added helper warnings for missing referenced Auto Strike docs, stale slice
+- Added helper warnings for missing referenced Strike docs, stale slice
   task/checkpoint checklists after build evidence, and curl/localhost checks
   being mistaken for browser/user-flow evidence.
 - Clarified build closeout guidance so agents do not leave long-running local
@@ -289,7 +299,7 @@ All notable changes to Strike will be recorded here.
 
 ## 0.8.9 - 2026-05-25
 
-- Added an Auto Strike initiative Phase Ledger so brainstorm, grill, spec,
+- Added a Strike initiative Phase Ledger so brainstorm, grill, spec,
   slice, build, review, and validation are visibly done, compressed, skipped, or
   pending instead of silently blurred.
 - Added helper warnings for later-phase work that lacks a substantive Phase
@@ -297,7 +307,7 @@ All notable changes to Strike will be recorded here.
 - Required root `language.md` plus per-initiative `decisions.md` and `spec.md`
   as mandatory current-truth docs, with helper warnings and tests for missing or
   weak artifacts.
-- Strengthened Auto Strike review expectations so completed meaningful slice
+- Strengthened Strike review expectations so completed meaningful slice
   reviews need fresh read-only reviewer evidence or an explicit unavailable-host
   rationale, not only main-agent self-review.
 - Tightened blocked browser/user-flow fallback evidence so skipped browser
@@ -306,24 +316,24 @@ All notable changes to Strike will be recorded here.
 
 ## 0.8.8 - 2026-05-25
 
-- Added Auto Strike slice closeout summary guidance so completed slices end with
+- Added Strike slice closeout summary guidance so completed slices end with
   a compact user-facing receipt covering built work, validation, review status,
   skipped/residual risk, docs, and next action.
 - Added helper warnings when active completed slice evidence has Changed,
   Verified, and Reviewed entries but no substantive `Closeout Summary`.
-- Tightened Auto Strike grill guidance around one-decision-node-at-a-time
+- Tightened Strike grill guidance around one-decision-node-at-a-time
   pressure testing, recommended answers, concise Decision Depth, and helper
   warnings for missing or unknown grill depth.
-- Reworked Auto Strike workspace structure around deterministic
+- Reworked Strike workspace structure around deterministic
   initiative -> feature -> slice directories, with helper parsing, validation,
   review scoping, and tests updated for the new shape.
-- Fixed Codex metadata so the standalone `auto-strike` skill is discoverable and
+- Fixed Codex metadata so the standalone `strike` skill is discoverable and
   invocable in dogfood runs, while the smaller Strike workflow skills remain
   manual-only.
 
 ## 0.8.7 - 2026-05-25
 
-- Added Auto Strike verification-capability guidance so slices record available
+- Added Strike verification-capability guidance so slices record available
   repo checks, host/manual browser or user-flow options, install constraints,
   blocked checks, replacement evidence, and residual risk before accepting
   skipped verification.
@@ -332,7 +342,7 @@ All notable changes to Strike will be recorded here.
 
 ## 0.8.6 - 2026-05-25
 
-- Removed Tiny/Fast/Full paths as first-class workflow routes. Auto Strike now
+- Removed Tiny/Fast/Full paths as first-class workflow routes. Strike now
   uses one phase workflow with judgment inside each phase.
 - Replaced index-level phase ceremony with an artifact-led `Active Work` resume
   pointer. Phase docs now own tasks, decisions, and exit evidence.
@@ -361,7 +371,7 @@ All notable changes to Strike will be recorded here.
   into focused `verification.md` and `dependencies.md` references.
 - Shortened the main completion standard and left detailed completion criteria
   in `readiness.md`.
-- Condensed the Auto Strike main skill into the routing contract, split detailed
+- Condensed the Strike main skill into the routing contract, split detailed
   behavior into phase-specific files, and removed the redundant `flow.md` phase
   map.
 - Clarified that phase order is the ideal default workflow, not a mandated
@@ -371,7 +381,7 @@ All notable changes to Strike will be recorded here.
 
 ## 0.8.5 - 2026-05-25
 
-- Added Auto Strike `review-plan` to recommend review lenses from active
+- Added Strike `review-plan` to recommend review lenses from active
   `Changed:` evidence.
 - Added `implementation-plan`, `ui-regression`, and `state-data-integrity`
   review lenses for pre-build planning, frontend regressions, and state/data
@@ -379,13 +389,13 @@ All notable changes to Strike will be recorded here.
 - Added validation warnings for weak pre-build slice prep, missing required
   review lens evidence, UI work without visual/static UI review evidence, and
   drift between active `Changed:` evidence and the Git worktree.
-- Updated Auto Strike workflow docs to require slice execution research,
+- Updated Strike workflow docs to require slice execution research,
   concrete implementation plans, critical plan review, `Reviewed:` evidence, and
   explicit skipped-review rationales before trusting a slice.
 
 ## 0.8.4 - 2026-05-25
 
-- Scoped Auto Strike `review-context` evidence to the active slice first, then
+- Scoped Strike `review-context` evidence to the active slice first, then
   the active feature, and only falls back to workspace-wide evidence when needed.
 - Grouped review packet source paths into active docs, changed files, workspace
   docs, and context docs so reviewers can prioritize implementation changes.
@@ -396,14 +406,14 @@ All notable changes to Strike will be recorded here.
 
 ## 0.8.3 - 2026-05-24
 
-- Improved Auto Strike review packets so `review-context` includes changed
+- Improved Strike review packets so `review-context` includes changed
   implementation files parsed from slice evidence `Changed:` sections.
 - Added tests that verify changed-path extraction and review packet source
   paths for focused reviewer agents.
 
 ## 0.8.2 - 2026-05-24
 
-- Added a read-only `auto-strike` workspace helper with `inspect`, `validate`,
+- Added a read-only `strike` workspace helper with `inspect`, `validate`,
   and `review-context` commands for agent-internal workspace auditing.
 - Added fixture tests for absent workspaces, unrelated folder collisions, Tiny
   Path flexibility, Fast/Large Path evidence, repo-level key docs, and review
@@ -413,19 +423,19 @@ All notable changes to Strike will be recorded here.
 
 ## 0.8.1 - 2026-05-24
 
-- Hardened `auto-strike` for greenfield and thin repositories by requiring
+- Hardened `strike` for greenfield and thin repositories by requiring
   stack discovery, explicit dependency approval, and a no-install fallback path.
-- Added collision handling for pre-existing root `auto-strike/` directories
+- Added collision handling for pre-existing root `strike/` directories
   before the skill writes workspace state.
-- Strengthened `auto-strike` review guidance so multiple review agents can run
+- Strengthened `strike` review guidance so multiple review agents can run
   in parallel with distinct lenses and return findings to the main agent for
   synthesis and evaluation.
 
 ## 0.8.0 - 2026-05-24
 
-- Added the user-invoked `auto-strike` utility skill for moving a fuzzy idea
-  toward a working MVP with a standalone root `auto-strike/` workspace.
-- Kept `auto-strike` independent from the normal Strike board/card workflow.
+- Added the user-invoked `strike` utility skill for moving a fuzzy idea
+  toward a working MVP with a standalone root `strike/` workspace.
+- Kept `strike` independent from the normal Strike board/card workflow.
 
 ## 0.7.0 - 2026-05-19
 

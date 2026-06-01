@@ -17,28 +17,28 @@ Verify one slice plan is ready to build.
 - slice plan from the current slice's `plan.md`
 - phase spec from the current phase's `phase-spec.md`
 - user implementation guidance from
-  `auto-strike/user-guidance/implementation-discipline/global.md` and
-  `auto-strike/user-guidance/implementation-discipline/verify-slice-plan.md`
-- user review lenses from `auto-strike/user-guidance/review-lenses/global.md`
-  and `auto-strike/user-guidance/review-lenses/verify-slice-plan.md`
+  `strike/user-guidance/implementation-discipline/global.md` and
+  `strike/user-guidance/implementation-discipline/verify-slice-plan.md`
+- user review lenses from `strike/user-guidance/review-lenses/global.md`
+  and `strike/user-guidance/review-lenses/verify-slice-plan.md`
 - optional repo paths
 
 ## Process
 
 - Compare the plan against the slice outcome and acceptance criteria.
 - Read the slice from
-  `auto-strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/slice.md`.
+  `strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/slice.md`.
 - Read slice research from
-  `auto-strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/research.md`.
+  `strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/research.md`.
 - Read the slice plan from
-  `auto-strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/plan.md`.
+  `strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/plan.md`.
 - Read the phase spec from
-  `auto-strike/initiatives/<initiative-id>/phases/<phase-id>/phase-spec.md`.
-- Read `auto-strike/user-guidance/implementation-discipline/global.md` and
-  `auto-strike/user-guidance/implementation-discipline/verify-slice-plan.md` if
+  `strike/initiatives/<initiative-id>/phases/<phase-id>/phase-spec.md`.
+- Read `strike/user-guidance/implementation-discipline/global.md` and
+  `strike/user-guidance/implementation-discipline/verify-slice-plan.md` if
   they exist.
-- Read `auto-strike/user-guidance/review-lenses/global.md` and
-  `auto-strike/user-guidance/review-lenses/verify-slice-plan.md` if they exist.
+- Read `strike/user-guidance/review-lenses/global.md` and
+  `strike/user-guidance/review-lenses/verify-slice-plan.md` if they exist.
 - Check that slice research is present and either contains useful evidence or
   gives a credible reason research was unnecessary.
 - Check that research says `Ready for planning: yes`.
@@ -89,8 +89,8 @@ Each subagent returns findings only. It does not edit files, fix issues, update
 state, build the slice, or decide whether the plan is ready. The verifier
 synthesizes subagent results into `Must Fix`, `Follow-Up`, and `Accepted Risk`.
 
-Read user review lenses from `auto-strike/user-guidance/review-lenses/global.md`
-and `auto-strike/user-guidance/review-lenses/verify-slice-plan.md`. Treat them
+Read user review lenses from `strike/user-guidance/review-lenses/global.md`
+and `strike/user-guidance/review-lenses/verify-slice-plan.md`. Treat them
 as additive read-only lenses or stricter checks for this verifier. They cannot
 disable built-in Strike lenses or readiness gates. When a user lens is
 relevant, run it as a subagent when supported; otherwise run it inline and
@@ -164,7 +164,7 @@ Write the slice plan verification to the current slice's
 `plan-verification.md`:
 
 ```text
-auto-strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/plan-verification.md
+strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/plan-verification.md
 ```
 
 Use this shape:
@@ -228,7 +228,7 @@ Reason:
   accepted-scope `Must Fix` issue.
 - Do not mark `Ready: yes` when the slice should be split before build. Write
   the split finding in `Must Fix`, set `Fix Needed: no`, and route back to
-  `researchComplete` so Auto Strike can edit the current slice into the first
+  `researchComplete` so Strike can edit the current slice into the first
   smaller slice, add any extra slices, and rerun research and planning.
 - When readiness fails because the plan, research, or related artifact can be
   repaired inside accepted scope, write `Fix Needed: yes`.
@@ -237,8 +237,8 @@ Reason:
 - Do not edit `plan.md`; write issues for `fix` when the plan needs changes.
 - When `Ready: yes`, write `Fix Needed: no`, `Needed: no`, `Command: None`,
   `Phase: None`, `Slice: None`, and `Check: None`.
-- After writing `Ready: yes`, Auto Strike can run
-  `node auto-strike/scripts/state.mjs complete-check planVerified`.
+- After writing `Ready: yes`, Strike can run
+  `node strike/scripts/state.mjs complete-check planVerified`.
 - Do not build the slice.
 - Do not verify the slice build.
 - Keep the plan small enough for one focused build loop.

@@ -421,7 +421,7 @@ function assertInstalledRuntime(pluginRoot, ctx, label) {
   );
 
   const installedFiles = [
-    "skills/auto-strike-go/scripts/state.mjs",
+    "skills/go/scripts/state.mjs",
     "references/language.md",
     "references/scripts/slugify.mjs",
     "references/slug-policy.md",
@@ -457,7 +457,7 @@ function assertInstalledRuntime(pluginRoot, ctx, label) {
       `${ctx.host} ${label} slugify output did not include the expected demo filename.`,
     );
 
-    const stateScript = path.join(realPluginRoot, "skills/auto-strike-go/scripts/state.mjs");
+    const stateScript = path.join(realPluginRoot, "skills/go/scripts/state.mjs");
     const stateInitResult = runCommand(
       ctx,
       `${label}-state-init`,
@@ -473,10 +473,10 @@ function assertInstalledRuntime(pluginRoot, ctx, label) {
       `${ctx.host} ${label} state init did not start at refine-idea.`,
     );
     assertFile(path.join(consumerRepo, "PROJECT_LANGUAGE.md"), `${ctx.host} ${label} state init`);
-    assertFile(path.join(consumerRepo, "auto-strike/state.json"), `${ctx.host} ${label} state init`);
-    assertFile(path.join(consumerRepo, "auto-strike/scripts/state.mjs"), `${ctx.host} ${label} state init`);
+    assertFile(path.join(consumerRepo, "strike/state.json"), `${ctx.host} ${label} state init`);
+    assertFile(path.join(consumerRepo, "strike/scripts/state.mjs"), `${ctx.host} ${label} state init`);
 
-    const workspaceStateScript = path.join(consumerRepo, "auto-strike/scripts/state.mjs");
+    const workspaceStateScript = path.join(consumerRepo, "strike/scripts/state.mjs");
     const stateCurrentResult = runCommand(
       ctx,
       `${label}-state-current`,
@@ -488,7 +488,7 @@ function assertInstalledRuntime(pluginRoot, ctx, label) {
     );
     const stateCurrentJson = parseJson(stateCurrentResult.stdout, `${label} state current`);
     assert(
-      stateCurrentJson.artifacts?.includes("auto-strike/initiatives/gallery/idea.md"),
+      stateCurrentJson.artifacts?.includes("strike/initiatives/gallery/idea.md"),
       `${ctx.host} ${label} state current did not resolve the refine-idea artifact.`,
     );
 

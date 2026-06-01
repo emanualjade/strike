@@ -7,8 +7,8 @@ Scenario: Medium Stress - local billing ledger
 
 ## Result
 
-Auto Strike completed the initiative and marked it `complete` in
-`auto-strike/state.json`.
+Strike completed the initiative and marked it `complete` in
+`strike/state.json`.
 
 Independent checks after the run:
 
@@ -41,7 +41,7 @@ Independent checks after the run:
 
 ## Potential Strike Improvements To Discuss
 
-- Consider whether Auto Strike should say anything about compact progress and
+- Consider whether Strike should say anything about compact progress and
   avoiding large transcript dumps. This would change agent behavior, so do not
   apply it without an explicit decision.
 - Consider whether inline verifier wording should distinguish unavailable

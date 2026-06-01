@@ -1,6 +1,6 @@
 ---
 name: fix
-description: Fix issues from a failed Auto Strike verification pass, then return to the same verifier.
+description: Fix issues from a failed Strike verification pass, then return to the same verifier.
 argument-hint: "[failed verification context]"
 disable-model-invocation: true
 allowed-tools: Read Write Edit MultiEdit Bash Grep Glob WebFetch WebSearch Agent
@@ -8,7 +8,7 @@ allowed-tools: Read Write Edit MultiEdit Bash Grep Glob WebFetch WebSearch Agent
 
 # Fix
 
-Fix issues from a failed Auto Strike verification pass.
+Fix issues from a failed Strike verification pass.
 
 ## Inputs
 
@@ -16,15 +16,15 @@ Fix issues from a failed Auto Strike verification pass.
 - current initiative, phase, or slice artifacts named by the verifier
 - prior fix reports for the same verifier, when present
 - user implementation guidance from
-  `auto-strike/user-guidance/implementation-discipline/global.md` and
-  `auto-strike/user-guidance/implementation-discipline/fix.md`
+  `strike/user-guidance/implementation-discipline/global.md` and
+  `strike/user-guidance/implementation-discipline/fix.md`
 - repo files, commands, or paths needed to understand and repair the issue
 
 ## Process
 
 - Read the failed verification artifact first.
-- Read `auto-strike/user-guidance/implementation-discipline/global.md` and
-  `auto-strike/user-guidance/implementation-discipline/fix.md` if they exist,
+- Read `strike/user-guidance/implementation-discipline/global.md` and
+  `strike/user-guidance/implementation-discipline/fix.md` if they exist,
   and apply relevant guidance to the repair.
 - Fix the verifier's `Must Fix` items. They may be broken behavior,
   incomplete accepted scope, missing evidence, weak artifacts, or regressions.
@@ -59,9 +59,9 @@ Write a compact fix report next to the affected workflow evidence.
 Use the next unused numeric path:
 
 ```text
-auto-strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/fixes/fix-001.md
-auto-strike/initiatives/<initiative-id>/phases/<phase-id>/fixes/fix-001.md
-auto-strike/initiatives/<initiative-id>/fixes/fix-001.md
+strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/fixes/fix-001.md
+strike/initiatives/<initiative-id>/phases/<phase-id>/fixes/fix-001.md
+strike/initiatives/<initiative-id>/fixes/fix-001.md
 ```
 
 Use the most local path that matches the failed verification.
@@ -114,7 +114,7 @@ Reason:
 - Use one of three outcomes: `Fixed: yes` and return to the same verifier;
   `Fixed: no` with `Route Back` when an earlier workflow step owns the repair;
   or `Fixed: no` without route-back only for a genuinely unresolved decision.
-- When writing route-back, use the exact helper command Auto Strike should run.
+- When writing route-back, use the exact helper command Strike should run.
   Use `reopen-check` for the current scope, `reopen-phase-check` for a phase
   check, and `reopen-slice-check` for a specific slice check.
 - Do not decide that the work is verified. The same verifier must run again.

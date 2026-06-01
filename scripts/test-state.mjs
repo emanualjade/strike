@@ -8,10 +8,10 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const helper = path.join(root, "plugins/strike/skills/auto-strike-go/scripts/state.mjs");
+const helper = path.join(root, "plugins/strike/skills/go/scripts/state.mjs");
 const newInitiativeHelper = path.join(
   root,
-  "plugins/strike/skills/auto-strike-new-initiative/scripts/state.mjs",
+  "plugins/strike/skills/new-initiative/scripts/state.mjs",
 );
 const tempRoots = [];
 
@@ -54,7 +54,7 @@ function runFail(repo, script, args, pattern) {
 }
 
 function workspaceHelper(repo) {
-  return path.join(repo, "auto-strike/scripts/state.mjs");
+  return path.join(repo, "strike/scripts/state.mjs");
 }
 
 function assertCurrent(current, expected) {
@@ -101,94 +101,94 @@ function testBootstrapAndWorkflowProgression() {
   assert.equal(init.current.skill, "refine-idea");
   assert.ok(fs.existsSync(path.join(repo, "PROJECT_LANGUAGE.md")));
   assert.match(fs.readFileSync(path.join(repo, "PROJECT_LANGUAGE.md"), "utf8"), /^# Project Language/m);
-  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/implementation-discipline/global.md")));
+  assert.ok(fs.existsSync(path.join(repo, "strike/user-guidance/implementation-discipline/global.md")));
   assert.match(
-    fs.readFileSync(path.join(repo, "auto-strike/user-guidance/implementation-discipline/global.md"), "utf8"),
+    fs.readFileSync(path.join(repo, "strike/user-guidance/implementation-discipline/global.md"), "utf8"),
     /^# Global Implementation Discipline/m,
   );
-  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/implementation-discipline/plan-slice.md")));
-  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/implementation-discipline/build-slice.md")));
-  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/implementation-discipline/fix.md")));
-  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/implementation-discipline/verify-slice-plan.md")));
-  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/implementation-discipline/verify-slice-build.md")));
-  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/implementation-discipline/verify-phase.md")));
-  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/implementation-discipline/verify-main-spec.md")));
-  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/review-lenses/global.md")));
-  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/review-lenses/verify-slice-plan.md")));
-  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/review-lenses/verify-slice-build.md")));
-  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/review-lenses/verify-phase.md")));
-  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/review-lenses/verify-main-spec.md")));
-  assert.ok(fs.existsSync(path.join(repo, "auto-strike/state.json")));
+  assert.ok(fs.existsSync(path.join(repo, "strike/user-guidance/implementation-discipline/plan-slice.md")));
+  assert.ok(fs.existsSync(path.join(repo, "strike/user-guidance/implementation-discipline/build-slice.md")));
+  assert.ok(fs.existsSync(path.join(repo, "strike/user-guidance/implementation-discipline/fix.md")));
+  assert.ok(fs.existsSync(path.join(repo, "strike/user-guidance/implementation-discipline/verify-slice-plan.md")));
+  assert.ok(fs.existsSync(path.join(repo, "strike/user-guidance/implementation-discipline/verify-slice-build.md")));
+  assert.ok(fs.existsSync(path.join(repo, "strike/user-guidance/implementation-discipline/verify-phase.md")));
+  assert.ok(fs.existsSync(path.join(repo, "strike/user-guidance/implementation-discipline/verify-main-spec.md")));
+  assert.ok(fs.existsSync(path.join(repo, "strike/user-guidance/review-lenses/global.md")));
+  assert.ok(fs.existsSync(path.join(repo, "strike/user-guidance/review-lenses/verify-slice-plan.md")));
+  assert.ok(fs.existsSync(path.join(repo, "strike/user-guidance/review-lenses/verify-slice-build.md")));
+  assert.ok(fs.existsSync(path.join(repo, "strike/user-guidance/review-lenses/verify-phase.md")));
+  assert.ok(fs.existsSync(path.join(repo, "strike/user-guidance/review-lenses/verify-main-spec.md")));
+  assert.ok(fs.existsSync(path.join(repo, "strike/state.json")));
   assert.ok(fs.existsSync(workspaceHelper(repo)));
-  assert.ok(fs.existsSync(path.join(repo, "auto-strike/initiatives/gallery")));
+  assert.ok(fs.existsSync(path.join(repo, "strike/initiatives/gallery")));
 
   let current = run(repo, workspaceHelper(repo), ["current"]);
   assertCurrent(current, {
     skill: "refine-idea",
     missing: ["ideaRefined"],
-    artifacts: ["auto-strike/initiatives/gallery/idea.md"],
+    artifacts: ["strike/initiatives/gallery/idea.md"],
   });
 
   complete(repo, "ideaRefined", {
     skill: "grill-idea",
     missing: ["decisionsResolved"],
-    artifacts: ["auto-strike/initiatives/gallery/decisions.md"],
+    artifacts: ["strike/initiatives/gallery/decisions.md"],
   });
   complete(repo, "decisionsResolved", {
     skill: "create-main-spec",
     missing: ["specCreated"],
-    artifacts: ["auto-strike/initiatives/gallery/main-spec.md"],
+    artifacts: ["strike/initiatives/gallery/main-spec.md"],
   });
   complete(repo, "specCreated", {
     skill: "create-development-phases",
     missing: ["phasesCreated"],
     artifacts: [
-      "auto-strike/initiatives/gallery/development-plan.md",
-      "auto-strike/initiatives/gallery/phases/<phase-id>/phase.md",
+      "strike/initiatives/gallery/development-plan.md",
+      "strike/initiatives/gallery/phases/<phase-id>/phase.md",
     ],
   });
 
   const phase = run(repo, workspaceHelper(repo), ["add-phase", "1", "Upload and display"]);
   assert.equal(phase.phase.id, "phase-01");
-  assert.ok(fs.existsSync(path.join(repo, "auto-strike/initiatives/gallery/phases/phase-01")));
+  assert.ok(fs.existsSync(path.join(repo, "strike/initiatives/gallery/phases/phase-01")));
 
   complete(repo, "phasesCreated", {
     phaseId: "phase-01",
     skill: "create-phase-spec",
     missing: ["phaseSpecCreated"],
-    artifacts: ["auto-strike/initiatives/gallery/phases/phase-01/phase-spec.md"],
+    artifacts: ["strike/initiatives/gallery/phases/phase-01/phase-spec.md"],
   });
   complete(repo, "phaseSpecCreated", {
     phaseId: "phase-01",
     skill: "create-phase-slices",
     missing: ["slicesCreated"],
-    artifacts: ["auto-strike/initiatives/gallery/phases/phase-01/slices/<slice-id>/slice.md"],
+    artifacts: ["strike/initiatives/gallery/phases/phase-01/slices/<slice-id>/slice.md"],
   });
 
   run(repo, workspaceHelper(repo), ["add-slice", "phase-1", "1", "Upload image"]);
   run(repo, workspaceHelper(repo), ["add-slice", "01", "slice-2", "Display gallery"]);
-  assert.ok(fs.existsSync(path.join(repo, "auto-strike/initiatives/gallery/phases/phase-01/slices/slice-02")));
+  assert.ok(fs.existsSync(path.join(repo, "strike/initiatives/gallery/phases/phase-01/slices/slice-02")));
 
   complete(repo, "slicesCreated", {
     phaseId: "phase-01",
     sliceId: "slice-01",
     skill: "research-slice",
     missing: ["researchComplete"],
-    artifacts: ["auto-strike/initiatives/gallery/phases/phase-01/slices/slice-01/research.md"],
+    artifacts: ["strike/initiatives/gallery/phases/phase-01/slices/slice-01/research.md"],
   });
   complete(repo, "researchComplete", {
     phaseId: "phase-01",
     sliceId: "slice-01",
     skill: "plan-slice",
     missing: ["planCreated"],
-    artifacts: ["auto-strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan.md"],
+    artifacts: ["strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan.md"],
   });
   complete(repo, "planCreated", {
     phaseId: "phase-01",
     sliceId: "slice-01",
     skill: "verify-slice-plan",
     missing: ["planVerified"],
-    artifacts: ["auto-strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan-verification.md"],
+    artifacts: ["strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan-verification.md"],
   });
   const reopenedResearch = run(repo, workspaceHelper(repo), ["reopen-check", "researchComplete"]);
   assertCurrent(reopenedResearch, {
@@ -196,49 +196,49 @@ function testBootstrapAndWorkflowProgression() {
     sliceId: "slice-01",
     skill: "research-slice",
     missing: ["researchComplete"],
-    artifacts: ["auto-strike/initiatives/gallery/phases/phase-01/slices/slice-01/research.md"],
+    artifacts: ["strike/initiatives/gallery/phases/phase-01/slices/slice-01/research.md"],
   });
   complete(repo, "researchComplete", {
     phaseId: "phase-01",
     sliceId: "slice-01",
     skill: "plan-slice",
     missing: ["planCreated"],
-    artifacts: ["auto-strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan.md"],
+    artifacts: ["strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan.md"],
   });
   complete(repo, "planCreated", {
     phaseId: "phase-01",
     sliceId: "slice-01",
     skill: "verify-slice-plan",
     missing: ["planVerified"],
-    artifacts: ["auto-strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan-verification.md"],
+    artifacts: ["strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan-verification.md"],
   });
   complete(repo, "planVerified", {
     phaseId: "phase-01",
     sliceId: "slice-01",
     skill: "build-slice",
     missing: ["implemented"],
-    artifacts: ["implementation files", "auto-strike/initiatives/gallery/phases/phase-01/slices/slice-01/build.md"],
+    artifacts: ["implementation files", "strike/initiatives/gallery/phases/phase-01/slices/slice-01/build.md"],
   });
   complete(repo, "implemented", {
     phaseId: "phase-01",
     sliceId: "slice-01",
     skill: "verify-slice-build",
     missing: ["buildVerified"],
-    artifacts: ["auto-strike/initiatives/gallery/phases/phase-01/slices/slice-01/build-verification.md"],
+    artifacts: ["strike/initiatives/gallery/phases/phase-01/slices/slice-01/build-verification.md"],
   });
   complete(repo, "buildVerified", {
     phaseId: "phase-01",
     sliceId: "slice-02",
     skill: "research-slice",
     missing: ["researchComplete"],
-    artifacts: ["auto-strike/initiatives/gallery/phases/phase-01/slices/slice-02/research.md"],
+    artifacts: ["strike/initiatives/gallery/phases/phase-01/slices/slice-02/research.md"],
   });
   complete(repo, "researchComplete", {
     phaseId: "phase-01",
     sliceId: "slice-02",
     skill: "plan-slice",
     missing: ["planCreated"],
-    artifacts: ["auto-strike/initiatives/gallery/phases/phase-01/slices/slice-02/plan.md"],
+    artifacts: ["strike/initiatives/gallery/phases/phase-01/slices/slice-02/plan.md"],
   });
 
   complete(repo, "planCreated", { phaseId: "phase-01", sliceId: "slice-02", skill: "verify-slice-plan" });
@@ -248,7 +248,7 @@ function testBootstrapAndWorkflowProgression() {
     phaseId: "phase-01",
     skill: "verify-phase",
     missing: ["allSlicesVerified"],
-    artifacts: ["auto-strike/initiatives/gallery/phases/phase-01/verification.md"],
+    artifacts: ["strike/initiatives/gallery/phases/phase-01/verification.md"],
   });
   const reopenedSliceBuild = run(repo, workspaceHelper(repo), ["reopen-slice-check", "phase-1", "2", "buildVerified"]);
   assertCurrent(reopenedSliceBuild, {
@@ -256,37 +256,37 @@ function testBootstrapAndWorkflowProgression() {
     sliceId: "slice-02",
     skill: "verify-slice-build",
     missing: ["buildVerified"],
-    artifacts: ["auto-strike/initiatives/gallery/phases/phase-01/slices/slice-02/build-verification.md"],
+    artifacts: ["strike/initiatives/gallery/phases/phase-01/slices/slice-02/build-verification.md"],
   });
   complete(repo, "buildVerified", {
     phaseId: "phase-01",
     skill: "verify-phase",
     missing: ["allSlicesVerified"],
-    artifacts: ["auto-strike/initiatives/gallery/phases/phase-01/verification.md"],
+    artifacts: ["strike/initiatives/gallery/phases/phase-01/verification.md"],
   });
   complete(repo, "allSlicesVerified", {
     skill: "verify-main-spec",
     missing: ["allPhasesVerified"],
-    artifacts: ["auto-strike/initiatives/gallery/verification.md"],
+    artifacts: ["strike/initiatives/gallery/verification.md"],
   });
   const reopenedPhaseFinal = run(repo, workspaceHelper(repo), ["reopen-phase-check", "1", "allSlicesVerified"]);
   assertCurrent(reopenedPhaseFinal, {
     phaseId: "phase-01",
     skill: "verify-phase",
     missing: ["allSlicesVerified"],
-    artifacts: ["auto-strike/initiatives/gallery/phases/phase-01/verification.md"],
+    artifacts: ["strike/initiatives/gallery/phases/phase-01/verification.md"],
   });
   complete(repo, "allSlicesVerified", {
     skill: "verify-main-spec",
     missing: ["allPhasesVerified"],
-    artifacts: ["auto-strike/initiatives/gallery/verification.md"],
+    artifacts: ["strike/initiatives/gallery/verification.md"],
   });
   const reopenedPhaseSlices = run(repo, workspaceHelper(repo), ["reopen-phase-check", "phase-1", "slicesCreated"]);
   assertCurrent(reopenedPhaseSlices, {
     phaseId: "phase-01",
     skill: "create-phase-slices",
     missing: ["slicesCreated"],
-    artifacts: ["auto-strike/initiatives/gallery/phases/phase-01/slices/<slice-id>/slice.md"],
+    artifacts: ["strike/initiatives/gallery/phases/phase-01/slices/<slice-id>/slice.md"],
   });
   complete(repo, "slicesCreated", {
     phaseId: "phase-01",
@@ -307,7 +307,7 @@ function testBootstrapAndWorkflowProgression() {
   complete(repo, "allSlicesVerified", {
     skill: "verify-main-spec",
     missing: ["allPhasesVerified"],
-    artifacts: ["auto-strike/initiatives/gallery/verification.md"],
+    artifacts: ["strike/initiatives/gallery/verification.md"],
   });
 
   current = run(repo, workspaceHelper(repo), ["complete-check", "allPhasesVerified"]);
@@ -348,18 +348,18 @@ function testNewInitiativeHelperWrapper() {
   const init = run(repo, newInitiativeHelper, ["init", "ledger", "Ledger"]);
   assert.equal(init.current.skill, "refine-idea");
   assert.ok(fs.existsSync(path.join(repo, "PROJECT_LANGUAGE.md")));
-  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/implementation-discipline/global.md")));
-  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/review-lenses/global.md")));
-  assert.ok(fs.existsSync(path.join(repo, "auto-strike/state.json")));
+  assert.ok(fs.existsSync(path.join(repo, "strike/user-guidance/implementation-discipline/global.md")));
+  assert.ok(fs.existsSync(path.join(repo, "strike/user-guidance/review-lenses/global.md")));
+  assert.ok(fs.existsSync(path.join(repo, "strike/state.json")));
   assert.ok(fs.existsSync(workspaceHelper(repo)));
-  assert.ok(fs.existsSync(path.join(repo, "auto-strike/initiatives/ledger")));
+  assert.ok(fs.existsSync(path.join(repo, "strike/initiatives/ledger")));
 }
 
 function testInitPreservesProjectGuidanceFiles() {
   const repo = tempRepo();
   const languagePath = path.join(repo, "PROJECT_LANGUAGE.md");
-  const disciplinePath = path.join(repo, "auto-strike/user-guidance/implementation-discipline/global.md");
-  const globalReviewLensPath = path.join(repo, "auto-strike/user-guidance/review-lenses/global.md");
+  const disciplinePath = path.join(repo, "strike/user-guidance/implementation-discipline/global.md");
+  const globalReviewLensPath = path.join(repo, "strike/user-guidance/review-lenses/global.md");
   fs.mkdirSync(path.dirname(disciplinePath), { recursive: true });
   fs.mkdirSync(path.dirname(globalReviewLensPath), { recursive: true });
   fs.writeFileSync(languagePath, "# Project Language\n\nExisting language.\n");
@@ -374,8 +374,8 @@ function testInitPreservesProjectGuidanceFiles() {
     "# Global Implementation Discipline\n\n- Existing rule.\n",
   );
   assert.equal(fs.readFileSync(globalReviewLensPath, "utf8"), "# Global Review Lenses\n\n- Existing lens.\n");
-  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/implementation-discipline/build-slice.md")));
-  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/review-lenses/verify-slice-build.md")));
+  assert.ok(fs.existsSync(path.join(repo, "strike/user-guidance/implementation-discipline/build-slice.md")));
+  assert.ok(fs.existsSync(path.join(repo, "strike/user-guidance/review-lenses/verify-slice-build.md")));
 }
 
 function testRouteBackCommandContract() {
@@ -401,7 +401,7 @@ function testRouteBackCommandContract() {
     sliceId: "slice-01",
     skill: "plan-slice",
     missing: ["planCreated"],
-    artifacts: ["auto-strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan.md"],
+    artifacts: ["strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan.md"],
   });
   runFail(repo, localHelper, ["reopen-check", "allSlicesVerified"], /Unknown verification key/);
 
@@ -431,10 +431,10 @@ function testRouteBackCommandContract() {
     sliceId: "slice-02",
     skill: "verify-slice-build",
     missing: ["buildVerified"],
-    artifacts: ["auto-strike/initiatives/gallery/phases/phase-01/slices/slice-02/build-verification.md"],
+    artifacts: ["strike/initiatives/gallery/phases/phase-01/slices/slice-02/build-verification.md"],
   });
 
-  const stateAfterSliceBack = JSON.parse(fs.readFileSync(path.join(repo, "auto-strike/state.json"), "utf8"));
+  const stateAfterSliceBack = JSON.parse(fs.readFileSync(path.join(repo, "strike/state.json"), "utf8"));
   assert.equal(stateAfterSliceBack.initiatives[0].phases[0].phaseWorkflow[2].verified.allSlicesVerified, false);
   assert.equal(stateAfterSliceBack.initiatives[0].initiativeWorkflow[4].verified.allPhasesVerified, false);
 
@@ -457,7 +457,7 @@ function testRouteBackCommandContract() {
     phaseId: "phase-01",
     skill: "verify-phase",
     missing: ["allSlicesVerified"],
-    artifacts: ["auto-strike/initiatives/gallery/phases/phase-01/verification.md"],
+    artifacts: ["strike/initiatives/gallery/phases/phase-01/verification.md"],
   });
 
   runFail(repo, localHelper, ["reopen-phase-check", "payment", "allSlicesVerified"], /Phase id must be numeric or canonical/);
@@ -482,7 +482,7 @@ function testRouteBackInvalidatesDownstreamScopes() {
     missing: ["specCreated"],
   });
 
-  let state = JSON.parse(fs.readFileSync(path.join(repo, "auto-strike/state.json"), "utf8"));
+  let state = JSON.parse(fs.readFileSync(path.join(repo, "strike/state.json"), "utf8"));
   const phase = state.initiatives[0].phases[0];
   assert.deepEqual(
     phase.phaseWorkflow.flatMap((item) => Object.values(item.verified)),
@@ -510,7 +510,7 @@ function testRouteBackInvalidatesDownstreamScopes() {
     missing: ["slicesCreated"],
   });
 
-  state = JSON.parse(fs.readFileSync(path.join(repo, "auto-strike/state.json"), "utf8"));
+  state = JSON.parse(fs.readFileSync(path.join(repo, "strike/state.json"), "utf8"));
   assert.equal(state.initiatives[0].initiativeWorkflow[4].verified.allPhasesVerified, false);
   for (const slice of state.initiatives[0].phases[0].slices) {
     assert.deepEqual(
@@ -535,7 +535,7 @@ function testDeterministicRegistrationOrder() {
   run(repo, localHelper, ["add-slice", "phase-01", "1-b", "First slice follow-up"]);
   run(repo, localHelper, ["add-slice", "phase-01", "1", "First slice"]);
 
-  const state = JSON.parse(fs.readFileSync(path.join(repo, "auto-strike/state.json"), "utf8"));
+  const state = JSON.parse(fs.readFileSync(path.join(repo, "strike/state.json"), "utf8"));
   const initiative = state.initiatives[0];
   assert.deepEqual(
     initiative.phases.map((phase) => phase.id),
@@ -556,7 +556,7 @@ function testInitiativeLifecycle() {
   assert.equal(added.initiative.id, "payment-system");
   assert.equal(added.current.initiativeId, "payment-system");
   assert.equal(added.current.skill, "refine-idea");
-  assert.ok(fs.existsSync(path.join(repo, "auto-strike/initiatives/payment-system")));
+  assert.ok(fs.existsSync(path.join(repo, "strike/initiatives/payment-system")));
   assert.deepEqual(
     added.initiatives.map(({ id, status }) => [id, status]),
     [
@@ -592,7 +592,7 @@ function testInitiativeLifecycle() {
   const finished = run(repo, localHelper, ["finish-initiative"]);
   assert.equal(finished.initiative.id, "gallery");
   assert.equal(finished.initiative.status, "complete");
-  assert.equal(finished.current.status, "blocked");
+  assert.equal(finished.current.status, "idle");
   assert.deepEqual(
     finished.initiatives.map(({ id, status }) => [id, status]),
     [

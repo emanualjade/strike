@@ -1,7 +1,7 @@
 {
   "name": "strike",
-  "version": "0.10.5",
-  "description": "Auto Strike workflow plus focused planning utilities for agent-assisted delivery.",
+  "version": "0.10.6",
+  "description": "Strike workflow plus focused planning utilities for agent-assisted delivery.",
   "author": {
     "name": "Emanual Jade"
   },
@@ -16,8 +16,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Strike",
-    "shortDescription": "Auto Strike turns ideas into shipped changes with companion planning utilities",
-    "longDescription": "Strike packages Auto Strike plus focused utilities for agent-assisted delivery. Use Auto Strike to refine an idea, create durable initiative docs, split delivery phases into slices, build, review, verify, and close readiness. Companion utilities create planning demos, visualize systems, sharpen domain language, and write handoffs while keeping runtime state in the consuming repository.",
+    "shortDescription": "Strike turns ideas into shipped changes with companion planning utilities",
+    "longDescription": "Strike packages a staged workflow plus focused utilities for agent-assisted delivery. Use Strike to refine an idea, create durable initiative docs, split delivery phases into slices, build, review, verify, and close readiness. Companion utilities create planning demos, visualize systems, sharpen domain language, and write handoffs while keeping runtime state in the consuming repository.",
     "developerName": "Emanual Jade",
     "category": "Coding",
     "capabilities": [
@@ -26,7 +26,7 @@
       "Write"
     ],
     "defaultPrompt": [
-      "Use Auto Strike to build and ship this idea.",
+      "Use Strike to build and ship this idea.",
       "Create a planning demo for this idea.",
       "Visualize this system with Strike."
     ],

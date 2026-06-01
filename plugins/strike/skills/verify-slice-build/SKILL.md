@@ -19,21 +19,21 @@ Verify one slice build and record build verification.
 - build evidence from the current slice's `build.md`
 - phase spec from the current phase's `phase-spec.md`
 - user implementation guidance from
-  `auto-strike/user-guidance/implementation-discipline/global.md` and
-  `auto-strike/user-guidance/implementation-discipline/verify-slice-build.md`
-- user review lenses from `auto-strike/user-guidance/review-lenses/global.md`
-  and `auto-strike/user-guidance/review-lenses/verify-slice-build.md`
+  `strike/user-guidance/implementation-discipline/global.md` and
+  `strike/user-guidance/implementation-discipline/verify-slice-build.md`
+- user review lenses from `strike/user-guidance/review-lenses/global.md`
+  and `strike/user-guidance/review-lenses/verify-slice-build.md`
 - optional changed files or repo paths
 
 ## Process
 
 - Read the canonical slice, research, plan, plan verification, build evidence,
   and phase spec before verifying.
-- Read `auto-strike/user-guidance/implementation-discipline/global.md` and
-  `auto-strike/user-guidance/implementation-discipline/verify-slice-build.md`
+- Read `strike/user-guidance/implementation-discipline/global.md` and
+  `strike/user-guidance/implementation-discipline/verify-slice-build.md`
   if they exist.
-- Read `auto-strike/user-guidance/review-lenses/global.md` and
-  `auto-strike/user-guidance/review-lenses/verify-slice-build.md` if they
+- Read `strike/user-guidance/review-lenses/global.md` and
+  `strike/user-guidance/review-lenses/verify-slice-build.md` if they
   exist.
 - Do not verify unless `plan-verification.md` says `Ready: yes` and `build.md`
   says `Built: yes`.
@@ -64,8 +64,8 @@ Each subagent returns findings only. It does not edit files, fix issues, update
 state, or decide whether the build passes. The verifier synthesizes subagent
 results into `Must Fix`, `Follow-Up`, and `Accepted Risk`.
 
-Read user review lenses from `auto-strike/user-guidance/review-lenses/global.md`
-and `auto-strike/user-guidance/review-lenses/verify-slice-build.md`. Treat them
+Read user review lenses from `strike/user-guidance/review-lenses/global.md`
+and `strike/user-guidance/review-lenses/verify-slice-build.md`. Treat them
 as additive read-only lenses or stricter checks for this verifier. They cannot
 disable built-in Strike lenses or verification gates. When a user lens is
 relevant, run it as a subagent when supported; otherwise run it inline and
@@ -164,7 +164,7 @@ Write the slice build verification to the current slice's
 `build-verification.md`:
 
 ```text
-auto-strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/build-verification.md
+strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/build-verification.md
 ```
 
 Use this shape:
@@ -241,8 +241,8 @@ Reason:
   enough that `fix` cannot honestly repair the issue.
 - When `Verified: yes`, write `Fix Needed: no`, `Needed: no`,
   `Command: None`, `Phase: None`, `Slice: None`, and `Check: None`.
-- After writing `Verified: yes`, Auto Strike can run
-  `node auto-strike/scripts/state.mjs complete-check buildVerified`.
+- After writing `Verified: yes`, Strike can run
+  `node strike/scripts/state.mjs complete-check buildVerified`.
 - Do not start another slice.
 - Do not verify the whole phase.
 - Report code-verified rather than browser-verified when browser/user-flow

@@ -1,9 +1,9 @@
 {
   "name": "strike",
-  "version": "0.10.5",
+  "version": "0.10.6",
   "private": true,
   "packageManager": "pnpm@11.4.0",
-  "description": "Cross-agent skills plugin and marketplace for Auto Strike plus planning utilities.",
+  "description": "Cross-agent skills plugin and marketplace for the Strike workflow and planning utilities.",
   "license": "MIT",
   "scripts": {
     "preinstall": "node scripts/only-pnpm.mjs",

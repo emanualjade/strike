@@ -19,7 +19,7 @@ Split one phase spec into small buildable implementation slices.
 
 Work on one phase at a time. If the phase spec is missing, stale, too vague, or
 inconsistent with the main spec, do not invent scope inside the slice set.
-Record the specific phase-spec problem so Auto Strike can route back to the
+Record the specific phase-spec problem so Strike can route back to the
 owning phase step.
 
 ## Slice Size

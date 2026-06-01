@@ -143,7 +143,7 @@ and `@` plugin/bundled-skill selection, while Codex CLI documents `/skills` and
 skills.
 
 Strike therefore keeps host-specific invocation syntax in README/docs, not in
-portable skill instructions. Auto Strike uses its state helper to determine the
+portable skill instructions. Strike uses its state helper to determine the
 next workflow skill.
 
 2026-05-25 utility skill note: Agent Skills do not require every skill to be a
@@ -153,13 +153,13 @@ capabilities. The repo validator requires portable frontmatter and Codex
 `agents/openai.yaml` metadata without forcing host invocation boilerplate into
 each skill.
 
-2026-05-31 Auto Strike package decision: Strike `0.9.0` removes the retired
-board/card step skills and keeps Auto Strike plus standalone utility skills:
+2026-05-31 Strike package decision: Strike `0.9.0` removes the retired
+board/card step skills and keeps the core workflow plus standalone utility skills:
 `demo`, `system-visualizer`, `language`, and `handoff`. This keeps the
 host-supported plugin structure from the official Codex and Claude docs:
 `.codex-plugin/plugin.json` and `.claude-plugin/plugin.json` remain at the
 plugin root metadata directories, with skill folders under plugin-root
-`skills/`. The removed `init`/`customize` workflow was not used by Auto Strike
+`skills/`. The removed `init`/`customize` workflow was not used by Strike
 and would have kept a setup ceremony around utilities, so retained utilities no
 longer require repo-local customization runtime before they run.
 
@@ -289,20 +289,19 @@ independently diagnosable.
 2026-05-25 dogfood note: OpenAI's Codex skills documentation describes explicit
 skill invocation with `$skill-name` and says `agents/openai.yaml` can set
 `policy.allow_implicit_invocation`. A pre-release Codex CLI dogfood run
-installed Strike `0.8.8` successfully, but `auto-strike` was not advertised to
+installed Strike `0.8.8` successfully, but `strike` was not advertised to
 the model while every Strike skill used `allow_implicit_invocation: false`.
-Auto Strike is the primary user-invoked standalone workflow, so its Codex
+Strike is the primary user-invoked standalone workflow, so its Codex
 metadata now keeps it visible with `allow_implicit_invocation: true` plus
 `interface` display metadata, while smaller companion utilities stay
 manual-only. Source checked: https://developers.openai.com/codex/skills
 
-2026-05-31 correction: the shipped Auto Strike entrypoint metadata and the repo
-validator enforce `allow_implicit_invocation: true` for Auto Strike. The
+2026-05-31 correction: the shipped Strike entrypoint metadata and the repo
+validator enforce `allow_implicit_invocation: true` for Strike. The
 portable `SKILL.md` still carries Claude's `disable-model-invocation: true`, so
 Claude slash-command behavior remains manually invoked while Codex can surface
-Auto Strike as the primary entry point.
+Strike as the primary entry point.
 
-2026-06-01 update: the ambiguous `auto-strike` entrypoint split into
-`auto-strike-new-initiative` for starting new work and `auto-strike-go` for
-continuing the active initiative. Both top-level entrypoints keep Codex
+2026-06-01 update: the top-level entrypoints are `new-initiative` for starting
+new work and `go` for continuing the active initiative. Both entrypoints keep Codex
 interface metadata and `allow_implicit_invocation: true`.

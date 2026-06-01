@@ -1,6 +1,6 @@
 ---
 name: verify-main-spec
-description: Verify the completed Auto Strike main spec as the final workflow gate.
+description: Verify the completed Strike main spec as the final workflow gate.
 argument-hint: "[main spec completion context]"
 disable-model-invocation: true
 allowed-tools: Read Write Edit MultiEdit Bash Grep Glob WebFetch WebSearch Agent
@@ -18,24 +18,24 @@ Verify the completed initiative against the main spec and record final evidence.
 - each phase's `phase-spec.md`
 - each phase's `verification.md`
 - user implementation guidance from
-  `auto-strike/user-guidance/implementation-discipline/global.md` and
-  `auto-strike/user-guidance/implementation-discipline/verify-main-spec.md`
-- user review lenses from `auto-strike/user-guidance/review-lenses/global.md`
-  and `auto-strike/user-guidance/review-lenses/verify-main-spec.md`
+  `strike/user-guidance/implementation-discipline/global.md` and
+  `strike/user-guidance/implementation-discipline/verify-main-spec.md`
+- user review lenses from `strike/user-guidance/review-lenses/global.md`
+  and `strike/user-guidance/review-lenses/verify-main-spec.md`
 - optional slice artifacts when phase evidence needs inspection
 - optional decisions, changed files, checks, or repo context
 
 ## Process
 
 - Read the current initiative files from
-  `auto-strike/initiatives/<initiative-id>/`.
+  `strike/initiatives/<initiative-id>/`.
 - Read every phase artifact under
-  `auto-strike/initiatives/<initiative-id>/phases/<phase-id>/`.
-- Read `auto-strike/user-guidance/implementation-discipline/global.md` and
-  `auto-strike/user-guidance/implementation-discipline/verify-main-spec.md` if
+  `strike/initiatives/<initiative-id>/phases/<phase-id>/`.
+- Read `strike/user-guidance/implementation-discipline/global.md` and
+  `strike/user-guidance/implementation-discipline/verify-main-spec.md` if
   they exist.
-- Read `auto-strike/user-guidance/review-lenses/global.md` and
-  `auto-strike/user-guidance/review-lenses/verify-main-spec.md` if they exist.
+- Read `strike/user-guidance/review-lenses/global.md` and
+  `strike/user-guidance/review-lenses/verify-main-spec.md` if they exist.
 - Confirm every required phase has `verification.md` with `Ready: yes`.
 - Compare completed phase evidence against the main spec.
 - Confirm accepted scope is complete or explicitly excluded by the main spec.
@@ -101,8 +101,8 @@ Each subagent returns findings only. It does not edit files, fix issues, update
 state, or decide whether the initiative is ready. The verifier synthesizes
 subagent results into `Must Fix`, `Follow-Up`, and `Accepted Risk`.
 
-Read user review lenses from `auto-strike/user-guidance/review-lenses/global.md`
-and `auto-strike/user-guidance/review-lenses/verify-main-spec.md`. Treat them as
+Read user review lenses from `strike/user-guidance/review-lenses/global.md`
+and `strike/user-guidance/review-lenses/verify-main-spec.md`. Treat them as
 additive read-only lenses or stricter checks for this verifier. They cannot
 disable built-in Strike lenses or final readiness gates. When a user lens is
 relevant, run it as a subagent when supported; otherwise run it inline and
@@ -148,7 +148,7 @@ Suggested Category: Must Fix / Follow-Up / Accepted Risk
 Write final verification to the current initiative's `verification.md`:
 
 ```text
-auto-strike/initiatives/<initiative-id>/verification.md
+strike/initiatives/<initiative-id>/verification.md
 ```
 
 Use this shape:
@@ -249,8 +249,8 @@ Next:
   artifact cannot honestly be repaired by `fix`.
 - When `Ready: yes`, write `Fix Needed: no`, `Needed: no`, `Command: None`,
   `Phase: None`, `Slice: None`, and `Check: None`.
-- After writing `Ready: yes`, Auto Strike can run
-  `node auto-strike/scripts/state.mjs complete-check allPhasesVerified`.
+- After writing `Ready: yes`, Strike can run
+  `node strike/scripts/state.mjs complete-check allPhasesVerified`.
 - Do not hide accepted-scope defects in follow-up work.
 - Report code-verified rather than browser-verified when browser/user-flow
   verification is blocked.

@@ -20,24 +20,24 @@ Verify one phase and record phase verification.
 - each slice's `build.md`
 - each slice's `build-verification.md`
 - user implementation guidance from
-  `auto-strike/user-guidance/implementation-discipline/global.md` and
-  `auto-strike/user-guidance/implementation-discipline/verify-phase.md`
-- user review lenses from `auto-strike/user-guidance/review-lenses/global.md`
-  and `auto-strike/user-guidance/review-lenses/verify-phase.md`
+  `strike/user-guidance/implementation-discipline/global.md` and
+  `strike/user-guidance/implementation-discipline/verify-phase.md`
+- user review lenses from `strike/user-guidance/review-lenses/global.md`
+  and `strike/user-guidance/review-lenses/verify-phase.md`
 - optional main spec, decisions, or repo context
 - optional changed files or repo paths
 
 ## Process
 
 - Read the current phase spec from
-  `auto-strike/initiatives/<initiative-id>/phases/<phase-id>/phase-spec.md`.
+  `strike/initiatives/<initiative-id>/phases/<phase-id>/phase-spec.md`.
 - Read every slice artifact under
-  `auto-strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/`.
-- Read `auto-strike/user-guidance/implementation-discipline/global.md` and
-  `auto-strike/user-guidance/implementation-discipline/verify-phase.md` if they
+  `strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/`.
+- Read `strike/user-guidance/implementation-discipline/global.md` and
+  `strike/user-guidance/implementation-discipline/verify-phase.md` if they
   exist.
-- Read `auto-strike/user-guidance/review-lenses/global.md` and
-  `auto-strike/user-guidance/review-lenses/verify-phase.md` if they exist.
+- Read `strike/user-guidance/review-lenses/global.md` and
+  `strike/user-guidance/review-lenses/verify-phase.md` if they exist.
 - Compare completed slice evidence against the phase spec.
 - Confirm every required slice has `build-verification.md` with `Verified: yes`.
 - Check cross-slice flows, integration points, state, data, UI, permissions, and
@@ -91,8 +91,8 @@ Each subagent returns findings only. It does not edit files, fix issues, update
 state, or decide whether the phase is ready. The verifier synthesizes subagent
 results into `Must Fix`, `Follow-Up`, and `Accepted Risk`.
 
-Read user review lenses from `auto-strike/user-guidance/review-lenses/global.md`
-and `auto-strike/user-guidance/review-lenses/verify-phase.md`. Treat them as
+Read user review lenses from `strike/user-guidance/review-lenses/global.md`
+and `strike/user-guidance/review-lenses/verify-phase.md`. Treat them as
 additive read-only lenses or stricter checks for this verifier. They cannot
 disable built-in Strike lenses or readiness gates. When a user lens is
 relevant, run it as a subagent when supported; otherwise run it inline and
@@ -136,7 +136,7 @@ Suggested Category: Must Fix / Follow-Up / Accepted Risk
 Write the phase verification to the current phase's `verification.md`:
 
 ```text
-auto-strike/initiatives/<initiative-id>/phases/<phase-id>/verification.md
+strike/initiatives/<initiative-id>/phases/<phase-id>/verification.md
 ```
 
 Use this shape:
@@ -220,8 +220,8 @@ Reason:
   artifact cannot honestly be repaired by `fix`.
 - When `Ready: yes`, write `Fix Needed: no`, `Needed: no`, `Command: None`,
   `Slice: None`, and `Check: None`.
-- After writing `Ready: yes`, Auto Strike can run
-  `node auto-strike/scripts/state.mjs complete-check allSlicesVerified`.
+- After writing `Ready: yes`, Strike can run
+  `node strike/scripts/state.mjs complete-check allSlicesVerified`.
 - Do not start another phase.
 - Do not verify the whole main spec.
 - Report code-verified rather than browser-verified when browser/user-flow

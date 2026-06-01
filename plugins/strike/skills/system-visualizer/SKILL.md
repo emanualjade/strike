@@ -23,7 +23,7 @@ diagram or model.
 The goal is not merely to draw a diagram. The goal is to help the user pick the right representation, produce reusable diagram/model code, and immediately show the user where they can view it visually.
 
 This is a standalone Strike utility. It may be called directly by the user, or
-recommended by Auto Strike when a visual model would clarify an initiative,
+recommended by Strike when a visual model would clarify an initiative,
 spec, phase, slice, review, or existing repository system.
 
 
@@ -86,22 +86,22 @@ Reference mapping:
 
 ## Natural Strike Use
 
-This is a utility, not an Auto Strike workflow step. Do not edit Auto Strike
+This is a utility, not a Strike workflow step. Do not edit Strike
 state or workflow artifacts unless the user explicitly asks to link or save the
 visualization there.
 
-When called from an Auto Strike initiative context:
+When called from a Strike initiative context:
 
-- read `auto-strike/state.json`
-- read `auto-strike/initiatives/<initiative-slug>/main-spec.md`
+- read `strike/state.json`
+- read `strike/initiatives/<initiative-slug>/main-spec.md`
 - read relevant phase specs and slice docs under
-  `auto-strike/initiatives/<initiative-slug>/phases/`
+  `strike/initiatives/<initiative-slug>/phases/`
 - produce diagrams inline unless the user asks to save them
 
 When saving project-specific visualizations, prefer:
 
-- `auto-strike/initiatives/<initiative-slug>/visuals/<topic>.<ext>` for
-  initiative-local Auto Strike visuals
+- `strike/initiatives/<initiative-slug>/visuals/<topic>.<ext>` for
+  initiative-local Strike visuals
 - `docs/visuals/<topic>.<ext>` for standalone repo-local visual docs
 - another repo-safe path the current user explicitly provides or confirms
 

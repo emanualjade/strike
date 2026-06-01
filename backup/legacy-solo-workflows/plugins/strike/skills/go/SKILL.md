@@ -6,7 +6,7 @@ disable-model-invocation: true
 allowed-tools: Read Bash Grep Glob
 ---
 
-# Strike Go
+# Go
 
 ## Communication
 

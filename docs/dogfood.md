@@ -4,7 +4,7 @@ Use this when a maintainer wants Codex to dogfood Strike against a real local
 workspace.
 
 Dogfooding is different from host smoke testing. Smoke tests prove install and
-runtime mechanics. Dogfooding checks whether Auto Strike produces good software
+runtime mechanics. Dogfooding checks whether Strike produces good software
 when used through Codex or Claude Code like a normal user would use it.
 
 Dogfooding is a learning loop, not a release gate. Use it to find workflow,
@@ -91,7 +91,38 @@ Prompt it like a normal user:
 - do not expose internal review notes, suspected bugs, or intended fixes
 
 Observe the run from the outside: what it asks, what it creates, how it uses
-Auto Strike, whether it follows state, and whether the software quality is good.
+Strike, whether it follows state, and whether the software quality is good.
+
+## Authentic Run Rules
+
+A dogfood run must exercise Strike through the target agent. Do not simulate the
+workflow by hand.
+
+- Do not manually create Strike artifacts for the target agent.
+- Do not manually fill in phase, slice, research, plan, build, review, or
+  verification documents.
+- Do not manually advance `strike/state.json` or run state-helper completion
+  commands on behalf of the target agent.
+- Do not replace a real staged run with a script that writes the expected files.
+- Do not count host smoke tests, helper tests, or manual state-machine checks as
+  dogfood evidence.
+
+The observer may run setup, install/update checks, and external verification
+after the target agent finishes a step. The observer may also inspect files,
+record notes, and answer product questions. If the observer has to create
+artifacts, edit code, or advance state to make the run pass, the dogfood run is
+invalid and should be restarted or recorded as failed.
+
+## Review Handling
+
+Keep build prompts natural. Do not tell the build agent that review subagents
+will inspect the work, that it is being evaluated, or that the dogfood is
+checking a particular failure mode.
+
+Run reviews only at the normal Strike verification stages. Review agents should
+be independent and read-only. They return findings to the verifier; they do not
+edit files, coach the builder in advance, update state, or decide whether the
+stage passes.
 
 ## Package Safety
 
@@ -167,14 +198,20 @@ agent:
 2. Pick Codex or Claude Code.
 3. Start in the dogfood workspace.
 4. Run the preflight check for the chosen host.
-5. Invoke Strike as a user would: start a new Auto Strike initiative or resume
-   with Auto Strike Go.
-6. Let the target agent move through the workflow.
+5. Invoke Strike as a user would: start a new Strike initiative or resume
+   with `go`.
+6. Let the target agent move through the workflow and create the artifacts.
 7. Intervene only as a user would when it asks questions, gets blocked, or needs
    product direction.
-8. Inspect generated artifacts and code after the run.
-9. Run the dogfood project's own checks when available.
-10. Record what worked, what failed, and what should change in Strike.
+8. Do not create or repair Strike artifacts for the target agent. If that seems
+   necessary, record the run as failed or restart it.
+9. Inspect generated artifacts and code after the run.
+10. Confirm the target agent actually went through the expected stages: idea,
+   decisions, main spec, development phases, phase spec, slices, research,
+   plan, plan verification, build, build verification/review, phase
+   verification, and main-spec verification.
+11. Run the dogfood project's own checks when available.
+12. Record what worked, what failed, and what should change in Strike.
 
 ## What To Record
 

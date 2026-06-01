@@ -33,11 +33,11 @@ Save demos where they will be useful without turning them into production
 assets:
 
 ```txt
-auto-strike/initiatives/<initiative-slug>/demos/
+strike/initiatives/<initiative-slug>/demos/
 docs/demos/
 ```
 
-Use the Auto Strike path when the demo belongs to an initiative. Use
+Use the Strike path when the demo belongs to an initiative. Use
 `docs/demos/` for standalone repo-local planning demos, or another repo-safe
 path the user explicitly provides or confirms.
 

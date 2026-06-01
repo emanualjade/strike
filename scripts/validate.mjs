@@ -11,7 +11,7 @@ const errors = [];
 const warnings = [];
 const pluginVersions = new Map();
 const marketplaceVersions = [];
-const autoStrikeEntrypointSkillNames = new Set(["auto-strike-new-initiative", "auto-strike-go"]);
+const strikeEntrypointSkillNames = new Set(["new-initiative", "go"]);
 
 function rel(filePath) {
   return path.relative(root, filePath) || ".";
@@ -362,15 +362,25 @@ function validateSkill(skillPath) {
     fail(`${rel(skillPath)}: missing agents/openai.yaml`);
   } else {
     const openaiMetadata = fs.readFileSync(openaiMetadataPath, "utf8");
-    if (autoStrikeEntrypointSkillNames.has(skillName)) {
+    if (strikeEntrypointSkillNames.has(skillName)) {
       if (!/disable-model-invocation:\s*true/.test(skillText)) {
         fail(`${rel(skillFile)}: ${skillName} must be explicit user-invocation only`);
       }
       if (!/allow_implicit_invocation:\s*true/.test(openaiMetadata)) {
         fail(`${rel(openaiMetadataPath)}: ${skillName} must allow implicit Codex invocation`);
       }
-      if (!/display_name:\s*["']?Auto Strike/.test(openaiMetadata)) {
+      const requiredInterfaceFields = ["display_name", "short_description", "default_prompt"];
+      const missingInterfaceFields = requiredInterfaceFields.filter(
+        (field) => !new RegExp(`^\\s*${field}:\\s*["']?\\S`, "m").test(openaiMetadata),
+      );
+      if (missingInterfaceFields.length > 0) {
         fail(`${rel(openaiMetadataPath)}: ${skillName} must provide Codex interface metadata`);
+      }
+      if (!/display_name:\s*["']?Strike:/m.test(openaiMetadata)) {
+        fail(`${rel(openaiMetadataPath)}: ${skillName} display_name must make Strike visible`);
+      }
+      if (!new RegExp(`default_prompt:\\s*["']?\\$strike:${skillName}\\b`, "m").test(openaiMetadata)) {
+        fail(`${rel(openaiMetadataPath)}: ${skillName} default_prompt must use $strike:${skillName}`);
       }
     } else if (!/allow_implicit_invocation:\s*false/.test(openaiMetadata)) {
       fail(`${rel(openaiMetadataPath)}: expected allow_implicit_invocation: false`);
@@ -522,9 +532,9 @@ function validateLicense() {
   }
 }
 
-function validateAutoStrikeWorkflow() {
-  const skillPath = "plugins/strike/skills/auto-strike-go/SKILL.md";
-  const helperPath = "plugins/strike/skills/auto-strike-go/scripts/state.mjs";
+function validateStrikeWorkflow() {
+  const skillPath = "plugins/strike/skills/go/SKILL.md";
+  const helperPath = "plugins/strike/skills/go/scripts/state.mjs";
 
   if (!exists(skillPath) || !exists(helperPath)) {
     return;
@@ -577,9 +587,9 @@ function requireText(text, needle, context) {
   }
 }
 
-function validateAutoStrikeContract() {
-  const autoStrikePath = "plugins/strike/skills/auto-strike-go/SKILL.md";
-  const helperPath = "plugins/strike/skills/auto-strike-go/scripts/state.mjs";
+function validateStrikeContract() {
+  const strikePath = "plugins/strike/skills/go/SKILL.md";
+  const helperPath = "plugins/strike/skills/go/scripts/state.mjs";
   const grillPath = "plugins/strike/skills/grill-idea/SKILL.md";
   const createMainPath = "plugins/strike/skills/create-main-spec/SKILL.md";
   const createDevPath = "plugins/strike/skills/create-development-phases/SKILL.md";
@@ -594,11 +604,11 @@ function validateAutoStrikeContract() {
   const verifyPhasePath = "plugins/strike/skills/verify-phase/SKILL.md";
   const verifyMainPath = "plugins/strike/skills/verify-main-spec/SKILL.md";
 
-  if (![autoStrikePath, helperPath, grillPath, createMainPath, createDevPath, createPhasePath, researchPath, createSlicesPath, planPath, verifyPath, buildPath, verifyBuildPath, fixPath, verifyPhasePath, verifyMainPath].every(exists)) {
+  if (![strikePath, helperPath, grillPath, createMainPath, createDevPath, createPhasePath, researchPath, createSlicesPath, planPath, verifyPath, buildPath, verifyBuildPath, fixPath, verifyPhasePath, verifyMainPath].every(exists)) {
     return;
   }
 
-  const autoStrikeText = fs.readFileSync(path.join(root, autoStrikePath), "utf8");
+  const strikeText = fs.readFileSync(path.join(root, strikePath), "utf8");
   const helperText = fs.readFileSync(path.join(root, helperPath), "utf8");
   const grillText = fs.readFileSync(path.join(root, grillPath), "utf8");
   const createMainText = fs.readFileSync(path.join(root, createMainPath), "utf8");
@@ -614,8 +624,8 @@ function validateAutoStrikeContract() {
   const verifyPhaseText = fs.readFileSync(path.join(root, verifyPhasePath), "utf8");
   const verifyMainText = fs.readFileSync(path.join(root, verifyMainPath), "utf8");
 
-  const autoStrikeWorkflowSkillTexts = {
-    [autoStrikePath]: autoStrikeText,
+  const strikeWorkflowSkillTexts = {
+    [strikePath]: strikeText,
     [grillPath]: grillText,
     [createMainPath]: createMainText,
     [createDevPath]: createDevText,
@@ -634,18 +644,18 @@ function validateAutoStrikeContract() {
     /\bgit\s+(?:diff|status)\b/,
     /\bstatus\s+--short\b/,
   ];
-  for (const [sourcePath, text] of Object.entries(autoStrikeWorkflowSkillTexts)) {
+  for (const [sourcePath, text] of Object.entries(strikeWorkflowSkillTexts)) {
     for (const pattern of forbiddenGitInspectionPatterns) {
       if (pattern.test(text)) {
-        fail(`${sourcePath}: Auto Strike workflow skills should not prescribe git inspection commands`);
+        fail(`${sourcePath}: Strike workflow skills should not prescribe git inspection commands`);
       }
     }
   }
 
-  const researchListIndex = autoStrikeText.indexOf("`research-slice/SKILL.md`");
-  const planListIndex = autoStrikeText.indexOf("`plan-slice/SKILL.md`");
+  const researchListIndex = strikeText.indexOf("`research-slice/SKILL.md`");
+  const planListIndex = strikeText.indexOf("`plan-slice/SKILL.md`");
   if (researchListIndex === -1 || planListIndex === -1 || researchListIndex > planListIndex) {
-    fail(`${autoStrikePath}: research-slice must appear before plan-slice in the workflow list`);
+    fail(`${strikePath}: research-slice must appear before plan-slice in the workflow list`);
   }
 
   const helperResearchIndex = helperText.indexOf('["research-slice", ["researchComplete"]]');
@@ -663,31 +673,31 @@ function validateAutoStrikeContract() {
   requireText(helperText, "INITIATIVE_UPSTREAM_CHECKS", helperPath);
   requireText(helperText, "research.md", helperPath);
   requireText(helperText, "build.md", helperPath);
-  requireText(autoStrikeText, "## Route-Back Handling", autoStrikePath);
-  requireText(autoStrikeText, "## Failed Verification Loop", autoStrikePath);
-  requireText(autoStrikeText, "fix/SKILL.md", autoStrikePath);
-  requireText(autoStrikeText, "Fix Needed: yes", autoStrikePath);
-  requireText(autoStrikeText, "Fixed: no` and `Route Back` says `Needed: yes", autoStrikePath);
-  requireText(autoStrikeText, "Must Fix", autoStrikePath);
-  requireText(autoStrikeText, "Follow-Up", autoStrikePath);
-  requireText(autoStrikeText, "Accepted Risk", autoStrikePath);
-  requireText(autoStrikeText, "reopen-check researchComplete", autoStrikePath);
-  requireText(autoStrikeText, "reopen-phase-check", autoStrikePath);
-  requireText(autoStrikeText, "reopen-slice-check", autoStrikePath);
-  requireText(autoStrikeText, "Built: yes", autoStrikePath);
-  requireText(autoStrikeText, "allSlicesVerified", autoStrikePath);
-  requireText(autoStrikeText, "allPhasesVerified", autoStrikePath);
-  requireText(autoStrikeText, "pass `plan.md`, `plan-verification.md`, and repo files named\n  by the plan", autoStrikePath);
-  requireText(autoStrikeText, "write `plan.md` with a focused `Test Plan`", autoStrikePath);
-  requireText(autoStrikeText, "Split Recommendation` is\n`Needed: yes`", autoStrikePath);
-  requireText(autoStrikeText, "read that skill's `SKILL.md` from\nthe installed Strike plugin", autoStrikePath);
-  requireText(autoStrikeText, "add/update planned tests, run focused checks", autoStrikePath);
-  requireText(autoStrikeText, "confirm focused test evidence", autoStrikePath);
-  requireText(autoStrikeText, "## Slice Git Checkpoint", autoStrikePath);
-  requireText(autoStrikeText, "After `buildVerified` is complete for a slice, commit and push that slice", autoStrikePath);
-  requireText(autoStrikeText, "After completing `buildVerified`, complete the slice git checkpoint", autoStrikePath);
-  requireText(autoStrikeText, "Do not prescribe extra git inspection commands", autoStrikePath);
-  requireText(autoStrikeText, "then commit and push that\n  completed slice before moving on", autoStrikePath);
+  requireText(strikeText, "## Route-Back Handling", strikePath);
+  requireText(strikeText, "## Failed Verification Loop", strikePath);
+  requireText(strikeText, "fix/SKILL.md", strikePath);
+  requireText(strikeText, "Fix Needed: yes", strikePath);
+  requireText(strikeText, "Fixed: no` and `Route Back` says `Needed: yes", strikePath);
+  requireText(strikeText, "Must Fix", strikePath);
+  requireText(strikeText, "Follow-Up", strikePath);
+  requireText(strikeText, "Accepted Risk", strikePath);
+  requireText(strikeText, "reopen-check researchComplete", strikePath);
+  requireText(strikeText, "reopen-phase-check", strikePath);
+  requireText(strikeText, "reopen-slice-check", strikePath);
+  requireText(strikeText, "Built: yes", strikePath);
+  requireText(strikeText, "allSlicesVerified", strikePath);
+  requireText(strikeText, "allPhasesVerified", strikePath);
+  requireText(strikeText, "pass `plan.md`, `plan-verification.md`, and repo files named\n  by the plan", strikePath);
+  requireText(strikeText, "write `plan.md` with a focused `Test Plan`", strikePath);
+  requireText(strikeText, "Split Recommendation` is\n`Needed: yes`", strikePath);
+  requireText(strikeText, "read that skill's `SKILL.md` from\nthe installed Strike plugin", strikePath);
+  requireText(strikeText, "add/update planned tests, run focused checks", strikePath);
+  requireText(strikeText, "confirm focused test evidence", strikePath);
+  requireText(strikeText, "## Slice Git Checkpoint", strikePath);
+  requireText(strikeText, "After `buildVerified` is complete for a slice, commit and push that slice", strikePath);
+  requireText(strikeText, "After completing `buildVerified`, complete the slice git checkpoint", strikePath);
+  requireText(strikeText, "Do not prescribe extra git inspection commands", strikePath);
+  requireText(strikeText, "then commit and push that\n  completed slice before moving on", strikePath);
 
   requireText(grillText, "## Decision Depth", grillPath);
   requireText(grillText, "## Pressure Points", grillPath);
@@ -915,7 +925,7 @@ function validateAutoStrikeContract() {
   requireText(buildText, "Check: None / planCreated / planVerified", buildPath);
   requireText(buildText, "complete-check implemented", buildPath);
   requireText(buildText, "verified plan cannot be followed without expanding or redesigning", buildPath);
-  requireText(buildText, "write `Built: no` and route back to the\n  owning workflow step so Auto Strike can continue", buildPath);
+  requireText(buildText, "write `Built: no` and route back to the\n  owning workflow step so Strike can continue", buildPath);
   requireText(buildText, "Do not re-evaluate whether the slice is well-shaped", buildPath);
   requireText(buildText, "Read upstream artifacts only when they are needed", buildPath);
 
@@ -973,13 +983,13 @@ function validateAutoStrikeContract() {
   requireText(verifyBuildText, "Do not edit implementation files", verifyBuildPath);
   requireText(verifyBuildText, "Give every `Must Fix` item a stable short issue ID", verifyBuildPath);
   requireText(verifyBuildText, "complete-check buildVerified", verifyBuildPath);
-  requireText(autoStrikeText, "build-verification.md", autoStrikePath);
-  requireText(autoStrikeText, "Verified: yes", autoStrikePath);
-  requireText(autoStrikeText, "finish-initiative", autoStrikePath);
-  requireText(autoStrikeText, "oversized slice discovered before build", autoStrikePath);
-  requireText(autoStrikeText, "preserve the original slice ID as the first\nsmaller slice", autoStrikePath);
+  requireText(strikeText, "build-verification.md", strikePath);
+  requireText(strikeText, "Verified: yes", strikePath);
+  requireText(strikeText, "finish-initiative", strikePath);
+  requireText(strikeText, "oversized slice discovered before build", strikePath);
+  requireText(strikeText, "preserve the original slice ID as the first\nsmaller slice", strikePath);
 
-  requireText(fixText, "failed Auto Strike verification pass", fixPath);
+  requireText(fixText, "failed Strike verification pass", fixPath);
   requireText(fixText, "## Source Verification", fixPath);
   requireText(fixText, "## Issues Addressed", fixPath);
   requireText(fixText, "Ready for re-verification: yes / no", fixPath);
@@ -989,7 +999,7 @@ function validateAutoStrikeContract() {
   requireText(fixText, "Slice: None / <slice-id>", fixPath);
   requireText(fixText, "Check: None / <state-check>", fixPath);
   requireText(fixText, "Use one of three outcomes", fixPath);
-  requireText(fixText, "use the exact helper command Auto Strike should run", fixPath);
+  requireText(fixText, "use the exact helper command Strike should run", fixPath);
   requireText(fixText, "same verifier must run again", fixPath);
   requireText(fixText, "Must Fix", fixPath);
 
@@ -1078,6 +1088,15 @@ function validateAutoStrikeContract() {
   requireText(verifyMainText, "Do not edit phase, slice, or implementation artifacts", verifyMainPath);
   requireText(verifyMainText, "Give every `Must Fix` item a stable short issue ID", verifyMainPath);
   requireText(verifyMainText, "complete-check allPhasesVerified", verifyMainPath);
+
+  const goPath = "plugins/strike/skills/go/SKILL.md";
+  const goText = fs.readFileSync(path.join(root, goPath), "utf8");
+  requireText(goText, "Do not batch multiple `complete-check` commands together", goPath);
+  requireText(goText, "Complete only that one returned check", goPath);
+
+  const newInitiativePath = "plugins/strike/skills/new-initiative/SKILL.md";
+  const newInitiativeText = fs.readFileSync(path.join(root, newInitiativePath), "utf8");
+  requireText(newInitiativeText, "Do not batch multiple `complete-check` commands together", newInitiativePath);
 }
 
 function validateCodexShortcutHandoffs() {
@@ -1103,8 +1122,8 @@ validateClaudeMarketplace();
 validatePlugins();
 validateVersionAlignment();
 validateSharedReferences();
-validateAutoStrikeWorkflow();
-validateAutoStrikeContract();
+validateStrikeWorkflow();
+validateStrikeContract();
 validateCodexShortcutHandoffs();
 validateLicense();
 

@@ -1,6 +1,0 @@
-policy:
-  allow_implicit_invocation: true
-interface:
-  display_name: "Auto Strike New Initiative"
-  short_description: "Start a fresh Auto Strike initiative from a new idea or request."
-  default_prompt: "$auto-strike-new-initiative Build and ship this new idea with Auto Strike."

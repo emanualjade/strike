@@ -1,6 +1,0 @@
-policy:
-  allow_implicit_invocation: true
-interface:
-  display_name: "Auto Strike Go"
-  short_description: "Continue the active Auto Strike initiative from existing workflow state."
-  default_prompt: "$auto-strike-go Continue the active Auto Strike initiative."

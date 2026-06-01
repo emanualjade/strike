@@ -16,15 +16,15 @@ Create a concrete implementation plan for one slice.
 - slice research from the current slice's `research.md`
 - phase spec
 - user implementation guidance from
-  `auto-strike/user-guidance/implementation-discipline/global.md` and
-  `auto-strike/user-guidance/implementation-discipline/plan-slice.md`
+  `strike/user-guidance/implementation-discipline/global.md` and
+  `strike/user-guidance/implementation-discipline/plan-slice.md`
 - optional main spec, decisions, or repo context
 
 ## Process
 
 - Read the slice stub, slice research, and relevant spec context.
-- Read `auto-strike/user-guidance/implementation-discipline/global.md` and
-  `auto-strike/user-guidance/implementation-discipline/plan-slice.md` if they
+- Read `strike/user-guidance/implementation-discipline/global.md` and
+  `strike/user-guidance/implementation-discipline/plan-slice.md` if they
   exist.
 - If slice research says `Ready for planning: no`, do not plan; surface the
   blocker or unresolved decision.
@@ -58,10 +58,10 @@ Create a concrete implementation plan for one slice.
 
 The required pre-planning research should already exist in the slice research
 file. Use it as the evidence check before planning, not as the plan itself.
-In Auto Strike, it lives at:
+In Strike, it lives at:
 
 ```text
-auto-strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/research.md
+strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/research.md
 ```
 
 If you have reason to do more research on your own you should feel free to do that.
@@ -78,7 +78,7 @@ excerpts, search trails, or link dumps.
 Write the slice plan to the current slice's `plan.md`:
 
 ```text
-auto-strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/plan.md
+strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/plan.md
 ```
 
 Use this shape:
@@ -147,7 +147,7 @@ Replacement slices:
 - If the slice must modify existing shared code, name likely callers or
   downstream consumers and how the build should protect them.
 - If `Split Recommendation` says `Needed: yes`, do not present the plan as
-  build-ready. Name the replacement slices clearly enough that Auto Strike can
+  build-ready. Name the replacement slices clearly enough that Strike can
   edit the current slice into the first smaller slice, create any extra slice
   stubs, and register them with `add-slice`.
 - Use existing repo conventions before inventing new structure.

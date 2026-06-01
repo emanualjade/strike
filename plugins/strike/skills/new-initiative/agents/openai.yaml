@@ -1,0 +1,6 @@
+policy:
+  allow_implicit_invocation: true
+interface:
+  display_name: "Strike: New Initiative"
+  short_description: "Start a fresh Strike initiative from a new idea or request."
+  default_prompt: "$strike:new-initiative Build and ship this new idea with Strike."

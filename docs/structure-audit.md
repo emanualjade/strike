@@ -47,26 +47,22 @@ replace skill-local `scripts/` for behavior that belongs to exactly one skill.
 
 2026-05-28 update: `plugins/strike/references/language.md` is the shared
 Strike language contract. It is package support material, not a host-discovered
-component. Auto Strike and utility skills point to it and use the consuming repo
-root `PROJECT_LANGUAGE.md` as the durable project language file. This is Strike
+component. Strike workflow and utility skills point to it and use the consuming
+repo root `PROJECT_LANGUAGE.md` as the durable project language file. This is Strike
 workflow policy, not a host schema requirement.
 
-2026-06-01 update: Auto Strike now uses a lean staged workflow orchestrator
-with `auto-strike/state.json` as the progress source of truth and Markdown
-artifacts under `auto-strike/initiatives/<initiative-id>/`. The old long-form
-Auto Strike runtime, mode-ledger guidance, and related restructure notes are
-preserved under `backup/auto-strike-legacy/` and are not part of the active
-plugin package. The user-facing entrypoints are explicit:
-`auto-strike-new-initiative` starts new work and `auto-strike-go` resumes the
-active initiative. This is Strike workflow policy, not a host schema
-requirement.
+2026-06-01 update: Strike now uses a lean staged workflow orchestrator with
+`strike/state.json` as the progress source of truth and Markdown artifacts
+under `strike/initiatives/<initiative-id>/`. The user-facing entrypoints are
+explicit: `new-initiative` starts new work and `go` resumes the active
+initiative. This is Strike workflow policy, not a host schema requirement.
 
-2026-06-01 update: Slice research is now a first-class Auto Strike workflow
+2026-06-01 update: Slice research is now a first-class Strike workflow
 step. `research-slice` runs before `plan-slice`, writes compact research to the
 slice's `research.md`, and the slice plan verification step checks that research
 was either used or explicitly unnecessary.
 
-2026-06-01 update: Auto Strike now has explicit route-back mechanics. Workflow
+2026-06-01 update: Strike now has explicit route-back mechanics. Workflow
 artifacts should return `Ready: no`, `Built: no`, or `Verified: no` plus
 `Route Back` when an earlier artifact is missing or weak. The state helper
 exposes `reopen-check <check-name>` to move the active scope back without
@@ -77,19 +73,19 @@ to a specific slice. Reopening a check also reopens later dependent checks so
 research, plans, builds, phase verification, and main verification are not
 trusted after upstream work changes.
 
-2026-06-01 update: Auto Strike init now creates `auto-strike/user-guidance/`
+2026-06-01 update: Strike init now creates `strike/user-guidance/`
 as user-owned runtime project memory. It contains
 `implementation-discipline/` for project-specific coding guidance and
 `review-lenses/` for additive verifier guidance. Each folder has a `global.md`
 plus stage-specific files, so stages can read focused guidance without parsing
-one large mixed file. This deliberately lives in the consuming repo's Auto
-Strike workspace rather than `plugins/strike/references/`, because it is
+one large mixed file. This deliberately lives in the consuming repo's Strike
+workspace rather than `plugins/strike/references/`, because it is
 editable project memory, not bundled package documentation or a host-discovered
 component. User review lenses are additive and do not replace built-in Strike
 verification gates.
 
 2026-05-31 update: Strike `0.9.0` removes the retired board/card workflow
-skills and keeps Auto Strike plus standalone utility skills. Root references
+skills and keeps the Strike workflow plus standalone utility skills. Root references
 are now limited to shared language, demo slug policy, and the slug helper.
 `plugins/strike/references/customization/`,
 `board-model.md`, and `stage-contracts.md` were removed because no retained
@@ -99,8 +95,8 @@ read only when a skill explicitly points to them.
 
 2026-06-01 update: `plugins/strike/references/invocation.md` was removed.
 Host invocation syntax is docs/package guidance, not runtime skill behavior.
-Active skills should describe their own work and outputs; Auto Strike routing
-comes from `auto-strike/state.json` and the state helper.
+Active skills should describe their own work and outputs; Strike routing comes
+from `strike/state.json` and the state helper.
 
 ### Host Invocation Documentation
 
