@@ -15,15 +15,25 @@ Create a concrete implementation plan for one slice.
 - slice stub or slice context
 - slice research from the current slice's `research.md`
 - phase spec
+- user implementation guidance from
+  `auto-strike/user-guidance/implementation-discipline/global.md` and
+  `auto-strike/user-guidance/implementation-discipline/plan-slice.md`
 - optional main spec, decisions, or repo context
 
 ## Process
 
 - Read the slice stub, slice research, and relevant spec context.
+- Read `auto-strike/user-guidance/implementation-discipline/global.md` and
+  `auto-strike/user-guidance/implementation-discipline/plan-slice.md` if they
+  exist.
 - If slice research says `Ready for planning: no`, do not plan; surface the
   blocker or unresolved decision.
-- Inspect local repo patterns before planning edits.
+- Inspect local repo patterns before planning edits, including surrounding code,
+  related upstream inputs, downstream consumers, and existing shared utilities
+  or helpers that may already cover the need.
 - Use the slice research as planning input.
+- Apply relevant user implementation guidance to the approach and verification
+  plan.
 - Preserve the slice outcome, acceptance criteria, dependencies, in-scope work,
   out-of-scope boundaries, and verification intent.
 - Do tactical research as needed when planning reveals a detail that affects
@@ -80,6 +90,14 @@ Use this shape:
 
 ## Implementation Research Additions
 
+## Repo Context / Impact Scan
+Implementation discipline guidance:
+Surrounding and related code:
+Upstream inputs:
+Downstream consumers:
+Existing utilities or shared patterns:
+New shared code placement:
+
 ## Slice Boundary
 Outcome:
 Acceptance criteria covered:
@@ -124,6 +142,10 @@ Replacement slices:
 - Do not plan around unresolved research blockers.
 - Keep coding out of the plan.
 - Prefer the smallest complete implementation path.
+- Do not create new utilities, helpers, adapters, or shared modules without
+  first checking whether the repo already has the needed home or behavior.
+- If the slice must modify existing shared code, name likely callers or
+  downstream consumers and how the build should protect them.
 - If `Split Recommendation` says `Needed: yes`, do not present the plan as
   build-ready. Name the replacement slices clearly enough that Auto Strike can
   edit the current slice into the first smaller slice, create any extra slice

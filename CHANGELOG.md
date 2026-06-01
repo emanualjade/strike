@@ -2,6 +2,16 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.10.4 - 2026-06-01
+
+- Consolidated user-owned workflow guidance under
+  `auto-strike/user-guidance/`.
+- Added stage-specific implementation discipline and additive review lens files,
+  with each stage reading `global.md` plus its own file.
+- Updated planning, build, fix, and verification stages to apply user guidance
+  while checking surrounding code, upstream/downstream impact, shared utility
+  placement, and user-requested review lenses.
+
 ## 0.10.1 - 2026-06-01
 
 - Refreshed README positioning and usage examples for the new Auto Strike

@@ -101,6 +101,23 @@ function testBootstrapAndWorkflowProgression() {
   assert.equal(init.current.skill, "refine-idea");
   assert.ok(fs.existsSync(path.join(repo, "PROJECT_LANGUAGE.md")));
   assert.match(fs.readFileSync(path.join(repo, "PROJECT_LANGUAGE.md"), "utf8"), /^# Project Language/m);
+  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/implementation-discipline/global.md")));
+  assert.match(
+    fs.readFileSync(path.join(repo, "auto-strike/user-guidance/implementation-discipline/global.md"), "utf8"),
+    /^# Global Implementation Discipline/m,
+  );
+  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/implementation-discipline/plan-slice.md")));
+  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/implementation-discipline/build-slice.md")));
+  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/implementation-discipline/fix.md")));
+  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/implementation-discipline/verify-slice-plan.md")));
+  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/implementation-discipline/verify-slice-build.md")));
+  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/implementation-discipline/verify-phase.md")));
+  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/implementation-discipline/verify-main-spec.md")));
+  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/review-lenses/global.md")));
+  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/review-lenses/verify-slice-plan.md")));
+  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/review-lenses/verify-slice-build.md")));
+  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/review-lenses/verify-phase.md")));
+  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/review-lenses/verify-main-spec.md")));
   assert.ok(fs.existsSync(path.join(repo, "auto-strike/state.json")));
   assert.ok(fs.existsSync(workspaceHelper(repo)));
   assert.ok(fs.existsSync(path.join(repo, "auto-strike/initiatives/gallery")));
@@ -331,9 +348,34 @@ function testNewInitiativeHelperWrapper() {
   const init = run(repo, newInitiativeHelper, ["init", "ledger", "Ledger"]);
   assert.equal(init.current.skill, "refine-idea");
   assert.ok(fs.existsSync(path.join(repo, "PROJECT_LANGUAGE.md")));
+  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/implementation-discipline/global.md")));
+  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/review-lenses/global.md")));
   assert.ok(fs.existsSync(path.join(repo, "auto-strike/state.json")));
   assert.ok(fs.existsSync(workspaceHelper(repo)));
   assert.ok(fs.existsSync(path.join(repo, "auto-strike/initiatives/ledger")));
+}
+
+function testInitPreservesProjectGuidanceFiles() {
+  const repo = tempRepo();
+  const languagePath = path.join(repo, "PROJECT_LANGUAGE.md");
+  const disciplinePath = path.join(repo, "auto-strike/user-guidance/implementation-discipline/global.md");
+  const globalReviewLensPath = path.join(repo, "auto-strike/user-guidance/review-lenses/global.md");
+  fs.mkdirSync(path.dirname(disciplinePath), { recursive: true });
+  fs.mkdirSync(path.dirname(globalReviewLensPath), { recursive: true });
+  fs.writeFileSync(languagePath, "# Project Language\n\nExisting language.\n");
+  fs.writeFileSync(disciplinePath, "# Global Implementation Discipline\n\n- Existing rule.\n");
+  fs.writeFileSync(globalReviewLensPath, "# Global Review Lenses\n\n- Existing lens.\n");
+
+  run(repo, helper, ["init", "gallery", "Gallery"]);
+
+  assert.equal(fs.readFileSync(languagePath, "utf8"), "# Project Language\n\nExisting language.\n");
+  assert.equal(
+    fs.readFileSync(disciplinePath, "utf8"),
+    "# Global Implementation Discipline\n\n- Existing rule.\n",
+  );
+  assert.equal(fs.readFileSync(globalReviewLensPath, "utf8"), "# Global Review Lenses\n\n- Existing lens.\n");
+  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/implementation-discipline/build-slice.md")));
+  assert.ok(fs.existsSync(path.join(repo, "auto-strike/user-guidance/review-lenses/verify-slice-build.md")));
 }
 
 function testRouteBackCommandContract() {
@@ -568,6 +610,7 @@ function testInitiativeLifecycle() {
 testBootstrapAndWorkflowProgression();
 testStrictCommands();
 testNewInitiativeHelperWrapper();
+testInitPreservesProjectGuidanceFiles();
 testRouteBackCommandContract();
 testRouteBackInvalidatesDownstreamScopes();
 testDeterministicRegistrationOrder();

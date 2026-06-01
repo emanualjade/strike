@@ -15,11 +15,17 @@ Fix issues from a failed Auto Strike verification pass.
 - failed verification artifact
 - current initiative, phase, or slice artifacts named by the verifier
 - prior fix reports for the same verifier, when present
+- user implementation guidance from
+  `auto-strike/user-guidance/implementation-discipline/global.md` and
+  `auto-strike/user-guidance/implementation-discipline/fix.md`
 - repo files, commands, or paths needed to understand and repair the issue
 
 ## Process
 
 - Read the failed verification artifact first.
+- Read `auto-strike/user-guidance/implementation-discipline/global.md` and
+  `auto-strike/user-guidance/implementation-discipline/fix.md` if they exist,
+  and apply relevant guidance to the repair.
 - Fix the verifier's `Must Fix` items. They may be broken behavior,
   incomplete accepted scope, missing evidence, weak artifacts, or regressions.
 - Treat `P0` and `P1` `Must Fix` items as required before the verifier can
@@ -27,6 +33,9 @@ Fix issues from a failed Auto Strike verification pass.
   are required by accepted scope.
 - Read whatever project docs, artifacts, code, or source-backed references are
   needed to fix the real issue.
+- If the repair creates or modifies utilities, helpers, adapters, schemas, or
+  shared modules, search for existing repo patterns and inspect likely callers
+  before editing.
 - Keep the repair focused on passing the failed verification, not expanding the
   feature.
 - Treat `Follow-Up` and `Accepted Risk` items as context. Do not fix them unless

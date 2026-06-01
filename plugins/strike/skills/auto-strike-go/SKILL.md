@@ -150,6 +150,22 @@ The first new-initiative run creates:
 ```text
 PROJECT_LANGUAGE.md
 auto-strike/
+  user-guidance/
+    implementation-discipline/
+      global.md
+      plan-slice.md
+      build-slice.md
+      fix.md
+      verify-slice-plan.md
+      verify-slice-build.md
+      verify-phase.md
+      verify-main-spec.md
+    review-lenses/
+      global.md
+      verify-slice-plan.md
+      verify-slice-build.md
+      verify-phase.md
+      verify-main-spec.md
   state.json
   scripts/state.mjs
   initiatives/
@@ -161,8 +177,12 @@ It runs the packaged helper once:
 node <auto-strike-new-initiative skill dir>/scripts/state.mjs init <initiative-id> [name]
 ```
 
-This creates starter state and copies the helper to
-`auto-strike/scripts/state.mjs`.
+This creates starter state, copies the helper to
+`auto-strike/scripts/state.mjs`, and initializes `auto-strike/user-guidance/`
+as user-owned workflow guidance. Auto Strike stages that plan, build, fix, or
+verify code should read implementation discipline `global.md` plus their own
+stage file. Verifiers should also read review-lenses `global.md` plus their own
+stage file.
 
 After bootstrap, use the workspace helper:
 

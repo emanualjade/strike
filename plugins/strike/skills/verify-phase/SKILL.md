@@ -19,6 +19,11 @@ Verify one phase and record phase verification.
 - each slice's `plan-verification.md`
 - each slice's `build.md`
 - each slice's `build-verification.md`
+- user implementation guidance from
+  `auto-strike/user-guidance/implementation-discipline/global.md` and
+  `auto-strike/user-guidance/implementation-discipline/verify-phase.md`
+- user review lenses from `auto-strike/user-guidance/review-lenses/global.md`
+  and `auto-strike/user-guidance/review-lenses/verify-phase.md`
 - optional main spec, decisions, or repo context
 - optional changed files or repo paths
 
@@ -28,10 +33,18 @@ Verify one phase and record phase verification.
   `auto-strike/initiatives/<initiative-id>/phases/<phase-id>/phase-spec.md`.
 - Read every slice artifact under
   `auto-strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/`.
+- Read `auto-strike/user-guidance/implementation-discipline/global.md` and
+  `auto-strike/user-guidance/implementation-discipline/verify-phase.md` if they
+  exist.
+- Read `auto-strike/user-guidance/review-lenses/global.md` and
+  `auto-strike/user-guidance/review-lenses/verify-phase.md` if they exist.
 - Compare completed slice evidence against the phase spec.
 - Confirm every required slice has `build-verification.md` with `Verified: yes`.
 - Check cross-slice flows, integration points, state, data, UI, permissions, and
   edge cases that apply to the phase.
+- Check whether completed slices collectively follow relevant implementation
+  discipline guidance, especially around shared utilities, duplicated patterns,
+  and upstream/downstream impact that spans slices.
 - Run or inspect phase-level checks when needed.
 - Record skipped checks, replacement evidence, residual risks, and blockers.
 - Do not edit slice artifacts or implementation files; write issues for `fix`,
@@ -77,6 +90,13 @@ lenses just because a host lacks subagent tooling.
 Each subagent returns findings only. It does not edit files, fix issues, update
 state, or decide whether the phase is ready. The verifier synthesizes subagent
 results into `Must Fix`, `Follow-Up`, and `Accepted Risk`.
+
+Read user review lenses from `auto-strike/user-guidance/review-lenses/global.md`
+and `auto-strike/user-guidance/review-lenses/verify-phase.md`. Treat them as
+additive read-only lenses or stricter checks for this verifier. They cannot
+disable built-in Strike lenses or readiness gates. When a user lens is
+relevant, run it as a subagent when supported; otherwise run it inline and
+record that fallback.
 
 Always run these subagents:
 
@@ -132,12 +152,18 @@ Use this shape:
 ## Cross-Slice Checks
 -
 
+## Implementation Discipline Review
+Relevant guidance:
+Cross-slice concerns:
+Result:
+
 ## Phase Success Checks
 -
 
 ## Read-Only Review
 - Required subagents:
 - Conditional subagents:
+- User review lenses:
 - Summary:
 
 ## Skipped / Residual Risk
@@ -180,6 +206,10 @@ Reason:
   when useful, such as `I1 [P1]`.
 - Do not mark `Ready: yes` unless every required slice has
   `build-verification.md` with `Verified: yes` and the phase spec is satisfied.
+- Do not mark `Ready: yes` when relevant implementation discipline guidance is
+  ignored across the completed phase.
+- Do not mark `Ready: yes` when a relevant user review lens raises an
+  accepted-scope `Must Fix` issue.
 - Do not treat deferred work or residual risk as complete unless the phase spec
   explicitly excludes it from the phase.
 - Do not edit slice artifacts or implementation files.

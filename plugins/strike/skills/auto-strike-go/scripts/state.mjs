@@ -9,6 +9,179 @@ const SCRIPT_FILE = fileURLToPath(import.meta.url);
 const DEFAULT_STATE_PATH = "auto-strike/state.json";
 const WORKSPACE_ROOT = "auto-strike";
 const LANGUAGE_FILE = "PROJECT_LANGUAGE.md";
+const USER_GUIDANCE_DIR = "user-guidance";
+const IMPLEMENTATION_DISCIPLINE_DIR = "implementation-discipline";
+const REVIEW_LENSES_DIR = "review-lenses";
+const IMPLEMENTATION_DISCIPLINE_TEMPLATES = new Map([
+  [
+    "global.md",
+    `# Global Implementation Discipline
+
+User/project-specific coding guidance for every Auto Strike implementation
+stage. Use this file for rare always-on implementation preferences.
+Stage-specific guidance belongs in the matching stage file.
+
+## Guidance
+
+- None yet.
+`,
+  ],
+  [
+    "plan-slice.md",
+    `# Plan Slice Implementation Discipline
+
+Add user/project-specific coding guidance for slice planning.
+
+## Guidance
+
+- None yet.
+`,
+  ],
+  [
+    "build-slice.md",
+    `# Build Slice Implementation Discipline
+
+Add user/project-specific coding guidance for slice implementation.
+
+## Guidance
+
+- None yet.
+`,
+  ],
+  [
+    "fix.md",
+    `# Fix Implementation Discipline
+
+Add user/project-specific coding guidance for fixing failed verification items.
+
+## Guidance
+
+- None yet.
+`,
+  ],
+  [
+    "verify-slice-plan.md",
+    `# Verify Slice Plan Implementation Discipline
+
+Add user/project-specific implementation guidance for slice plan verification.
+
+## Guidance
+
+- None yet.
+`,
+  ],
+  [
+    "verify-slice-build.md",
+    `# Verify Slice Build Implementation Discipline
+
+Add user/project-specific implementation guidance for slice build verification.
+
+## Guidance
+
+- None yet.
+`,
+  ],
+  [
+    "verify-phase.md",
+    `# Verify Phase Implementation Discipline
+
+Add user/project-specific implementation guidance for phase verification.
+
+## Guidance
+
+- None yet.
+`,
+  ],
+  [
+    "verify-main-spec.md",
+    `# Verify Main Spec Implementation Discipline
+
+Add user/project-specific implementation guidance for final main spec
+verification.
+
+## Guidance
+
+- None yet.
+`,
+  ],
+]);
+const REVIEW_LENS_TEMPLATES = new Map([
+  [
+    "global.md",
+    `# Global Review Lenses
+
+User/project-specific review lenses that apply to every Auto Strike verifier.
+Use this file for rare always-on review requirements. Stage-specific guidance
+belongs in the matching verifier file.
+
+Built-in Strike review lenses still apply. User review lenses are additive; they
+do not disable built-in gates.
+
+## Additional Lenses
+
+- None yet.
+`,
+  ],
+  [
+    "verify-slice-plan.md",
+    `# Verify Slice Plan Review Lenses
+
+Add extra user/project-specific read-only review lenses for slice plan
+verification.
+
+Built-in Strike review lenses still apply. User review lenses are additive; they
+do not disable built-in gates.
+
+## Additional Lenses
+
+- None yet.
+`,
+  ],
+  [
+    "verify-slice-build.md",
+    `# Verify Slice Build Review Lenses
+
+Add extra user/project-specific read-only review lenses for slice build
+verification.
+
+Built-in Strike review lenses still apply. User review lenses are additive; they
+do not disable built-in gates.
+
+## Additional Lenses
+
+- None yet.
+`,
+  ],
+  [
+    "verify-phase.md",
+    `# Verify Phase Review Lenses
+
+Add extra user/project-specific read-only review lenses for phase verification.
+
+Built-in Strike review lenses still apply. User review lenses are additive; they
+do not disable built-in gates.
+
+## Additional Lenses
+
+- None yet.
+`,
+  ],
+  [
+    "verify-main-spec.md",
+    `# Verify Main Spec Review Lenses
+
+Add extra user/project-specific read-only review lenses for final main spec
+verification.
+
+Built-in Strike review lenses still apply. User review lenses are additive; they
+do not disable built-in gates.
+
+## Additional Lenses
+
+- None yet.
+`,
+  ],
+]);
 
 export const INITIATIVE_WORKFLOW = [
   ["refine-idea", ["ideaRefined"]],
@@ -586,25 +759,39 @@ function initWorkspace(id, name, statePath) {
     throw new Error(`State already exists: ${statePath}`);
   }
 
-  const workspaceRoot = path.dirname(statePath);
-  const repoRoot = path.dirname(workspaceRoot);
-  const helperPath = path.join(workspaceRoot, "scripts/state.mjs");
-  const initiativePath = path.join(workspaceRoot, "initiatives", id);
-  const languagePath = path.join(repoRoot, LANGUAGE_FILE);
+  const paths = workspacePaths(statePath);
+  const initiativePath = path.join(paths.workspaceRoot, "initiatives", id);
 
-  fs.mkdirSync(path.dirname(helperPath), { recursive: true });
+  fs.mkdirSync(path.dirname(paths.helperPath), { recursive: true });
   fs.mkdirSync(initiativePath, { recursive: true });
-  createLanguageFile(languagePath);
-  copyHelper(helperPath);
+  createLanguageFile(paths.languagePath);
+  createGuidanceFiles(paths.implementationDisciplinePath, IMPLEMENTATION_DISCIPLINE_TEMPLATES);
+  createReviewLensFiles(paths.reviewLensesPath);
+  copyHelper(paths.helperPath);
 
   const state = createInitialState(id, name);
   writeState(statePath, state);
   return {
     statePath,
-    helperPath,
+    helperPath: paths.helperPath,
     initiativePath,
-    languagePath,
+    languagePath: paths.languagePath,
+    implementationDisciplinePath: paths.implementationDisciplinePath,
+    reviewLensesPath: paths.reviewLensesPath,
     current: getCurrentState(state),
+  };
+}
+
+function workspacePaths(statePath) {
+  const workspaceRoot = path.dirname(statePath);
+  const repoRoot = path.dirname(workspaceRoot);
+  const userGuidancePath = path.join(workspaceRoot, USER_GUIDANCE_DIR);
+  return {
+    workspaceRoot,
+    helperPath: path.join(workspaceRoot, "scripts/state.mjs"),
+    languagePath: path.join(repoRoot, LANGUAGE_FILE),
+    implementationDisciplinePath: path.join(userGuidancePath, IMPLEMENTATION_DISCIPLINE_DIR),
+    reviewLensesPath: path.join(userGuidancePath, REVIEW_LENSES_DIR),
   };
 }
 
@@ -618,6 +805,19 @@ This file names durable project language for code, UI, docs, planning, and model
 It is a glossary, not a spec, implementation guide, ADR, or planning scratchpad.
 `,
   );
+}
+
+function createReviewLensFiles(reviewLensesPath) {
+  createGuidanceFiles(reviewLensesPath, REVIEW_LENS_TEMPLATES);
+}
+
+function createGuidanceFiles(rootPath, templates) {
+  fs.mkdirSync(rootPath, { recursive: true });
+  for (const [filename, content] of templates) {
+    const filePath = path.join(rootPath, filename);
+    if (fs.existsSync(filePath)) continue;
+    fs.writeFileSync(filePath, content);
+  }
 }
 
 function copyHelper(helperPath) {

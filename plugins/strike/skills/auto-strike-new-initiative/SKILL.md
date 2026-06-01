@@ -26,9 +26,11 @@ If `auto-strike/state.json` does not exist, initialize the workspace:
 node <this skill dir>/scripts/state.mjs init <initiative-id> [name]
 ```
 
-This creates `PROJECT_LANGUAGE.md` if missing, creates `auto-strike/state.json`,
-copies the helper to `auto-strike/scripts/state.mjs`, and creates the first
-initiative directory. It does not overwrite an existing project language file.
+This initializes `PROJECT_LANGUAGE.md`,
+`auto-strike/user-guidance/`, `auto-strike/state.json`, copies the helper to
+`auto-strike/scripts/state.mjs`, and creates the first initiative directory. It
+does not overwrite existing project language, implementation discipline, or user
+review lens files.
 
 If `auto-strike/state.json` already exists, add a new active initiative:
 

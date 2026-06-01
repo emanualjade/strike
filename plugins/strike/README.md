@@ -12,12 +12,32 @@ It creates and maintains a workspace in the consuming repository:
 
 ```text
 auto-strike/
+  user-guidance/
+    implementation-discipline/
+      global.md
+      plan-slice.md
+      build-slice.md
+      fix.md
+      verify-slice-plan.md
+      verify-slice-build.md
+      verify-phase.md
+      verify-main-spec.md
+    review-lenses/
+      global.md
+      verify-slice-plan.md
+      verify-slice-build.md
+      verify-phase.md
+      verify-main-spec.md
 PROJECT_LANGUAGE.md
 ```
 
 `auto-strike/state.json` stores workflow progress. Markdown files under
 `auto-strike/initiatives/<initiative-id>/` store idea, decision, spec, phase,
 slice, research, plan, build, and verification artifacts.
+`auto-strike/user-guidance/implementation-discipline/` is user-owned project
+guidance for how Auto Strike should plan, build, fix, and verify code in this
+repo. `auto-strike/user-guidance/review-lenses/` contains user-owned additive
+verifier guidance. Stages read `global.md` plus their own stage file.
 
 The workflow is:
 
@@ -119,6 +139,22 @@ Auto Strike creates and updates runtime state in the repository where it runs:
 
 ```text
 auto-strike/
+  user-guidance/
+    implementation-discipline/
+      global.md
+      plan-slice.md
+      build-slice.md
+      fix.md
+      verify-slice-plan.md
+      verify-slice-build.md
+      verify-phase.md
+      verify-main-spec.md
+    review-lenses/
+      global.md
+      verify-slice-plan.md
+      verify-slice-build.md
+      verify-phase.md
+      verify-main-spec.md
 PROJECT_LANGUAGE.md
 ```
 
@@ -126,7 +162,10 @@ PROJECT_LANGUAGE.md
 `auto-strike/initiatives/<initiative-id>/` store the artifacts for each staged
 skill. `PROJECT_LANGUAGE.md` is the project language file that Auto
 Strike and the `language` utility keep current as durable language
-crystallizes. The plugin does not ship runtime project artifacts.
+crystallizes. `auto-strike/user-guidance/implementation-discipline/` is the
+user's editable implementation guidance folder.
+`auto-strike/user-guidance/review-lenses/` is the user's editable verifier
+guidance folder. The plugin does not ship runtime project artifacts.
 
 ## Portability
 

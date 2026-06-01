@@ -18,12 +18,23 @@ Verify one slice build and record build verification.
 - plan verification from the current slice's `plan-verification.md`
 - build evidence from the current slice's `build.md`
 - phase spec from the current phase's `phase-spec.md`
+- user implementation guidance from
+  `auto-strike/user-guidance/implementation-discipline/global.md` and
+  `auto-strike/user-guidance/implementation-discipline/verify-slice-build.md`
+- user review lenses from `auto-strike/user-guidance/review-lenses/global.md`
+  and `auto-strike/user-guidance/review-lenses/verify-slice-build.md`
 - optional changed files or repo paths
 
 ## Process
 
 - Read the canonical slice, research, plan, plan verification, build evidence,
   and phase spec before verifying.
+- Read `auto-strike/user-guidance/implementation-discipline/global.md` and
+  `auto-strike/user-guidance/implementation-discipline/verify-slice-build.md`
+  if they exist.
+- Read `auto-strike/user-guidance/review-lenses/global.md` and
+  `auto-strike/user-guidance/review-lenses/verify-slice-build.md` if they
+  exist.
 - Do not verify unless `plan-verification.md` says `Ready: yes` and `build.md`
   says `Built: yes`.
 - Compare the built work against slice acceptance criteria.
@@ -53,6 +64,13 @@ Each subagent returns findings only. It does not edit files, fix issues, update
 state, or decide whether the build passes. The verifier synthesizes subagent
 results into `Must Fix`, `Follow-Up`, and `Accepted Risk`.
 
+Read user review lenses from `auto-strike/user-guidance/review-lenses/global.md`
+and `auto-strike/user-guidance/review-lenses/verify-slice-build.md`. Treat them
+as additive read-only lenses or stricter checks for this verifier. They cannot
+disable built-in Strike lenses or verification gates. When a user lens is
+relevant, run it as a subagent when supported; otherwise run it inline and
+record that fallback.
+
 Run these baseline subagents:
 
 - `canonical-implementation`: checks that implementation does not guess on
@@ -66,10 +84,14 @@ Run these baseline subagents:
   and scripts; purpose names instead of vague buckets like `helpers`, `utils`,
   `misc`, or `common`; core noun before qualifiers for files, types, routes,
   and schema concepts; small modules without hidden side effects or scattered
-  duplicate logic; extra scrutiny for shared code, schemas, auth, payments,
-  uploads, migrations, jobs, and integrations; isolated adapters for
-  replaceable or risky vendor code; centralized and documented env access; no
-  hardcoded secrets or environment-specific URLs; input validation at
+  duplicate logic; compliance with relevant implementation-discipline guidance;
+  evidence that new utilities, helpers, adapters, or shared modules
+  use the repo's established home; evidence that changed shared utilities were
+  checked against likely callers and downstream consumers; extra scrutiny for
+  shared code, schemas, auth, payments, uploads, migrations, jobs, and
+  integrations; isolated adapters for replaceable or risky vendor code;
+  centralized and documented env access; no hardcoded secrets or
+  environment-specific URLs; input validation at
   boundaries; explicit errors; guarded destructive or external side effects;
   useful debug evidence without leaking sensitive data; and relevant loading,
   empty, success, failure, recovery, accessibility, and responsive states.
@@ -167,6 +189,7 @@ Use this shape:
 ## Read-Only Review
 - Required subagents:
 - Optional subagents:
+- User review lenses:
 - Summary:
 
 ## Skipped / Residual Risk
@@ -210,6 +233,8 @@ Reason:
 - Do not edit implementation files; write issues for `fix` when the build needs
   changes.
 - Do not mark `Verified: yes` when `build.md` says `Built: no`.
+- Do not mark `Verified: yes` when a relevant user review lens raises an
+  accepted-scope `Must Fix` issue.
 - When verification fails because the implementation, tests, evidence, or local
   artifacts can be repaired inside accepted scope, write `Fix Needed: yes`.
 - Route back only when the accepted plan, research, or scope is untrustworthy

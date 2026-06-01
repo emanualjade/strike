@@ -15,18 +15,28 @@ Implement one planned slice.
 - verified slice plan from the current slice's `plan.md`
 - plan verification from the current slice's `plan-verification.md`
 - repo files named by the plan
+- user implementation guidance from
+  `auto-strike/user-guidance/implementation-discipline/global.md` and
+  `auto-strike/user-guidance/implementation-discipline/build-slice.md`
 - optional slice, research, or phase-spec context only when the verified plan is
   unclear, stale, or appears to conflict with the repo
 
 ## Process
 
 - Treat `plan.md` as the primary build handoff.
+- Read `auto-strike/user-guidance/implementation-discipline/global.md` and
+  `auto-strike/user-guidance/implementation-discipline/build-slice.md` if they
+  exist, and apply the relevant guidance while editing.
 - If `plan-verification.md` does not say `Ready: yes`, write `Built: no` with
   route back to `verify-slice-plan` and do not edit implementation files.
 - Skim the plan's `Slice Boundary`, `Surfaces`, `Approach`, `Test Plan`, and
   `Verification` before editing.
-- Inspect the current repo files and surfaces named by the plan before changing
-  them.
+- Inspect the current repo files and surfaces named by the plan, plus nearby
+  related code, before changing them.
+- Before creating a utility, helper, adapter, or shared module, search for an
+  existing one and place any new shared code where repo patterns say it belongs.
+- Before modifying an existing shared utility, helper, adapter, schema, or
+  shared module, inspect likely callers and downstream consumers.
 - Implement only the planned slice scope, using the smallest complete path.
 - Follow repo conventions and the repo's package manager, test, security, and
   editing rules.
@@ -80,7 +90,9 @@ Not run / skipped:
 - None.
 
 ## Implementation Notes
--
+- Implementation discipline guidance used:
+- Repo pattern or utility placement notes:
+- Upstream/downstream impact notes:
 
 ## Route Back
 Needed: yes / no
@@ -113,3 +125,5 @@ Reason:
 - Do not claim verification.
 - Preserve unrelated user work.
 - Follow the repo's package manager, test, security, and editing rules.
+- Do not scatter duplicate helpers or create convenience utilities without a
+  repo-pattern-based home.

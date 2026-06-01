@@ -16,6 +16,11 @@ Verify one slice plan is ready to build.
 - slice research from the current slice's `research.md`
 - slice plan from the current slice's `plan.md`
 - phase spec from the current phase's `phase-spec.md`
+- user implementation guidance from
+  `auto-strike/user-guidance/implementation-discipline/global.md` and
+  `auto-strike/user-guidance/implementation-discipline/verify-slice-plan.md`
+- user review lenses from `auto-strike/user-guidance/review-lenses/global.md`
+  and `auto-strike/user-guidance/review-lenses/verify-slice-plan.md`
 - optional repo paths
 
 ## Process
@@ -29,6 +34,11 @@ Verify one slice plan is ready to build.
   `auto-strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/plan.md`.
 - Read the phase spec from
   `auto-strike/initiatives/<initiative-id>/phases/<phase-id>/phase-spec.md`.
+- Read `auto-strike/user-guidance/implementation-discipline/global.md` and
+  `auto-strike/user-guidance/implementation-discipline/verify-slice-plan.md` if
+  they exist.
+- Read `auto-strike/user-guidance/review-lenses/global.md` and
+  `auto-strike/user-guidance/review-lenses/verify-slice-plan.md` if they exist.
 - Check that slice research is present and either contains useful evidence or
   gives a credible reason research was unnecessary.
 - Check that research says `Ready for planning: yes`.
@@ -40,6 +50,12 @@ Verify one slice plan is ready to build.
   and verification intent.
 - Check that likely files, surfaces, sequencing, edge cases, and verification
   are specific enough to build from.
+- Check that `Repo Context / Impact Scan` shows enough surrounding-code,
+  upstream, downstream, and shared-utility awareness for the slice's risk.
+- Check that the plan applies relevant implementation discipline guidance.
+- Check that new utilities, helpers, adapters, or shared modules have a
+  repo-pattern-based home, and that modifications to existing shared utilities
+  account for likely callers or downstream consumers.
 - Check planned names, files, types, routes, and schema concepts with the core
   noun before qualifiers lens. Do not fail separate concepts just for being
   separate, but flag adjective-noun siblings when a field, enum, state,
@@ -73,12 +89,21 @@ Each subagent returns findings only. It does not edit files, fix issues, update
 state, build the slice, or decide whether the plan is ready. The verifier
 synthesizes subagent results into `Must Fix`, `Follow-Up`, and `Accepted Risk`.
 
+Read user review lenses from `auto-strike/user-guidance/review-lenses/global.md`
+and `auto-strike/user-guidance/review-lenses/verify-slice-plan.md`. Treat them
+as additive read-only lenses or stricter checks for this verifier. They cannot
+disable built-in Strike lenses or readiness gates. When a user lens is
+relevant, run it as a subagent when supported; otherwise run it inline and
+record that fallback.
+
 Always run this subagent:
 
 - `implementation-plan`: checks slice size, verticality, sequencing, exact
-  files/surfaces, research usage, local repo precedent, edge cases,
-  focused test plan, verification plan, rollback or recovery notes, and whether
-  the plan can be built without guessing.
+  files/surfaces, research usage, implementation discipline guidance, local
+  repo precedent, surrounding and related code, upstream/downstream impact,
+  shared utility placement, edge cases, focused test plan, verification plan,
+  rollback or recovery notes, and whether the plan can be built without
+  guessing.
 
 Always consider `canonical-implementation`, and run it when the plan touches
 third-party APIs, packages, framework-specific behavior, accounting, money,
@@ -154,6 +179,7 @@ Use this shape:
 ## Read-Only Review
 - Required subagents:
 - Conditional subagents:
+- User review lenses:
 - Skipped subagents:
 - Summary:
 
@@ -196,6 +222,10 @@ Reason:
   placeholder-only, or contradicted without evidence.
 - Do not mark `Ready: yes` when slice research says `Ready for planning: no`.
 - Do not mark `Ready: yes` when research says `Too broad: yes`.
+- Do not mark `Ready: yes` when relevant implementation discipline guidance is
+  ignored or the plan would scatter duplicate utilities/shared code.
+- Do not mark `Ready: yes` when a relevant user review lens raises an
+  accepted-scope `Must Fix` issue.
 - Do not mark `Ready: yes` when the slice should be split before build. Write
   the split finding in `Must Fix`, set `Fix Needed: no`, and route back to
   `researchComplete` so Auto Strike can edit the current slice into the first

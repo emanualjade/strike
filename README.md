@@ -102,14 +102,48 @@ Auto Strike creates and maintains its own workspace:
 
 ```text
 auto-strike/
+  user-guidance/
+    implementation-discipline/
+      global.md
+      plan-slice.md
+      build-slice.md
+      fix.md
+      verify-slice-plan.md
+      verify-slice-build.md
+      verify-phase.md
+      verify-main-spec.md
+    review-lenses/
+      global.md
+      verify-slice-plan.md
+      verify-slice-build.md
+      verify-phase.md
+      verify-main-spec.md
 PROJECT_LANGUAGE.md
 ```
 
 `auto-strike/state.json` tracks workflow progress. Markdown files under
-`auto-strike/initiatives/<initiative-id>/` store the artifacts:
+`auto-strike/initiatives/<initiative-id>/` store the artifacts.
+`auto-strike/user-guidance/implementation-discipline/` contains user-owned
+project-specific coding guidance that Auto Strike reads during planning,
+building, fixing, and verification. `auto-strike/user-guidance/review-lenses/`
+contains user-owned additive review guidance. Stages read `global.md` plus
+their own stage file:
 
 ```text
 auto-strike/state.json
+auto-strike/user-guidance/implementation-discipline/global.md
+auto-strike/user-guidance/implementation-discipline/plan-slice.md
+auto-strike/user-guidance/implementation-discipline/build-slice.md
+auto-strike/user-guidance/implementation-discipline/fix.md
+auto-strike/user-guidance/implementation-discipline/verify-slice-plan.md
+auto-strike/user-guidance/implementation-discipline/verify-slice-build.md
+auto-strike/user-guidance/implementation-discipline/verify-phase.md
+auto-strike/user-guidance/implementation-discipline/verify-main-spec.md
+auto-strike/user-guidance/review-lenses/global.md
+auto-strike/user-guidance/review-lenses/verify-slice-plan.md
+auto-strike/user-guidance/review-lenses/verify-slice-build.md
+auto-strike/user-guidance/review-lenses/verify-phase.md
+auto-strike/user-guidance/review-lenses/verify-main-spec.md
 auto-strike/initiatives/<initiative-id>/idea.md
 auto-strike/initiatives/<initiative-id>/decisions.md
 auto-strike/initiatives/<initiative-id>/main-spec.md

@@ -1,6 +1,6 @@
 # Structure Audit
 
-Last checked: 2026-05-31.
+Last checked: 2026-06-01.
 
 This file records the "is this grounded, invented, and idiomatic?" pass for the scaffold.
 
@@ -76,6 +76,17 @@ main verification route back to a specific phase, and `reopen-slice-check
 to a specific slice. Reopening a check also reopens later dependent checks so
 research, plans, builds, phase verification, and main verification are not
 trusted after upstream work changes.
+
+2026-06-01 update: Auto Strike init now creates `auto-strike/user-guidance/`
+as user-owned runtime project memory. It contains
+`implementation-discipline/` for project-specific coding guidance and
+`review-lenses/` for additive verifier guidance. Each folder has a `global.md`
+plus stage-specific files, so stages can read focused guidance without parsing
+one large mixed file. This deliberately lives in the consuming repo's Auto
+Strike workspace rather than `plugins/strike/references/`, because it is
+editable project memory, not bundled package documentation or a host-discovered
+component. User review lenses are additive and do not replace built-in Strike
+verification gates.
 
 2026-05-31 update: Strike `0.9.0` removes the retired board/card workflow
 skills and keeps Auto Strike plus standalone utility skills. Root references
