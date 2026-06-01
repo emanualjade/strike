@@ -14,8 +14,8 @@ Strike helps turn a loose feature idea into a refined plan, clear decisions, a d
 ✅ **Better decisions before code:**<br>
 Strike forces early refinement and decision grilling so the agent does not rush into implementation with vague requirements.
 
-✅ **Thin slices agents can actually finish:**<br>
-Large features are broken into phases and small vertical slices that fit the way LLM coding agents work best.
+✅ **Codes with thin vertical slices:**<br>
+Large features are broken into phases and small vertical slices that help achieve quality results.
 
 ✅ **Research before planning:**<br>
 Each slice has an explicit research step so the agent checks docs, standards, examples, and known patterns before guessing.
