@@ -165,25 +165,18 @@ These are useful to call on their own, with or without an Auto Strike workflow.
   `PROJECT_LANGUAGE.md`.
 - `handoff`: compact the current conversation into a handoff document.
 
-## Before You Install
-
-You need one of these AI coding tools:
-
-- Codex
-- Claude Code
-
-For installed plugin use, you also need Node.js 18 or newer available as
-`node`. Strike uses bundled deterministic Node scripts for Auto Strike state
-checks and demo filenames. The stricter Node version in this repo's
-`package.json` applies to local development and release work, not normal plugin
-runtime.
-
 ## Install Strike
+
+<sub><strong>Requirements:</strong> Codex or Claude Code, plus Node.js 18 or
+newer available as <code>node</code>. Local repo development uses the stricter
+Node version in <code>package.json</code>.</sub>
 
 <details>
 <summary><strong>Codex</strong></summary>
 
-### Global Marketplace
+### Install For All Projects
+
+Use this when you want Strike available anywhere you use Codex on this machine.
 
 ```bash
 codex plugin marketplace add emanualjade/strike --ref main --sparse .agents/plugins --sparse plugins/strike
@@ -213,7 +206,10 @@ $strike:system-visualizer auto-strike/initiatives/my-idea
 $strike:language checkout clarify
 ```
 
-### Repository Marketplace
+### Install For One Project
+
+Use this when you want Strike available only through this repository's plugin
+marketplace.
 
 Create or edit `.agents/plugins/marketplace.json` in the consuming repo:
 
@@ -258,21 +254,32 @@ Use your marketplace name, not `example-project-plugins`.
 <details>
 <summary><strong>Claude Code</strong></summary>
 
-User scope:
+Pick one install option:
+
+### Install For All Projects
+
+Use this when you want Strike available anywhere you use Claude Code on this
+machine.
 
 ```bash
 claude plugin marketplace add emanualjade/strike --sparse .claude-plugin plugins --scope user
 claude plugin install strike@strike --scope user
 ```
 
-Project scope:
+### Install For This Project Team
+
+Use this when you want Strike registered for the current project so teammates
+using the project can share the same plugin setup.
 
 ```bash
 claude plugin marketplace add emanualjade/strike --sparse .claude-plugin plugins --scope project
 claude plugin install strike@strike --scope project
 ```
 
-Local repository-private scope:
+### Install Privately For This Repo
+
+Use this when you want Strike available only for your local copy of this
+repository.
 
 ```bash
 claude plugin marketplace add emanualjade/strike --sparse .claude-plugin plugins --scope local
