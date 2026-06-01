@@ -2,6 +2,11 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.10.5 - 2026-06-01
+
+- Published README customization polish in the release tag, including the new
+  `Customize strike` section and customization benefit copy.
+
 ## 0.10.4 - 2026-06-01
 
 - Consolidated user-owned workflow guidance under
