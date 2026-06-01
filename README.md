@@ -128,15 +128,18 @@ choice you do not like twice, you should not have to keep correcting it in chat.
 Write the preference down once, in the project, and future Auto Strike stages
 can pick it up.
 
-Use implementation discipline files for how you want work done. These are good
-for things like where shared utilities belong, how much surrounding code to
+Use **implementation discipline files** for how you want work done. These are
+good for things like where shared utilities belong, how much surrounding code to
 inspect before editing, what package manager rules matter, or what your team
 considers a clean boundary.
 
-Use review lens files for extra scrutiny you want during verification. These are
-good for things like caller-impact checks, accessibility passes, security review
-for sensitive flows, or "any shared schema change needs downstream consumers
-checked before this passes."
+Use **review lens files** for extra scrutiny during verification. They are a
+good place to say things like:
+
+- check likely callers when shared code changes
+- run an accessibility pass for meaningful UI work
+- look extra carefully at auth, payments, privacy, or destructive actions
+- make sure schema changes account for downstream consumers
 
 Auto Strike reads `global.md` for guidance that always matters, plus the file
 for the current stage:
