@@ -55,7 +55,7 @@ Strike is designed as one portable skill package that works across Codex and Cla
 - Install the plugin as described below in the installation section.
 - Run it from the root of the project you are working like so.
 
-#### ===== Codex Example =====
+#### Codex Example
 
 <sub>Start something new. Strike will clarify the idea, then continue through the build workflow.</sub>
 ```text
@@ -67,9 +67,7 @@ $strike:auto-strike-new-initiative Add password reset to this app
 $strike:auto-strike-go
 ```
 
----
-
-#### **===== Claude Code Example =====**
+#### Claude Code Example
 
 <sub>Start something new. Strike will clarify the idea, then continue through the build workflow.</sub>
 ```text
@@ -182,7 +180,10 @@ runtime.
 
 ## Install Strike
 
-### Codex Global
+<details>
+<summary><strong>Codex</strong></summary>
+
+### Global Marketplace
 
 ```bash
 codex plugin marketplace add emanualjade/strike --ref main --sparse .agents/plugins --sparse plugins/strike
@@ -212,7 +213,7 @@ $strike:system-visualizer auto-strike/initiatives/my-idea
 $strike:language checkout clarify
 ```
 
-### Codex Repository Marketplace
+### Repository Marketplace
 
 Create or edit `.agents/plugins/marketplace.json` in the consuming repo:
 
@@ -252,7 +253,10 @@ codex plugin list --marketplace example-project-plugins
 
 Use your marketplace name, not `example-project-plugins`.
 
-### Claude Code
+</details>
+
+<details>
+<summary><strong>Claude Code</strong></summary>
 
 User scope:
 
@@ -291,9 +295,12 @@ Claude Code plugin skills are namespaced:
 /strike:language checkout clarify
 ```
 
+</details>
+
 ## Update Strike
 
-### Codex
+<details>
+<summary><strong>Codex</strong></summary>
 
 ```bash
 codex plugin marketplace upgrade strike
@@ -303,7 +310,10 @@ codex plugin list --marketplace strike
 
 Fully quit and relaunch Codex Desktop after updating, then start a new thread.
 
-### Claude Code
+</details>
+
+<details>
+<summary><strong>Claude Code</strong></summary>
 
 ```bash
 claude plugin marketplace update strike
@@ -317,9 +327,12 @@ Then run:
 /reload-plugins
 ```
 
+</details>
+
 ## Uninstall Strike
 
-### Codex
+<details>
+<summary><strong>Codex</strong></summary>
 
 ```bash
 codex plugin remove strike@strike
@@ -329,7 +342,10 @@ codex plugin marketplace remove strike
 If Strike was added to a repository marketplace, edit or delete that repo's
 `.agents/plugins/marketplace.json`.
 
-### Claude Code
+</details>
+
+<details>
+<summary><strong>Claude Code</strong></summary>
 
 ```bash
 claude plugin uninstall strike@strike --scope user
@@ -337,6 +353,8 @@ claude plugin marketplace remove strike
 ```
 
 Replace `user` with `project` or `local` if needed.
+
+</details>
 
 ## Local Development
 
