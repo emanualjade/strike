@@ -38,6 +38,9 @@ Strike verifies not only individual slices, but also completed phases and the fu
 * ✅ **Project language consistency:**<br>
 Strike tracks important naming, domain terms, and language choices so the project stays coherent as it grows.
 
+* ✅ **Customizable to your project:**<br>
+Teach Strike your coding preferences, review expectations, and local patterns so it gets better at working the way your project works.
+
 * ✅ **Useful checkpoints:**<br>
 Verified slices can be committed and pushed before moving on, keeping work reviewable and recoverable.
 
