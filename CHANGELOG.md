@@ -2,6 +2,13 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.10.1 - 2026-06-01
+
+- Refreshed README positioning and usage examples for the new Auto Strike
+  workflow.
+- Clarified Codex `$strike:<skill>` invocation syntax and the split between
+  plugin runtime Node requirements and repo development Node requirements.
+
 ## 0.10.0 - 2026-05-31
 
 - Added the draft lean Auto Strike orchestrator file and state helper for

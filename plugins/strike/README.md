@@ -82,7 +82,7 @@ These are useful to call on their own, with or without an Auto Strike workflow.
   `PROJECT_LANGUAGE.md`.
 - `handoff`: compact the current conversation into a handoff document.
 
-Common direct invocations:
+Common skill argument shapes:
 
 ```txt
 auto-strike-new-initiative <idea>
@@ -101,16 +101,16 @@ syntax.
 | Host | Invocation form |
 | --- | --- |
 | Claude Code plugin | `/strike:<skill> <args>` |
-| Codex | App: type `$` to select an installed skill, or `@` to choose Strike or one of its bundled skills. CLI: use `/skills` to browse. The short prompt form is `$<skill> <args>`; namespaced `$strike:<skill> <args>` may appear. |
+| Codex | App: use `$strike:<skill> <args>` directly, type `$` to select an installed skill, or `@` to choose Strike or one of its bundled skills. CLI: use `/skills` to browse. |
 
 Examples:
 
 ```txt
-auto-strike-new-initiative Build an MVP for this idea
-auto-strike-go Continue the active initiative
-demo auto-strike/initiatives/my-idea "Compare onboarding options"
-system-visualizer auto-strike/initiatives/my-idea
-language checkout clarify
+$strike:auto-strike-new-initiative Build an MVP for this idea
+$strike:auto-strike-go Continue the active initiative
+$strike:demo auto-strike/initiatives/my-idea "Compare onboarding options"
+$strike:system-visualizer auto-strike/initiatives/my-idea
+$strike:language checkout clarify
 ```
 
 ## Runtime State
@@ -145,7 +145,8 @@ repo-local marketplace files, and repo-local skill folders are not part of the
 portable package.
 
 The plugin has no package-manager install step. Bundled helpers use Node.js 18
-or newer.
+or newer at runtime. The repo `package.json` engine of Node.js 22.13 or newer
+applies only to developing and releasing this repo with pnpm 11.4.0.
 
 ## Local Development
 

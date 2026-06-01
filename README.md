@@ -1,28 +1,96 @@
 # Strike
 
-Strike is an installable skills plugin. It gets you from a fuzzy idea to well built feature in a way that covers all the proper planning, research and validation automatically. Strike takes large features and automatically breaks them into manageable phases and thin vertical slices that an LLM can handle effectively.
+Strike helps AI coding agents turn fuzzy feature ideas into planned, sliced, researched, built, and verified software changes.
 
-## Standard use is easy
-- Install the plugin
-- Run the Auto Strike new-initiative skill from the root of the project you are working in.
-**Example**
+> Strike was born out of my own need to build large features in large codebases with AI coding agents. It combines ideas from Superpowers, GSD, Addy Osmani's agent skills, Matt Pocock's skills, and Gstack into one opinionated workflow for planning, slicing, researching, building, verifying, and resuming real software work.
+
+## Why use Strike?
+
+Strike is still early, so you may not want to depend on it for critical production work yet. But the goal is clear: make AI coding agents better at turning rough ideas into finished, verified features.
+
+* ✅ **From fuzzy idea to build path:**<br>
+Strike helps turn a loose feature idea into a refined plan, clear decisions, a durable spec, phases, and buildable slices.
+
+* ✅ **Better decisions before code:**<br>
+Strike forces early refinement and decision grilling so the agent does not rush into implementation with vague requirements.
+
+* ✅ **Thin slices agents can actually finish:**<br>
+Large features are broken into phases and small vertical slices that fit the way LLM coding agents work best.
+
+* ✅ **Research before planning:**<br>
+Each slice has an explicit research step so the agent checks docs, standards, examples, and known patterns before guessing.
+
+* ✅ **Durable artifacts, not disposable chat:**<br>
+Strike writes the idea, decisions, specs, plans, research, and verification notes into files so progress survives context loss.
+
+* ✅ **Workflow state you can resume:**<br>
+Strike tracks where the initiative is, what is complete, and what still needs to happen, so work can stop and resume cleanly.
+
+* ✅ **Plan verification before build:**<br>
+Slice plans are checked before coding starts, reducing the chance that the agent builds from a weak or incomplete plan.
+
+* ✅ **Verification and fix loops:**<br>
+Strike does not pretend work is done. Failed verification routes through a fix loop, then runs the same verifier again.
+
+* ✅ **Phase and spec-level validation:**<br>
+Strike verifies not only individual slices, but also completed phases and the full main spec.
+
+* ✅ **Project language consistency:**<br>
+Strike tracks important naming, domain terms, and language choices so the project stays coherent as it grows.
+
+* ✅ **Useful checkpoints:**<br>
+Verified slices can be committed and pushed before moving on, keeping work reviewable and recoverable.
+
+* ✅ **Standalone utilities included:**<br>
+Strike also includes focused tools for demos, system visualization, project language, and handoff documents.
+
+* ✅ **Portable across agent tools:**<br>
+Strike is designed as one portable skill package that works across Codex and Claude Code.
+
+
+## How to use it
+
+**Build things with strike** it's easy
+
+- Install the plugin as described below in the installation section.
+- Run it from the root of the project you are working like so.
+
+#### ===== Codex Example =====
+
+<sub>Start something new. Strike will clarify the idea, then continue through the build workflow.</sub>
+```text
+$strike:auto-strike-new-initiative Add password reset to this app
 ```
-$auto-strike-new-initiative hey codex I want to add a payments system to my app. I'm not sure how or what to use. Help me get this done properly
+
+<sub>Resume later from the same repo, even in a new chat window. Pick up where you left off without losing context.</sub>
+```text
+$strike:auto-strike-go
 ```
-Strike will walk you through all the steps to get this built and built well. To
-resume the active initiative later, run `$auto-strike-go`. In Claude Code, use
-`/strike:auto-strike-new-initiative` and `/strike:auto-strike-go`.
 
-## How Auto Strike Works
+---
 
-Auto-strike walks through a number of steps starting with helping you refine your idea and then taking over to get it built in a robust way.
+#### **===== Claude Code Example =====**
 
-The workflow moves through these skills:
+<sub>Start something new. Strike will clarify the idea, then continue through the build workflow.</sub>
+```text
+/strike:auto-strike-new-initiative Add password reset to this app
+```
+
+<sub>Resume later from the same repo, even in a new chat window. Pick up where you left off without losing context.</sub>
+```text
+/strike:auto-strike-go
+```
+
+## How Strike Works
+
+Strike walks through a staged workflow from rough idea to verified software change.
+
+The workflow moves through the following steps:
 
 - refine the idea - helps you refine your initial idea.
 - grill the decisions - helps ensure the essential decisions are answered before building.
-- create the main spec - Strike pretty much takes over at this point and builds on its own from here.
-- create development phases
+- create the main spec - defines the durable target for the whole feature.
+- create development phases - breaks the feature into safe build phases.
 - create one phase spec at a time
 - create slices for a phase
 - research, plan, verify, build, and verify each slice
@@ -106,8 +174,11 @@ You need one of these AI coding tools:
 - Codex
 - Claude Code
 
-You also need Node.js 18 or newer available as `node`. Strike uses bundled
-deterministic Node scripts for Auto Strike state checks and demo filenames.
+For installed plugin use, you also need Node.js 18 or newer available as
+`node`. Strike uses bundled deterministic Node scripts for Auto Strike state
+checks and demo filenames. The stricter Node version in this repo's
+`package.json` applies to local development and release work, not normal plugin
+runtime.
 
 ## Install Strike
 
@@ -130,14 +201,15 @@ codex
 For Codex Desktop, fully quit and relaunch the app after install, then start a
 new blank thread from the workspace.
 
-Invoke bundled skills with `$` or choose Strike with `@`:
+Invoke bundled skills with the namespaced `$strike:<skill>` form or choose
+Strike with `@`:
 
 ```text
-$auto-strike-new-initiative Build an MVP for this idea: ...
-$auto-strike-go Continue the active initiative.
-$demo auto-strike/initiatives/my-idea "Compare onboarding options"
-$system-visualizer auto-strike/initiatives/my-idea
-$language checkout clarify
+$strike:auto-strike-new-initiative Build an MVP for this idea: ...
+$strike:auto-strike-go Continue the active initiative.
+$strike:demo auto-strike/initiatives/my-idea "Compare onboarding options"
+$strike:system-visualizer auto-strike/initiatives/my-idea
+$strike:language checkout clarify
 ```
 
 ### Codex Repository Marketplace
@@ -267,6 +339,9 @@ claude plugin marketplace remove strike
 Replace `user` with `project` or `local` if needed.
 
 ## Local Development
+
+Local development and release work require Node.js 22.13 or newer because this
+repo pins pnpm 11.4.0.
 
 This repo uses standalone `pnpm` only. Do not use `npm`, `npx`, or Corepack for
 local package work.
