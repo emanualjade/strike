@@ -2,6 +2,27 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.10.9 - 2026-06-02
+
+- Added a mandatory pre-grill `research-initiative` workflow gate between idea
+  refinement and grilling.
+- Added initiative research artifacts under `research/`: a user-approved
+  `scope.md`, one concise report per approved topic, and a rollup `index.md`
+  with `Ready for grill`.
+- Updated the state helper to require a research scope user checkpoint and a
+  ready research index with a non-empty report file for every approved research
+  item before the workflow can advance to Grill.
+- Added workflow normalization and `sync-helper` so existing Strike workspaces
+  refresh copied helpers and receive new workflow gates after plugin updates.
+- Updated Grill, Main Spec, phase, slice research, and slice planning guidance
+  so provider/model/API, database/schema, file/blob, queue/job, auth/payment,
+  and repo-pattern constraints carry forward from initiative research.
+- Added optional `supporting-artifacts/` notes for Grill discussions that need
+  concise schema, architecture, provider-routing, data-lifecycle, permissions,
+  or operational context outside the main decision record.
+- Updated host-smoke and state-helper tests for the new initiative research
+  gate.
+
 ## 0.10.8 - 2026-06-02
 
 - Added a shared verification evidence taxonomy that separates static/build

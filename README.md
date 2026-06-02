@@ -89,6 +89,8 @@ Strike walks through a staged workflow from rough idea to verified software chan
 The workflow moves through the following steps:
 
 - refine the idea - helps you refine your initial idea.
+- research the initiative - identifies dependency, API, model, repo-pattern,
+  schema, and file/workflow facts before decisions harden.
 - grill the decisions - helps ensure the essential decisions are answered before building.
 - create the main spec - defines the durable target for the whole feature.
 - create development phases - breaks the feature into safe build phases.
@@ -114,7 +116,11 @@ PROJECT_LANGUAGE.md
 ```text
 strike/state.json
 strike/initiatives/<initiative-id>/idea.md
+strike/initiatives/<initiative-id>/research/scope.md
+strike/initiatives/<initiative-id>/research/<research-item-id>.md
+strike/initiatives/<initiative-id>/research/index.md
 strike/initiatives/<initiative-id>/decisions.md
+strike/initiatives/<initiative-id>/supporting-artifacts/<topic>.md
 strike/initiatives/<initiative-id>/main-spec.md
 strike/initiatives/<initiative-id>/development-plan.md
 strike/initiatives/<initiative-id>/phases/phase-01/phase.md
@@ -201,6 +207,8 @@ Call these directly when you want one focused planning artifact without running
 the whole Strike workflow.
 
 - `refine-idea`: clarify a raw idea into a useful first outcome.
+- `research-initiative`: run pre-grill research with a user-approved scope and
+  concise per-topic reports.
 - `grill-idea`: pressure-test decisions, assumptions, and blockers.
 - `create-main-spec`: write a durable main spec.
 - `create-development-phases`: split a main spec into buildable phases.
@@ -402,6 +410,11 @@ Then run:
 ```
 
 </details>
+
+When resuming an existing Strike workspace after a plugin update, run the
+current `go` skill first so it can refresh `strike/scripts/state.mjs` with
+`sync-helper`. Do not rely on an older copied workspace helper before it is
+synced.
 
 ## Uninstall Strike
 

@@ -62,6 +62,27 @@ step. `research-slice` runs before `plan-slice`, writes compact research to the
 slice's `research.md`, and the slice plan verification step checks that research
 was either used or explicitly unnecessary.
 
+2026-06-02 update: Initiative research is now a first-class pre-grill Strike
+workflow step. `research-initiative` runs after `refine-idea` and before
+`grill-idea`, writes a user-approved research scope plus per-topic reports under
+`research/`, and rolls findings into `research/index.md` for Grill, Main Spec,
+phase specs, and slice planning. This is Strike workflow policy, not a host
+schema requirement.
+
+2026-06-02 update: `supporting-artifacts/` is an optional initiative-level
+directory for concise decision-discussion notes created during Grill, such as
+schema reasoning, architecture tradeoffs, provider routing, data lifecycle, and
+permissions notes. Downstream stages may scan it when present, but it is not
+hidden source of truth; required decisions and constraints still belong in
+`decisions.md` and `main-spec.md`. This is Strike workflow policy, not a host
+schema requirement.
+
+2026-06-02 update: the copied workspace state helper now has a `sync-helper`
+command and normalizes old workflow state to the current packaged workflow. This
+keeps existing workspaces on new gates such as initiative research after plugin
+updates without asking agents to hand-edit `strike/state.json` or helper files.
+This is Strike runtime policy, not a host schema requirement.
+
 2026-06-01 update: Strike now has explicit route-back mechanics. Workflow
 artifacts should return `Ready: no`, `Built: no`, or `Verified: no` plus
 `Route Back` when an earlier artifact is missing or weak. The state helper

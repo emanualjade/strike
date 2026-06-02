@@ -13,7 +13,8 @@ Split one phase spec into small buildable implementation slices.
 ## Inputs
 
 - phase spec
-- optional main spec, development plan, or decisions
+- optional main spec, development plan, decisions, initiative research, or
+  supporting artifacts
 - optional context files or repo paths
 - optional slice output root
 
@@ -101,6 +102,11 @@ One slice is correct when splitting would create fake work.
 ## Process
 
 - Read the phase spec and relevant context.
+- Read relevant initiative research constraints when they affect slice
+  boundaries, provider/model capabilities, data/schema work, file/blob flows,
+  queues/jobs, auth/payment behavior, or repo-pattern risk.
+- If `supporting-artifacts/` exists, scan it and read only files relevant to
+  this phase before setting slice boundaries.
 - Identify the smallest set of slices that can complete the phase coherently.
 - Name each slice by outcome, not task category.
 - Use canonical slice IDs: `slice-01`, `slice-02`, `slice-03-b`.
@@ -109,6 +115,11 @@ One slice is correct when splitting would create fake work.
 - Put edge/flow notes only where they affect slice boundaries, acceptance,
   risk, or verification. Useful categories include state, permissions, data
   integrity, integrations, UI/device, operations, and recovery.
+- Do not create slices whose acceptance criteria require unsupported or unknown
+  provider/model/API/database/file behavior unless the phase spec explicitly
+  accepts that risk.
+- Do not use supporting artifacts to add scope that is absent from the phase
+  spec. Use them to understand reasoning and boundaries.
 - Create concise slice stubs when a slice output root is provided.
 - Ask one consequential question if the slice split changes scope, risk, or
   delivery order.

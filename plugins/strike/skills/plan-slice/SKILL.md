@@ -13,6 +13,8 @@ Create a concrete implementation plan for one slice.
 ## Inputs
 
 - slice stub or slice context
+- initiative research index and relevant reports when they affect this slice
+- supporting artifacts relevant to this slice, when present
 - slice research from the current slice's `research.md`
 - phase spec
 - shared verification evidence taxonomy from the Strike plugin root's
@@ -24,7 +26,8 @@ Create a concrete implementation plan for one slice.
 
 ## Process
 
-- Read the slice stub, slice research, and relevant spec context.
+- Read the slice stub, relevant initiative research, relevant supporting
+  artifacts, slice research, and relevant spec context.
 - Read the bundled `references/verification-evidence.md` from the Strike plugin
   root.
 - Read `strike/user-guidance/implementation-discipline/global.md` and
@@ -48,6 +51,12 @@ Create a concrete implementation plan for one slice.
   same class of problem before proposing a new pattern. Name the precedent or
   record that none was found.
 - Use the slice research as planning input.
+- Use initiative research as inherited constraints. Do not plan behavior that
+  contradicts provider/model/API/database/file/queue constraints recorded
+  before Grill.
+- If `supporting-artifacts/` exists, scan it and read only files relevant to
+  this slice. Use them to understand schema reasoning, architecture tradeoffs,
+  provider routing, data lifecycle, permissions, or operational constraints.
 - Apply relevant user implementation guidance to the approach and verification
   plan.
 - Preserve the slice outcome, acceptance criteria, dependencies, in-scope work,
@@ -75,6 +84,16 @@ Create a concrete implementation plan for one slice.
   enough to build from, but not a step-by-step coding script.
 
 ## Research
+
+Initiative research captures provider/model/API, database/schema, file/blob,
+queue/job, auth/payment, and repo-pattern constraints that shaped the spec. Use
+it as inherited context when relevant. Slice research is the required
+implementation-specific evidence check for this slice.
+
+Supporting artifacts are optional decision-discussion notes. Use them when
+relevant, but do not treat them as standalone scope. Accepted decisions and
+constraints must still be represented in `decisions.md`, `main-spec.md`, or the
+phase/slice specs.
 
 The required pre-planning research should already exist in the slice research
 file. Use it as the evidence check before planning, not as the plan itself.
@@ -105,6 +124,10 @@ Use this shape:
 
 ```md
 # Slice Plan
+
+## Initiative Research Used
+
+## Supporting Artifacts Used
 
 ## Research Used
 

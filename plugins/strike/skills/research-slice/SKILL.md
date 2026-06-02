@@ -17,6 +17,8 @@ making things up.
 
 - slice or slice context
 - relevant spec or phase context
+- initiative research index and relevant reports, when present
+- supporting artifacts relevant to this slice, when present
 
 ## What Matters
 
@@ -37,6 +39,16 @@ making things up.
 - Use light repo reading if it helps identify the stack, existing
   integration, domain terms, or whether the repo already has a clear pattern.
   Deeper local implementation planning belongs in `plan-slice`.
+- Use initiative research as baseline evidence for provider/model/API,
+  database/schema, file/blob, queue/job, auth/payment, and repo architecture
+  constraints. Slice research should not be the first place basic provider
+  capabilities are discovered.
+- If `supporting-artifacts/` exists, scan it and read only files relevant to
+  this slice's domain, schema, architecture, provider routing, data lifecycle,
+  permissions, or operational concerns.
+- If the slice depends on a material provider/API/model or repo-pattern fact
+  that is missing from initiative research, write `Ready for planning: no` and
+  list the missing initiative research in `## Questions Or Blockers`.
 - In rare cases where research is not needed, say why in a sentence or two.
 - Record the needed decision when evidence reveals a consequential product,
   security, data, permission, or architecture decision.
@@ -88,6 +100,10 @@ guessing. Save only necessary research in a concise format. Less verbose is
 better.
 
 - Do not write the slice plan. This is just a research phase.
+- Do not silently redo missing initiative-level research inside one slice when
+  that fact affects decisions, spec, phase shape, or multiple slices.
+- Do not treat supporting artifacts as new acceptance criteria. Use them to
+  understand reasoning and existing decisions that were summarized upstream.
 - Keep it short: source, finding, why it matters.
 - Record implications, not a diary: what changed, why it matters, and where the
   evidence came from.

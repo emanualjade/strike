@@ -20,6 +20,7 @@ Implement one planned slice.
 - user implementation guidance from
   `strike/user-guidance/implementation-discipline/global.md` and
   `strike/user-guidance/implementation-discipline/build-slice.md`
+- supporting artifacts named in the verified plan, when present
 - optional slice, research, or phase-spec context only when the verified plan is
   unclear, stale, or appears to conflict with the repo
 
@@ -35,6 +36,8 @@ Implement one planned slice.
   route back to `verify-slice-plan` and do not edit implementation files.
 - Skim the plan's `Repo Pattern Scan`, `Slice Boundary`, `Surfaces`, `Approach`,
   `Verification Evidence Plan`, and `Verification` before editing.
+- If the plan names relevant `supporting-artifacts/`, read them before editing.
+  Use them only as context for decisions already reflected in the plan/specs.
 - Inspect the current repo files and surfaces named by the plan, plus nearby
   related code, before changing them.
 - Before patching a technical symptom or implementing integration, provider,
@@ -79,6 +82,9 @@ Implement one planned slice.
 - If the plan is missing, too vague, no longer matches the repo, or needs
   upstream context to understand, write `Built: no` with route back to
   `plan-slice` or `verify-slice-plan`.
+- If the build discovers a relevant schema/architecture/provider/data note in
+  `supporting-artifacts/` that the plan did not account for, write `Built: no`
+  with route back to `plan-slice` instead of silently expanding scope.
 - If the verified plan cannot be followed without expanding or redesigning the
   slice, write `Built: no` with route back to `plan-slice`.
 

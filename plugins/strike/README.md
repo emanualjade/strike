@@ -33,7 +33,11 @@ PROJECT_LANGUAGE.md
 
 `strike/state.json` stores workflow progress. Markdown files under
 `strike/initiatives/<initiative-id>/` store idea, decision, spec, phase,
-slice, research, plan, build, and verification artifacts.
+slice, research, plan, build, and verification artifacts. Optional
+`supporting-artifacts/` files preserve concise decision-discussion notes such as
+schema reasoning, architecture tradeoffs, provider routing, and data lifecycle.
+Existing workspaces should refresh the copied helper with `sync-helper` after a
+plugin update so new workflow gates are available locally.
 `strike/user-guidance/implementation-discipline/` is user-owned project
 guidance for how Strike should plan, build, fix, and verify code in this
 repo. `strike/user-guidance/review-lenses/` contains user-owned additive
@@ -43,6 +47,7 @@ The workflow is:
 
 ```text
 refine-idea
+research-initiative
 grill-idea
 create-main-spec
 create-development-phases
@@ -71,6 +76,8 @@ Call these directly when you want one focused planning artifact without running
 the whole Strike workflow.
 
 - `refine-idea`: clarify a raw idea into a useful first outcome.
+- `research-initiative`: run pre-grill research with a user-approved scope and
+  concise per-topic reports.
 - `grill-idea`: pressure-test decisions, assumptions, and blockers.
 - `create-main-spec`: write a durable main spec.
 - `create-development-phases`: split a main spec into buildable phases.

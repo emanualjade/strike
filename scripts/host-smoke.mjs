@@ -491,6 +491,16 @@ function assertInstalledRuntime(pluginRoot, ctx, label) {
       stateNextStepJson.artifacts?.includes("strike/initiatives/gallery/idea.md"),
       `${ctx.host} ${label} state next-step did not resolve the refine-idea artifact.`,
     );
+    writeFileSync(
+      path.join(consumerRepo, "strike/initiatives/gallery/idea.md"),
+      `# Refined Idea
+
+## User Checkpoint
+Prompt: Continue?
+User response: Yes, continue.
+Ready to continue: yes
+`,
+    );
 
     const stateCompleteResult = runCommand(
       ctx,
@@ -523,8 +533,93 @@ function assertInstalledRuntime(pluginRoot, ctx, label) {
       `${label} state next-step after complete-check`,
     );
     assert(
-      stateNextStepAfterCompleteJson.skill === "grill-idea",
-      `${ctx.host} ${label} next-step did not advance to grill-idea after complete-check.`,
+      stateNextStepAfterCompleteJson.skill === "research-initiative",
+      `${ctx.host} ${label} next-step did not advance to research-initiative after ideaRefined.`,
+    );
+    assert(
+      stateNextStepAfterCompleteJson.artifacts?.includes("strike/initiatives/gallery/research/scope.md") &&
+        stateNextStepAfterCompleteJson.artifacts?.includes("strike/initiatives/gallery/research/index.md"),
+      `${ctx.host} ${label} next-step did not resolve the initiative research artifacts.`,
+    );
+
+    mkdirSync(path.join(consumerRepo, "strike/initiatives/gallery/research"), { recursive: true });
+    writeFileSync(
+      path.join(consumerRepo, "strike/initiatives/gallery/research/scope.md"),
+      `# Initiative Research Scope
+
+## Research Items
+- ID: repo-patterns
+  Topic: Existing repo patterns
+  Category: repo
+  Why it matters: The implementation should reuse local precedent.
+  Questions to answer:
+  Expected sources:
+
+## User Checkpoint
+Prompt: Research these topics?
+User response: Yes, research these.
+Ready to research: yes
+`,
+    );
+    writeFileSync(
+      path.join(consumerRepo, "strike/initiatives/gallery/research/index.md"),
+      `# Initiative Research Index
+
+## Reports
+- ID: repo-patterns
+  File: repo-patterns.md
+  Topic: Existing repo patterns
+  Status: complete
+
+## Ready For Grill
+Ready for grill: yes
+Reason: Research is complete enough for grilling.
+`,
+    );
+    writeFileSync(
+      path.join(consumerRepo, "strike/initiatives/gallery/research/repo-patterns.md"),
+      `# Research: Existing Repo Patterns
+
+## Findings
+- Finding: Representative repo pattern reviewed.
+  Evidence: Host smoke fixture.
+  Implication: Grill can proceed.
+`,
+    );
+    const stateCompleteResearchResult = runCommand(
+      ctx,
+      `${label}-state-complete-research`,
+      process.execPath,
+      [workspaceStateScript, "complete-check", "initiativeResearchComplete"],
+      {
+        cwd: consumerRepo,
+      },
+    );
+    const stateCompleteResearchJson = parseJson(
+      stateCompleteResearchResult.stdout,
+      `${label} state complete research`,
+    );
+    assert(
+      stateCompleteResearchJson.status === "recorded" &&
+        stateCompleteResearchJson.completedCheck === "initiativeResearchComplete",
+      `${ctx.host} ${label} initiative research complete-check did not return a completion receipt.`,
+    );
+    const stateNextStepAfterResearchResult = runCommand(
+      ctx,
+      `${label}-state-next-step-after-research`,
+      process.execPath,
+      [workspaceStateScript, "next-step"],
+      {
+        cwd: consumerRepo,
+      },
+    );
+    const stateNextStepAfterResearchJson = parseJson(
+      stateNextStepAfterResearchResult.stdout,
+      `${label} state next-step after research`,
+    );
+    assert(
+      stateNextStepAfterResearchJson.skill === "grill-idea",
+      `${ctx.host} ${label} next-step did not advance to grill-idea after initiative research.`,
     );
   } finally {
     writeFileSync(

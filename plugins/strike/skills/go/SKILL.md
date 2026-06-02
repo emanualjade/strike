@@ -14,6 +14,7 @@ new initiative in this skill.
 ## The Workflow Skills
 
 - `refine-idea/SKILL.md` - clarify the raw idea into a useful first outcome.
+- `research-initiative/SKILL.md` - research approved initiative-level dependencies before grilling decisions.
 - `grill-idea/SKILL.md` - pressure-test key decisions before specs.
 - `create-main-spec/SKILL.md` - define the whole feature or MVP at a durable level.
 - `create-development-phases/SKILL.md` - split the main spec into buildable phases.
@@ -58,11 +59,14 @@ At the start of every run, inspect the existing Strike workspace.
 If `strike/state.json` exists, run:
 
 ```text
+node <go skill dir>/scripts/state.mjs sync-helper
 node strike/scripts/state.mjs next-step
 ```
 
-If `next-step` returns `status: "active"`, resume from the returned workflow
-skill unless the user asks to jump, revisit, or repair an earlier step.
+Use the current packaged helper for `sync-helper`, then use the refreshed
+workspace helper for `next-step`. If `next-step` returns `status: "active"`,
+resume from the returned workflow skill unless the user asks to jump, revisit,
+or repair an earlier step.
 
 If there is no workflow state, tell the user to start with
 `new-initiative`.
@@ -95,6 +99,7 @@ Example:
       "status": "active",
       "initiativeWorkflow": [
         { "skill": "refine-idea", "verified": { "ideaRefined": true } },
+        { "skill": "research-initiative", "verified": { "initiativeResearchComplete": true } },
         { "skill": "grill-idea", "verified": { "decisionsResolved": true } },
         { "skill": "create-main-spec", "verified": { "specCreated": true } },
         { "skill": "create-development-phases", "verified": { "phasesCreated": true } },
@@ -217,6 +222,17 @@ verify code should read implementation discipline `global.md` plus their own
 stage file. Verifiers should also read review-lenses `global.md` plus their own
 stage file.
 
+At the start of a Strike resume, refresh the copied workspace helper from the
+current packaged helper before using it:
+
+```text
+node <go skill dir>/scripts/state.mjs sync-helper
+```
+
+This keeps existing workspaces on the current workflow gates after a plugin
+update. If the helper refuses to overwrite an unrecognized file, stop and ask
+the user instead of editing the helper by hand.
+
 After bootstrap, use the workspace helper:
 
 ```text
@@ -224,6 +240,7 @@ node strike/scripts/state.mjs next-step
 node strike/scripts/state.mjs list-initiatives
 node strike/scripts/state.mjs set-active <initiative-id>
 node strike/scripts/state.mjs finish-initiative [initiative-id]
+node strike/scripts/state.mjs sync-helper
 node strike/scripts/state.mjs complete-check <check-name>
 node strike/scripts/state.mjs reopen-check <check-name>
 node strike/scripts/state.mjs reopen-phase-check <phase-id> <check-name>
@@ -263,7 +280,8 @@ strike/initiatives/<initiative-id>/
 Default outputs:
 
 - `refine-idea` -> `idea.md`
-- `grill-idea` -> `decisions.md`
+- `research-initiative` -> `research/scope.md`, one report per approved research item, and `research/index.md`
+- `grill-idea` -> `decisions.md`, optionally `supporting-artifacts/<topic>.md`
 - `create-main-spec` -> `main-spec.md`
 - `create-development-phases` -> `development-plan.md`, `phases/<phase-id>/phase.md`, and `state.json` phase entries
 - `create-phase-spec` -> `phases/<phase-id>/phase-spec.md`
@@ -277,9 +295,17 @@ Default outputs:
 - `verify-phase` -> `phases/<phase-id>/verification.md`
 - `verify-main-spec` -> `verification.md`
 
-Slice research is a required workflow artifact. Additional initiative or phase
-research files are optional; create one only when source-backed findings affect
-decisions at that scope.
+Initiative research is a required pre-grill workflow artifact. It may conclude
+that no material research is needed, but only after a user-approved scope
+checkpoint. Slice research is also required for every implementation slice.
+
+`supporting-artifacts/` is optional initiative context created during Grill
+when schema, architecture, provider routing, data lifecycle, permissions, or
+other decision reasoning needs a concise note outside `decisions.md`. It is not
+hidden source of truth: decisions and constraints required for planning must be
+summarized in `decisions.md` and carried into `main-spec.md`. Later research,
+spec, phase, slice, plan, build, and verification stages should scan this
+directory when it exists and read only files relevant to their current step.
 
 ## State Helper
 
@@ -351,6 +377,13 @@ Do not complete `planCreated` if `plan.md` says `Split Recommendation` is
 
 Do not complete `ideaRefined` unless `idea.md` contains `## User Checkpoint`,
 records a non-empty `User response:`, and says `Ready to continue: yes`.
+
+Do not complete `initiativeResearchComplete` unless `research/scope.md`
+contains `## User Checkpoint`, records a non-empty `User response:`, and says
+`Ready to research: yes`, `research/index.md` says `Ready for grill: yes`, and
+each approved research item has a non-empty report file referenced by
+`research/index.md`. If no material research is needed, `research/scope.md`
+must explicitly say `No material research needed: yes`.
 
 Do not complete `decisionsResolved` unless `decisions.md` contains
 `## User Checkpoint`, records a non-empty `User response:`, and says
@@ -481,6 +514,7 @@ the reopened item could make downstream work stale. `reopen-phase-check` and
 Common route backs:
 
 - missing or weak slice research -> `reopen-check researchComplete`
+- missing or weak initiative research -> `reopen-check initiativeResearchComplete`
 - weak slice plan -> `reopen-check planCreated`
 - oversized slice discovered before build -> edit the current slice into the
   first smaller replacement slice, create additional replacement slice stubs,
@@ -491,6 +525,8 @@ Common route backs:
 - phase verification finds weak slice build verification -> `reopen-slice-check <phase-id> <slice-id> buildVerified`
 - main verification finds weak phase verification -> `reopen-phase-check <phase-id> allSlicesVerified`
 - main verification finds weak phase shape -> `reopen-phase-check <phase-id> phaseSpecCreated`
+- main verification finds missing provider/API/model/repo-pattern research that
+  affects initiative decisions -> `reopen-check initiativeResearchComplete`
 
 When splitting an active slice, preserve the original slice ID as the first
 smaller slice whenever possible. Use canonical suffix IDs such as `slice-03-b`
@@ -509,53 +545,71 @@ Initiative setup:
 
 - `refine-idea`: pass the raw request; write `idea.md`; complete
   `ideaRefined` only after the user checkpoint says `Ready to continue: yes`.
-- `grill-idea`: pass `idea.md`; write `decisions.md`; complete
+- `research-initiative`: pass `idea.md`; write `research/scope.md`, one report
+  per approved research item, and `research/index.md`; complete
+  `initiativeResearchComplete` only after the research scope checkpoint says
+  `Ready to research: yes`, the index says `Ready for grill: yes`, and every
+  approved research item has a report file.
+- `grill-idea`: pass `idea.md` plus `research/scope.md`,
+  `research/index.md`, and relevant research reports; write `decisions.md`; complete
   `decisionsResolved` only after the user checkpoint says
-  `Ready to continue: yes`.
-- `create-main-spec`: pass `idea.md` and `decisions.md`; write
-  `main-spec.md`; complete `specCreated`.
-- `create-development-phases`: pass `main-spec.md`; write
-  `development-plan.md` and phase stubs. Run `add-phase <phase-id> [name]` for
-  every phase, then complete `phasesCreated`.
+  `Ready to continue: yes`. If decision discussion creates relevant
+  schema/architecture/provider/data notes, write them under
+  `supporting-artifacts/` and link them from `decisions.md`.
+- `create-main-spec`: pass `idea.md`, initiative research, `decisions.md`, and
+  relevant `supporting-artifacts/`; write `main-spec.md`; complete
+  `specCreated`.
+- `create-development-phases`: pass `main-spec.md`, initiative research, and
+  relevant `supporting-artifacts/` when they affect phase boundaries or risk;
+  write `development-plan.md` and phase stubs. Run
+  `add-phase <phase-id> [name]` for every phase, then complete
+  `phasesCreated`.
 
 Phase setup:
 
-- `create-phase-spec`: pass `main-spec.md`, `development-plan.md`, and the
-  phase stub; write the phase's `phase-spec.md`; complete `phaseSpecCreated`.
-- `create-phase-slices`: pass the phase spec; write one `slice.md` per slice.
-  Run `add-slice <phase-id> <slice-id> [name]` for every slice, then complete
+- `create-phase-spec`: pass `main-spec.md`, initiative research, relevant
+  `supporting-artifacts/`, `development-plan.md`, and the phase stub; write the
+  phase's `phase-spec.md`; complete `phaseSpecCreated`.
+- `create-phase-slices`: pass the phase spec plus relevant initiative research
+  and `supporting-artifacts/`; write one `slice.md` per slice. Run
+  `add-slice <phase-id> <slice-id> [name]` for every slice, then complete
   `slicesCreated`.
 
 Slice loop:
 
-- `research-slice`: pass `main-spec.md`, `phase-spec.md`, and `slice.md`; write
+- `research-slice`: pass `main-spec.md`, relevant initiative research,
+  relevant `supporting-artifacts/`, `phase-spec.md`, and `slice.md`; write
   `research.md`; complete `researchComplete` only when it says
   `Ready for planning: yes`.
-- `plan-slice`: pass `main-spec.md`, `phase-spec.md`, `slice.md`, and
+- `plan-slice`: pass `main-spec.md`, relevant initiative research,
+  relevant `supporting-artifacts/`, `phase-spec.md`, `slice.md`, and
   `research.md`; write `plan.md` with a focused `Verification Evidence Plan`;
   complete
   `planCreated` only when `Split Recommendation` is `Needed: no`.
-- `verify-slice-plan`: pass the slice artifacts; write
-  `plan-verification.md`; complete `planVerified` only when it says
-  `Ready: yes`.
-- `build-slice`: pass `plan.md`, `plan-verification.md`, and repo files named
-  by the plan; implement the work, add/update planned automated tests, run
-  focused verification evidence checks, use existing repo precedent before
-  patching technical symptoms or integration/dataflow behavior, and write
-  `build.md`; complete `implemented` only when it says `Built: yes`.
-- `verify-slice-build`: pass the slice artifacts and changed files; write
-  `build-verification.md`; confirm grouped verification evidence, including
-  Browser Clickthrough for browser-visible work; complete `buildVerified` only
-  when it says `Verified: yes`, then commit and push that completed slice before
-  moving on.
+- `verify-slice-plan`: pass the slice artifacts plus relevant initiative
+  research and `supporting-artifacts/`; write `plan-verification.md`; complete
+  `planVerified` only when it says `Ready: yes`.
+- `build-slice`: pass `plan.md`, `plan-verification.md`, relevant
+  `supporting-artifacts/` named in the plan, and repo files named by the plan;
+  implement the work, add/update planned automated tests, run focused
+  verification evidence checks, use existing repo precedent before patching
+  technical symptoms or integration/dataflow behavior, and write `build.md`;
+  complete `implemented` only when it says `Built: yes`.
+- `verify-slice-build`: pass the slice artifacts, relevant
+  `supporting-artifacts/`, and changed files; write `build-verification.md`;
+  confirm grouped verification evidence, including Browser Clickthrough for
+  browser-visible work; complete `buildVerified` only when it says
+  `Verified: yes`, then commit and push that completed slice before moving on.
 
 Verification gates:
 
-- `verify-phase`: pass the phase spec and all slice artifacts for the phase;
-  write the phase's `verification.md`; complete `allSlicesVerified` only when
-  it says `Ready: yes`.
-- `verify-main-spec`: pass the main spec, development plan, and every phase
-  verification; write the initiative `verification.md`; complete
+- `verify-phase`: pass the phase spec, relevant initiative research,
+  relevant `supporting-artifacts/`, and all slice artifacts for the phase; write
+  the phase's `verification.md`; complete `allSlicesVerified` only when it says
+  `Ready: yes`.
+- `verify-main-spec`: pass the main spec, initiative research,
+  `supporting-artifacts/`, development plan, and every phase verification; write
+  the initiative `verification.md`; complete
   `allPhasesVerified` only when it says `Ready: yes`. The helper marks the
   initiative complete.
 

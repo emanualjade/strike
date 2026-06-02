@@ -16,6 +16,7 @@ Verify one slice plan is ready to build.
 - slice research from the current slice's `research.md`
 - slice plan from the current slice's `plan.md`
 - phase spec from the current phase's `phase-spec.md`
+- supporting artifacts relevant to this slice, when present
 - shared verification evidence taxonomy from the Strike plugin root's
   `references/verification-evidence.md`
 - user implementation guidance from
@@ -36,6 +37,10 @@ Verify one slice plan is ready to build.
   `strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/plan.md`.
 - Read the phase spec from
   `strike/initiatives/<initiative-id>/phases/<phase-id>/phase-spec.md`.
+- If `supporting-artifacts/` exists, scan it and read only files relevant to
+  this slice plan. Check that relevant schema, architecture, provider-routing,
+  data-lifecycle, permission, or operational notes were represented in the plan
+  or explicitly rejected with a reason.
 - Read the bundled `references/verification-evidence.md` from the Strike plugin
   root.
 - Read `strike/user-guidance/implementation-discipline/global.md` and
@@ -48,6 +53,8 @@ Verify one slice plan is ready to build.
 - Check that research says `Ready for planning: yes`.
 - Check that the plan uses the slice research, narrows it, or explains why a
   finding does not apply.
+- Check that the plan uses relevant supporting artifacts, narrows them to the
+  slice, or explains why a decision note does not apply.
 - Check that planning-time research additions are source-backed when present.
 - Check that the plan's `Slice Boundary` preserves the slice outcome,
   acceptance criteria, dependencies, in-scope work, out-of-scope boundaries,
@@ -134,8 +141,8 @@ Always run this subagent:
 - `implementation-plan`: checks slice size, verticality, sequencing, exact
   files/surfaces, research usage, implementation discipline guidance, local
   repo precedent, surrounding and related code, upstream/downstream impact,
-  shared utility placement, repo pattern scan classification, existing examples
-  reviewed for relevant work categories, edge cases, grouped verification
+  shared utility placement, repo pattern scan classification, supporting artifact usage,
+  existing examples reviewed for relevant work categories, edge cases, grouped verification
   evidence plan, focused automated tests, E2E decision, browser clickthrough
   plan, visual evidence plan, rollback or recovery notes, and whether the plan
   can be built without guessing.
@@ -209,6 +216,8 @@ Use this shape:
 
 ## Research Gate
 
+## Supporting Artifacts
+
 ## Plan Review
 
 ## Read-Only Review
@@ -262,6 +271,9 @@ Reason:
 - Do not mark `Ready: yes` when `Repo Pattern Scan` is missing, fails to
   classify the work, or does not inspect matching repo examples for the relevant
   categories.
+- Do not mark `Ready: yes` when relevant `supporting-artifacts/` notes are
+  ignored by the plan, unless the plan explains why they do not apply to this
+  slice.
 - Do not mark `Ready: yes` when integration, provider, workflow, upload, asset,
   storage, queue, job, callback, webhook, or dataflow work lacks a repo-precedent
   scan.

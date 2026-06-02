@@ -13,7 +13,9 @@ Create a durable main spec from the provided idea, decisions, and context.
 ## Inputs
 
 - idea, brief, or refined idea
+- initiative research scope, reports, and index
 - decisions, assumptions, constraints, or open questions
+- optional supporting artifacts from `supporting-artifacts/`
 - optional context files or repo paths
 - optional output path
 
@@ -21,12 +23,20 @@ Create a durable main spec from the provided idea, decisions, and context.
 
 - Pull current truth from the provided idea, decisions, accepted assumptions,
   rejected paths, context, and research.
+- Use `research/index.md` as the concise source for provider/model/API,
+  database/schema, file/blob, queue/job, auth/payment, and repo-pattern
+  constraints. Use per-topic reports only for details needed in the spec.
+- If `supporting-artifacts/` exists, scan its filenames and read only artifacts
+  relevant to the main spec. Use them to preserve schema, architecture,
+  provider-routing, data-lifecycle, permission, or operational reasoning.
 - Preserve accepted decisions and do not revive rejected options.
 - Turn vague scope into explicit scope, non-goals, and ask-first boundaries.
 - Capture product behavior, domain language, flows, state, constraints,
   security/privacy/permissions/data integrity, and success checks when relevant.
 - Absorb research as spec-useful implications, not a research transcript. Do
   not overstate weak evidence or unknowns.
+- Include capability matrices or constraint tables only when they affect product
+  behavior, routing, validation, storage, provider choice, or unsupported cases.
 - Ask one consequential question if a missing answer changes scope, behavior,
   model shape, risk, or validation.
 - End this skill at the main spec. Do not create a development plan, phases, slices,
@@ -82,6 +92,10 @@ Use this shape:
 
 ## Source Inputs
 
+## Research Inputs
+
+## Supporting Artifacts
+
 ## Summary
 
 ## Outcome
@@ -130,6 +144,12 @@ Use this shape:
 - Create one main spec.
 - Ground the spec in the provided idea, decisions, assumptions, constraints, and
   context.
+- Do not omit material initiative research constraints. If the feature depends
+  on a provider/model/API/database/file/queue behavior, the spec must preserve
+  the relevant supported, unsupported, and unknown cases.
+- Do not let supporting artifacts remain hidden context. Any accepted decision,
+  requirement, constraint, non-goal, or blocker needed for downstream planning
+  must be represented in the main spec.
 - Ask one consequential question if a missing answer changes scope, behavior, or
   risk.
 - Keep the spec durable enough to be useful outside the current chat.

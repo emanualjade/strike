@@ -14,6 +14,9 @@ phases.
 ## Inputs
 
 - main spec
+- initiative research index or relevant reports when they affect phase order or
+  risk
+- supporting artifacts when they affect phase boundaries or risk
 - optional decisions, constraints, or context files
 - optional output path for the development plan
 - optional phase output root for phase stubs
@@ -47,7 +50,8 @@ creates a stable contract, or makes the next phase easier to verify.
 
 ## Process
 
-- Read the main spec and relevant context.
+- Read the main spec, initiative research constraints, relevant supporting
+  artifacts, and other relevant context.
 - Identify the smallest ordered phase list that can deliver the spec
   coherently.
 - Name each phase by outcome, not implementation activity.
@@ -55,6 +59,12 @@ creates a stable contract, or makes the next phase easier to verify.
 - Capture why the phases are separate and why they are ordered that way.
 - Order early phases to prove the most important uncertainty or unlock the next
   useful behavior.
+- Use initiative research to order provider/API/model, data/schema,
+  file/blob, queue/job, auth/payment, or repo-pattern risks where they affect
+  phase shape.
+- Use supporting artifacts to preserve decision-discussion context that affects
+  phase boundaries, such as schema reasoning, architecture tradeoffs, data
+  lifecycle, provider routing, or operational constraints.
 - Mention likely surfaces or watchouts only when they clarify phase scope,
   risk, research needs, or verification shape.
 - Create concise phase stubs when a phase output root is provided.
@@ -133,6 +143,11 @@ Run `add-phase` for each phase before `complete-check phasesCreated`. Do not use
 - Keep phase IDs canonical and put human names in phase titles or display names.
 - Keep phase count as small as the spec allows.
 - Preserve the main spec's scope, rules, constraints, and open questions.
+- Preserve material initiative research constraints. Do not phase work in a way
+  that requires unsupported provider/model/API/database/file behavior unless the
+  main spec explicitly accepted that risk.
+- Do not treat supporting artifacts as standalone scope. Phase only against
+  decisions and constraints represented in the main spec.
 - Do not create phase specs, slice files, slice acceptance criteria,
   implementation tasks, or implementation files.
 - Before finishing, reread the development plan as if the chat transcript is

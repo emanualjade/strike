@@ -16,6 +16,8 @@ into implementation slices.
 - phase stub or phase context
 - main spec
 - development plan
+- initiative research index or relevant reports for this phase
+- supporting artifacts relevant to this phase
 - optional decisions, constraints, or repo context
 - optional output path
 
@@ -24,6 +26,9 @@ into implementation slices.
 - Preserve the phase purpose, boundary, dependencies, and completion target.
 - Compare the provided phase context and development plan against the main spec.
 - Pull only the main spec details that matter for this phase.
+- Pull only the initiative research constraints that matter for this phase.
+- If `supporting-artifacts/` exists, scan it and read only files relevant to
+  this phase's scope, boundaries, or risks.
 - Make the phase independently understandable after a context reset.
 - Clarify scope, non-goals, flows, product rules, UX expectations, states,
   lifecycle, invariants, security, privacy, permissions, data integrity,
@@ -32,6 +37,9 @@ into implementation slices.
   slicing. Do not invent architecture.
 - Record phase-specific research needs or weak evidence without turning the
   spec into a research transcript.
+- If initiative research says a provider/API/model/database/file/queue behavior
+  is unsupported, unknown, or constrained, preserve the phase-specific impact in
+  boundaries, rules, risks, or open questions.
 - Surface if the phase boundary is wrong: too broad, too small, stale,
   horizontal, or inconsistent with the main spec or development plan.
 - Ask one consequential question if the phase cannot be specified without
@@ -142,6 +150,9 @@ Reason:
 - Create one phase spec.
 - Keep the phase boundary clear.
 - Preserve relevant main spec decisions and constraints.
+- Preserve relevant initiative research constraints.
+- Preserve relevant supporting-artifact context only when it is represented by
+  main-spec decisions or needed to explain phase-specific boundaries.
 - Surface if the phase is too broad or too small to specify coherently.
 - Do not create slices, slice acceptance criteria, slice plans, implementation
   tasks, or implementation files.

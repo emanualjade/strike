@@ -13,6 +13,7 @@ Pressure-test a refined idea until key decisions are explicit enough for a spec.
 ## Inputs
 
 - refined idea
+- initiative research scope, reports, and index when present
 - optional context files or repo paths
 - optional decision depth: `lean`, `standard`, or `deep`
 - optional output path
@@ -21,12 +22,23 @@ Pressure-test a refined idea until key decisions are explicit enough for a spec.
 
 - Identify decisions that change product behavior, scope, model shape, workflow,
   risk, or validation.
+- Read `research/scope.md`, `research/index.md`, and the relevant per-topic
+  research reports before pressure-testing decisions. Use researched
+  capabilities, unsupported cases, unknowns, and repo patterns as decision
+  inputs.
+- If a material third-party API, model, database/schema behavior, queue,
+  file/blob workflow, auth/payment surface, or repo architecture pattern is
+  missing from initiative research, do not paper over it. Ask whether to route
+  back to initiative research before continuing.
 - Inspect provided repo/docs context instead of asking when a factual answer is
   already knowable.
 - Ask one consequential question at a time. Briefly say why it matters and give
   a recommended answer when that helps the user decide.
 - Use concrete scenarios for abstract decisions. Show alternatives only when
   they help the user choose, then wait for the user's answer.
+- For provider/model work, ask decisions from the capability matrix: supported
+  sizes, formats, routing, fallbacks, rejection behavior, cost/rate-limit
+  constraints, storage boundaries, and how to handle unsupported requests.
 - Treat a detailed kickoff as possible decision evidence, not automatic
   completion. Record which nodes it answered and which remain vague.
 - Initiate a user checkpoint before finishing, even when provided decision files,
@@ -40,7 +52,16 @@ Pressure-test a refined idea until key decisions are explicit enough for a spec.
   blockers.
 - When a decision crystallizes, update the output document as current truth.
   Keep rejected options only when they still explain the final choice.
+- When discussion gets deep enough that the decision record would become noisy,
+  optionally write concise supporting artifacts under
+  `supporting-artifacts/`. Use them for schema notes, architecture tradeoffs,
+  provider routing, data lifecycle, permissions, migrations, operational
+  constraints, or other reasoning that should not vanish into chat.
+- If you create supporting artifacts, list them in `decisions.md` and summarize
+  the actual decisions or constraints they informed.
 - Do focused research only when it can change a decision.
+  Substantial missing research belongs back in `research-initiative`, not as a
+  hidden side quest inside Grill.
 
 ## Decision Depth
 
@@ -124,6 +145,11 @@ Why:
 - Detail:
   Constraint:
 
+## Supporting Artifacts
+- File:
+  Why it exists:
+  Decisions informed:
+
 ## Pressure Points
 - Scope:
 - Domain language:
@@ -132,6 +158,7 @@ Why:
 - Permissions / ownership:
 - Data integrity / privacy:
 - Integrations / failures:
+- Research constraints:
 - Validation evidence:
 
 ## Decision Checkpoint
@@ -157,11 +184,44 @@ None.
 -
 ```
 
+Supporting artifacts use this lightweight shape:
+
+```md
+# <Topic> Notes
+
+Status: supporting
+
+## Summary
+
+## Decisions Informed
+-
+
+## Important Constraints
+-
+
+## Open Questions
+-
+
+## Do Not Infer
+-
+```
+
 ## Rules
 
 - Do not create durable project state unless an output path is provided.
 - Do not turn the idea into a spec.
+- Do not let supporting artifacts become hidden source of truth. Any accepted
+  decision, requirement, constraint, non-goal, or blocker needed for planning
+  must be summarized in `decisions.md` and later carried into `main-spec.md`.
+- Do not write pseudo-code or pseudo-schema just to fill the directory. Create
+  supporting artifacts only when they preserve useful reasoning, tradeoffs,
+  constraints, diagrams-in-words, or domain notes from the decision discussion.
 - Do not ask about details the repo or provided context already answers.
+- Do not ignore initiative research. When research says a capability is
+  unsupported, unknown, expensive, risky, or constrained, turn that into an
+  explicit decision, accepted assumption, deferred decision, or blocker.
+- Do not merge multiple provider/model/API constraints into one vague decision
+  when the reports show they differ.
 - Keep questions limited to decisions that would change outcome, scope, or risk.
 - Use `standard` depth when no depth is provided.
 - Do not infer user answers from silence, failed tools, or unavailable question

@@ -592,6 +592,7 @@ function validateStrikeContract() {
   const strikePath = "plugins/strike/skills/go/SKILL.md";
   const helperPath = "plugins/strike/skills/go/scripts/state.mjs";
   const refinePath = "plugins/strike/skills/refine-idea/SKILL.md";
+  const researchInitiativePath = "plugins/strike/skills/research-initiative/SKILL.md";
   const grillPath = "plugins/strike/skills/grill-idea/SKILL.md";
   const createMainPath = "plugins/strike/skills/create-main-spec/SKILL.md";
   const createDevPath = "plugins/strike/skills/create-development-phases/SKILL.md";
@@ -608,13 +609,14 @@ function validateStrikeContract() {
   const verificationEvidencePath = "plugins/strike/references/verification-evidence.md";
   const dogfoodPath = "docs/dogfood.md";
 
-  if (![strikePath, helperPath, refinePath, grillPath, createMainPath, createDevPath, createPhasePath, researchPath, createSlicesPath, planPath, verifyPath, buildPath, verifyBuildPath, fixPath, verifyPhasePath, verifyMainPath, verificationEvidencePath, dogfoodPath].every(exists)) {
+  if (![strikePath, helperPath, refinePath, researchInitiativePath, grillPath, createMainPath, createDevPath, createPhasePath, researchPath, createSlicesPath, planPath, verifyPath, buildPath, verifyBuildPath, fixPath, verifyPhasePath, verifyMainPath, verificationEvidencePath, dogfoodPath].every(exists)) {
     return;
   }
 
   const strikeText = fs.readFileSync(path.join(root, strikePath), "utf8");
   const helperText = fs.readFileSync(path.join(root, helperPath), "utf8");
   const refineText = fs.readFileSync(path.join(root, refinePath), "utf8");
+  const researchInitiativeText = fs.readFileSync(path.join(root, researchInitiativePath), "utf8");
   const grillText = fs.readFileSync(path.join(root, grillPath), "utf8");
   const createMainText = fs.readFileSync(path.join(root, createMainPath), "utf8");
   const createDevText = fs.readFileSync(path.join(root, createDevPath), "utf8");
@@ -634,6 +636,7 @@ function validateStrikeContract() {
   const strikeWorkflowSkillTexts = {
     [strikePath]: strikeText,
     [refinePath]: refineText,
+    [researchInitiativePath]: researchInitiativeText,
     [grillPath]: grillText,
     [createMainPath]: createMainText,
     [createDevPath]: createDevText,
@@ -665,12 +668,50 @@ function validateStrikeContract() {
   if (researchListIndex === -1 || planListIndex === -1 || researchListIndex > planListIndex) {
     fail(`${strikePath}: research-slice must appear before plan-slice in the workflow list`);
   }
+  const refineListIndex = strikeText.indexOf("`refine-idea/SKILL.md`");
+  const initiativeResearchListIndex = strikeText.indexOf("`research-initiative/SKILL.md`");
+  const grillListIndex = strikeText.indexOf("`grill-idea/SKILL.md`");
+  if (
+    refineListIndex === -1 ||
+    initiativeResearchListIndex === -1 ||
+    grillListIndex === -1 ||
+    refineListIndex > initiativeResearchListIndex ||
+    initiativeResearchListIndex > grillListIndex
+  ) {
+    fail(`${strikePath}: research-initiative must appear between refine-idea and grill-idea in the workflow list`);
+  }
 
   const helperResearchIndex = helperText.indexOf('["research-slice", ["researchComplete"]]');
   const helperPlanIndex = helperText.indexOf('["plan-slice", ["planCreated"]]');
   if (helperResearchIndex === -1 || helperPlanIndex === -1 || helperResearchIndex > helperPlanIndex) {
     fail(`${helperPath}: research-slice must appear before plan-slice in the slice workflow`);
   }
+  const helperRefineIndex = helperText.indexOf('["refine-idea", ["ideaRefined"]]');
+  const helperInitiativeResearchIndex = helperText.indexOf(
+    '["research-initiative", ["initiativeResearchComplete"]]',
+  );
+  const helperGrillIndex = helperText.indexOf('["grill-idea", ["decisionsResolved"]]');
+  if (
+    helperRefineIndex === -1 ||
+    helperInitiativeResearchIndex === -1 ||
+    helperGrillIndex === -1 ||
+    helperRefineIndex > helperInitiativeResearchIndex ||
+    helperInitiativeResearchIndex > helperGrillIndex
+  ) {
+    fail(`${helperPath}: research-initiative must appear between refine-idea and grill-idea in the initiative workflow`);
+  }
+  requireText(helperText, 'case "research-initiative":', helperPath);
+  requireText(helperText, "requireResearchScopeCheckpoint", helperPath);
+  requireText(helperText, "requireReadyForGrill", helperPath);
+  requireText(helperText, "requireResearchReports", helperPath);
+  requireText(helperText, "normalizeState", helperPath);
+  requireText(helperText, 'command === "sync-helper"', helperPath);
+  requireText(helperText, "isStrikeStateHelper", helperPath);
+  requireText(helperText, "Ready to research: yes", helperPath);
+  requireText(helperText, "Ready for grill: yes", helperPath);
+  requireText(helperText, "No material research needed: yes", helperPath);
+  requireText(helperText, "<research-item-id>.md", helperPath);
+  requireText(helperText, "initiativeResearchComplete", helperPath);
   requireText(helperText, 'case "research-slice":', helperPath);
   requireText(helperText, 'command === "reopen-check"', helperPath);
   requireText(helperText, 'command === "reopen-phase-check"', helperPath);
@@ -696,19 +737,27 @@ function validateStrikeContract() {
   requireText(strikeText, "allSlicesVerified", strikePath);
   requireText(strikeText, "allPhasesVerified", strikePath);
   requireText(strikeText, "Do not complete `ideaRefined` unless `idea.md` contains `## User Checkpoint`", strikePath);
+  requireText(strikeText, "Do not complete `initiativeResearchComplete` unless `research/scope.md`", strikePath);
+  requireText(strikeText, "each approved research item has a non-empty report file referenced by", strikePath);
+  requireText(strikeText, "No material research needed: yes", strikePath);
+  requireText(strikeText, "sync-helper", strikePath);
   requireText(strikeText, "Do not complete `decisionsResolved` unless `decisions.md` contains", strikePath);
-  requireText(strikeText, "pass `plan.md`, `plan-verification.md`, and repo files named\n  by the plan", strikePath);
+  requireText(strikeText, "`research-initiative`: pass `idea.md`", strikePath);
+  requireText(strikeText, "missing or weak initiative research -> `reopen-check initiativeResearchComplete`", strikePath);
+  requireText(strikeText, "supporting-artifacts/", strikePath);
+  requireText(strikeText, "It is not\nhidden source of truth", strikePath);
+  requireText(strikeText, "pass `plan.md`, `plan-verification.md`, relevant\n  `supporting-artifacts/` named in the plan", strikePath);
   requireText(strikeText, "write `plan.md` with a focused `Verification Evidence Plan`", strikePath);
   requireText(strikeText, "Split Recommendation` is\n`Needed: yes`", strikePath);
   requireText(strikeText, "read that skill's `SKILL.md` from\nthe installed Strike plugin", strikePath);
-  requireText(strikeText, "add/update planned automated tests, run\n  focused verification evidence checks", strikePath);
-  requireText(strikeText, "use existing repo precedent before\n  patching technical symptoms or integration/dataflow behavior", strikePath);
+  requireText(strikeText, "add/update planned automated tests, run focused\n  verification evidence checks", strikePath);
+  requireText(strikeText, "use existing repo precedent before patching\n  technical symptoms or integration/dataflow behavior", strikePath);
   requireText(strikeText, "confirm grouped verification evidence", strikePath);
   requireText(strikeText, "## Slice Git Checkpoint", strikePath);
   requireText(strikeText, "After `buildVerified` is complete for a slice, commit and push that slice", strikePath);
   requireText(strikeText, "After completing `buildVerified`, complete the slice git checkpoint", strikePath);
   requireText(strikeText, "Do not prescribe extra git inspection commands", strikePath);
-  requireText(strikeText, "then commit and push that completed slice before\n  moving on", strikePath);
+  requireText(strikeText, "then commit and push that completed slice before moving on", strikePath);
 
   requireText(helperText, "requireUserCheckpoint", helperPath);
   requireText(helperText, "Ready to continue: yes", helperPath);
@@ -733,7 +782,29 @@ function validateStrikeContract() {
   requireText(refineText, "Existing artifacts can inform\n  the refined idea, but they do not replace hearing from the user", refinePath);
   requireText(refineText, "## User Checkpoint", refinePath);
   requireText(refineText, "Ready to continue: yes / no", refinePath);
+  requireText(refineText, "## Research Candidates", refinePath);
+  requireText(refineText, "the research scope needed before Grill", refinePath);
   requireText(refineText, "Do not treat provided docs, prior schemas, planning files, or silence", refinePath);
+
+  for (const heading of [
+    "## Research Scope",
+    "## Evidence Rules",
+    "### `scope.md`",
+    "### Per-item reports",
+    "### `index.md`",
+  ]) {
+    requireText(researchInitiativeText, heading, researchInitiativePath);
+  }
+  requireText(researchInitiativeText, "Initiate a user checkpoint before running the full research", researchInitiativePath);
+  requireText(researchInitiativeText, "Do not combine distinct provider/model capabilities", researchInitiativePath);
+  requireText(researchInitiativeText, "official or primary sources", researchInitiativePath);
+  requireText(researchInitiativeText, "For OpenAI APIs and models", researchInitiativePath);
+  requireText(researchInitiativeText, "one concise report per\n   item under `research/`", researchInitiativePath);
+  requireText(researchInitiativeText, "Ready to research: yes / no", researchInitiativePath);
+  requireText(researchInitiativeText, "Ready for grill: yes / no", researchInitiativePath);
+  requireText(researchInitiativeText, "Do not complete this gate until `scope.md` records a user response", researchInitiativePath);
+  requireText(researchInitiativeText, "Do not compress multiple material dependencies into one report", researchInitiativePath);
+  requireText(researchInitiativeText, "write `Ready for\n  grill: no`", researchInitiativePath);
 
   requireText(grillText, "## Decision Depth", grillPath);
   requireText(grillText, "## Pressure Points", grillPath);
@@ -752,8 +823,18 @@ function validateStrikeContract() {
   requireText(grillText, "## User Checkpoint", grillPath);
   requireText(grillText, "Ready to continue: yes / no", grillPath);
   requireText(grillText, "Validation / browser or live checks", grillPath);
+  requireText(grillText, "research/index.md", grillPath);
+  requireText(grillText, "Research constraints:", grillPath);
+  requireText(grillText, "Substantial missing research belongs back in `research-initiative`", grillPath);
+  requireText(grillText, "## Supporting Artifacts", grillPath);
+  requireText(grillText, "supporting-artifacts/", grillPath);
+  requireText(grillText, "Do not let supporting artifacts become hidden source of truth", grillPath);
 
   requireText(createMainText, "## Quality Bar", createMainPath);
+  requireText(createMainText, "## Research Inputs", createMainPath);
+  requireText(createMainText, "## Supporting Artifacts", createMainPath);
+  requireText(createMainText, "supporting-artifacts/", createMainPath);
+  requireText(createMainText, "research/index.md", createMainPath);
   requireText(createMainText, "fresh context window", createMainPath);
   requireText(createMainText, "without re-interviewing the user", createMainPath);
   requireText(createMainText, "Do not create a development plan, phases, slices", createMainPath);
@@ -766,9 +847,13 @@ function validateStrikeContract() {
   requireText(createMainText, "Development Handoff", createMainPath);
   requireText(createMainText, "do not revive rejected options", createMainPath);
   requireText(createMainText, "not overstate weak evidence", createMainPath);
+  requireText(createMainText, "Do not omit material initiative research constraints", createMainPath);
+  requireText(createMainText, "Do not let supporting artifacts remain hidden context", createMainPath);
   requireText(createMainText, "core noun before qualifiers", createMainPath);
   requireText(createMainText, "if the chat transcript is gone", createMainPath);
 
+  requireText(createDevText, "initiative research constraints", createDevPath);
+  requireText(createDevText, "supporting artifacts", createDevPath);
   requireText(createDevText, "observable, reviewable, or\nverifiable", createDevPath);
   requireText(createDevText, "fuzzy acceptance", createDevPath);
   requireText(createDevText, "One phase\nis correct when splitting would create fake work", createDevPath);
@@ -785,6 +870,8 @@ function validateStrikeContract() {
   requireText(createDevText, "Do not create phase specs, slice files", createDevPath);
   requireText(createDevText, "without\n  re-slicing the initiative", createDevPath);
 
+  requireText(createPhaseText, "initiative research constraints", createPhasePath);
+  requireText(createPhaseText, "supporting-artifacts/", createPhasePath);
   requireText(createPhaseText, "## Quality Bar", createPhasePath);
   requireText(createPhaseText, "`create-phase-slices` can split this one phase", createPhasePath);
   requireText(createPhaseText, "without rediscovering the main spec", createPhasePath);
@@ -818,7 +905,10 @@ function validateStrikeContract() {
   requireText(researchText, "Label weak evidence as weak", researchPath);
   requireText(researchText, "money, accounting", researchPath);
   requireText(researchText, "Use this when `Needed: no`", researchPath);
+  requireText(researchText, "Use initiative research as baseline evidence", researchPath);
+  requireText(researchText, "supporting-artifacts/", researchPath);
   requireText(researchText, "Do not write the slice plan", researchPath);
+  requireText(researchText, "Do not silently redo missing initiative-level research", researchPath);
   requireText(researchText, "as short as possible", researchPath);
   requireText(researchText, "Less verbose is\nbetter", researchPath);
   requireText(researchText, "Record implications, not a diary", researchPath);
@@ -826,6 +916,8 @@ function validateStrikeContract() {
   requireText(researchText, "Too broad: yes / no", researchPath);
   requireText(researchText, "edit the\n  current slice into the first smaller slice", researchPath);
 
+  requireText(createSlicesText, "Read relevant initiative research constraints", createSlicesPath);
+  requireText(createSlicesText, "supporting-artifacts/", createSlicesPath);
   requireText(createSlicesText, "A vertical slice is one observable behavior path", createSlicesPath);
   requireText(createSlicesText, "Work on one phase at a time", createSlicesPath);
   requireText(createSlicesText, "route back to the\nowning phase step", createSlicesPath);
@@ -856,6 +948,10 @@ function validateStrikeContract() {
   requireText(createSlicesText, "## Non-Vertical Justification", createSlicesPath);
   requireText(createSlicesText, "Do not create shared slice indexes", createSlicesPath);
 
+  requireText(planText, "## Initiative Research Used", planPath);
+  requireText(planText, "## Supporting Artifacts Used", planPath);
+  requireText(planText, "Use initiative research as inherited constraints", planPath);
+  requireText(planText, "supporting-artifacts/", planPath);
   requireText(planText, "slice research", planPath);
   requireText(planText, "current slice's `research.md`", planPath);
   requireText(planText, "current slice's `plan.md`", planPath);
@@ -923,7 +1019,11 @@ function validateStrikeContract() {
   requireText(verifyText, "current slice's `research.md`", verifyPath);
   requireText(verifyText, "current slice's `plan.md`", verifyPath);
   requireText(verifyText, "current phase's `phase-spec.md`", verifyPath);
+  requireText(verifyText, "supporting-artifacts/", verifyPath);
   requireText(verifyText, "plan's `Slice Boundary`", verifyPath);
+  requireText(verifyText, "## Supporting Artifacts", verifyPath);
+  requireText(verifyText, "supporting artifact usage", verifyPath);
+  requireText(verifyText, "relevant `supporting-artifacts/` notes are\n  ignored by the plan", verifyPath);
   requireText(verifyText, "out-of-scope boundaries", verifyPath);
   requireText(verifyText, "verification intent", verifyPath);
   requireText(verifyText, "core\n  noun before qualifiers lens", verifyPath);
@@ -972,6 +1072,7 @@ function validateStrikeContract() {
   requireText(verifyText, "rerun research and planning", verifyPath);
 
   requireText(buildText, "verified slice plan from the current slice's `plan.md`", buildPath);
+  requireText(buildText, "supporting-artifacts/", buildPath);
   requireText(buildText, "current slice's `plan-verification.md`", buildPath);
   requireText(buildText, "optional slice, research, or phase-spec context only", buildPath);
   requireText(buildText, "Treat `plan.md` as the primary build handoff", buildPath);
@@ -1015,6 +1116,7 @@ function validateStrikeContract() {
   requireText(buildText, "Do not treat a failing command, provider response, workflow error, payload\n  limit", buildPath);
 
   requireText(verifyBuildText, "current slice's `slice.md`", verifyBuildPath);
+  requireText(verifyBuildText, "supporting-artifacts/", verifyBuildPath);
   requireText(verifyBuildText, "current slice's `research.md`", verifyBuildPath);
   requireText(verifyBuildText, "current slice's `plan.md`", verifyBuildPath);
   requireText(verifyBuildText, "current slice's `plan-verification.md`", verifyBuildPath);
@@ -1105,6 +1207,7 @@ function validateStrikeContract() {
   requireText(fixText, "payload limit", fixPath);
 
   requireText(verifyPhaseText, "current phase's `phase-spec.md`", verifyPhasePath);
+  requireText(verifyPhaseText, "supporting-artifacts/", verifyPhasePath);
   requireText(verifyPhaseText, "each slice's `slice.md`", verifyPhasePath);
   requireText(verifyPhaseText, "each slice's `research.md`", verifyPhasePath);
   requireText(verifyPhaseText, "each slice's `plan.md`", verifyPhasePath);
@@ -1144,6 +1247,9 @@ function validateStrikeContract() {
   requireText(verifyPhaseText, "complete-check allSlicesVerified", verifyPhasePath);
 
   requireText(verifyMainText, "current initiative's `main-spec.md`", verifyMainPath);
+  requireText(verifyMainText, "research/index.md", verifyMainPath);
+  requireText(verifyMainText, "supporting-artifacts/", verifyMainPath);
+  requireText(verifyMainText, "initiativeResearchComplete", verifyMainPath);
   requireText(verifyMainText, "current initiative's `development-plan.md`", verifyMainPath);
   requireText(verifyMainText, "each phase's `phase.md`", verifyMainPath);
   requireText(verifyMainText, "each phase's `phase-spec.md`", verifyMainPath);
@@ -1189,7 +1295,7 @@ function validateStrikeContract() {
   requireText(verifyMainText, "Phase: None / <phase-id>", verifyMainPath);
   requireText(verifyMainText, "Slice: None / <slice-id>", verifyMainPath);
   requireText(verifyMainText, "Command: None / reopen-check / reopen-phase-check / reopen-slice-check", verifyMainPath);
-  requireText(verifyMainText, "Check: None / ideaRefined / decisionsResolved / specCreated / phasesCreated / phaseSpecCreated / slicesCreated / researchComplete / planCreated / planVerified / implemented / buildVerified / allSlicesVerified", verifyMainPath);
+  requireText(verifyMainText, "Check: None / ideaRefined / initiativeResearchComplete / decisionsResolved / specCreated / phasesCreated / phaseSpecCreated / slicesCreated / researchComplete / planCreated / planVerified / implemented / buildVerified / allSlicesVerified", verifyMainPath);
   requireText(verifyMainText, "Do not edit phase, slice, or implementation artifacts", verifyMainPath);
   requireText(verifyMainText, "Give every `Must Fix` item a stable short issue ID", verifyMainPath);
   requireText(verifyMainText, "complete-check allPhasesVerified", verifyMainPath);

@@ -13,6 +13,9 @@ Verify the completed initiative against the main spec and record final evidence.
 ## Inputs
 
 - main spec from the current initiative's `main-spec.md`
+- initiative research scope and index from `research/scope.md` and
+  `research/index.md`
+- supporting artifacts from `supporting-artifacts/`, when present
 - development plan from the current initiative's `development-plan.md`
 - each phase's `phase.md`
 - each phase's `phase-spec.md`
@@ -31,6 +34,10 @@ Verify the completed initiative against the main spec and record final evidence.
 
 - Read the current initiative files from
   `strike/initiatives/<initiative-id>/`.
+- If `supporting-artifacts/` exists, scan it and read only files relevant to
+  final readiness. Confirm accepted decisions and constraints from relevant
+  notes were carried into `decisions.md`, `main-spec.md`, phase specs, plans,
+  or verification evidence.
 - Read every phase artifact under
   `strike/initiatives/<initiative-id>/phases/<phase-id>/`.
 - Read the bundled `references/verification-evidence.md` from the Strike plugin
@@ -42,6 +49,10 @@ Verify the completed initiative against the main spec and record final evidence.
   `strike/user-guidance/review-lenses/verify-main-spec.md` if they exist.
 - Confirm every required phase has `verification.md` with `Ready: yes`.
 - Compare completed phase evidence against the main spec.
+- Confirm material initiative research constraints were carried into decisions,
+  the main spec, phase specs, and relevant slice plans. If provider/model/API,
+  database/schema, file/blob, queue/job, auth/payment, or repo-pattern research
+  is missing or contradicted, route back to `initiativeResearchComplete`.
 - Summarize phase verification evidence by the standard categories: Static /
   Build Checks, Unit / Component / Integration Tests, E2E Tests, Browser
   Clickthrough, and Visual Evidence.
@@ -235,7 +246,7 @@ Needed: yes / no
 Command: None / reopen-check / reopen-phase-check / reopen-slice-check
 Phase: None / <phase-id>
 Slice: None / <slice-id>
-Check: None / ideaRefined / decisionsResolved / specCreated / phasesCreated / phaseSpecCreated / slicesCreated / researchComplete / planCreated / planVerified / implemented / buildVerified / allSlicesVerified
+Check: None / ideaRefined / initiativeResearchComplete / decisionsResolved / specCreated / phasesCreated / phaseSpecCreated / slicesCreated / researchComplete / planCreated / planVerified / implemented / buildVerified / allSlicesVerified
 Reason:
 
 ## Final Receipt

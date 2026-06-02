@@ -19,6 +19,7 @@ Verify one phase and record phase verification.
 - each slice's `plan-verification.md`
 - each slice's `build.md`
 - each slice's `build-verification.md`
+- supporting artifacts relevant to this phase, when present
 - shared verification evidence taxonomy from the Strike plugin root's
   `references/verification-evidence.md`
 - user implementation guidance from
@@ -35,6 +36,9 @@ Verify one phase and record phase verification.
   `strike/initiatives/<initiative-id>/phases/<phase-id>/phase-spec.md`.
 - Read every slice artifact under
   `strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/`.
+- If `supporting-artifacts/` exists, scan it and read only files relevant to
+  this phase. Confirm relevant notes were represented in phase/slice specs,
+  plans, or verification evidence rather than left as hidden context.
 - Read the bundled `references/verification-evidence.md` from the Strike plugin
   root.
 - Read `strike/user-guidance/implementation-discipline/global.md` and

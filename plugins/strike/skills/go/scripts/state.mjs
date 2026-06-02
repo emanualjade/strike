@@ -12,6 +12,7 @@ const LANGUAGE_FILE = "PROJECT_LANGUAGE.md";
 const USER_GUIDANCE_DIR = "user-guidance";
 const IMPLEMENTATION_DISCIPLINE_DIR = "implementation-discipline";
 const REVIEW_LENSES_DIR = "review-lenses";
+const RESEARCH_SCOPE_RE = /^No material research needed:[^\S\r\n]*yes\b/mi;
 const IMPLEMENTATION_DISCIPLINE_TEMPLATES = new Map([
   [
     "global.md",
@@ -185,6 +186,7 @@ do not disable built-in gates.
 
 export const INITIATIVE_WORKFLOW = [
   ["refine-idea", ["ideaRefined"]],
+  ["research-initiative", ["initiativeResearchComplete"]],
   ["grill-idea", ["decisionsResolved"]],
   ["create-main-spec", ["specCreated"]],
   ["create-development-phases", ["phasesCreated"]],
@@ -209,6 +211,7 @@ const INITIATIVE_FINAL_SKILLS = new Set(["verify-main-spec"]);
 const PHASE_FINAL_SKILLS = new Set(["verify-phase"]);
 const INITIATIVE_UPSTREAM_CHECKS = new Set([
   "ideaRefined",
+  "initiativeResearchComplete",
   "decisionsResolved",
   "specCreated",
   "phasesCreated",
@@ -240,12 +243,56 @@ export function createInitialState(id, name = id) {
   };
 }
 
+export function normalizeState(state) {
+  if (!state || typeof state !== "object") return state;
+  if (!Array.isArray(state.initiatives)) return state;
+
+  for (const initiative of state.initiatives) {
+    initiative.initiativeWorkflow = normalizeWorkflow(
+      initiative.initiativeWorkflow,
+      INITIATIVE_WORKFLOW,
+    );
+
+    for (const phase of initiative.phases ?? []) {
+      phase.phaseWorkflow = normalizeWorkflow(phase.phaseWorkflow, PHASE_WORKFLOW);
+      for (const slice of phase.slices ?? []) {
+        slice.sliceWorkflow = normalizeWorkflow(slice.sliceWorkflow, SLICE_WORKFLOW);
+      }
+    }
+  }
+
+  return state;
+}
+
+function normalizeWorkflow(workflow, template) {
+  const bySkill = new Map();
+  for (const item of workflow ?? []) {
+    if (typeof item?.skill === "string" && !bySkill.has(item.skill)) {
+      bySkill.set(item.skill, item);
+    }
+  }
+
+  return template.map(([skill, checks]) => {
+    const existingVerified = bySkill.get(skill)?.verified;
+    const verified =
+      existingVerified && typeof existingVerified === "object" && !Array.isArray(existingVerified)
+        ? existingVerified
+        : {};
+    return {
+      skill,
+      verified: Object.fromEntries(checks.map((check) => [check, verified[check] === true])),
+    };
+  });
+}
+
 export function getActiveInitiative(state) {
+  normalizeState(state);
   const initiatives = Array.isArray(state?.initiatives) ? state.initiatives : [];
   return initiatives.find((initiative) => initiative.status === "active") ?? null;
 }
 
 export function listInitiatives(state) {
+  normalizeState(state);
   const initiatives = Array.isArray(state?.initiatives) ? state.initiatives : [];
   return initiatives.map((initiative) => ({
     id: initiative.id,
@@ -255,6 +302,7 @@ export function listInitiatives(state) {
 }
 
 export function addInitiative(state, id, name = id) {
+  normalizeState(state);
   state.initiatives ??= [];
   if (state.initiatives.some((initiative) => initiative.id === id)) {
     throw new Error(`Initiative already exists: ${id}`);
@@ -267,6 +315,7 @@ export function addInitiative(state, id, name = id) {
 }
 
 export function setActiveInitiative(state, id) {
+  normalizeState(state);
   validateId(id, "Initiative id");
   const initiative = (state.initiatives ?? []).find((item) => item.id === id);
   if (!initiative) {
@@ -279,6 +328,7 @@ export function setActiveInitiative(state, id) {
 }
 
 export function finishInitiative(state, id = null) {
+  normalizeState(state);
   const initiative = id
     ? (state.initiatives ?? []).find((item) => item.id === id)
     : getActiveInitiative(state);
@@ -299,6 +349,7 @@ function pauseActiveInitiatives(state) {
 }
 
 export function getNextStep(state) {
+  normalizeState(state);
   const initiative = getActiveInitiative(state);
   if (!initiative) {
     return { status: "idle", reason: "No active initiative." };
@@ -399,6 +450,20 @@ function validateCompletionPreconditions(state, current, verificationKey, option
     );
   }
 
+  if (verificationKey === "initiativeResearchComplete") {
+    const scopePath = artifactFilePath(options.statePath, current.initiativeId, "research", "scope.md");
+    const indexPath = artifactFilePath(options.statePath, current.initiativeId, "research", "index.md");
+    requireResearchScopeCheckpoint(
+      "initiativeResearchComplete",
+      scopePath,
+    );
+    requireReadyForGrill(
+      "initiativeResearchComplete",
+      indexPath,
+    );
+    requireResearchReports("initiativeResearchComplete", scopePath, indexPath);
+  }
+
   if (verificationKey === "decisionsResolved") {
     requireUserCheckpoint(
       "decisionsResolved",
@@ -495,6 +560,138 @@ function requireUserCheckpoint(verificationKey, artifactPath) {
       `Cannot complete ${verificationKey} until ${artifactPath} has ## User Checkpoint, a non-empty User response, and Ready to continue: yes.`,
     );
   }
+}
+
+function requireResearchScopeCheckpoint(verificationKey, artifactPath) {
+  if (!hasFileContent(artifactPath)) {
+    throw new Error(
+      `Cannot complete ${verificationKey} until ${artifactPath} exists and contains a research user checkpoint.`,
+    );
+  }
+
+  const text = fs.readFileSync(artifactPath, "utf8");
+  const hasCheckpoint = /^## User Checkpoint\b/mi.test(text);
+  const hasReadyYes = /^Ready to research:[^\S\r\n]*yes\b/mi.test(text);
+  const hasUserResponse = /^User response:[^\S\r\n]*\S.+$/mi.test(text);
+
+  if (!hasCheckpoint || !hasReadyYes || !hasUserResponse) {
+    throw new Error(
+      `Cannot complete ${verificationKey} until ${artifactPath} has ## User Checkpoint, a non-empty User response, and Ready to research: yes.`,
+    );
+  }
+}
+
+function requireReadyForGrill(verificationKey, artifactPath) {
+  if (!hasFileContent(artifactPath)) {
+    throw new Error(
+      `Cannot complete ${verificationKey} until ${artifactPath} exists and contains a research index.`,
+    );
+  }
+
+  const text = fs.readFileSync(artifactPath, "utf8");
+  if (!/^Ready for grill:[^\S\r\n]*yes\b/mi.test(text)) {
+    throw new Error(
+      `Cannot complete ${verificationKey} until ${artifactPath} says Ready for grill: yes.`,
+    );
+  }
+}
+
+function requireResearchReports(verificationKey, scopePath, indexPath) {
+  const scopeText = fs.readFileSync(scopePath, "utf8");
+  const indexText = fs.readFileSync(indexPath, "utf8");
+  const approvedItemIds = researchItemIds(scopeText);
+
+  if (approvedItemIds.length === 0) {
+    if (!RESEARCH_SCOPE_RE.test(scopeText)) {
+      throw new Error(
+        `Cannot complete ${verificationKey} until ${scopePath} either lists approved research item IDs or says No material research needed: yes.`,
+      );
+    }
+    return;
+  }
+
+  const reportsById = researchReportsById(indexText);
+  const researchRoot = path.dirname(indexPath);
+  const missing = [];
+
+  for (const itemId of approvedItemIds) {
+    const report = reportsById.get(itemId);
+    if (!report?.file || !report?.status || report.status === "not needed") {
+      missing.push(itemId);
+      continue;
+    }
+
+    const reportPath = safeResearchReportPath(researchRoot, report.file);
+    if (!reportPath || !hasFileContent(reportPath)) {
+      missing.push(`${itemId} (${report.file})`);
+    }
+  }
+
+  if (missing.length > 0) {
+    throw new Error(
+      `Cannot complete ${verificationKey} until each approved research item has a non-empty report file referenced by ${indexPath}: ${missing.join(", ")}.`,
+    );
+  }
+}
+
+function researchItemIds(scopeText) {
+  const ids = [];
+  const pattern = /^\s*-?\s*ID:\s*([a-z0-9][a-z0-9-]*)\s*$/gim;
+  let match;
+  while ((match = pattern.exec(scopeText))) {
+    const id = match[1].toLowerCase();
+    if (!["none", "n-a", "na", "not-needed"].includes(id)) {
+      ids.push(id);
+    }
+  }
+  return [...new Set(ids)];
+}
+
+function researchReportsById(indexText) {
+  const reports = new Map();
+  let inReports = false;
+  let current = null;
+
+  for (const line of indexText.split(/\r?\n/)) {
+    if (/^##\s+/.test(line)) {
+      inReports = /^##\s+Reports\b/i.test(line);
+      current = null;
+      continue;
+    }
+    if (!inReports) continue;
+
+    const idMatch = line.match(/^\s*-\s*ID:\s*([a-z0-9][a-z0-9-]*)\s*$/i);
+    if (idMatch) {
+      current = { id: idMatch[1].toLowerCase(), file: "", status: "" };
+      reports.set(current.id, current);
+      continue;
+    }
+
+    if (!current) continue;
+    const fileMatch = line.match(/^\s*File:\s*(\S.*)$/i);
+    if (fileMatch) {
+      current.file = fileMatch[1].trim();
+      continue;
+    }
+
+    const statusMatch = line.match(/^\s*Status:\s*(complete|partial|not needed)\b/i);
+    if (statusMatch) {
+      current.status = statusMatch[1].toLowerCase();
+    }
+  }
+
+  return reports;
+}
+
+function safeResearchReportPath(researchRoot, reportFile) {
+  if (!reportFile || reportFile === "-" || /^none$/i.test(reportFile)) return null;
+  if (path.isAbsolute(reportFile)) return null;
+  const normalized = path.normalize(reportFile);
+  if (normalized.startsWith("..") || normalized.includes(`${path.sep}..${path.sep}`)) return null;
+  if (normalized === "scope.md" || normalized === "index.md" || !normalized.endsWith(".md")) {
+    return null;
+  }
+  return path.join(researchRoot, normalized);
 }
 
 function hasFileContent(filePath) {
@@ -767,6 +964,12 @@ export function artifactPathsForCurrent(current) {
   switch (current.skill) {
     case "refine-idea":
       return [`${initiativeRoot}/idea.md`];
+    case "research-initiative":
+      return [
+        `${initiativeRoot}/research/scope.md`,
+        `${initiativeRoot}/research/<research-item-id>.md`,
+        `${initiativeRoot}/research/index.md`,
+      ];
     case "grill-idea":
       return [`${initiativeRoot}/decisions.md`];
     case "create-main-spec":
@@ -833,7 +1036,7 @@ function workflowForCurrentScope(state, current) {
 }
 
 function readState(filePath) {
-  return JSON.parse(fs.readFileSync(filePath, "utf8"));
+  return normalizeState(JSON.parse(fs.readFileSync(filePath, "utf8")));
 }
 
 function writeState(filePath, state) {
@@ -937,7 +1140,7 @@ function initWorkspace(id, name, statePath) {
   createLanguageFile(paths.languagePath);
   createGuidanceFiles(paths.implementationDisciplinePath, IMPLEMENTATION_DISCIPLINE_TEMPLATES);
   createReviewLensFiles(paths.reviewLensesPath);
-  copyHelper(paths.helperPath);
+  syncHelper(paths.helperPath);
 
   const state = createInitialState(id, name);
   writeState(statePath, state);
@@ -990,17 +1193,32 @@ function createGuidanceFiles(rootPath, templates) {
   }
 }
 
-function copyHelper(helperPath) {
+function syncHelper(helperPath) {
+  fs.mkdirSync(path.dirname(helperPath), { recursive: true });
+  const source = fs.readFileSync(SCRIPT_FILE, "utf8");
+
   if (fs.existsSync(helperPath)) {
     const existing = fs.readFileSync(helperPath, "utf8");
-    const source = fs.readFileSync(SCRIPT_FILE, "utf8");
     if (existing !== source) {
-      throw new Error(`Refusing to overwrite existing helper: ${helperPath}`);
+      if (!isStrikeStateHelper(existing)) {
+        throw new Error(`Refusing to overwrite unrecognized existing helper: ${helperPath}`);
+      }
+      fs.writeFileSync(helperPath, source);
+      return { helperPath, refreshed: true };
     }
-    return;
+    return { helperPath, refreshed: false };
   }
 
   fs.copyFileSync(SCRIPT_FILE, helperPath);
+  return { helperPath, refreshed: true };
+}
+
+function isStrikeStateHelper(text) {
+  return (
+    text.includes('DEFAULT_STATE_PATH = "strike/state.json"') &&
+    text.includes("INITIATIVE_WORKFLOW") &&
+    text.includes("complete-check")
+  );
 }
 
 export function main() {
@@ -1022,6 +1240,12 @@ export function main() {
       throw new Error("Usage: state.mjs init <initiative-id> [name] [--state path]");
     }
     printJson(initWorkspace(id, args.slice(1).join(" ") || id, statePath));
+    return;
+  }
+
+  if (command === "sync-helper") {
+    const result = syncHelper(workspacePaths(statePath).helperPath);
+    printJson(result);
     return;
   }
 
@@ -1196,7 +1420,7 @@ export function main() {
   }
 
   throw new Error(
-    "Usage: state.mjs <template|init|next-step|list-initiatives|add-initiative|set-active|finish-initiative|complete-check|reopen-check|reopen-phase-check|reopen-slice-check|add-phase|add-slice> ...",
+    "Usage: state.mjs <template|init|sync-helper|next-step|list-initiatives|add-initiative|set-active|finish-initiative|complete-check|reopen-check|reopen-phase-check|reopen-slice-check|add-phase|add-slice> ...",
   );
 }
 

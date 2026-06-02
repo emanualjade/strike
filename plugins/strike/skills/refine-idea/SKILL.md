@@ -23,6 +23,10 @@ Clarify a raw idea into a useful first outcome.
 - Clarify the painful moment, current workaround, or opportunity.
 - Propose the first useful outcome.
 - Identify constraints and first-version non-goals.
+- Do light reconnaissance when it can reveal material research candidates for
+  the next gate. Name likely third-party APIs, models, SDKs, provider
+  capabilities, database/schema concerns, queues/jobs, file/blob workflows,
+  auth/payments, or repo architecture patterns that could change decisions.
 - Initiate a user checkpoint before finishing, even when provided docs, decision
   files, schemas, or existing plans seem complete. Briefly summarize the refined
   outcome and ask whether the user is ready to move on or wants to discuss more.
@@ -31,7 +35,8 @@ Clarify a raw idea into a useful first outcome.
 - Ask one consequential question if the first useful outcome cannot be clarified.
 
 Do light research only when it can change the first useful outcome, constraints,
-privacy/cost risk, or feasibility.
+privacy/cost risk, feasibility, or the research scope needed before Grill.
+Do not produce full provider/API reports in this step.
 
 ## Language
 
@@ -74,6 +79,11 @@ Use this shape:
 ## Open Questions
 -
 
+## Research Candidates
+- Topic:
+  Why it may matter:
+  Suggested research:
+
 ## User Checkpoint
 Prompt:
 User response:
@@ -85,6 +95,9 @@ Ready to continue: yes / no
 - Do not create durable project state unless an output path is provided.
 - Do not choose stack, dependencies, persistence, auth, or phase count unless
   the idea requires that decision now.
+- Do not skip `Research Candidates` just because the idea seems simple. Write
+  `None apparent` only when no material external, repo, data, model, provider,
+  or architecture facts need pre-grill research.
 - Prefer a small useful outcome over a broad feature wish.
 - Keep open questions limited to decisions that would change outcome, scope, or
   risk.

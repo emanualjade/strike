@@ -86,7 +86,11 @@ function writeArtifact(repo, relativePath, content = "# Test Artifact\n\nReady.\
 }
 
 function writeWorkflowCheckpointArtifact(repo, checkName) {
-  if (checkName !== "ideaRefined" && checkName !== "decisionsResolved") {
+  if (
+    checkName !== "ideaRefined" &&
+    checkName !== "initiativeResearchComplete" &&
+    checkName !== "decisionsResolved"
+  ) {
     return;
   }
 
@@ -98,6 +102,66 @@ function writeWorkflowCheckpointArtifact(repo, checkName) {
   const state = JSON.parse(fs.readFileSync(statePath, "utf8"));
   const initiative = state.initiatives.find((item) => item.status === "active");
   if (!initiative) {
+    return;
+  }
+
+  if (checkName === "initiativeResearchComplete") {
+    const researchRoot = path.join(repo, "strike/initiatives", initiative.id, "research");
+    const scopePath = path.join(researchRoot, "scope.md");
+    const indexPath = path.join(researchRoot, "index.md");
+    if (!fs.existsSync(scopePath)) {
+      writeArtifact(
+        repo,
+        path.join("strike/initiatives", initiative.id, "research/scope.md"),
+        `# Initiative Research Scope
+
+## Research Items
+- ID: repo-patterns
+  Topic: Existing repo patterns
+  Category: repo
+  Why it matters: The implementation should reuse local precedent.
+  Questions to answer:
+  Expected sources:
+
+## User Checkpoint
+Prompt: Research these topics?
+User response: Yes, research these.
+Ready to research: yes
+`,
+      );
+    }
+    if (!fs.existsSync(indexPath)) {
+      writeArtifact(
+        repo,
+        path.join("strike/initiatives", initiative.id, "research/index.md"),
+        `# Initiative Research Index
+
+## Reports
+- ID: repo-patterns
+  File: repo-patterns.md
+  Topic: Existing repo patterns
+  Status: complete
+
+## Ready For Grill
+Ready for grill: yes
+Reason: Research is complete enough for grilling.
+`,
+      );
+    }
+    const reportPath = path.join(researchRoot, "repo-patterns.md");
+    if (!fs.existsSync(reportPath)) {
+      writeArtifact(
+        repo,
+        path.join("strike/initiatives", initiative.id, "research/repo-patterns.md"),
+        `# Research: Existing Repo Patterns
+
+## Findings
+- Finding: Representative repo pattern reviewed.
+  Evidence: Test fixture.
+  Implication: Grill can proceed.
+`,
+      );
+    }
     return;
   }
 
@@ -127,7 +191,7 @@ function writePhaseArtifacts(repo, initiativeId, phaseIds) {
   }
 }
 
-function testUserCheckpointRequiredForIdeaAndGrill() {
+function testUserCheckpointRequiredForIdeaResearchAndGrill() {
   const repo = tempRepo();
   run(repo, helper, ["init", "gallery", "Gallery"]);
   const localHelper = workspaceHelper(repo);
@@ -161,7 +225,100 @@ User response: Yes, continue.
 Ready to continue: yes
 `,
   );
-  complete(repo, "ideaRefined", { skill: "grill-idea" });
+  complete(repo, "ideaRefined", { skill: "research-initiative" });
+
+  runFail(repo, localHelper, ["complete-check", "initiativeResearchComplete"], /research user checkpoint/);
+
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/research/scope.md",
+    `# Initiative Research Scope
+
+## Research Items
+- ID: repo-patterns
+  Topic: Existing repo patterns
+  Category: repo
+  Why it matters: The implementation should reuse local precedent.
+  Questions to answer:
+  Expected sources:
+
+## User Checkpoint
+Prompt: Research these topics?
+User response:
+Ready to research: yes
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "initiativeResearchComplete"], /non-empty User response/);
+
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/research/scope.md",
+    `# Initiative Research Scope
+
+## Research Items
+- ID: repo-patterns
+  Topic: Existing repo patterns
+  Category: repo
+  Why it matters: The implementation should reuse local precedent.
+  Questions to answer:
+  Expected sources:
+
+## User Checkpoint
+Prompt: Research these topics?
+User response: Yes, research these.
+Ready to research: yes
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "initiativeResearchComplete"], /research index/);
+
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/research/index.md",
+    `# Initiative Research Index
+
+## Reports
+- ID: repo-patterns
+  File: repo-patterns.md
+  Topic: Existing repo patterns
+  Status: complete
+
+## Ready For Grill
+Ready for grill: no
+Reason: Still missing approved research.
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "initiativeResearchComplete"], /Ready for grill: yes/);
+
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/research/index.md",
+    `# Initiative Research Index
+
+## Reports
+- ID: repo-patterns
+  File: repo-patterns.md
+  Topic: Existing repo patterns
+  Status: complete
+
+## Ready For Grill
+Ready for grill: yes
+Reason: Research is complete enough for grilling.
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "initiativeResearchComplete"], /approved research item/);
+
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/research/repo-patterns.md",
+    `# Research: Existing Repo Patterns
+
+## Findings
+- Finding: Representative repo pattern reviewed.
+  Evidence: Test fixture.
+  Implication: Grill can proceed.
+`,
+  );
+  complete(repo, "initiativeResearchComplete", { skill: "grill-idea" });
 
   runFail(repo, localHelper, ["complete-check", "decisionsResolved"], /user checkpoint/);
 
@@ -187,7 +344,8 @@ function writeSliceArtifacts(repo, initiativeId, phaseId, sliceIds) {
 
 function bootstrapTwoSliceWorkflow(repo) {
   run(repo, helper, ["init", "gallery", "Gallery"]);
-  complete(repo, "ideaRefined", { skill: "grill-idea" });
+  complete(repo, "ideaRefined", { skill: "research-initiative" });
+  complete(repo, "initiativeResearchComplete", { skill: "grill-idea" });
   complete(repo, "decisionsResolved", { skill: "create-main-spec" });
   complete(repo, "specCreated", { skill: "create-development-phases" });
   run(repo, workspaceHelper(repo), ["add-phase", "1", "Upload and display"]);
@@ -248,6 +406,15 @@ function testBootstrapAndWorkflowProgression() {
   });
 
   complete(repo, "ideaRefined", {
+    skill: "research-initiative",
+    missing: ["initiativeResearchComplete"],
+    artifacts: [
+      "strike/initiatives/gallery/research/scope.md",
+      "strike/initiatives/gallery/research/<research-item-id>.md",
+      "strike/initiatives/gallery/research/index.md",
+    ],
+  });
+  complete(repo, "initiativeResearchComplete", {
     skill: "grill-idea",
     missing: ["decisionsResolved"],
     artifacts: ["strike/initiatives/gallery/decisions.md"],
@@ -457,7 +624,8 @@ function testPhaseAndSliceRegistrationRequired() {
   run(repo, helper, ["init", "gallery", "Gallery"]);
   const localHelper = workspaceHelper(repo);
 
-  complete(repo, "ideaRefined", { skill: "grill-idea" });
+  complete(repo, "ideaRefined", { skill: "research-initiative" });
+  complete(repo, "initiativeResearchComplete", { skill: "grill-idea" });
   complete(repo, "decisionsResolved", { skill: "create-main-spec" });
   complete(repo, "specCreated", { skill: "create-development-phases" });
   runFail(repo, localHelper, ["complete-check", "phasesCreated"], /at least one phase/);
@@ -567,6 +735,86 @@ function testInitPreservesProjectGuidanceFiles() {
   assert.ok(fs.existsSync(path.join(repo, "strike/user-guidance/review-lenses/verify-slice-build.md")));
 }
 
+function testSyncHelperRefreshesRecognizedWorkspaceHelper() {
+  const repo = tempRepo();
+  const localHelper = workspaceHelper(repo);
+  fs.mkdirSync(path.dirname(localHelper), { recursive: true });
+  fs.writeFileSync(
+    localHelper,
+    `#!/usr/bin/env node
+const DEFAULT_STATE_PATH = "strike/state.json";
+const INITIATIVE_WORKFLOW = [];
+const command = "complete-check";
+console.log(DEFAULT_STATE_PATH, INITIATIVE_WORKFLOW, command);
+`,
+  );
+
+  const firstSync = run(repo, helper, ["sync-helper"]);
+  assert.equal(firstSync.refreshed, true);
+  assert.equal(fs.readFileSync(localHelper, "utf8"), fs.readFileSync(helper, "utf8"));
+
+  const secondSync = run(repo, helper, ["sync-helper"]);
+  assert.equal(secondSync.refreshed, false);
+}
+
+function testOldInitiativeWorkflowNormalizesResearchGate() {
+  const repo = tempRepo();
+  const statePath = path.join(repo, "strike/state.json");
+  fs.mkdirSync(path.dirname(statePath), { recursive: true });
+  fs.writeFileSync(
+    statePath,
+    `${JSON.stringify(
+      {
+        version: 1,
+        initiatives: [
+          {
+            id: "gallery",
+            name: "Gallery",
+            status: "active",
+            initiativeWorkflow: [
+              { skill: "refine-idea", verified: { ideaRefined: true } },
+              { skill: "grill-idea", verified: { decisionsResolved: false } },
+              { skill: "create-main-spec", verified: { specCreated: false } },
+              { skill: "create-development-phases", verified: { phasesCreated: false } },
+              { skill: "verify-main-spec", verified: { allPhasesVerified: false } },
+            ],
+            phases: [],
+          },
+        ],
+      },
+      null,
+      2,
+    )}\n`,
+  );
+
+  const nextStep = run(repo, helper, ["next-step"]);
+  assertNextStep(nextStep, {
+    skill: "research-initiative",
+    missing: ["initiativeResearchComplete"],
+  });
+
+  writeWorkflowCheckpointArtifact(repo, "initiativeResearchComplete");
+  const receipt = run(repo, helper, ["complete-check", "initiativeResearchComplete"]);
+  assert.equal(receipt.completedCheck, "initiativeResearchComplete");
+
+  const normalizedState = JSON.parse(fs.readFileSync(statePath, "utf8"));
+  assert.deepEqual(
+    normalizedState.initiatives[0].initiativeWorkflow.map((item) => item.skill),
+    [
+      "refine-idea",
+      "research-initiative",
+      "grill-idea",
+      "create-main-spec",
+      "create-development-phases",
+      "verify-main-spec",
+    ],
+  );
+  assert.equal(
+    normalizedState.initiatives[0].initiativeWorkflow[1].verified.initiativeResearchComplete,
+    true,
+  );
+}
+
 function testRouteBackCommandContract() {
   const repo = tempRepo();
   bootstrapTwoSliceWorkflow(repo);
@@ -625,7 +873,7 @@ function testRouteBackCommandContract() {
 
   const stateAfterSliceBack = JSON.parse(fs.readFileSync(path.join(repo, "strike/state.json"), "utf8"));
   assert.equal(stateAfterSliceBack.initiatives[0].phases[0].phaseWorkflow[2].verified.allSlicesVerified, false);
-  assert.equal(stateAfterSliceBack.initiatives[0].initiativeWorkflow[4].verified.allPhasesVerified, false);
+  assert.equal(stateAfterSliceBack.initiatives[0].initiativeWorkflow[5].verified.allPhasesVerified, false);
 
   complete(repo, "buildVerified", {
     phaseId: "phase-01",
@@ -700,7 +948,7 @@ function testRouteBackInvalidatesDownstreamScopes() {
   });
 
   state = JSON.parse(fs.readFileSync(path.join(repo, "strike/state.json"), "utf8"));
-  assert.equal(state.initiatives[0].initiativeWorkflow[4].verified.allPhasesVerified, false);
+  assert.equal(state.initiatives[0].initiativeWorkflow[5].verified.allPhasesVerified, false);
   for (const slice of state.initiatives[0].phases[0].slices) {
     assert.deepEqual(
       slice.sliceWorkflow.flatMap((item) => Object.values(item.verified)),
@@ -797,11 +1045,13 @@ function testInitiativeLifecycle() {
 }
 
 testBootstrapAndWorkflowProgression();
-testUserCheckpointRequiredForIdeaAndGrill();
+testUserCheckpointRequiredForIdeaResearchAndGrill();
 testPhaseAndSliceRegistrationRequired();
 testStrictCommands();
 testNewInitiativeHelperWrapper();
 testInitPreservesProjectGuidanceFiles();
+testSyncHelperRefreshesRecognizedWorkspaceHelper();
+testOldInitiativeWorkflowNormalizesResearchGate();
 testRouteBackCommandContract();
 testRouteBackInvalidatesDownstreamScopes();
 testDeterministicRegistrationOrder();

@@ -18,6 +18,8 @@ Verify one slice build and record build verification.
 - plan verification from the current slice's `plan-verification.md`
 - build evidence from the current slice's `build.md`
 - phase spec from the current phase's `phase-spec.md`
+- supporting artifacts named in the plan or relevant to the built slice, when
+  present
 - shared verification evidence taxonomy from the Strike plugin root's
   `references/verification-evidence.md`
 - user implementation guidance from
@@ -31,6 +33,9 @@ Verify one slice build and record build verification.
 
 - Read the canonical slice, research, plan, plan verification, build evidence,
   and phase spec before verifying.
+- If the plan or slice references `supporting-artifacts/`, read the relevant
+  artifacts before verifying. Confirm the build followed decisions already
+  represented in the plan/specs; do not promote supporting notes into new scope.
 - Read the bundled `references/verification-evidence.md` from the Strike plugin
   root.
 - Read `strike/user-guidance/implementation-discipline/global.md` and
@@ -64,6 +69,9 @@ Verify one slice build and record build verification.
 - Check that integration, provider, workflow, upload, asset, storage, queue, job,
   callback, webhook, or dataflow work follows existing repo precedent when one
   exists. Treat unexplored precedent as a verification issue, not a style nit.
+- Treat ignored relevant supporting artifacts as a plan/build issue when they
+  contain schema, architecture, provider routing, data lifecycle, permissions,
+  or operational constraints that were supposed to inform the slice.
 - Record skipped checks, replacement evidence, and residual risk.
 - If `build.md` says `Built: no`, do not verify. Follow its `## Route Back`
   guidance.
