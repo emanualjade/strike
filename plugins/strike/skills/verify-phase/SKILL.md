@@ -244,7 +244,8 @@ Reason:
   `Slice: None`, and `Check: None`.
 - After writing `Ready: yes`, Strike can run
   `node strike/scripts/state.mjs complete-check allSlicesVerified`.
-- Do not start another phase.
+- Do not start another phase from inside `verify-phase`; return control to `go`
+  so the orchestrator can run `next-step` and continue if another phase is ready.
 - Do not verify the whole main spec.
 - Keep automated evidence, E2E tests, Browser Clickthrough, and Visual Evidence
   separate when summarizing phase readiness.

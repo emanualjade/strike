@@ -2,6 +2,12 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.10.14 - 2026-06-02
+
+- Clarified that phase verification returns control to `go` after
+  `allSlicesVerified`; phase boundaries are workflow handoffs, not automatic
+  pauses when `next-step` points to the next phase.
+
 ## 0.10.13 - 2026-06-02
 
 - Tightened slice-specific and planning-time research so agents start from

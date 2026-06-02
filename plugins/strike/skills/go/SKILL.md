@@ -167,6 +167,10 @@ completed check and let the helper decide the next step.
 The JSON returned by `complete-check` is only a receipt. It intentionally does
 not return the next workflow skill, missing checks, or artifact paths. Always
 run `next-step` again before doing or completing another workflow step.
+Phase boundaries are normal workflow handoffs, not automatic pauses. If
+`allSlicesVerified` completes and `next-step` returns the next phase's
+`create-phase-spec`, continue with that returned step unless the user asked to
+pause or the workflow is blocked.
 
 Treat the `next-step` result as an exclusive gate. Do not create or edit artifacts
 owned by later workflow skills until `next-step` points to that skill. In
