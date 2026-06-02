@@ -3,7 +3,7 @@ name: grill-idea
 description: Pressure-test a refined idea until key decisions, assumptions, and blockers are explicit enough for a spec.
 argument-hint: "[refined idea or context] [--depth lean|standard|deep] [--output path]"
 disable-model-invocation: true
-allowed-tools: Read Write Edit Grep Glob WebFetch WebSearch
+allowed-tools: Read Write Edit Grep Glob WebFetch WebSearch Agent
 ---
 
 # Grill Idea
@@ -74,6 +74,11 @@ decision nodes remain unresolved.
   then ask whether the user is ready to move on or wants to discuss more.
 - Wait for the user's answer to that checkpoint. Existing artifacts can inform
   the decision record, but they do not replace hearing from the user.
+- Before completing Grill, run a read-only decision review of the final
+  `decisions.md`. Use a subagent or custom agent when available; otherwise run a
+  separate inline review pass. The reviewer must not edit files.
+- If the decision review finds `Must Fix` issues, address them in `decisions.md`
+  or ask the next user question, then rerun the review before completing.
 - Recommend defaults for reversible low-risk details.
 - Record user-stated decisions, accepted assumptions, deferred decisions, and
   blockers.
@@ -213,6 +218,15 @@ Prompt:
 User response:
 Ready to continue: yes / no
 
+## Decision Review
+Reviewer: subagent / inline
+Verdict: pass / needs-fix / accepted-risk
+Must Fix count:
+Findings addressed:
+-
+Accepted risks:
+-
+
 ## Blocking Question
 None.
 
@@ -242,6 +256,19 @@ Status: supporting
 -
 ```
 
+Decision review prompt:
+
+```text
+Read-only review this decisions.md before it goes to Main Spec. Check for
+blind spots, unsupported assumptions, contradictions with initiative research,
+official sources, repo code, or provided docs, unresolved consequential decision
+nodes, missing owners or stages for deferrals, spec-blocking ambiguity, and
+anything that would make the spec agent guess. Pay special attention to scope,
+data, permissions, provider behavior, failure cases, validation, browser checks,
+cost, privacy, and ownership. Return Must Fix / Follow-Up / Accepted Risk
+findings. Do not edit files.
+```
+
 ## Rules
 
 - Do not create durable project state unless an output path is provided.
@@ -269,6 +296,10 @@ Status: supporting
   UI. Ask plainly and wait when the answer matters.
 - Do not mark decisions ready to continue without `## User Checkpoint` showing
   that you asked the user whether to move on and received their answer.
+- Do not complete Grill without `## Decision Review` showing `Verdict: pass` or
+  `Verdict: accepted-risk` and `Must Fix count: 0`.
+- Do not let decision review replace user questioning. If review finds a
+  spec-blocking choice, ask the user one question and rerun the review.
 - Do not move to the final checkpoint while consequential decision nodes remain
   unresolved.
 - Do not treat provided docs, prior schemas, planning files, or silence as the

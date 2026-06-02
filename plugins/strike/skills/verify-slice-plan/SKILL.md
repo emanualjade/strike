@@ -99,9 +99,10 @@ Verify one slice plan is ready to build.
   repo-specific or risk-based reason.
 - Check the research `Slice Size Check`. If it says `Too broad: yes`, the plan
   is not ready until the slice is split or the finding is resolved.
-- Check that the slice and plan are small enough for one focused build loop. A
-  plan with L/XL signals, multiple independent behaviors, too many surfaces, or
-  broad-stack work that can work smaller is not ready.
+- Check that the slice and plan are cohesive and verifiable in one focused build
+  loop. A plan with independent outcomes, unclear verification, weak cohesion,
+  or broad-stack work that can be separated without creating fake work is not
+  ready.
 - Confirm the plan follows local repo patterns where they are knowable.
 - Confirm the plan prefers existing repo structure and patterns for matching
   UI/component, routing/API, networking/provider integration, async
@@ -291,10 +292,11 @@ Reason:
   and workflow risk but the plan does not name specs to add/update.
 - Do not mark `Ready: yes` when a relevant user review lens raises an
   accepted-scope `Must Fix` issue.
-- Do not mark `Ready: yes` when the slice should be split before build. Write
-  the split finding in `Must Fix`, set `Fix Needed: no`, and route back to
-  `researchComplete` so Strike can edit the current slice into the first
-  smaller slice, add any extra slices, and rerun research and planning.
+- Do not mark `Ready: yes` when the slice contains independent outcomes, cannot
+  be verified in one focused loop, or would force unrelated changes into the
+  same build. Write the split finding in `Must Fix`, set `Fix Needed: no`, and
+  route back to `researchComplete` so Strike can edit the current slice into the
+  first smaller slice, add any extra slices, and rerun research and planning.
 - When readiness fails because the plan, research, or related artifact can be
   repaired inside accepted scope, write `Fix Needed: yes`.
 - Route back only when a real decision, scope change, or untrustworthy upstream
@@ -306,4 +308,4 @@ Reason:
   `node strike/scripts/state.mjs complete-check planVerified`.
 - Do not build the slice.
 - Do not verify the slice build.
-- Keep the plan small enough for one focused build loop.
+- Keep the plan cohesive and verifiable in one focused build loop.

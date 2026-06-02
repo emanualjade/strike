@@ -74,10 +74,11 @@ Create a concrete implementation plan for one slice.
   automated tests in the repo's test/E2E environment and Browser Clickthrough in
   the dev/local app environment unless repo instructions or the user explicitly
   require otherwise.
-- Before writing the plan, check whether the slice is still small enough for one
-  focused build loop. If the likely plan has L/XL signals, multiple independent
-  behaviors, too many surfaces, or broad-stack work that can work smaller, do
-  not write a bloated plan. Write a split recommendation instead.
+- Before writing the plan, check whether the slice is cohesive and verifiable in
+  one focused build loop. If the likely plan has independent behaviors, unclear
+  verification, weak cohesion, or broad-stack work that can be separated without
+  creating fake work, do not write a bloated plan. Write a split recommendation
+  instead.
 - Ask one consequential question if a missing decision changes behavior, risk,
   or implementation shape.
 - Point build toward the simplest safe approach. The plan should be specific

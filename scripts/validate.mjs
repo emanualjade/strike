@@ -747,6 +747,8 @@ function validateStrikeContract() {
   requireText(strikeText, "No material research needed: yes", strikePath);
   requireText(strikeText, "sync-helper", strikePath);
   requireText(strikeText, "Do not complete `decisionsResolved` unless `decisions.md` contains", strikePath);
+  requireText(strikeText, "## Decision Review", strikePath);
+  requireText(strikeText, "`Verdict: pass` or `Verdict: accepted-risk`", strikePath);
   requireText(strikeText, "`research-initiative`: pass `idea.md`", strikePath);
   requireText(strikeText, "missing or weak initiative research -> `reopen-check initiativeResearchComplete`", strikePath);
   requireText(strikeText, "supporting-artifacts/", strikePath);
@@ -765,6 +767,7 @@ function validateStrikeContract() {
   requireText(strikeText, "then commit and push that completed slice before moving on", strikePath);
 
   requireText(helperText, "requireUserCheckpoint", helperPath);
+  requireText(helperText, "requireDecisionReview", helperPath);
   requireText(helperText, "Ready to continue: yes", helperPath);
   requireText(helperText, "non-empty User response", helperPath);
 
@@ -830,6 +833,8 @@ function validateStrikeContract() {
   requireText(grillText, "Do not ask the user factual questions you can answer yourself", grillPath);
   requireText(grillText, "Do not silently decide product, scope, risk", grillPath);
   requireText(grillText, "## Decision Tree", grillPath);
+  requireText(grillText, "## Decision Review", grillPath);
+  requireText(grillText, "Decision review prompt", grillPath);
   requireText(grillText, "## Pressure Points", grillPath);
   requireText(grillText, "## Decision Checkpoint", grillPath);
   requireText(grillText, "`lean`", grillPath);
@@ -843,6 +848,9 @@ function validateStrikeContract() {
   requireText(grillText, "Do not infer user answers from silence", grillPath);
   requireText(grillText, "Do not silently draft around a consequential fork", grillPath);
   requireText(grillText, "Do not move to the final checkpoint while consequential decision nodes remain", grillPath);
+  requireText(grillText, "run a read-only decision review", grillPath);
+  requireText(grillText, "Do not complete Grill without `## Decision Review`", grillPath);
+  requireText(grillText, "Do not let decision review replace user questioning", grillPath);
   requireText(grillText, "Initiate a user checkpoint before finishing", grillPath);
   requireText(grillText, "Existing artifacts can inform\n  the decision record, but they do not replace hearing from the user", grillPath);
   requireText(grillText, "## User Checkpoint", grillPath);
@@ -949,12 +957,12 @@ function validateStrikeContract() {
   requireText(createSlicesText, "Good vertical slice examples", createSlicesPath);
   requireText(createSlicesText, "Usually bad slice shapes", createSlicesPath);
   requireText(createSlicesText, "| XS | 1 file; tiny config, function, copy, or style change. |", createSlicesPath);
-  requireText(createSlicesText, "| M | 3-5 files; one complete vertical behavior path. |", createSlicesPath);
-  requireText(createSlicesText, "| XL | 8+ files; too large for one slice. |", createSlicesPath);
-  requireText(createSlicesText, "more than 5 likely files", createSlicesPath);
-  requireText(createSlicesText, "more than 3 acceptance criteria", createSlicesPath);
+  requireText(createSlicesText, "| M | 3-7 files; one complete vertical behavior path or tightly coupled behavior cluster. |", createSlicesPath);
+  requireText(createSlicesText, "| XL | 12+ files; usually too large for one slice. |", createSlicesPath);
+  requireText(createSlicesText, "more than 7 likely files", createSlicesPath);
+  requireText(createSlicesText, "more than 4 acceptance criteria", createSlicesPath);
   requireText(createSlicesText, "UI plus route/API plus state/data plus tests", createSlicesPath);
-  requireText(createSlicesText, "Do not label a slice `M` while accepting `L/XL` signals", createSlicesPath);
+  requireText(createSlicesText, "Do not label a slice `M` while accepting `L/XL` signals from independent", createSlicesPath);
   requireText(createSlicesText, "Non-vertical slices are allowed only when they reduce risk", createSlicesPath);
   requireText(createSlicesText, "## Quality Bar", createSlicesPath);
   requireText(createSlicesText, "without re-slicing the phase", createSlicesPath);
@@ -1090,10 +1098,11 @@ function validateStrikeContract() {
   requireText(verifyText, "researchComplete", verifyPath);
   requireText(verifyText, "planCreated", verifyPath);
   requireText(verifyText, "research says `Too broad: yes`", verifyPath);
-  requireText(verifyText, "small enough for one focused build loop", verifyPath);
-  requireText(verifyText, "slice should be split before build", verifyPath);
+  requireText(verifyText, "cohesive and verifiable in one focused build loop", verifyPath);
+  requireText(verifyText, "independent outcomes, cannot\n  be verified in one focused loop", verifyPath);
   requireText(verifyText, "Give every `Must Fix` item a stable short issue ID", verifyPath);
-  requireText(verifyText, "set `Fix Needed: no`, and route back to\n  `researchComplete`", verifyPath);
+  requireText(verifyText, "set `Fix Needed: no`", verifyPath);
+  requireText(verifyText, "route back to `researchComplete`", verifyPath);
   requireText(verifyText, "rerun research and planning", verifyPath);
 
   requireText(buildText, "verified slice plan from the current slice's `plan.md`", buildPath);

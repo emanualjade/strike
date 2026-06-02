@@ -62,6 +62,13 @@ step. `research-slice` runs before `plan-slice`, writes compact research to the
 slice's `research.md`, and the slice plan verification step checks that research
 was either used or explicitly unnecessary.
 
+2026-06-02 update: slice sizing is cohesion-based rather than strictly
+thin-slice-by-file-count. `create-phase-slices`, `plan-slice`, and
+`verify-slice-plan` allow broader UI/API/data/test work when it belongs to one
+verifiable behavior flow, while still requiring split or justification for
+independent outcomes, weak cohesion, unclear verification, and L/XL slice
+signals. This is Strike workflow policy, not a host schema requirement.
+
 2026-06-02 update: Initiative research is now a first-class pre-grill Strike
 workflow step. `research-initiative` runs after `refine-idea` and before
 `grill-idea`, writes a user-approved research scope plus per-topic reports under
@@ -89,6 +96,12 @@ The audit checks report claims against official or primary sources and actual
 repo code, then the research stage fixes the reports and records the audit
 rollup in `research/index.md`. This is Strike workflow policy, not a host schema
 requirement.
+
+2026-06-02 update: Grill now requires a read-only `Decision Review` section in
+`decisions.md` before `decisionsResolved` can complete. The review checks for
+blind spots, unsupported assumptions, unresolved consequential decision nodes,
+contradictions with research/docs/code, and spec-blocking ambiguity. This is
+Strike workflow policy, not a host schema requirement.
 
 2026-06-01 update: Strike now has explicit route-back mechanics. Workflow
 artifacts should return `Ready: no`, `Built: no`, or `Verified: no` plus

@@ -194,6 +194,30 @@ Verdict: pass
     return;
   }
 
+  if (checkName === "decisionsResolved") {
+    writeArtifact(
+      repo,
+      path.join("strike/initiatives", initiative.id, artifactName),
+      `# Idea Decisions
+
+## User Checkpoint
+Prompt: Are you ready to continue?
+User response: Yes, continue.
+Ready to continue: yes
+
+## Decision Review
+Reviewer: inline
+Verdict: pass
+Must Fix count: 0
+Findings addressed:
+- None.
+Accepted risks:
+- None.
+`,
+    );
+    return;
+  }
+
   writeArtifact(
     repo,
     path.join("strike/initiatives", initiative.id, artifactName),
@@ -476,6 +500,72 @@ Reason: Research is complete enough for grilling.
 Prompt: Are you ready for spec?
 User response: Yes, continue.
 Ready to continue: yes
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "decisionsResolved"], /Decision Review/);
+
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/decisions.md",
+    `# Idea Decisions
+
+## User Checkpoint
+Prompt: Are you ready for spec?
+User response: Yes, continue.
+Ready to continue: yes
+
+## Decision Review
+Reviewer: subagent
+Verdict: needs-fix
+Must Fix count: 0
+Findings addressed:
+- None.
+Accepted risks:
+- None.
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "decisionsResolved"], /Verdict: pass or accepted-risk/);
+
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/decisions.md",
+    `# Idea Decisions
+
+## User Checkpoint
+Prompt: Are you ready for spec?
+User response: Yes, continue.
+Ready to continue: yes
+
+## Decision Review
+Reviewer: subagent
+Verdict: pass
+Must Fix count: 1
+Findings addressed:
+- One finding remains.
+Accepted risks:
+- None.
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "decisionsResolved"], /Must Fix count: 0/);
+
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/decisions.md",
+    `# Idea Decisions
+
+## User Checkpoint
+Prompt: Are you ready for spec?
+User response: Yes, continue.
+Ready to continue: yes
+
+## Decision Review
+Reviewer: subagent
+Verdict: accepted-risk
+Must Fix count: 0
+Findings addressed:
+- None.
+Accepted risks:
+- Minor follow-up risk accepted.
 `,
   );
   complete(repo, "decisionsResolved", { skill: "create-main-spec" });

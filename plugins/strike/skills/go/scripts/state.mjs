@@ -466,10 +466,9 @@ function validateCompletionPreconditions(state, current, verificationKey, option
   }
 
   if (verificationKey === "decisionsResolved") {
-    requireUserCheckpoint(
-      "decisionsResolved",
-      artifactFilePath(options.statePath, current.initiativeId, "decisions.md"),
-    );
+    const decisionsPath = artifactFilePath(options.statePath, current.initiativeId, "decisions.md");
+    requireUserCheckpoint("decisionsResolved", decisionsPath);
+    requireDecisionReview("decisionsResolved", decisionsPath);
   }
 
   if (verificationKey === "phasesCreated") {
@@ -559,6 +558,26 @@ function requireUserCheckpoint(verificationKey, artifactPath) {
   if (!hasCheckpoint || !hasReadyYes || !hasUserResponse) {
     throw new Error(
       `Cannot complete ${verificationKey} until ${artifactPath} has ## User Checkpoint, a non-empty User response, and Ready to continue: yes.`,
+    );
+  }
+}
+
+function requireDecisionReview(verificationKey, artifactPath) {
+  if (!hasFileContent(artifactPath)) {
+    throw new Error(
+      `Cannot complete ${verificationKey} until ${artifactPath} exists and contains a decision review.`,
+    );
+  }
+
+  const text = fs.readFileSync(artifactPath, "utf8");
+  const hasReview = /^## Decision Review\b/mi.test(text);
+  const verdict = text.match(/^Verdict:[^\S\r\n]*(pass|accepted-risk|needs-fix)\b/mi)?.[1].toLowerCase();
+  const mustFixCountText = text.match(/^Must Fix count:[^\S\r\n]*(\d+)\s*$/mi)?.[1];
+  const mustFixCount = Number.parseInt(mustFixCountText ?? "", 10);
+
+  if (!hasReview || (verdict !== "pass" && verdict !== "accepted-risk") || mustFixCount !== 0) {
+    throw new Error(
+      `Cannot complete ${verificationKey} until ${artifactPath} has ## Decision Review with Verdict: pass or accepted-risk and Must Fix count: 0.`,
     );
   }
 }

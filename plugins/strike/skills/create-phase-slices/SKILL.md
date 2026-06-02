@@ -25,16 +25,17 @@ owning phase step.
 
 ## Slice Size
 
-A slice is one small buildable increment that can be planned, built, verified,
+A slice is one cohesive buildable increment that can be planned, built, verified,
 and reviewed in one focused loop.
 
 A good slice:
 
-- produces one observable user or system behavior, or reduces a specific
+- produces one observable user or system behavior, a tightly coupled behavior
+  cluster that shares the same state/data/API flow, or reduces a specific
   near-term risk
 - has clear acceptance criteria
 - leaves the repo in a working state
-- is small enough to complete without bundling unrelated outcomes
+- is cohesive enough to complete without bundling unrelated outcomes
 
 A vertical slice is one observable behavior path. It is not "frontend work,"
 "backend work," or "database setup" by itself.
@@ -53,8 +54,9 @@ Usually bad slice shapes:
 - add frontend and backend for payments
 
 A slice may touch UI, API, data, and tests when those pieces must land together
-to make one small behavior work. Split it when the pieces are independent or the
-behavior can work smaller.
+to make one behavior flow work. It may include tightly coupled variants when
+splitting them would create fake work. Split it when the pieces are independent
+or the behavior can work smaller.
 
 Use this sizing guide:
 
@@ -62,23 +64,25 @@ Use this sizing guide:
 | --- | --- |
 | XS | 1 file; tiny config, function, copy, or style change. |
 | S | 1-2 files; one component, endpoint, helper, or adapter. |
-| M | 3-5 files; one complete vertical behavior path. |
-| L | 5-8 files; challenge and split unless clearly justified. |
-| XL | 8+ files; too large for one slice. |
+| M | 3-7 files; one complete vertical behavior path or tightly coupled behavior cluster. |
+| L | 8-12 files; justify or split. |
+| XL | 12+ files; usually too large for one slice. |
 
 Break or challenge a slice when it has:
 
-- more than 5 likely files
-- more than 3 acceptance criteria
+- more than 7 likely files, unless the touched files are tightly coupled around
+  one behavior flow
+- more than 4 acceptance criteria, or criteria that describe independent outcomes
 - a broad title such as `and`, `full`, `complete`, `MVP`, or
   `setup frontend/backend`
-- multiple independent subsystems
+- multiple independent subsystems or behavior paths
 - repo setup plus package decisions plus frontend/backend behavior
-- UI plus route/API plus state/data plus tests, unless one behavior truly cannot
-  work smaller
+- UI plus route/API plus state/data plus tests, when those surfaces do not share
+  one behavior flow
 
-Do not label a slice `M` while accepting `L/XL` signals. Split it or record why
-the larger blast radius is still the smallest safe move.
+Do not label a slice `M` while accepting `L/XL` signals from independent
+outcomes or weak cohesion. Split it or record why the larger blast radius is
+still the smallest safe move.
 
 Non-vertical slices are allowed only when they reduce risk or unlock near-term
 vertical behavior. Keep them XS/S unless clearly justified. Explain why a
@@ -188,7 +192,7 @@ One sentence describing the observable behavior that works after this slice.
 - Keep implementation planning, execution tasks, research notes, build steps,
   and verification evidence out of the slice stub.
 - Preserve the phase spec's scope, rules, constraints, and open questions.
-- Split or justify any L/XL, batched, or non-vertical slice.
+- Split or justify any L/XL, batched, low-cohesion, or non-vertical slice.
 - Add `## Why Not Split` for L slices or broad-stack slices that cannot be made
   smaller.
 - Add `## Non-Vertical Justification` only for non-vertical slices.

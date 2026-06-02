@@ -2,6 +2,24 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.10.12 - 2026-06-02
+
+- Relaxed slice sizing from strict thin-slice file counts to a cohesion-based
+  rubric: medium slices may include tightly coupled behavior clusters, larger
+  slices require justification, and splitting is driven by independent outcomes,
+  weak cohesion, or unclear verification.
+- Updated slice planning and plan verification to allow broader UI/API/data/test
+  work when it belongs to one verifiable behavior flow, while still routing back
+  slices that bundle unrelated work.
+
+## 0.10.11 - 2026-06-02
+
+- Added a mandatory `Decision Review` gate to Grill before
+  `decisionsResolved` can complete.
+- Required `decisions.md` to record a passing or accepted-risk decision review
+  with `Must Fix count: 0`, so blind spots, unsupported assumptions, unresolved
+  decision nodes, and spec-blocking ambiguity are checked before Main Spec.
+
 ## 0.10.10 - 2026-06-02
 
 - Added a mandatory per-item research audit loop inside `research-initiative`.

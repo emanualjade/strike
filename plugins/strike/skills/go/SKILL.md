@@ -393,7 +393,8 @@ say `No material research needed: yes`.
 
 Do not complete `decisionsResolved` unless `decisions.md` contains
 `## User Checkpoint`, records a non-empty `User response:`, and says
-`Ready to continue: yes`.
+`Ready to continue: yes`, and contains `## Decision Review` with
+`Verdict: pass` or `Verdict: accepted-risk` and `Must Fix count: 0`.
 
 Do not complete `phasesCreated` until `development-plan.md` exists, each
 planned phase has a phase stub, and each planned phase has been added with
@@ -561,7 +562,8 @@ Initiative setup:
 - `grill-idea`: pass `idea.md` plus `research/scope.md`,
   `research/index.md`, and relevant research reports; write `decisions.md`; complete
   `decisionsResolved` only after the user checkpoint says
-  `Ready to continue: yes`. If decision discussion creates relevant
+  `Ready to continue: yes` and the decision review has no unresolved Must Fix
+  findings. If decision discussion creates relevant
   schema/architecture/provider/data notes, write them under
   `supporting-artifacts/` and link them from `decisions.md`.
 - `create-main-spec`: pass `idea.md`, initiative research, `decisions.md`, and

@@ -111,9 +111,9 @@ better.
   before writing the artifact.
 - Prefer official or primary sources for external, current, or high-stakes
   facts.
-- If research shows the slice is too broad, too risky, or hiding multiple
-  independent behaviors, write `Too broad: yes`, suggest smaller replacement
-  slices, and write `Ready for planning: no`. Strike should edit the
+- If research shows the slice is too broad, too risky, weakly cohesive, or
+  hiding multiple independent behaviors, write `Too broad: yes`, suggest smaller
+  replacement slices, and write `Ready for planning: no`. Strike should edit the
   current slice into the first smaller slice and add any extra slices before
   rerunning research.
 - In `## Ready For Planning`, write `Ready for planning: yes` only when the
