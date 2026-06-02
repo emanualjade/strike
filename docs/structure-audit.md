@@ -83,6 +83,13 @@ keeps existing workspaces on new gates such as initiative research after plugin
 updates without asking agents to hand-edit `strike/state.json` or helper files.
 This is Strike runtime policy, not a host schema requirement.
 
+2026-06-02 update: initiative research now requires one read-only audit artifact
+under `research/audits/` for each approved research item before Grill can run.
+The audit checks report claims against official or primary sources and actual
+repo code, then the research stage fixes the reports and records the audit
+rollup in `research/index.md`. This is Strike workflow policy, not a host schema
+requirement.
+
 2026-06-01 update: Strike now has explicit route-back mechanics. Workflow
 artifacts should return `Ready: no`, `Built: no`, or `Verified: no` plus
 `Route Back` when an earlier artifact is missing or weak. The state helper

@@ -18,6 +18,30 @@ Pressure-test a refined idea until key decisions are explicit enough for a spec.
 - optional decision depth: `lean`, `standard`, or `deep`
 - optional output path
 
+## Core Loop
+
+Walk the consequential decision tree until shared understanding.
+
+Facts: agent resolves. Tradeoffs: agent recommends. Choices: user decides. New
+branches: keep walking.
+
+For each decision node:
+
+1. Decide whether it is factual or a user/product judgment.
+2. If it can be answered from repo code, provided docs, initiative research, or
+   official sources, answer it yourself and record the evidence.
+3. If it requires user preference, product intent, scope choice, risk tolerance,
+   priority, business rule, or ownership, ask the user one question.
+4. Give your recommended answer and why.
+5. If the answer creates new consequential decision nodes, continue the loop.
+
+A decision node is exhausted only when it is resolved, accepted as an explicit
+assumption, intentionally deferred with a named stage or owner, or blocked.
+
+Do not ask the user factual questions you can answer yourself. Do not silently
+decide user choices. Do not move to the final checkpoint while consequential
+decision nodes remain unresolved.
+
 ## Process
 
 - Identify decisions that change product behavior, scope, model shape, workflow,
@@ -41,6 +65,9 @@ Pressure-test a refined idea until key decisions are explicit enough for a spec.
   constraints, storage boundaries, and how to handle unsupported requests.
 - Treat a detailed kickoff as possible decision evidence, not automatic
   completion. Record which nodes it answered and which remain vague.
+- You may draft `decisions.md` as working notes, but do not treat a draft as a
+  substitute for live Grill questioning. If drafting reveals a consequential
+  fork, stop and ask the user before finalizing the decision record.
 - Initiate a user checkpoint before finishing, even when provided decision files,
   schemas, planning docs, or repo context seem to answer the pressure points.
   Summarize the resolved decisions, accepted assumptions, and deferred decisions,
@@ -135,6 +162,15 @@ Why:
   Impact:
   Revisit if:
 
+## Decision Tree
+- Node:
+  Type: factual / user-choice / tradeoff
+  Status: resolved / assumed / deferred / blocked
+  Evidence:
+  User question:
+  Recommendation:
+  Follow-on nodes:
+
 ## Accepted Assumptions
 -
 
@@ -217,6 +253,11 @@ Status: supporting
   supporting artifacts only when they preserve useful reasoning, tradeoffs,
   constraints, diagrams-in-words, or domain notes from the decision discussion.
 - Do not ask about details the repo or provided context already answers.
+- Do not ask the user factual questions you can answer from repo code, provided
+  docs, initiative research, or official sources.
+- Do not silently decide product, scope, risk, priority, business-rule, or
+  ownership choices for the user.
+- Do not silently draft around a consequential fork. Ask the next question.
 - Do not ignore initiative research. When research says a capability is
   unsupported, unknown, expensive, risky, or constrained, turn that into an
   explicit decision, accepted assumption, deferred decision, or blocker.
@@ -228,6 +269,8 @@ Status: supporting
   UI. Ask plainly and wait when the answer matters.
 - Do not mark decisions ready to continue without `## User Checkpoint` showing
   that you asked the user whether to move on and received their answer.
+- Do not move to the final checkpoint while consequential decision nodes remain
+  unresolved.
 - Do not treat provided docs, prior schemas, planning files, or silence as the
   user's checkpoint response.
 - Do not turn stale contradiction history into the decision record; keep the

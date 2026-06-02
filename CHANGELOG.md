@@ -2,6 +2,18 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.10.10 - 2026-06-02
+
+- Added a mandatory per-item research audit loop inside `research-initiative`.
+- Required each approved initiative research item to have a non-empty audit file
+  under `research/audits/` before `Ready for grill: yes`.
+- Updated the state helper, host smoke test, and validation checks so
+  `initiativeResearchComplete` requires passing or accepted-risk audits with no
+  unresolved Must Fix findings.
+- Updated Grill with a simple decision-tree core loop: facts are resolved by the
+  agent, tradeoffs get recommendations, user choices are asked one at a time,
+  and new consequential branches keep the loop going.
+
 ## 0.10.9 - 2026-06-02
 
 - Added a mandatory pre-grill `research-initiative` workflow gate between idea

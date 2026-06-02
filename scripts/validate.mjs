@@ -704,6 +704,9 @@ function validateStrikeContract() {
   requireText(helperText, "requireResearchScopeCheckpoint", helperPath);
   requireText(helperText, "requireReadyForGrill", helperPath);
   requireText(helperText, "requireResearchReports", helperPath);
+  requireText(helperText, "requireResearchAudits", helperPath);
+  requireText(helperText, "researchAuditsById", helperPath);
+  requireText(helperText, "safeResearchAuditPath", helperPath);
   requireText(helperText, "normalizeState", helperPath);
   requireText(helperText, 'command === "sync-helper"', helperPath);
   requireText(helperText, "isStrikeStateHelper", helperPath);
@@ -711,6 +714,7 @@ function validateStrikeContract() {
   requireText(helperText, "Ready for grill: yes", helperPath);
   requireText(helperText, "No material research needed: yes", helperPath);
   requireText(helperText, "<research-item-id>.md", helperPath);
+  requireText(helperText, "audits/<research-item-id>.md", helperPath);
   requireText(helperText, "initiativeResearchComplete", helperPath);
   requireText(helperText, 'case "research-slice":', helperPath);
   requireText(helperText, 'command === "reopen-check"', helperPath);
@@ -738,7 +742,8 @@ function validateStrikeContract() {
   requireText(strikeText, "allPhasesVerified", strikePath);
   requireText(strikeText, "Do not complete `ideaRefined` unless `idea.md` contains `## User Checkpoint`", strikePath);
   requireText(strikeText, "Do not complete `initiativeResearchComplete` unless `research/scope.md`", strikePath);
-  requireText(strikeText, "each approved research item has a non-empty report file referenced by", strikePath);
+  requireText(strikeText, "each approved research item has a non-empty report file and a non-empty audit", strikePath);
+  requireText(strikeText, "Must Fix count: 0", strikePath);
   requireText(strikeText, "No material research needed: yes", strikePath);
   requireText(strikeText, "sync-helper", strikePath);
   requireText(strikeText, "Do not complete `decisionsResolved` unless `decisions.md` contains", strikePath);
@@ -789,24 +794,42 @@ function validateStrikeContract() {
   for (const heading of [
     "## Research Scope",
     "## Evidence Rules",
+    "## Research Pass",
+    "## Research Audit",
     "### `scope.md`",
     "### Per-item reports",
+    "### Per-item audits",
     "### `index.md`",
   ]) {
     requireText(researchInitiativeText, heading, researchInitiativePath);
   }
+  requireText(researchInitiativeText, "allowed-tools: Read Write Edit Bash Grep Glob WebFetch WebSearch Agent", researchInitiativePath);
   requireText(researchInitiativeText, "Initiate a user checkpoint before running the full research", researchInitiativePath);
   requireText(researchInitiativeText, "Do not combine distinct provider/model capabilities", researchInitiativePath);
   requireText(researchInitiativeText, "official or primary sources", researchInitiativePath);
   requireText(researchInitiativeText, "For OpenAI APIs and models", researchInitiativePath);
-  requireText(researchInitiativeText, "one concise report per\n   item under `research/`", researchInitiativePath);
+  requireText(researchInitiativeText, "use a separate research pass for each approved item", researchInitiativePath);
+  requireText(researchInitiativeText, "Audit each per-item report before `research/index.md`", researchInitiativePath);
+  requireText(researchInitiativeText, "Do not tell the research worker to rely on a later\naudit", researchInitiativePath);
+  requireText(researchInitiativeText, "Use this audit prompt shape", researchInitiativePath);
+  requireText(researchInitiativeText, "Audit: pass / needs-fix / accepted-risk", researchInitiativePath);
+  requireText(researchInitiativeText, "research/audits/", researchInitiativePath);
+  requireText(researchInitiativeText, "## Research Audit", researchInitiativePath);
+  requireText(researchInitiativeText, "Must Fix count:", researchInitiativePath);
   requireText(researchInitiativeText, "Ready to research: yes / no", researchInitiativePath);
   requireText(researchInitiativeText, "Ready for grill: yes / no", researchInitiativePath);
   requireText(researchInitiativeText, "Do not complete this gate until `scope.md` records a user response", researchInitiativePath);
   requireText(researchInitiativeText, "Do not compress multiple material dependencies into one report", researchInitiativePath);
+  requireText(researchInitiativeText, "no unresolved audit\n  `Must Fix` findings", researchInitiativePath);
   requireText(researchInitiativeText, "write `Ready for\n  grill: no`", researchInitiativePath);
 
   requireText(grillText, "## Decision Depth", grillPath);
+  requireText(grillText, "## Core Loop", grillPath);
+  requireText(grillText, "Walk the consequential decision tree until shared understanding", grillPath);
+  requireText(grillText, "Facts: agent resolves. Tradeoffs: agent recommends. Choices: user decides", grillPath);
+  requireText(grillText, "Do not ask the user factual questions you can answer yourself", grillPath);
+  requireText(grillText, "Do not silently decide product, scope, risk", grillPath);
+  requireText(grillText, "## Decision Tree", grillPath);
   requireText(grillText, "## Pressure Points", grillPath);
   requireText(grillText, "## Decision Checkpoint", grillPath);
   requireText(grillText, "`lean`", grillPath);
@@ -818,6 +841,8 @@ function validateStrikeContract() {
   requireText(grillText, "current truth", grillPath);
   requireText(grillText, "Spec-Owned Details", grillPath);
   requireText(grillText, "Do not infer user answers from silence", grillPath);
+  requireText(grillText, "Do not silently draft around a consequential fork", grillPath);
+  requireText(grillText, "Do not move to the final checkpoint while consequential decision nodes remain", grillPath);
   requireText(grillText, "Initiate a user checkpoint before finishing", grillPath);
   requireText(grillText, "Existing artifacts can inform\n  the decision record, but they do not replace hearing from the user", grillPath);
   requireText(grillText, "## User Checkpoint", grillPath);

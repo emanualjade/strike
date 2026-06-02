@@ -3,7 +3,7 @@ name: research-initiative
 description: Run mandatory pre-grill research for an initiative, including user-approved research scope, per-topic reports, and a concise research index for later decisions and planning.
 argument-hint: "[idea/context] [--output-dir path]"
 disable-model-invocation: true
-allowed-tools: Read Write Edit Bash Grep Glob WebFetch WebSearch
+allowed-tools: Read Write Edit Bash Grep Glob WebFetch WebSearch Agent
 ---
 
 # Research Initiative
@@ -35,9 +35,16 @@ not the grill, spec, phase plan, or slice research.
    refocus.
 5. Wait for the user's answer. Update `research/scope.md` with their response
    and the approved scope.
-6. Research each approved item independently and write one concise report per
-   item under `research/`.
-7. Write `research/index.md` as the rollup used by Grill, Main Spec, phase
+6. Research each approved item independently and write one final-quality report
+   per item under `research/`. When the host supports subagents or custom
+   agents, use a separate research pass for each approved item. If not, run
+   separate inline passes and keep their findings isolated by item.
+7. Audit each report independently before writing the final index. Use a
+   separate read-only audit reviewer per approved item when supported, or a
+   separate inline audit pass when not.
+8. Assess audit findings, fix the reports, and update each report's audit
+   status. Do not delegate the final acceptance decision to the audit reviewer.
+9. Write `research/index.md` as the rollup used by Grill, Main Spec, phase
    specs, and slice planning.
 
 ## Research Scope
@@ -79,6 +86,50 @@ Bad scope shapes:
   upload/store, render, persist, queue, and job helpers before proposing any
   data movement.
 - Label weak or missing evidence as unknown. Do not fill gaps with guesses.
+
+## Research Pass
+
+Treat each approved item as a final-quality research assignment. The research
+worker or inline pass should receive the item scope, expected sources, and
+relevant repo paths only. Do not tell the research worker to rely on a later
+audit. Use this prompt shape:
+
+```text
+Produce a final-quality research report for this approved research item.
+Every material claim must be source-backed or marked unknown. For external
+facts, prefer official or primary sources. For repo facts, inspect actual files
+and name representative paths. Do not combine this item with other research
+items.
+```
+
+## Research Audit
+
+Audit each per-item report before `research/index.md` can say
+`Ready for grill: yes`.
+
+- Use a separate read-only reviewer per approved report when the host supports
+  subagents or custom agents.
+- If subagents are unavailable, run one separate inline audit pass per report.
+- Give the audit reviewer the finished report, the approved item scope, and the
+  relevant source/repo expectations. Do not give it the research worker's
+  private reasoning or excuses.
+- The reviewer must verify the report against official or primary source docs
+  for external APIs/models/services, actual repo code for local architecture and
+  data/file/queue/migration/provider/persistence patterns, and the report's own
+  cited sources.
+- The reviewer must not edit files. The main research agent assesses findings,
+  fixes reports, and writes the final audit rollup.
+
+Use this audit prompt shape:
+
+```text
+Read-only audit this research report against official/primary source docs and
+the actual repo code. Verify each material claim. Return accurate claims,
+unsupported/stale/overstated/contradicted claims, missing source-backed facts,
+missing repo precedent or files that should have been inspected, severity
+Must Fix / Follow-Up / Accepted Risk, exact affected report sections or claims,
+and source links or repo paths used as evidence. Do not edit files.
+```
 
 ## Output
 
@@ -155,10 +206,50 @@ Use this shape:
 
 ## Planning Implications
 -
+
+## Audit Status
+Audit: pass / needs-fix / accepted-risk
+Audit file:
+Fixes applied:
+Accepted risks:
 ```
 
 Omit `## Existing Repo Pattern` only when the item is purely external and no
 repo precedent is relevant.
+
+### Per-item audits
+
+Write audit files under `research/audits/` using stable lowercase kebab-case
+filenames that match the report ID, such as `audits/openai-image-generation.md`.
+
+Use this shape:
+
+```md
+# Research Audit: <Topic>
+
+## Scope
+
+## Sources / Repo Evidence Checked
+- Source or file:
+  Why checked:
+
+## Accurate Claims
+-
+
+## Issues
+### Must Fix
+-
+
+### Follow-Up
+-
+
+### Accepted Risk
+-
+
+## Verdict
+Verdict: pass / needs-fix / accepted-risk
+Reason:
+```
 
 ### `index.md`
 
@@ -172,6 +263,14 @@ Use this shape:
   File:
   Topic:
   Status: complete / partial / not needed
+
+## Research Audit
+- ID:
+  Report:
+  Audit file:
+  Verdict: pass / needs-fix / accepted-risk
+  Must Fix count:
+  Notes:
 
 ## Capability Matrix
 | Item | Supported | Unsupported | Unknown | Implementation implication |
@@ -209,8 +308,9 @@ and say `No material research needed: yes`. `index.md` should say
   the user checkpoint.
 - Do not complete this gate until `scope.md` records a user response and
   `Ready to research: yes`.
-- Do not write `Ready for grill: yes` unless the approved reports are enough for
-  Grill to make decisions without guessing about material dependencies.
+- Do not write `Ready for grill: yes` unless every approved research item has a
+  report, an audit file, a `## Research Audit` entry, and no unresolved audit
+  `Must Fix` findings.
 - If research reveals an unresolved consequential question, write `Ready for
   grill: no`, list the blocker in `Open Questions`, and ask the user before
   continuing.

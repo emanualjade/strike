@@ -118,6 +118,7 @@ strike/state.json
 strike/initiatives/<initiative-id>/idea.md
 strike/initiatives/<initiative-id>/research/scope.md
 strike/initiatives/<initiative-id>/research/<research-item-id>.md
+strike/initiatives/<initiative-id>/research/audits/<research-item-id>.md
 strike/initiatives/<initiative-id>/research/index.md
 strike/initiatives/<initiative-id>/decisions.md
 strike/initiatives/<initiative-id>/supporting-artifacts/<topic>.md

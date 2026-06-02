@@ -33,7 +33,8 @@ PROJECT_LANGUAGE.md
 
 `strike/state.json` stores workflow progress. Markdown files under
 `strike/initiatives/<initiative-id>/` store idea, decision, spec, phase,
-slice, research, plan, build, and verification artifacts. Optional
+slice, research, plan, build, and verification artifacts. Initiative research
+reports are audited under `research/audits/` before Grill can run. Optional
 `supporting-artifacts/` files preserve concise decision-discussion notes such as
 schema reasoning, architecture tradeoffs, provider routing, and data lifecycle.
 Existing workspaces should refresh the copied helper with `sync-helper` after a

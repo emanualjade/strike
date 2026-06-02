@@ -142,6 +142,12 @@ Ready to research: yes
   Topic: Existing repo patterns
   Status: complete
 
+## Research Audit
+- ID: repo-patterns
+  Audit file: audits/repo-patterns.md
+  Verdict: pass
+  Must Fix count: 0
+
 ## Ready For Grill
 Ready for grill: yes
 Reason: Research is complete enough for grilling.
@@ -159,6 +165,23 @@ Reason: Research is complete enough for grilling.
 - Finding: Representative repo pattern reviewed.
   Evidence: Test fixture.
   Implication: Grill can proceed.
+`,
+      );
+    }
+    const auditPath = path.join(researchRoot, "audits/repo-patterns.md");
+    if (!fs.existsSync(auditPath)) {
+      writeArtifact(
+        repo,
+        path.join("strike/initiatives", initiative.id, "research/audits/repo-patterns.md"),
+        `# Research Audit: Existing Repo Patterns
+
+Verdict: pass
+
+## Must Fix
+- None.
+
+## Evidence Checked
+- Test fixture.
 `,
       );
     }
@@ -282,6 +305,12 @@ Ready to research: yes
   Topic: Existing repo patterns
   Status: complete
 
+## Research Audit
+- ID: repo-patterns
+  Audit file: audits/repo-patterns.md
+  Verdict: pass
+  Must Fix count: 0
+
 ## Ready For Grill
 Ready for grill: no
 Reason: Still missing approved research.
@@ -300,6 +329,12 @@ Reason: Still missing approved research.
   Topic: Existing repo patterns
   Status: complete
 
+## Research Audit
+- ID: repo-patterns
+  Audit file: audits/repo-patterns.md
+  Verdict: pass
+  Must Fix count: 0
+
 ## Ready For Grill
 Ready for grill: yes
 Reason: Research is complete enough for grilling.
@@ -316,6 +351,116 @@ Reason: Research is complete enough for grilling.
 - Finding: Representative repo pattern reviewed.
   Evidence: Test fixture.
   Implication: Grill can proceed.
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "initiativeResearchComplete"], /audit file/);
+
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/research/audits/repo-patterns.md",
+    `# Research Audit: Existing Repo Patterns
+
+Verdict: pass
+
+## Must Fix
+- None.
+
+## Evidence Checked
+- Test fixture.
+`,
+  );
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/research/index.md",
+    `# Initiative Research Index
+
+## Reports
+- ID: repo-patterns
+  File: repo-patterns.md
+  Topic: Existing repo patterns
+  Status: complete
+
+## Research Audit
+- ID: repo-patterns
+  Audit file: ../repo-patterns.md
+  Verdict: pass
+  Must Fix count: 0
+
+## Ready For Grill
+Ready for grill: yes
+Reason: Research is complete enough for grilling.
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "initiativeResearchComplete"], /audit file/);
+
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/research/index.md",
+    `# Initiative Research Index
+
+## Reports
+- ID: repo-patterns
+  File: repo-patterns.md
+  Topic: Existing repo patterns
+  Status: complete
+
+## Research Audit
+- ID: repo-patterns
+  Audit file: audits/repo-patterns.md
+  Verdict: needs-fix
+  Must Fix count: 0
+
+## Ready For Grill
+Ready for grill: yes
+Reason: Research is complete enough for grilling.
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "initiativeResearchComplete"], /Verdict pass or accepted-risk/);
+
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/research/index.md",
+    `# Initiative Research Index
+
+## Reports
+- ID: repo-patterns
+  File: repo-patterns.md
+  Topic: Existing repo patterns
+  Status: complete
+
+## Research Audit
+- ID: repo-patterns
+  Audit file: audits/repo-patterns.md
+  Verdict: pass
+  Must Fix count: 1
+
+## Ready For Grill
+Ready for grill: yes
+Reason: Research is complete enough for grilling.
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "initiativeResearchComplete"], /Must Fix count 0/);
+
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/research/index.md",
+    `# Initiative Research Index
+
+## Reports
+- ID: repo-patterns
+  File: repo-patterns.md
+  Topic: Existing repo patterns
+  Status: complete
+
+## Research Audit
+- ID: repo-patterns
+  Audit file: audits/repo-patterns.md
+  Verdict: accepted-risk
+  Must Fix count: 0
+
+## Ready For Grill
+Ready for grill: yes
+Reason: Research is complete enough for grilling.
 `,
   );
   complete(repo, "initiativeResearchComplete", { skill: "grill-idea" });
@@ -411,6 +556,7 @@ function testBootstrapAndWorkflowProgression() {
     artifacts: [
       "strike/initiatives/gallery/research/scope.md",
       "strike/initiatives/gallery/research/<research-item-id>.md",
+      "strike/initiatives/gallery/research/audits/<research-item-id>.md",
       "strike/initiatives/gallery/research/index.md",
     ],
   });

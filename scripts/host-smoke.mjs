@@ -538,6 +538,7 @@ Ready to continue: yes
     );
     assert(
       stateNextStepAfterCompleteJson.artifacts?.includes("strike/initiatives/gallery/research/scope.md") &&
+        stateNextStepAfterCompleteJson.artifacts?.includes("strike/initiatives/gallery/research/audits/<research-item-id>.md") &&
         stateNextStepAfterCompleteJson.artifacts?.includes("strike/initiatives/gallery/research/index.md"),
       `${ctx.host} ${label} next-step did not resolve the initiative research artifacts.`,
     );
@@ -571,6 +572,12 @@ Ready to research: yes
   Topic: Existing repo patterns
   Status: complete
 
+## Research Audit
+- ID: repo-patterns
+  Audit file: audits/repo-patterns.md
+  Verdict: pass
+  Must Fix count: 0
+
 ## Ready For Grill
 Ready for grill: yes
 Reason: Research is complete enough for grilling.
@@ -584,6 +591,20 @@ Reason: Research is complete enough for grilling.
 - Finding: Representative repo pattern reviewed.
   Evidence: Host smoke fixture.
   Implication: Grill can proceed.
+`,
+    );
+    mkdirSync(path.join(consumerRepo, "strike/initiatives/gallery/research/audits"), { recursive: true });
+    writeFileSync(
+      path.join(consumerRepo, "strike/initiatives/gallery/research/audits/repo-patterns.md"),
+      `# Research Audit: Existing Repo Patterns
+
+Verdict: pass
+
+## Must Fix
+- None.
+
+## Evidence Checked
+- Host smoke fixture.
 `,
     );
     const stateCompleteResearchResult = runCommand(

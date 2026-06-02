@@ -462,6 +462,7 @@ function validateCompletionPreconditions(state, current, verificationKey, option
       indexPath,
     );
     requireResearchReports("initiativeResearchComplete", scopePath, indexPath);
+    requireResearchAudits("initiativeResearchComplete", scopePath, indexPath);
   }
 
   if (verificationKey === "decisionsResolved") {
@@ -634,6 +635,41 @@ function requireResearchReports(verificationKey, scopePath, indexPath) {
   }
 }
 
+function requireResearchAudits(verificationKey, scopePath, indexPath) {
+  const scopeText = fs.readFileSync(scopePath, "utf8");
+  const indexText = fs.readFileSync(indexPath, "utf8");
+  const approvedItemIds = researchItemIds(scopeText);
+
+  if (approvedItemIds.length === 0) {
+    return;
+  }
+
+  const auditsById = researchAuditsById(indexText);
+  const researchRoot = path.dirname(indexPath);
+  const missing = [];
+
+  for (const itemId of approvedItemIds) {
+    const audit = auditsById.get(itemId);
+    const mustFixCount = Number.parseInt(audit?.mustFixCount ?? "", 10);
+    const acceptableVerdict = audit?.verdict === "pass" || audit?.verdict === "accepted-risk";
+    if (!audit?.file || !acceptableVerdict || mustFixCount !== 0) {
+      missing.push(itemId);
+      continue;
+    }
+
+    const auditPath = safeResearchAuditPath(researchRoot, audit.file);
+    if (!auditPath || !hasFileContent(auditPath)) {
+      missing.push(`${itemId} (${audit.file})`);
+    }
+  }
+
+  if (missing.length > 0) {
+    throw new Error(
+      `Cannot complete ${verificationKey} until each approved research item has a non-empty audit file with Verdict pass or accepted-risk and Must Fix count 0 referenced by ${indexPath}: ${missing.join(", ")}.`,
+    );
+  }
+}
+
 function researchItemIds(scopeText) {
   const ids = [];
   const pattern = /^\s*-?\s*ID:\s*([a-z0-9][a-z0-9-]*)\s*$/gim;
@@ -645,6 +681,48 @@ function researchItemIds(scopeText) {
     }
   }
   return [...new Set(ids)];
+}
+
+function researchAuditsById(indexText) {
+  const audits = new Map();
+  let inAudits = false;
+  let current = null;
+
+  for (const line of indexText.split(/\r?\n/)) {
+    if (/^##\s+/.test(line)) {
+      inAudits = /^##\s+Research Audit\b/i.test(line);
+      current = null;
+      continue;
+    }
+    if (!inAudits) continue;
+
+    const idMatch = line.match(/^\s*-\s*ID:\s*([a-z0-9][a-z0-9-]*)\s*$/i);
+    if (idMatch) {
+      current = { id: idMatch[1].toLowerCase(), file: "", verdict: "", mustFixCount: "" };
+      audits.set(current.id, current);
+      continue;
+    }
+
+    if (!current) continue;
+    const fileMatch = line.match(/^\s*Audit file:\s*(\S.*)$/i);
+    if (fileMatch) {
+      current.file = fileMatch[1].trim();
+      continue;
+    }
+
+    const verdictMatch = line.match(/^\s*Verdict:\s*(pass|needs-fix|accepted-risk)\b/i);
+    if (verdictMatch) {
+      current.verdict = verdictMatch[1].toLowerCase();
+      continue;
+    }
+
+    const countMatch = line.match(/^\s*Must Fix count:\s*(\d+)\s*$/i);
+    if (countMatch) {
+      current.mustFixCount = countMatch[1];
+    }
+  }
+
+  return audits;
 }
 
 function researchReportsById(indexText) {
@@ -681,6 +759,17 @@ function researchReportsById(indexText) {
   }
 
   return reports;
+}
+
+function safeResearchAuditPath(researchRoot, auditFile) {
+  if (!auditFile || auditFile === "-" || /^none$/i.test(auditFile)) return null;
+  if (path.isAbsolute(auditFile)) return null;
+  const normalized = path.normalize(auditFile);
+  if (normalized.startsWith("..") || normalized.includes(`${path.sep}..${path.sep}`)) return null;
+  if (!normalized.startsWith(`audits${path.sep}`) || !normalized.endsWith(".md")) {
+    return null;
+  }
+  return path.join(researchRoot, normalized);
 }
 
 function safeResearchReportPath(researchRoot, reportFile) {
@@ -968,6 +1057,7 @@ export function artifactPathsForCurrent(current) {
       return [
         `${initiativeRoot}/research/scope.md`,
         `${initiativeRoot}/research/<research-item-id>.md`,
+        `${initiativeRoot}/research/audits/<research-item-id>.md`,
         `${initiativeRoot}/research/index.md`,
       ];
     case "grill-idea":

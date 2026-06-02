@@ -280,7 +280,9 @@ strike/initiatives/<initiative-id>/
 Default outputs:
 
 - `refine-idea` -> `idea.md`
-- `research-initiative` -> `research/scope.md`, one report per approved research item, and `research/index.md`
+- `research-initiative` -> `research/scope.md`, one report per approved
+  research item, one audit under `research/audits/` per approved research item,
+  and `research/index.md`
 - `grill-idea` -> `decisions.md`, optionally `supporting-artifacts/<topic>.md`
 - `create-main-spec` -> `main-spec.md`
 - `create-development-phases` -> `development-plan.md`, `phases/<phase-id>/phase.md`, and `state.json` phase entries
@@ -297,7 +299,9 @@ Default outputs:
 
 Initiative research is a required pre-grill workflow artifact. It may conclude
 that no material research is needed, but only after a user-approved scope
-checkpoint. Slice research is also required for every implementation slice.
+checkpoint. When material research is approved, each per-item report must be
+audited before Grill can run. Slice research is also required for every
+implementation slice.
 
 `supporting-artifacts/` is optional initiative context created during Grill
 when schema, architecture, provider routing, data lifecycle, permissions, or
@@ -381,9 +385,11 @@ records a non-empty `User response:`, and says `Ready to continue: yes`.
 Do not complete `initiativeResearchComplete` unless `research/scope.md`
 contains `## User Checkpoint`, records a non-empty `User response:`, and says
 `Ready to research: yes`, `research/index.md` says `Ready for grill: yes`, and
-each approved research item has a non-empty report file referenced by
-`research/index.md`. If no material research is needed, `research/scope.md`
-must explicitly say `No material research needed: yes`.
+each approved research item has a non-empty report file and a non-empty audit
+file referenced by `research/index.md`. The index must show `Verdict: pass` or
+`Verdict: accepted-risk` and `Must Fix count: 0` for every approved research
+item. If no material research is needed, `research/scope.md` must explicitly
+say `No material research needed: yes`.
 
 Do not complete `decisionsResolved` unless `decisions.md` contains
 `## User Checkpoint`, records a non-empty `User response:`, and says
@@ -546,10 +552,12 @@ Initiative setup:
 - `refine-idea`: pass the raw request; write `idea.md`; complete
   `ideaRefined` only after the user checkpoint says `Ready to continue: yes`.
 - `research-initiative`: pass `idea.md`; write `research/scope.md`, one report
-  per approved research item, and `research/index.md`; complete
+  per approved research item, one audit under `research/audits/` per approved
+  research item, and `research/index.md`; complete
   `initiativeResearchComplete` only after the research scope checkpoint says
   `Ready to research: yes`, the index says `Ready for grill: yes`, and every
-  approved research item has a report file.
+  approved research item has a report file plus a passing or accepted-risk
+  audit with no unresolved Must Fix findings.
 - `grill-idea`: pass `idea.md` plus `research/scope.md`,
   `research/index.md`, and relevant research reports; write `decisions.md`; complete
   `decisionsResolved` only after the user checkpoint says
