@@ -505,6 +505,7 @@ function validateRuntimeReferenceBoundary() {
   const allowedRuntimeReferences = [
     /^plugins\/strike\/references\/language\.md$/,
     /^plugins\/strike\/references\/slug-policy\.md$/,
+    /^plugins\/strike\/references\/verification-evidence\.md$/,
     /^plugins\/strike\/references\/scripts\/[a-z0-9-]+\.mjs$/,
   ];
 
@@ -590,6 +591,7 @@ function requireText(text, needle, context) {
 function validateStrikeContract() {
   const strikePath = "plugins/strike/skills/go/SKILL.md";
   const helperPath = "plugins/strike/skills/go/scripts/state.mjs";
+  const refinePath = "plugins/strike/skills/refine-idea/SKILL.md";
   const grillPath = "plugins/strike/skills/grill-idea/SKILL.md";
   const createMainPath = "plugins/strike/skills/create-main-spec/SKILL.md";
   const createDevPath = "plugins/strike/skills/create-development-phases/SKILL.md";
@@ -603,13 +605,16 @@ function validateStrikeContract() {
   const fixPath = "plugins/strike/skills/fix/SKILL.md";
   const verifyPhasePath = "plugins/strike/skills/verify-phase/SKILL.md";
   const verifyMainPath = "plugins/strike/skills/verify-main-spec/SKILL.md";
+  const verificationEvidencePath = "plugins/strike/references/verification-evidence.md";
+  const dogfoodPath = "docs/dogfood.md";
 
-  if (![strikePath, helperPath, grillPath, createMainPath, createDevPath, createPhasePath, researchPath, createSlicesPath, planPath, verifyPath, buildPath, verifyBuildPath, fixPath, verifyPhasePath, verifyMainPath].every(exists)) {
+  if (![strikePath, helperPath, refinePath, grillPath, createMainPath, createDevPath, createPhasePath, researchPath, createSlicesPath, planPath, verifyPath, buildPath, verifyBuildPath, fixPath, verifyPhasePath, verifyMainPath, verificationEvidencePath, dogfoodPath].every(exists)) {
     return;
   }
 
   const strikeText = fs.readFileSync(path.join(root, strikePath), "utf8");
   const helperText = fs.readFileSync(path.join(root, helperPath), "utf8");
+  const refineText = fs.readFileSync(path.join(root, refinePath), "utf8");
   const grillText = fs.readFileSync(path.join(root, grillPath), "utf8");
   const createMainText = fs.readFileSync(path.join(root, createMainPath), "utf8");
   const createDevText = fs.readFileSync(path.join(root, createDevPath), "utf8");
@@ -623,9 +628,12 @@ function validateStrikeContract() {
   const fixText = fs.readFileSync(path.join(root, fixPath), "utf8");
   const verifyPhaseText = fs.readFileSync(path.join(root, verifyPhasePath), "utf8");
   const verifyMainText = fs.readFileSync(path.join(root, verifyMainPath), "utf8");
+  const verificationEvidenceText = fs.readFileSync(path.join(root, verificationEvidencePath), "utf8");
+  const dogfoodText = fs.readFileSync(path.join(root, dogfoodPath), "utf8");
 
   const strikeWorkflowSkillTexts = {
     [strikePath]: strikeText,
+    [refinePath]: refineText,
     [grillPath]: grillText,
     [createMainPath]: createMainText,
     [createDevPath]: createDevText,
@@ -687,17 +695,45 @@ function validateStrikeContract() {
   requireText(strikeText, "Built: yes", strikePath);
   requireText(strikeText, "allSlicesVerified", strikePath);
   requireText(strikeText, "allPhasesVerified", strikePath);
+  requireText(strikeText, "Do not complete `ideaRefined` unless `idea.md` contains `## User Checkpoint`", strikePath);
+  requireText(strikeText, "Do not complete `decisionsResolved` unless `decisions.md` contains", strikePath);
   requireText(strikeText, "pass `plan.md`, `plan-verification.md`, and repo files named\n  by the plan", strikePath);
-  requireText(strikeText, "write `plan.md` with a focused `Test Plan`", strikePath);
+  requireText(strikeText, "write `plan.md` with a focused `Verification Evidence Plan`", strikePath);
   requireText(strikeText, "Split Recommendation` is\n`Needed: yes`", strikePath);
   requireText(strikeText, "read that skill's `SKILL.md` from\nthe installed Strike plugin", strikePath);
-  requireText(strikeText, "add/update planned tests, run focused checks", strikePath);
-  requireText(strikeText, "confirm focused test evidence", strikePath);
+  requireText(strikeText, "add/update planned automated tests, run\n  focused verification evidence checks", strikePath);
+  requireText(strikeText, "use existing repo precedent before\n  patching technical symptoms or integration/dataflow behavior", strikePath);
+  requireText(strikeText, "confirm grouped verification evidence", strikePath);
   requireText(strikeText, "## Slice Git Checkpoint", strikePath);
   requireText(strikeText, "After `buildVerified` is complete for a slice, commit and push that slice", strikePath);
   requireText(strikeText, "After completing `buildVerified`, complete the slice git checkpoint", strikePath);
   requireText(strikeText, "Do not prescribe extra git inspection commands", strikePath);
-  requireText(strikeText, "then commit and push that\n  completed slice before moving on", strikePath);
+  requireText(strikeText, "then commit and push that completed slice before\n  moving on", strikePath);
+
+  requireText(helperText, "requireUserCheckpoint", helperPath);
+  requireText(helperText, "Ready to continue: yes", helperPath);
+  requireText(helperText, "non-empty User response", helperPath);
+
+  requireText(verificationEvidenceText, "Environment:", verificationEvidencePath);
+  requireText(verificationEvidenceText, "E2E tests and Browser Clickthrough must stay in their proper environments", verificationEvidencePath);
+  requireText(verificationEvidenceText, "tests in the repo's test/E2E environment", verificationEvidencePath);
+  requireText(verificationEvidenceText, "browser clickthrough in the dev/local\n  app environment", verificationEvidencePath);
+  requireText(verificationEvidenceText, "Do not modify env files, DB targets, or runtime mode", verificationEvidencePath);
+  requireText(verificationEvidenceText, "A failed first browser route, URL form, or browser tool is not enough", verificationEvidencePath);
+  requireText(verificationEvidenceText, "try another available\nbrowser surface before failing verification", verificationEvidencePath);
+  requireText(dogfoodText, "## Browser Checks", dogfoodPath);
+  requireText(dogfoodText, "### Nested Browser Harnesses", dogfoodPath);
+  requireText(dogfoodText, "This observer check helps classify the failure; it\ndoes not replace target-agent browser evidence", dogfoodPath);
+  requireText(dogfoodText, "target browser evidence: failed / missing", dogfoodPath);
+  requireText(dogfoodText, "The target workflow remains unverified until the target agent completes the\nBrowser Clickthrough itself", dogfoodPath);
+  requireText(dogfoodText, "keep observer browser checks separate from target evidence", dogfoodPath);
+  requireText(dogfoodText, "## Browser Evidence", dogfoodPath);
+
+  requireText(refineText, "Initiate a user checkpoint before finishing", refinePath);
+  requireText(refineText, "Existing artifacts can inform\n  the refined idea, but they do not replace hearing from the user", refinePath);
+  requireText(refineText, "## User Checkpoint", refinePath);
+  requireText(refineText, "Ready to continue: yes / no", refinePath);
+  requireText(refineText, "Do not treat provided docs, prior schemas, planning files, or silence", refinePath);
 
   requireText(grillText, "## Decision Depth", grillPath);
   requireText(grillText, "## Pressure Points", grillPath);
@@ -711,6 +747,10 @@ function validateStrikeContract() {
   requireText(grillText, "current truth", grillPath);
   requireText(grillText, "Spec-Owned Details", grillPath);
   requireText(grillText, "Do not infer user answers from silence", grillPath);
+  requireText(grillText, "Initiate a user checkpoint before finishing", grillPath);
+  requireText(grillText, "Existing artifacts can inform\n  the decision record, but they do not replace hearing from the user", grillPath);
+  requireText(grillText, "## User Checkpoint", grillPath);
+  requireText(grillText, "Ready to continue: yes / no", grillPath);
   requireText(grillText, "Validation / browser or live checks", grillPath);
 
   requireText(createMainText, "## Quality Bar", createMainPath);
@@ -824,23 +864,47 @@ function validateStrikeContract() {
   requireText(planText, "Preserve the slice outcome, acceptance criteria", planPath);
   requireText(planText, "Do tactical research as needed", planPath);
   requireText(planText, "implementation, verification, or risk", planPath);
-  requireText(planText, "focused test work", planPath);
+  requireText(planText, "Classify the kind of work the slice is about to do", planPath);
+  requireText(planText, "For each relevant work category, inspect how the repo already structures", planPath);
+  requireText(planText, "verification evidence categories", planPath);
+  requireText(planText, "same class of problem before proposing a new pattern", planPath);
   requireText(planText, "core noun before qualifiers lens", planPath);
   requireText(planText, "adjective-noun siblings", planPath);
   requireText(planText, "simplest safe approach", planPath);
   requireText(planText, "not a step-by-step coding script", planPath);
   requireText(planText, "## Research Used", planPath);
   requireText(planText, "## Implementation Research Additions", planPath);
+  requireText(planText, "## Repo Pattern Scan", planPath);
+  requireText(planText, "Work categories:", planPath);
+  requireText(planText, "Existing examples reviewed:", planPath);
+  requireText(planText, "Chosen precedents:", planPath);
+  requireText(planText, "Pattern decisions:", planPath);
+  requireText(planText, "Networking / provider integration:", planPath);
+  requireText(planText, "Upload / file / asset storage:", planPath);
+  requireText(planText, "Testing / E2E / browser verification:", planPath);
   requireText(planText, "using the same\ncompact style", planPath);
   requireText(planText, "Do not paste raw notes, long\nexcerpts", planPath);
   requireText(planText, "## Slice Boundary", planPath);
   requireText(planText, "Acceptance criteria covered:", planPath);
   requireText(planText, "Out of scope:", planPath);
-  requireText(planText, "## Test Plan", planPath);
-  requireText(planText, "Tests to add/update:", planPath);
-  requireText(planText, "Focused commands:", planPath);
-  requireText(planText, "No-test reason:", planPath);
+  requireText(planText, "references/verification-evidence.md", planPath);
+  requireText(planText, "## Verification Evidence Plan", planPath);
+  requireText(planText, "### Static / Build Checks", planPath);
+  requireText(planText, "### Unit / Component / Integration Tests", planPath);
+  requireText(planText, "### E2E Tests", planPath);
+  requireText(planText, "### Browser Clickthrough", planPath);
+  requireText(planText, "### Visual Evidence", planPath);
+  requireText(planText, "### Skipped / Not Applicable", planPath);
+  requireText(planText, "Environment:", planPath);
+  requireText(planText, "DB/runtime:", planPath);
+  requireText(planText, "Fixtures/data setup:", planPath);
+  requireText(planText, "Representative data:", planPath);
+  requireText(planText, "Controls/actions:", planPath);
+  requireText(planText, "Similar repo precedent:", planPath);
   requireText(planText, "Do not default to a full test suite", planPath);
+  requireText(planText, "Browser Clickthrough should use the dev/local app environment", planPath);
+  requireText(planText, "test environment clickthrough as\n  equivalent proof", planPath);
+  requireText(planText, "Do not write the implementation approach until `Repo Pattern Scan` classifies", planPath);
   requireText(planText, "## Split Recommendation", planPath);
   requireText(planText, "Needed: yes / no", planPath);
   requireText(planText, "bloated plan", planPath);
@@ -864,7 +928,9 @@ function validateStrikeContract() {
   requireText(verifyText, "verification intent", verifyPath);
   requireText(verifyText, "core\n  noun before qualifiers lens", verifyPath);
   requireText(verifyText, "adjective-noun siblings", verifyPath);
-  requireText(verifyText, "concrete `Test Plan`", verifyPath);
+  requireText(verifyText, "concrete `Verification Evidence Plan`", verifyPath);
+  requireText(verifyText, "tests use the repo's test/E2E environment while Browser Clickthrough uses the\n  dev/local app environment", verifyPath);
+  requireText(verifyText, "verification environments are missing, swapped", verifyPath);
   requireText(verifyText, "default full-suite command", verifyPath);
   requireText(verifyText, "research `Slice Size Check`", verifyPath);
   requireText(verifyText, "If it says `Too broad: yes`", verifyPath);
@@ -873,7 +939,12 @@ function validateStrikeContract() {
   requireText(verifyText, "host does not support subagents", verifyPath);
   requireText(verifyText, "inline lenses", verifyPath);
   requireText(verifyText, "implementation-plan", verifyPath);
-  requireText(verifyText, "focused test plan, verification plan", verifyPath);
+  requireText(verifyText, "grouped verification\n  evidence plan", verifyPath);
+  requireText(verifyText, "similar-precedent awareness", verifyPath);
+  requireText(verifyText, "`Repo Pattern Scan` classifies", verifyPath);
+  requireText(verifyText, "repo pattern scan classification", verifyPath);
+  requireText(verifyText, "`Repo Pattern Scan` is missing", verifyPath);
+  requireText(verifyText, "lacks a repo-precedent\n  scan", verifyPath);
   requireText(verifyText, "Always run this subagent", verifyPath);
   requireText(verifyText, "Always consider `canonical-implementation`", verifyPath);
   requireText(verifyText, "official docs", verifyPath);
@@ -906,19 +977,31 @@ function validateStrikeContract() {
   requireText(buildText, "Treat `plan.md` as the primary build handoff", buildPath);
   requireText(buildText, "If `plan-verification.md` does not say `Ready: yes`, write `Built: no`", buildPath);
   requireText(buildText, "route back to `verify-slice-plan` and do not edit implementation files", buildPath);
-  requireText(buildText, "plan's `Slice Boundary`, `Surfaces`, `Approach`, `Test Plan`, and\n  `Verification`", buildPath);
+  requireText(buildText, "plan's `Repo Pattern Scan`, `Slice Boundary`, `Surfaces`, `Approach`,\n  `Verification Evidence Plan`, and `Verification`", buildPath);
   requireText(buildText, "smallest complete path", buildPath);
-  requireText(buildText, "Add or update the focused tests named in the plan", buildPath);
-  requireText(buildText, "Do not default to a\n  full suite", buildPath);
-  requireText(buildText, "important implementation notes", buildPath);
+  requireText(buildText, "Follow the repo structures and precedents selected in the plan's\n  `Repo Pattern Scan`", buildPath);
+  requireText(buildText, "search for existing repo examples of the same class of problem", buildPath);
+  requireText(buildText, "Add or update the focused Unit / Component / Integration Tests and E2E Tests", buildPath);
+  requireText(buildText, "Run automated tests in the planned test/E2E environment", buildPath);
+  requireText(buildText, "Do not switch Browser Clickthrough to a test DB or test\n  environment", buildPath);
+  requireText(buildText, "Do not declare Browser Clickthrough blocked after one failed browser URL", buildPath);
+  requireText(buildText, "retry with alternate local\n  URL forms and another available browser surface", buildPath);
+  requireText(buildText, "Do not default to a full suite", buildPath);
+  requireText(buildText, "important\n  implementation notes", buildPath);
   requireText(buildText, "Use engineering judgment for ordinary implementation details", buildPath);
   requireText(buildText, "Do not route back for ordinary implementation choices", buildPath);
   requireText(buildText, "current slice's `build.md`", buildPath);
   requireText(buildText, "Built: yes / no", buildPath);
-  requireText(buildText, "## Tests", buildPath);
-  requireText(buildText, "Added or updated:", buildPath);
-  requireText(buildText, "Focused commands:", buildPath);
-  requireText(buildText, "Not run / skipped:", buildPath);
+  requireText(buildText, "## Verification Evidence", buildPath);
+  requireText(buildText, "### Static / Build Checks", buildPath);
+  requireText(buildText, "### Unit / Component / Integration Tests", buildPath);
+  requireText(buildText, "### E2E Tests", buildPath);
+  requireText(buildText, "### Browser Clickthrough", buildPath);
+  requireText(buildText, "### Visual Evidence", buildPath);
+  requireText(buildText, "### Skipped / Not Applicable", buildPath);
+  requireText(buildText, "DB/runtime:", buildPath);
+  requireText(buildText, "Fixtures/data setup:", buildPath);
+  requireText(buildText, "Similar repo precedent used:", buildPath);
   requireText(buildText, "Command: None / reopen-check", buildPath);
   requireText(buildText, "Phase: None / <phase-id>", buildPath);
   requireText(buildText, "Slice: None / <slice-id>", buildPath);
@@ -928,6 +1011,8 @@ function validateStrikeContract() {
   requireText(buildText, "write `Built: no` and route back to the\n  owning workflow step so Strike can continue", buildPath);
   requireText(buildText, "Do not re-evaluate whether the slice is well-shaped", buildPath);
   requireText(buildText, "Read upstream artifacts only when they are needed", buildPath);
+  requireText(buildText, "Keep environments separate too", buildPath);
+  requireText(buildText, "Do not treat a failing command, provider response, workflow error, payload\n  limit", buildPath);
 
   requireText(verifyBuildText, "current slice's `slice.md`", verifyBuildPath);
   requireText(verifyBuildText, "current slice's `research.md`", verifyBuildPath);
@@ -937,7 +1022,8 @@ function validateStrikeContract() {
   requireText(verifyBuildText, "current phase's `phase-spec.md`", verifyBuildPath);
   requireText(verifyBuildText, "build-verification.md", verifyBuildPath);
   requireText(verifyBuildText, "Built: yes", verifyBuildPath);
-  requireText(verifyBuildText, "Confirm planned tests were added", verifyBuildPath);
+  requireText(verifyBuildText, "Confirm planned Unit / Component / Integration Tests and E2E Tests", verifyBuildPath);
+  requireText(verifyBuildText, "Confirm automated tests ran in the repo's test/E2E environment", verifyBuildPath);
   requireText(verifyBuildText, "Do not default to a full test suite", verifyBuildPath);
   requireText(verifyBuildText, "read-only review subagents", verifyBuildPath);
   requireText(verifyBuildText, "host does not support subagents", verifyBuildPath);
@@ -951,6 +1037,7 @@ function validateStrikeContract() {
   requireText(verifyBuildText, "centralized and documented env access", verifyBuildPath);
   requireText(verifyBuildText, "useful debug evidence without leaking sensitive data", verifyBuildPath);
   requireText(verifyBuildText, "loading,\n  empty, success, failure, recovery, accessibility, and responsive states", verifyBuildPath);
+  requireText(verifyBuildText, "technical symptoms, workflow errors, provider responses, payload\n  limits", verifyBuildPath);
   requireText(verifyBuildText, "functionality", verifyBuildPath);
   requireText(verifyBuildText, "spec-coverage", verifyBuildPath);
   requireText(verifyBuildText, "edge-cases", verifyBuildPath);
@@ -961,16 +1048,24 @@ function validateStrikeContract() {
   requireText(verifyBuildText, "integration-risk", verifyBuildPath);
   requireText(verifyBuildText, "accessibility", verifyBuildPath);
   requireText(verifyBuildText, "Suggested Category: Must Fix / Follow-Up / Accepted Risk", verifyBuildPath);
-  requireText(verifyBuildText, "run an actual browser or user-flow check after the\nslice build", verifyBuildPath);
-  requireText(verifyBuildText, "host browser tools or Playwright CLI", verifyBuildPath);
-  requireText(verifyBuildText, "they are not browser verification", verifyBuildPath);
-  requireText(verifyBuildText, "Report code-verified rather than browser-verified", verifyBuildPath);
-  requireText(verifyBuildText, "replacement evidence is\nstrong enough", verifyBuildPath);
-  requireText(verifyBuildText, "residual user-facing risk is explicitly listed under\n`Accepted Risk`", verifyBuildPath);
+  requireText(verifyBuildText, "run an actual Browser Clickthrough after the slice\nbuild", verifyBuildPath);
+  requireText(verifyBuildText, "Browser Clickthrough means using the feature", verifyBuildPath);
+  requireText(verifyBuildText, "Browser Clickthrough should run against the dev/local app environment", verifyBuildPath);
+  requireText(verifyBuildText, "Do not accept a single failed browser route, URL form, navigation timeout", verifyBuildPath);
+  requireText(verifyBuildText, "try another available browser surface before writing\n`Verified: no`", verifyBuildPath);
+  requireText(verifyBuildText, "Opening a route shell, logging in, navigating near the feature", verifyBuildPath);
+  requireText(verifyBuildText, "automated tests and Browser Clickthrough are separate gates", verifyBuildPath);
+  requireText(verifyBuildText, "tests\nbelong in the repo's test/E2E environment", verifyBuildPath);
   requireText(verifyBuildText, "## Issues", verifyBuildPath);
-  requireText(verifyBuildText, "## Tests", verifyBuildPath);
-  requireText(verifyBuildText, "Focused commands:", verifyBuildPath);
-  requireText(verifyBuildText, "Not run / skipped:", verifyBuildPath);
+  requireText(verifyBuildText, "## Verification Evidence", verifyBuildPath);
+  requireText(verifyBuildText, "### Static / Build Checks", verifyBuildPath);
+  requireText(verifyBuildText, "### Unit / Component / Integration Tests", verifyBuildPath);
+  requireText(verifyBuildText, "### E2E Tests", verifyBuildPath);
+  requireText(verifyBuildText, "### Browser Clickthrough", verifyBuildPath);
+  requireText(verifyBuildText, "### Visual Evidence", verifyBuildPath);
+  requireText(verifyBuildText, "### Skipped / Not Applicable", verifyBuildPath);
+  requireText(verifyBuildText, "DB/runtime:", verifyBuildPath);
+  requireText(verifyBuildText, "Fixtures/data setup:", verifyBuildPath);
   requireText(verifyBuildText, "### Must Fix", verifyBuildPath);
   requireText(verifyBuildText, "### Follow-Up", verifyBuildPath);
   requireText(verifyBuildText, "### Accepted Risk", verifyBuildPath);
@@ -981,6 +1076,8 @@ function validateStrikeContract() {
   requireText(verifyBuildText, "Slice: None / <slice-id>", verifyBuildPath);
   requireText(verifyBuildText, "Check: None / researchComplete / planCreated / planVerified / implemented", verifyBuildPath);
   requireText(verifyBuildText, "Do not edit implementation files", verifyBuildPath);
+  requireText(verifyBuildText, "Browser Clickthrough was moved to a test DB/environment", verifyBuildPath);
+  requireText(verifyBuildText, "patched\n  without checking existing repo precedent", verifyBuildPath);
   requireText(verifyBuildText, "Give every `Must Fix` item a stable short issue ID", verifyBuildPath);
   requireText(verifyBuildText, "complete-check buildVerified", verifyBuildPath);
   requireText(strikeText, "build-verification.md", strikePath);
@@ -992,6 +1089,8 @@ function validateStrikeContract() {
   requireText(fixText, "failed Strike verification pass", fixPath);
   requireText(fixText, "## Source Verification", fixPath);
   requireText(fixText, "## Issues Addressed", fixPath);
+  requireText(fixText, "## Repo Precedent", fixPath);
+  requireText(fixText, "Closest existing pattern:", fixPath);
   requireText(fixText, "Ready for re-verification: yes / no", fixPath);
   requireText(fixText, "## Route Back", fixPath);
   requireText(fixText, "Command: None / reopen-check / reopen-phase-check / reopen-slice-check", fixPath);
@@ -1002,6 +1101,8 @@ function validateStrikeContract() {
   requireText(fixText, "use the exact helper command Strike should run", fixPath);
   requireText(fixText, "same verifier must run again", fixPath);
   requireText(fixText, "Must Fix", fixPath);
+  requireText(fixText, "same class of problem. Use error terms, provider names", fixPath);
+  requireText(fixText, "payload limit", fixPath);
 
   requireText(verifyPhaseText, "current phase's `phase-spec.md`", verifyPhasePath);
   requireText(verifyPhaseText, "each slice's `slice.md`", verifyPhasePath);
@@ -1024,11 +1125,11 @@ function validateStrikeContract() {
   requireText(verifyPhaseText, "phase-integration-risk", verifyPhasePath);
   requireText(verifyPhaseText, "Suggested Category: Must Fix / Follow-Up / Accepted Risk", verifyPhasePath);
   requireText(verifyPhaseText, "only when a user-facing flow spans\nmultiple slices", verifyPhasePath);
-  requireText(verifyPhaseText, "host browser tools or Playwright CLI", verifyPhasePath);
-  requireText(verifyPhaseText, "they are not browser verification", verifyPhasePath);
-  requireText(verifyPhaseText, "Report code-verified rather than browser-verified", verifyPhasePath);
-  requireText(verifyPhaseText, "replacement evidence is\nstrong enough", verifyPhasePath);
-  requireText(verifyPhaseText, "residual user-facing risk is explicitly listed under\n`Accepted Risk`", verifyPhasePath);
+  requireText(verifyPhaseText, "Browser Clickthrough means using the feature", verifyPhasePath);
+  requireText(verifyPhaseText, "supporting evidence only. They are not Browser Clickthrough", verifyPhasePath);
+  requireText(verifyPhaseText, "did not include actual Browser Clickthrough", verifyPhasePath);
+  requireText(verifyPhaseText, "Environment scope:", verifyPhasePath);
+  requireText(verifyPhaseText, "using a test DB/environment\n  for dev/local Browser Clickthrough", verifyPhasePath);
   requireText(verifyPhaseText, "## Issues", verifyPhasePath);
   requireText(verifyPhaseText, "### Must Fix", verifyPhasePath);
   requireText(verifyPhaseText, "### Follow-Up", verifyPhasePath);
@@ -1061,7 +1162,7 @@ function validateStrikeContract() {
   requireText(verifyMainText, "final-integration-risk", verifyMainPath);
   requireText(verifyMainText, "Suggested Category: Must Fix / Follow-Up / Accepted Risk", verifyMainPath);
   requireText(verifyMainText, "include final smoke evidence for both the\n  new/changed path and one preserved existing path", verifyMainPath);
-  requireText(verifyMainText, "one final browser or user-flow check\nacross the accepted scope", verifyMainPath);
+  requireText(verifyMainText, "one final Browser Clickthrough or\nrepresentative user-flow check across the accepted scope", verifyMainPath);
   requireText(verifyMainText, "User-flow checks are not only browser checks", verifyMainPath);
   requireText(verifyMainText, "smoke-test the changed/new path and at least\none preserved existing path", verifyMainPath);
   requireText(verifyMainText, "visual screenshot check after representative\ndata exists", verifyMainPath);
@@ -1070,15 +1171,15 @@ function validateStrikeContract() {
   requireText(verifyMainText, "do not overlap\n  or clip", verifyMainPath);
   requireText(verifyMainText, "visually connected to the right\n  labels", verifyMainPath);
   requireText(verifyMainText, "## Visual Screenshot Check", verifyMainPath);
-  requireText(verifyMainText, "Status: passed / blocked / Not applicable", verifyMainPath);
+  requireText(verifyMainText, "Status: passed / failed / Not applicable", verifyMainPath);
   requireText(verifyMainText, "Do not write `Passed: no`", verifyMainPath);
   requireText(verifyMainText, "Screenshot:", verifyMainPath);
   requireText(verifyMainText, "Viewport:", verifyMainPath);
-  requireText(verifyMainText, "host browser tools or Playwright CLI", verifyMainPath);
-  requireText(verifyMainText, "they are not browser verification", verifyMainPath);
-  requireText(verifyMainText, "Report code-verified rather than browser-verified", verifyMainPath);
-  requireText(verifyMainText, "replacement\nevidence is strong enough", verifyMainPath);
-  requireText(verifyMainText, "residual user-facing risk is explicitly listed\nunder `Accepted Risk`", verifyMainPath);
+  requireText(verifyMainText, "Browser Clickthrough means using the accepted feature", verifyMainPath);
+  requireText(verifyMainText, "supporting evidence only. They are not Browser Clickthrough", verifyMainPath);
+  requireText(verifyMainText, "actual Browser Clickthrough or representative user-flow\n  exercise", verifyMainPath);
+  requireText(verifyMainText, "Environment scope:", verifyMainPath);
+  requireText(verifyMainText, "using a test\n  DB/environment for dev/local Browser Clickthrough", verifyMainPath);
   requireText(verifyMainText, "## Issues", verifyMainPath);
   requireText(verifyMainText, "### Must Fix", verifyMainPath);
   requireText(verifyMainText, "### Follow-Up", verifyMainPath);

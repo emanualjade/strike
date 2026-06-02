@@ -2,6 +2,34 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.10.8 - 2026-06-02
+
+- Added a shared verification evidence taxonomy that separates static/build
+  checks, unit/component/integration tests, E2E tests, browser clickthrough,
+  visual evidence, and skipped/not-applicable evidence.
+- Updated slice planning, build, and verification skills to use grouped
+  verification evidence instead of one generic test/check bucket.
+- Made browser-visible slice verification require actual browser clickthrough:
+  route opened, representative data used, feature controls clicked, expected
+  states observed, and screenshots captured.
+- Added repo-precedent gates so integration, provider, workflow, upload,
+  storage, asset, queue, job, and dataflow work must search for existing repo
+  patterns before inventing or patching a solution.
+- Added a planning-time Repo Pattern Scan so agents classify the work and inspect
+  matching repo patterns before proposing how to build it.
+- Added mandatory user checkpoints for idea refinement and grilling, including
+  state-helper enforcement that `idea.md` and `decisions.md` record a user
+  response before the workflow can continue.
+- Added verification environment-scope rules so automated tests stay in the
+  repo's test/E2E environment and browser clickthrough stays in the dev/local app
+  environment unless explicitly overridden.
+- Added browser-clickthrough recovery rules so a single blocked local URL,
+  navigation timeout, or browser-tool failure cannot be treated as enough
+  evidence to abandon browser verification.
+- Added dogfood guidance for nested browser harness failures so observer-side
+  clickthrough can classify a target browser/tooling issue without replacing
+  target-agent browser evidence.
+
 ## 0.10.7 - 2026-06-02
 
 - Renamed the workflow state prompt from `current` to `next-step` and made

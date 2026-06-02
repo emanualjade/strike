@@ -19,6 +19,8 @@ Verify one phase and record phase verification.
 - each slice's `plan-verification.md`
 - each slice's `build.md`
 - each slice's `build-verification.md`
+- shared verification evidence taxonomy from the Strike plugin root's
+  `references/verification-evidence.md`
 - user implementation guidance from
   `strike/user-guidance/implementation-discipline/global.md` and
   `strike/user-guidance/implementation-discipline/verify-phase.md`
@@ -33,6 +35,8 @@ Verify one phase and record phase verification.
   `strike/initiatives/<initiative-id>/phases/<phase-id>/phase-spec.md`.
 - Read every slice artifact under
   `strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/`.
+- Read the bundled `references/verification-evidence.md` from the Strike plugin
+  root.
 - Read `strike/user-guidance/implementation-discipline/global.md` and
   `strike/user-guidance/implementation-discipline/verify-phase.md` if they
   exist.
@@ -40,6 +44,9 @@ Verify one phase and record phase verification.
   `strike/user-guidance/review-lenses/verify-phase.md` if they exist.
 - Compare completed slice evidence against the phase spec.
 - Confirm every required slice has `build-verification.md` with `Verified: yes`.
+- Summarize slice verification evidence by the standard categories: Static /
+  Build Checks, Unit / Component / Integration Tests, E2E Tests, Browser
+  Clickthrough, and Visual Evidence.
 - Check cross-slice flows, integration points, state, data, UI, permissions, and
   edge cases that apply to the phase.
 - Check whether completed slices collectively follow relevant implementation
@@ -56,27 +63,25 @@ Verify one phase and record phase verification.
 ## Browser / User-Flow Checks
 
 Do browser or user-flow checks at phase level only when a user-facing flow spans
-multiple slices, or when earlier slice browser evidence is thin, blocked,
+multiple slices, or when earlier slice browser evidence is thin, missing,
 contradictory, or risky.
 
 Use the repo-approved browser path when one exists. If the repo does not name a
-path, discover available host browser tools or Playwright CLI and use the best
-available safe option.
+path, use the best available browser automation path, such as Playwright CLI.
 
-Code review, static checks, curl, and DOM inspection are useful replacement
-evidence, but they are not browser verification.
+Browser Clickthrough means using the feature: open the real route/page, create
+or use representative data, click the actual controls/actions, observe expected
+states/results, and capture screenshots.
 
-If browser verification is blocked, record what should have run, what blocked
-it, replacement evidence, and residual user-facing risk.
+Code review, static checks, curl, DOM inspection, and route-shell screenshots are
+supporting evidence only. They are not Browser Clickthrough.
 
-Do not call phase UI/user-flow work browser-verified without an actual browser
-or user-flow check. Report code-verified rather than browser-verified when
-browser verification is blocked.
+Do not call phase UI/user-flow work browser-verified without actual Browser
+Clickthrough.
 
 When browser or user-flow verification is required for accepted phase scope and
-it is blocked, mark verification as not ready unless replacement evidence is
-strong enough and the residual user-facing risk is explicitly listed under
-`Accepted Risk`.
+it did not happen, mark verification as not ready and record the blocker, route
+back, or fix needed.
 
 ## Review
 
@@ -152,6 +157,14 @@ Use this shape:
 ## Cross-Slice Checks
 -
 
+## Verification Evidence Summary
+Static / Build Checks:
+Unit / Component / Integration Tests:
+E2E Tests:
+Browser Clickthrough:
+Visual Evidence:
+Environment scope:
+
 ## Implementation Discipline Review
 Relevant guidance:
 Cross-slice concerns:
@@ -206,6 +219,11 @@ Reason:
   when useful, such as `I1 [P1]`.
 - Do not mark `Ready: yes` unless every required slice has
   `build-verification.md` with `Verified: yes` and the phase spec is satisfied.
+- Do not mark `Ready: yes` when required cross-slice browser/user-flow evidence
+  did not include actual Browser Clickthrough.
+- Do not mark `Ready: yes` when browser/user-flow evidence was gathered in the
+  wrong environment for the accepted scope, such as using a test DB/environment
+  for dev/local Browser Clickthrough without explicit user or repo direction.
 - Do not mark `Ready: yes` when relevant implementation discipline guidance is
   ignored across the completed phase.
 - Do not mark `Ready: yes` when a relevant user review lens raises an
@@ -224,5 +242,5 @@ Reason:
   `node strike/scripts/state.mjs complete-check allSlicesVerified`.
 - Do not start another phase.
 - Do not verify the whole main spec.
-- Report code-verified rather than browser-verified when browser/user-flow
-  verification is blocked.
+- Keep automated evidence, E2E tests, Browser Clickthrough, and Visual Evidence
+  separate when summarizing phase readiness.

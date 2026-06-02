@@ -16,6 +16,8 @@ Verify one slice plan is ready to build.
 - slice research from the current slice's `research.md`
 - slice plan from the current slice's `plan.md`
 - phase spec from the current phase's `phase-spec.md`
+- shared verification evidence taxonomy from the Strike plugin root's
+  `references/verification-evidence.md`
 - user implementation guidance from
   `strike/user-guidance/implementation-discipline/global.md` and
   `strike/user-guidance/implementation-discipline/verify-slice-plan.md`
@@ -34,6 +36,8 @@ Verify one slice plan is ready to build.
   `strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/plan.md`.
 - Read the phase spec from
   `strike/initiatives/<initiative-id>/phases/<phase-id>/phase-spec.md`.
+- Read the bundled `references/verification-evidence.md` from the Strike plugin
+  root.
 - Read `strike/user-guidance/implementation-discipline/global.md` and
   `strike/user-guidance/implementation-discipline/verify-slice-plan.md` if
   they exist.
@@ -51,7 +55,11 @@ Verify one slice plan is ready to build.
 - Check that likely files, surfaces, sequencing, edge cases, and verification
   are specific enough to build from.
 - Check that `Repo Context / Impact Scan` shows enough surrounding-code,
-  upstream, downstream, and shared-utility awareness for the slice's risk.
+  upstream, downstream, shared-utility, and similar-precedent awareness for the
+  slice's risk.
+- Check that `Repo Pattern Scan` classifies the kind of work being planned and
+  reviews existing repo examples for the relevant categories before the approach
+  is accepted.
 - Check that the plan applies relevant implementation discipline guidance.
 - Check that new utilities, helpers, adapters, or shared modules have a
   repo-pattern-based home, and that modifications to existing shared utilities
@@ -61,9 +69,25 @@ Verify one slice plan is ready to build.
   separate, but flag adjective-noun siblings when a field, enum, state,
   permission, relationship, ownership, placement, or usage context may be the
   better model.
-- Check that the plan has a concrete `Test Plan`: tests to add/update, focused
-  commands to run, browser/user-flow check when relevant, or a credible
-  no-test reason.
+- Check that the plan has a concrete `Verification Evidence Plan` using the
+  standard categories: Static / Build Checks, Unit / Component / Integration
+  Tests, E2E Tests, Browser Clickthrough, Visual Evidence, and Skipped / Not
+  Applicable.
+- Check that the plan separates relevant automated tests from Browser
+  Clickthrough. Do not accept one as a substitute for the other.
+- Check that each verification category names the intended environment, and that
+  tests use the repo's test/E2E environment while Browser Clickthrough uses the
+  dev/local app environment unless repo instructions or the user explicitly
+  require otherwise.
+- For browser-visible work, check that Browser Clickthrough names the real route
+  or page, dev/local environment and DB/runtime, representative data to
+  create/use, controls or actions to click, expected states/results, and Visual
+  Evidence screenshots.
+- Check that the E2E Tests category either names specs to add/update or gives a
+  concrete skip/not-applicable reason. Require E2E tests when the repo already
+  has E2E infrastructure and the slice changes an important workflow, auth or
+  permission boundary, persistence path, cross-page flow, regression-prone
+  interaction, or business-critical path.
 - Do not accept a vague test plan or a default full-suite command without a
   repo-specific or risk-based reason.
 - Check the research `Slice Size Check`. If it says `Too broad: yes`, the plan
@@ -72,6 +96,15 @@ Verify one slice plan is ready to build.
   plan with L/XL signals, multiple independent behaviors, too many surfaces, or
   broad-stack work that can work smaller is not ready.
 - Confirm the plan follows local repo patterns where they are knowable.
+- Confirm the plan prefers existing repo structure and patterns for matching
+  UI/component, routing/API, networking/provider integration, async
+  workflow/job/queue, data model/persistence, upload/file/asset storage,
+  validation/error handling, auth/permissions/ownership, and testing/E2E/browser
+  verification work unless it records a clear reason to differ.
+- For integration, provider, workflow, upload, asset, storage, queue, job,
+  callback, webhook, or dataflow work, confirm the plan searched for existing
+  repo examples of the same problem class and named the closest precedent or a
+  credible no-precedent finding.
 - Review risky state, data, UI, integration, permission, and rollback concerns
   that apply to the slice.
 - If the plan needs a product, permission, data, security, or hard-to-reverse
@@ -101,9 +134,11 @@ Always run this subagent:
 - `implementation-plan`: checks slice size, verticality, sequencing, exact
   files/surfaces, research usage, implementation discipline guidance, local
   repo precedent, surrounding and related code, upstream/downstream impact,
-  shared utility placement, edge cases, focused test plan, verification plan,
-  rollback or recovery notes, and whether the plan can be built without
-  guessing.
+  shared utility placement, repo pattern scan classification, existing examples
+  reviewed for relevant work categories, edge cases, grouped verification
+  evidence plan, focused automated tests, E2E decision, browser clickthrough
+  plan, visual evidence plan, rollback or recovery notes, and whether the plan
+  can be built without guessing.
 
 Always consider `canonical-implementation`, and run it when the plan touches
 third-party APIs, packages, framework-specific behavior, accounting, money,
@@ -224,6 +259,24 @@ Reason:
 - Do not mark `Ready: yes` when research says `Too broad: yes`.
 - Do not mark `Ready: yes` when relevant implementation discipline guidance is
   ignored or the plan would scatter duplicate utilities/shared code.
+- Do not mark `Ready: yes` when `Repo Pattern Scan` is missing, fails to
+  classify the work, or does not inspect matching repo examples for the relevant
+  categories.
+- Do not mark `Ready: yes` when integration, provider, workflow, upload, asset,
+  storage, queue, job, callback, webhook, or dataflow work lacks a repo-precedent
+  scan.
+- Do not mark `Ready: yes` when `Verification Evidence Plan` is missing,
+  collapsed into a generic "test" bucket, or vague about required evidence.
+- Do not mark `Ready: yes` when verification environments are missing, swapped,
+  or chosen merely to make checks easier. Browser Clickthrough belongs in the
+  dev/local app environment; automated tests belong in the repo's test/E2E
+  environment unless explicitly overridden by repo instructions or the user.
+- Do not mark `Ready: yes` for browser-visible work unless Browser Clickthrough
+  names the actual feature route/page, dev/local environment and DB/runtime,
+  representative data, controls/actions, expected states/results, and Visual
+  Evidence screenshots.
+- Do not mark `Ready: yes` when E2E Tests are required by repo infrastructure
+  and workflow risk but the plan does not name specs to add/update.
 - Do not mark `Ready: yes` when a relevant user review lens raises an
   accepted-scope `Must Fix` issue.
 - Do not mark `Ready: yes` when the slice should be split before build. Write

@@ -98,6 +98,13 @@ Host invocation syntax is docs/package guidance, not runtime skill behavior.
 Active skills should describe their own work and outputs; Strike routing comes
 from `strike/state.json` and the state helper.
 
+2026-06-02 update: `plugins/strike/references/verification-evidence.md` is the
+shared Strike taxonomy for verification evidence categories. It keeps static
+checks, unit/component/integration tests, E2E tests, browser clickthrough, visual
+evidence, and skipped/not-applicable evidence separate across planning, build,
+and verification skills. This is Strike workflow policy and package support
+material, not a host-discovered component path.
+
 ### Host Invocation Documentation
 
 - Grounded in research: Yes.

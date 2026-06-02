@@ -349,6 +349,13 @@ Do not complete `planCreated` if `plan.md` says `Split Recommendation` is
 `Needed: yes`. Split the active slice, add any replacement slice stubs with
 `add-slice`, run `reopen-check researchComplete`, then continue from `next-step`.
 
+Do not complete `ideaRefined` unless `idea.md` contains `## User Checkpoint`,
+records a non-empty `User response:`, and says `Ready to continue: yes`.
+
+Do not complete `decisionsResolved` unless `decisions.md` contains
+`## User Checkpoint`, records a non-empty `User response:`, and says
+`Ready to continue: yes`.
+
 Do not complete `phasesCreated` until `development-plan.md` exists, each
 planned phase has a phase stub, and each planned phase has been added with
 `add-phase`.
@@ -501,9 +508,10 @@ complete the returned check only after the step's artifact passes its gate.
 Initiative setup:
 
 - `refine-idea`: pass the raw request; write `idea.md`; complete
-  `ideaRefined`.
+  `ideaRefined` only after the user checkpoint says `Ready to continue: yes`.
 - `grill-idea`: pass `idea.md`; write `decisions.md`; complete
-  `decisionsResolved`.
+  `decisionsResolved` only after the user checkpoint says
+  `Ready to continue: yes`.
 - `create-main-spec`: pass `idea.md` and `decisions.md`; write
   `main-spec.md`; complete `specCreated`.
 - `create-development-phases`: pass `main-spec.md`; write
@@ -524,18 +532,22 @@ Slice loop:
   `research.md`; complete `researchComplete` only when it says
   `Ready for planning: yes`.
 - `plan-slice`: pass `main-spec.md`, `phase-spec.md`, `slice.md`, and
-  `research.md`; write `plan.md` with a focused `Test Plan`; complete
+  `research.md`; write `plan.md` with a focused `Verification Evidence Plan`;
+  complete
   `planCreated` only when `Split Recommendation` is `Needed: no`.
 - `verify-slice-plan`: pass the slice artifacts; write
   `plan-verification.md`; complete `planVerified` only when it says
   `Ready: yes`.
 - `build-slice`: pass `plan.md`, `plan-verification.md`, and repo files named
-  by the plan; implement the work, add/update planned tests, run focused checks,
-  and write `build.md`; complete `implemented` only when it says `Built: yes`.
+  by the plan; implement the work, add/update planned automated tests, run
+  focused verification evidence checks, use existing repo precedent before
+  patching technical symptoms or integration/dataflow behavior, and write
+  `build.md`; complete `implemented` only when it says `Built: yes`.
 - `verify-slice-build`: pass the slice artifacts and changed files; write
-  `build-verification.md`; confirm focused test evidence; complete
-  `buildVerified` only when it says `Verified: yes`, then commit and push that
-  completed slice before moving on.
+  `build-verification.md`; confirm grouped verification evidence, including
+  Browser Clickthrough for browser-visible work; complete `buildVerified` only
+  when it says `Verified: yes`, then commit and push that completed slice before
+  moving on.
 
 Verification gates:
 

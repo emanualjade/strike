@@ -33,9 +33,16 @@ Fix issues from a failed Strike verification pass.
   are required by accepted scope.
 - Read whatever project docs, artifacts, code, or source-backed references are
   needed to fix the real issue.
+- Before patching a technical symptom, search the codebase for how this repo
+  already handles the same class of problem. Use error terms, provider names,
+  object names, workflow step names, storage/upload paths, and nearby adapters or
+  callers as search anchors.
 - If the repair creates or modifies utilities, helpers, adapters, schemas, or
   shared modules, search for existing repo patterns and inspect likely callers
   before editing.
+- For integration, provider, workflow, upload, asset, storage, queue, job,
+  callback, webhook, or dataflow repairs, name the existing repo precedent used
+  or record that none was found before making code changes.
 - Keep the repair focused on passing the failed verification, not expanding the
   feature.
 - Treat `Follow-Up` and `Accepted Risk` items as context. Do not fix them unless
@@ -85,6 +92,11 @@ Reason:
 ## Changes Made
 -
 
+## Repo Precedent
+Searched:
+Closest existing pattern:
+How the repair follows or intentionally differs:
+
 ## Checks
 -
 
@@ -120,6 +132,9 @@ Reason:
 - Do not decide that the work is verified. The same verifier must run again.
 - Do not complete workflow state checks.
 - Do not chase open-ended improvements.
+- Do not treat a failed check, provider response, workflow error, payload limit,
+  upload/storage issue, or dataflow mismatch as novel until you have searched
+  the repo for existing handling of that class of problem.
 - Do not hide accepted-scope defects as follow-up work.
 - Do not rewrite the failed verification artifact; it remains the source for
   this repair loop.

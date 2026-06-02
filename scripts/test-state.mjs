@@ -64,6 +64,7 @@ function assertNextStep(nextStep, expected) {
 }
 
 function complete(repo, checkName, expected) {
+  writeWorkflowCheckpointArtifact(repo, checkName);
   const receipt = run(repo, workspaceHelper(repo), ["complete-check", checkName]);
   assertNextStep(receipt, {
     status: "recorded",
@@ -84,11 +85,98 @@ function writeArtifact(repo, relativePath, content = "# Test Artifact\n\nReady.\
   fs.writeFileSync(artifactPath, content);
 }
 
+function writeWorkflowCheckpointArtifact(repo, checkName) {
+  if (checkName !== "ideaRefined" && checkName !== "decisionsResolved") {
+    return;
+  }
+
+  const statePath = path.join(repo, "strike/state.json");
+  if (!fs.existsSync(statePath)) {
+    return;
+  }
+
+  const state = JSON.parse(fs.readFileSync(statePath, "utf8"));
+  const initiative = state.initiatives.find((item) => item.status === "active");
+  if (!initiative) {
+    return;
+  }
+
+  const artifactName = checkName === "ideaRefined" ? "idea.md" : "decisions.md";
+  const artifactPath = path.join(repo, "strike/initiatives", initiative.id, artifactName);
+  if (fs.existsSync(artifactPath)) {
+    return;
+  }
+
+  writeArtifact(
+    repo,
+    path.join("strike/initiatives", initiative.id, artifactName),
+    `# Test Artifact
+
+## User Checkpoint
+Prompt: Are you ready to continue?
+User response: Yes, continue.
+Ready to continue: yes
+`,
+  );
+}
+
 function writePhaseArtifacts(repo, initiativeId, phaseIds) {
   writeArtifact(repo, `strike/initiatives/${initiativeId}/development-plan.md`);
   for (const phaseId of phaseIds) {
     writeArtifact(repo, `strike/initiatives/${initiativeId}/phases/${phaseId}/phase.md`);
   }
+}
+
+function testUserCheckpointRequiredForIdeaAndGrill() {
+  const repo = tempRepo();
+  run(repo, helper, ["init", "gallery", "Gallery"]);
+  const localHelper = workspaceHelper(repo);
+
+  runFail(repo, localHelper, ["complete-check", "ideaRefined"], /user checkpoint/);
+
+  writeArtifact(repo, "strike/initiatives/gallery/idea.md", "# Refined Idea\n\nNo checkpoint.\n");
+  runFail(repo, localHelper, ["complete-check", "ideaRefined"], /User Checkpoint/);
+
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/idea.md",
+    `# Refined Idea
+
+## User Checkpoint
+Prompt: Are you ready?
+User response:
+Ready to continue: yes
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "ideaRefined"], /non-empty User response/);
+
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/idea.md",
+    `# Refined Idea
+
+## User Checkpoint
+Prompt: Are you ready?
+User response: Yes, continue.
+Ready to continue: yes
+`,
+  );
+  complete(repo, "ideaRefined", { skill: "grill-idea" });
+
+  runFail(repo, localHelper, ["complete-check", "decisionsResolved"], /user checkpoint/);
+
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/decisions.md",
+    `# Idea Decisions
+
+## User Checkpoint
+Prompt: Are you ready for spec?
+User response: Yes, continue.
+Ready to continue: yes
+`,
+  );
+  complete(repo, "decisionsResolved", { skill: "create-main-spec" });
 }
 
 function writeSliceArtifacts(repo, initiativeId, phaseId, sliceIds) {
@@ -709,6 +797,7 @@ function testInitiativeLifecycle() {
 }
 
 testBootstrapAndWorkflowProgression();
+testUserCheckpointRequiredForIdeaAndGrill();
 testPhaseAndSliceRegistrationRequired();
 testStrictCommands();
 testNewInitiativeHelperWrapper();

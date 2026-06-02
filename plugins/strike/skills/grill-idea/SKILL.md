@@ -29,6 +29,12 @@ Pressure-test a refined idea until key decisions are explicit enough for a spec.
   they help the user choose, then wait for the user's answer.
 - Treat a detailed kickoff as possible decision evidence, not automatic
   completion. Record which nodes it answered and which remain vague.
+- Initiate a user checkpoint before finishing, even when provided decision files,
+  schemas, planning docs, or repo context seem to answer the pressure points.
+  Summarize the resolved decisions, accepted assumptions, and deferred decisions,
+  then ask whether the user is ready to move on or wants to discuss more.
+- Wait for the user's answer to that checkpoint. Existing artifacts can inform
+  the decision record, but they do not replace hearing from the user.
 - Recommend defaults for reversible low-risk details.
 - Record user-stated decisions, accepted assumptions, deferred decisions, and
   blockers.
@@ -139,6 +145,11 @@ Why:
 - Accepted assumptions:
 - Deferred decisions:
 
+## User Checkpoint
+Prompt:
+User response:
+Ready to continue: yes / no
+
 ## Blocking Question
 None.
 
@@ -155,6 +166,10 @@ None.
 - Use `standard` depth when no depth is provided.
 - Do not infer user answers from silence, failed tools, or unavailable question
   UI. Ask plainly and wait when the answer matters.
+- Do not mark decisions ready to continue without `## User Checkpoint` showing
+  that you asked the user whether to move on and received their answer.
+- Do not treat provided docs, prior schemas, planning files, or silence as the
+  user's checkpoint response.
 - Do not turn stale contradiction history into the decision record; keep the
   artifact focused on current truth.
 - Once constraints are decided, leave drafting details to the spec handoff.

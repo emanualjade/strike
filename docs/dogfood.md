@@ -148,8 +148,40 @@ For browser-visible work, verify in a real browser or with Playwright CLI when
 available. Static review, curl, and DOM inspection are useful, but they are not
 browser verification.
 
-If browser verification is blocked, record what should have run, what blocked
-it, what replacement evidence was checked, and the remaining user-facing risk.
+Browser-visible work should exercise the actual feature: open the real route,
+create or use representative data, click the feature controls, observe expected
+states, and capture screenshots. Static review, curl, DOM inspection, and
+route-shell screenshots do not replace that clickthrough.
+
+A failed first browser URL or browser tool is a dogfood finding, not a reason to
+stop looking. Try alternate local URL forms such as `localhost`, `127.0.0.1`,
+the assigned dev-server host/port, and `file://` for static apps that can run
+from disk. Try another available browser surface when one browser tool blocks a
+local URL. Record the failed route/tool attempts and the eventual result.
+
+### Nested Browser Harnesses
+
+In AI-testing-AI dogfood runs, the target agent may be running in a delegated
+thread whose browser routing, URL policy, or tool exposure differs from the
+observer session. Treat that as a harness/tooling finding to investigate, not
+as proof that browser checks are optional.
+
+When the target agent reports a local URL policy block, navigation timeout, or
+missing browser route, the observer may independently try the same app and flow
+from the observer session without editing target artifacts, coaching the target,
+or advancing Strike state. This observer check helps classify the failure; it
+does not replace target-agent browser evidence.
+
+If the observer can click through the feature but the target agent cannot,
+record:
+
+- target browser evidence: failed / missing
+- observer harness evidence: passed, with URL and actions
+- finding: target host or delegated-thread browser capability/routing issue
+
+The target workflow remains unverified until the target agent completes the
+Browser Clickthrough itself, or the harness is fixed and the relevant Strike
+step is rerun.
 
 ## Dogfood Scenarios
 
@@ -198,20 +230,25 @@ agent:
 2. Pick Codex or Claude Code.
 3. Start in the dogfood workspace.
 4. Run the preflight check for the chosen host.
-5. Invoke Strike as a user would: start a new Strike initiative or resume
+5. For browser-visible scenarios, note the browser surface expected for the
+   target host and keep observer browser checks separate from target evidence.
+6. Invoke Strike as a user would: start a new Strike initiative or resume
    with `go`.
-6. Let the target agent move through the workflow and create the artifacts.
-7. Intervene only as a user would when it asks questions, gets blocked, or needs
+7. Let the target agent move through the workflow and create the artifacts.
+8. Intervene only as a user would when it asks questions, gets blocked, or needs
    product direction.
-8. Do not create or repair Strike artifacts for the target agent. If that seems
+9. Do not create or repair Strike artifacts for the target agent. If that seems
    necessary, record the run as failed or restart it.
-9. Inspect generated artifacts and code after the run.
-10. Confirm the target agent actually went through the expected stages: idea,
+10. Inspect generated artifacts and code after the run.
+11. Confirm the target agent actually went through the expected stages: idea,
    decisions, main spec, development phases, phase spec, slices, research,
    plan, plan verification, build, build verification/review, phase
    verification, and main-spec verification.
-11. Run the dogfood project's own checks when available.
-12. Record what worked, what failed, and what should change in Strike.
+12. Run the dogfood project's own checks when available.
+13. Record what worked, what failed, and what should change in Strike.
+14. For any Strike process failure found during dogfood, patch the Strike
+    workflow/docs/tests in the same repo pass, then rerun the smallest useful
+    validation for that change.
 
 ## What To Record
 
@@ -231,6 +268,11 @@ Scenario:
 ## Artifacts Created
 
 ## Software Quality
+
+## Browser Evidence
+- Target agent:
+- Observer harness:
+- Classification:
 
 ## Workflow Issues
 

@@ -18,6 +18,8 @@ Verify one slice build and record build verification.
 - plan verification from the current slice's `plan-verification.md`
 - build evidence from the current slice's `build.md`
 - phase spec from the current phase's `phase-spec.md`
+- shared verification evidence taxonomy from the Strike plugin root's
+  `references/verification-evidence.md`
 - user implementation guidance from
   `strike/user-guidance/implementation-discipline/global.md` and
   `strike/user-guidance/implementation-discipline/verify-slice-build.md`
@@ -29,6 +31,8 @@ Verify one slice build and record build verification.
 
 - Read the canonical slice, research, plan, plan verification, build evidence,
   and phase spec before verifying.
+- Read the bundled `references/verification-evidence.md` from the Strike plugin
+  root.
 - Read `strike/user-guidance/implementation-discipline/global.md` and
   `strike/user-guidance/implementation-discipline/verify-slice-build.md`
   if they exist.
@@ -38,13 +42,28 @@ Verify one slice build and record build verification.
 - Do not verify unless `plan-verification.md` says `Ready: yes` and `build.md`
   says `Built: yes`.
 - Compare the built work against slice acceptance criteria.
-- Confirm planned tests were added, updated, or credibly skipped.
-- Run or inspect the focused checks named by the plan, build evidence, and
-  changed surfaces.
+- Confirm the plan and build evidence use the standard verification evidence
+  categories.
+- Confirm planned Unit / Component / Integration Tests and E2E Tests were added,
+  updated, run, or credibly skipped according to the category rules.
+- Run or inspect the Static / Build Checks, focused test commands, E2E commands,
+  Browser Clickthrough, and Visual Evidence named by the plan, build evidence,
+  and changed surfaces.
+- Confirm automated tests ran in the repo's test/E2E environment, and Browser
+  Clickthrough ran in the dev/local app environment unless repo instructions or
+  the user explicitly required a different environment.
 - Do not default to a full test suite. Use focused commands unless the plan,
   repo convention, or risk justifies a broader run.
+- For browser-visible work, independently exercise the accepted feature in a
+  browser in the dev/local app environment before passing verification: open the
+  real route/page, create or use representative data, click the actual feature
+  controls/actions, observe the expected states/results, and capture screenshots
+  of the resulting feature state.
 - Review important edge cases, state, data, UI, integration, and permission risks
   that apply to this slice.
+- Check that integration, provider, workflow, upload, asset, storage, queue, job,
+  callback, webhook, or dataflow work follows existing repo precedent when one
+  exists. Treat unexplored precedent as a verification issue, not a style nit.
 - Record skipped checks, replacement evidence, and residual risk.
 - If `build.md` says `Built: no`, do not verify. Follow its `## Route Back`
   guidance.
@@ -90,6 +109,9 @@ Run these baseline subagents:
   checked against likely callers and downstream consumers; extra scrutiny for
   shared code, schemas, auth, payments, uploads, migrations, jobs, and
   integrations; isolated adapters for replaceable or risky vendor code;
+  evidence that technical symptoms, workflow errors, provider responses, payload
+  limits, upload/storage issues, and dataflow mismatches were checked against
+  similar repo precedent before being patched;
   centralized and documented env access; no hardcoded secrets or
   environment-specific URLs; input validation at
   boundaries; explicit errors; guarded destructive or external side effects;
@@ -131,32 +153,47 @@ Record the review result in the verification output.
 
 ## Browser / User-Flow Checks
 
-For UI or user-facing work, run an actual browser or user-flow check after the
-slice build.
+For browser-visible work, run an actual Browser Clickthrough after the slice
+build and before `Verified: yes`.
 
-Use the repo-approved browser path when one exists. If the repo does not name a
-path, discover available host browser tools or Playwright CLI and use the best
-available safe option.
+Use the repo-approved browser path when one exists. Otherwise use the best
+available browser automation path, such as Playwright CLI.
 
-Code review, static checks, curl, and DOM inspection are useful replacement
-evidence, but they are not browser verification.
+Browser Clickthrough means using the feature, not merely reaching it. Record the
+environment and DB/runtime used, route or page opened, representative data
+created or used, controls/actions clicked, expected states/results observed, and
+screenshots captured.
 
-If browser verification is blocked by host policy, missing tools, environment,
-auth, server startup, permissions, or user instruction, record:
+Browser Clickthrough should run against the dev/local app environment. Do not
+switch it to a test DB or test environment just because the dev/local environment
+is harder to seed, migrate, or start. If dev/local is blocked, mark verification
+as not passing and record the blocker, route back, or fix needed.
 
-- what browser/user-flow check should have run
-- what blocked it
-- replacement evidence checked
-- residual user-facing risk
+Do not accept a single failed browser route, URL form, navigation timeout, or
+browser tool as enough evidence that Browser Clickthrough is blocked. Treat the
+browser as available. Try valid alternate local URL forms such as `localhost`,
+`127.0.0.1`, the assigned dev-server host/port, and, for static apps that can run
+from disk, an absolute `file://` URL. If one browser automation surface blocks
+the URL or cannot navigate, try another available browser surface before writing
+`Verified: no` for blocked browser evidence. Record each attempted URL/tool and
+its result.
 
-Do not call UI work browser-verified without an actual browser or user-flow
-check. Report code-verified rather than browser-verified when browser
-verification is blocked.
+Opening a route shell, logging in, navigating near the feature, code review,
+static checks, curl, DOM inspection, and screenshots alone are not Browser
+Clickthrough.
 
-When browser or user-flow verification is required for accepted UI scope and it
-is blocked, mark verification as not passing unless replacement evidence is
-strong enough and the residual user-facing risk is explicitly listed under
-`Accepted Risk`.
+Relevant automated tests and Browser Clickthrough are separate gates. Browser
+Clickthrough does not replace appropriate automated tests, and automated tests
+do not replace Browser Clickthrough. Their environments are separate too: tests
+belong in the repo's test/E2E environment, and Browser Clickthrough belongs in
+the dev/local app environment unless explicitly overridden.
+
+Do not call browser-visible work verified without actual Browser Clickthrough.
+
+When accepted browser-visible scope cannot be exercised because representative
+data, auth, product setup, environment, or an external dependency is missing,
+mark verification as not passing and record the blocker, route back, or fix
+needed. Do not treat the gap as passed evidence.
 
 ## Output
 
@@ -174,15 +211,50 @@ Use this shape:
 
 ## Acceptance Review
 
-## Checks
--
+## Verification Evidence
+### Static / Build Checks
+Required: yes / no
+Environment:
+Evidence:
+Result: passed / failed / skipped / not applicable
+Reason:
 
-## Tests
-- Planned:
-- Added or updated:
-- Focused commands:
-- Not run / skipped:
-- Result:
+### Unit / Component / Integration Tests
+Required: yes / no
+Environment:
+Evidence:
+Result: passed / failed / skipped / not applicable
+Reason:
+
+### E2E Tests
+Required: yes / no
+Environment:
+Evidence:
+Fixtures/data setup:
+Result: passed / failed / skipped / not applicable
+Reason:
+
+### Browser Clickthrough
+Required: yes / no
+Environment:
+DB/runtime:
+Route/page:
+Representative data:
+Controls/actions:
+Observed states/results:
+Result: passed / failed / skipped / not applicable
+Reason:
+
+### Visual Evidence
+Required: yes / no
+Environment:
+Screenshots:
+Viewports:
+Result: passed / failed / skipped / not applicable
+Reason:
+
+### Skipped / Not Applicable
+-
 
 ## Review
 
@@ -233,6 +305,26 @@ Reason:
 - Do not edit implementation files; write issues for `fix` when the build needs
   changes.
 - Do not mark `Verified: yes` when `build.md` says `Built: no`.
+- Do not mark `Verified: yes` when relevant automated tests, E2E tests, static
+  checks, Browser Clickthrough, or Visual Evidence are missing, collapsed into a
+  generic "checks" bucket, or skipped without a concrete category-specific
+  reason.
+- Do not mark `Verified: yes` when automated tests were pointed at the dev
+  environment, Browser Clickthrough was moved to a test DB/environment, or env
+  files/DB targets/runtime mode were changed merely to make verification easier.
+- Do not mark `Verified: yes` for browser-visible work unless actual Browser
+  Clickthrough used the feature in the dev/local app environment: route/page
+  opened, DB/runtime recorded, representative data created or used, feature
+  controls/actions clicked, expected states/results observed, and screenshots
+  captured.
+- Do not mark browser verification as blocked after only one local URL form or
+  one browser automation surface failed. Record alternate URL/tool attempts in
+  Browser Clickthrough evidence before treating browser evidence as blocked.
+- Do not mark `Verified: yes` when E2E Tests are required by repo infrastructure
+  and workflow risk but no E2E specs were added, updated, or run.
+- Do not mark `Verified: yes` when integration, provider, workflow, upload,
+  asset, storage, queue, job, callback, webhook, or dataflow work was patched
+  without checking existing repo precedent for the same class of problem.
 - Do not mark `Verified: yes` when a relevant user review lens raises an
   accepted-scope `Must Fix` issue.
 - When verification fails because the implementation, tests, evidence, or local
@@ -245,5 +337,5 @@ Reason:
   `node strike/scripts/state.mjs complete-check buildVerified`.
 - Do not start another slice.
 - Do not verify the whole phase.
-- Report code-verified rather than browser-verified when browser/user-flow
-  verification is blocked.
+- Keep Browser Clickthrough and automated tests separate. Passing one does not
+  satisfy the other.

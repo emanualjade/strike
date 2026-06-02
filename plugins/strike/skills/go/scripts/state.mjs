@@ -392,6 +392,20 @@ function completionReceipt(current, verificationKey) {
 }
 
 function validateCompletionPreconditions(state, current, verificationKey, options = {}) {
+  if (verificationKey === "ideaRefined") {
+    requireUserCheckpoint(
+      "ideaRefined",
+      artifactFilePath(options.statePath, current.initiativeId, "idea.md"),
+    );
+  }
+
+  if (verificationKey === "decisionsResolved") {
+    requireUserCheckpoint(
+      "decisionsResolved",
+      artifactFilePath(options.statePath, current.initiativeId, "decisions.md"),
+    );
+  }
+
   if (verificationKey === "phasesCreated") {
     const initiative = (state.initiatives ?? []).find((item) => item.id === current.initiativeId);
     if (!initiative || (initiative.phases ?? []).length === 0) {
@@ -460,6 +474,25 @@ function requireContentArtifacts(verificationKey, artifactPaths) {
   if (missing.length > 0) {
     throw new Error(
       `Cannot complete ${verificationKey} until these artifacts exist and contain content: ${missing.join(", ")}.`,
+    );
+  }
+}
+
+function requireUserCheckpoint(verificationKey, artifactPath) {
+  if (!hasFileContent(artifactPath)) {
+    throw new Error(
+      `Cannot complete ${verificationKey} until ${artifactPath} exists and contains a user checkpoint.`,
+    );
+  }
+
+  const text = fs.readFileSync(artifactPath, "utf8");
+  const hasCheckpoint = /^## User Checkpoint\b/mi.test(text);
+  const hasReadyYes = /^Ready to continue:[^\S\r\n]*yes\b/mi.test(text);
+  const hasUserResponse = /^User response:[^\S\r\n]*\S.+$/mi.test(text);
+
+  if (!hasCheckpoint || !hasReadyYes || !hasUserResponse) {
+    throw new Error(
+      `Cannot complete ${verificationKey} until ${artifactPath} has ## User Checkpoint, a non-empty User response, and Ready to continue: yes.`,
     );
   }
 }

@@ -17,6 +17,8 @@ Verify the completed initiative against the main spec and record final evidence.
 - each phase's `phase.md`
 - each phase's `phase-spec.md`
 - each phase's `verification.md`
+- shared verification evidence taxonomy from the Strike plugin root's
+  `references/verification-evidence.md`
 - user implementation guidance from
   `strike/user-guidance/implementation-discipline/global.md` and
   `strike/user-guidance/implementation-discipline/verify-main-spec.md`
@@ -31,6 +33,8 @@ Verify the completed initiative against the main spec and record final evidence.
   `strike/initiatives/<initiative-id>/`.
 - Read every phase artifact under
   `strike/initiatives/<initiative-id>/phases/<phase-id>/`.
+- Read the bundled `references/verification-evidence.md` from the Strike plugin
+  root.
 - Read `strike/user-guidance/implementation-discipline/global.md` and
   `strike/user-guidance/implementation-discipline/verify-main-spec.md` if
   they exist.
@@ -38,6 +42,9 @@ Verify the completed initiative against the main spec and record final evidence.
   `strike/user-guidance/review-lenses/verify-main-spec.md` if they exist.
 - Confirm every required phase has `verification.md` with `Ready: yes`.
 - Compare completed phase evidence against the main spec.
+- Summarize phase verification evidence by the standard categories: Static /
+  Build Checks, Unit / Component / Integration Tests, E2E Tests, Browser
+  Clickthrough, and Visual Evidence.
 - Confirm accepted scope is complete or explicitly excluded by the main spec.
 - Check cross-phase flows, dependencies, integrations, state, data, UI,
   permissions, and operational risks.
@@ -56,8 +63,9 @@ Verify the completed initiative against the main spec and record final evidence.
 
 ## Browser / User-Flow Checks
 
-For a UI or user-facing initiative, run one final browser or user-flow check
-across the accepted scope before final verification passes.
+For a UI or user-facing initiative, run one final Browser Clickthrough or
+representative user-flow check across the accepted scope before final
+verification passes.
 
 User-flow checks are not only browser checks. For CLI, API, integration,
 automation, or backend workflow changes, use representative commands, requests,
@@ -80,24 +88,21 @@ data exists. Inspect the screenshot for:
   unusable scrolling
 
 Use the repo-approved browser path when one exists. If the repo does not name a
-path, discover available host browser tools or Playwright CLI and use the best
-available safe option.
+path, use the best available browser automation path, such as Playwright CLI.
 
-Code review, static checks, curl, and DOM inspection are useful replacement
-evidence, but they are not browser verification.
+Browser Clickthrough means using the accepted feature: open the real route/page,
+create or use representative data, click the actual controls/actions, observe
+expected states/results, and capture screenshots.
 
-If browser verification is blocked, record what final browser/user-flow check
-should have run, what blocked it, replacement evidence, and residual
-user-facing risk.
+Code review, static checks, curl, DOM inspection, and route-shell screenshots are
+supporting evidence only. They are not Browser Clickthrough.
 
-Do not call final UI/user-flow work browser-verified without an actual browser
-or user-flow check. Report code-verified rather than browser-verified when
-browser verification is blocked.
+Do not call final UI/user-flow work browser-verified without actual Browser
+Clickthrough or representative user-flow exercise.
 
 When browser or user-flow verification is required for accepted initiative scope
-and it is blocked, mark final verification as not ready unless replacement
-evidence is strong enough and the residual user-facing risk is explicitly listed
-under `Accepted Risk`.
+and it did not happen, mark final verification as not ready and record the
+blocker, route back, or fix needed.
 
 ## Review
 
@@ -175,6 +180,14 @@ Use this shape:
 ## Cross-Phase Checks
 -
 
+## Verification Evidence Summary
+Static / Build Checks:
+Unit / Component / Integration Tests:
+E2E Tests:
+Browser Clickthrough:
+Visual Evidence:
+Environment scope:
+
 ## Implementation Discipline Review
 Relevant guidance:
 Cross-phase concerns:
@@ -184,7 +197,7 @@ Result:
 -
 
 ## Visual Screenshot Check
-Status: passed / blocked / Not applicable
+Status: passed / failed / Not applicable
 Screenshot:
 Viewport:
 Findings:
@@ -246,6 +259,13 @@ Next:
   when useful, such as `I1 [P1]`.
 - Do not mark `Ready: yes` unless every required phase has
   `verification.md` with `Ready: yes` and the main spec is satisfied.
+- Do not mark `Ready: yes` for UI/browser-visible accepted scope unless final
+  checks include actual Browser Clickthrough or representative user-flow
+  exercise.
+- Do not mark `Ready: yes` when final browser/user-flow evidence was gathered in
+  the wrong environment for the accepted scope, such as using a test
+  DB/environment for dev/local Browser Clickthrough without explicit user or repo
+  direction.
 - Do not mark `Ready: yes` when relevant implementation discipline guidance is
   ignored across the completed initiative.
 - Do not mark `Ready: yes` when a relevant user review lens raises an
@@ -270,5 +290,5 @@ Next:
 - After writing `Ready: yes`, Strike can run
   `node strike/scripts/state.mjs complete-check allPhasesVerified`.
 - Do not hide accepted-scope defects in follow-up work.
-- Report code-verified rather than browser-verified when browser/user-flow
-  verification is blocked.
+- Keep automated evidence, E2E tests, Browser Clickthrough, and Visual Evidence
+  separate when summarizing final readiness.
