@@ -52,10 +52,19 @@ repo root `PROJECT_LANGUAGE.md` as the durable project language file. This is St
 workflow policy, not a host schema requirement.
 
 2026-06-01 update: Strike now uses a lean staged workflow orchestrator with
-`strike/state.json` as the progress source of truth and Markdown artifacts
-under `strike/initiatives/<initiative-id>/`. The user-facing entrypoints are
-explicit: `new-initiative` starts new work and `go` resumes the active
-initiative. This is Strike workflow policy, not a host schema requirement.
+Markdown artifacts under `strike/initiatives/<initiative-id>/`. The user-facing
+entrypoints are explicit: `new-initiative` starts new work and `go` resumes the
+active initiative. This is Strike workflow policy, not a host schema
+requirement.
+
+2026-06-02 update: Strike split workflow progress state so `strike/state.json`
+is a compact initiative index and the authoritative source for initiative
+lifecycle status. Detailed workflow progress lives in
+`strike/initiatives/<initiative-id>/state.json`. The state helper still reads
+old single-file v1 state and migrates it to split v2 state on the next write.
+Agents may inspect state when needed, but should read root state for initiative
+selection and only the relevant initiative-local state file for detailed
+progress. This is Strike workflow policy, not a host schema requirement.
 
 2026-06-01 update: Slice research is now a first-class Strike workflow
 step. `research-slice` runs before `plan-slice`, writes compact research to the

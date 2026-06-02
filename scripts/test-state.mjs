@@ -85,6 +85,27 @@ function writeArtifact(repo, relativePath, content = "# Test Artifact\n\nReady.\
   fs.writeFileSync(artifactPath, content);
 }
 
+function readRootState(repo) {
+  return JSON.parse(fs.readFileSync(path.join(repo, "strike/state.json"), "utf8"));
+}
+
+function readInitiativeState(repo, initiativeId) {
+  return JSON.parse(
+    fs.readFileSync(path.join(repo, "strike/initiatives", initiativeId, "state.json"), "utf8"),
+  );
+}
+
+function writeRootState(repo, state) {
+  fs.writeFileSync(path.join(repo, "strike/state.json"), `${JSON.stringify(state, null, 2)}\n`);
+}
+
+function writeInitiativeState(repo, initiativeId, state) {
+  fs.writeFileSync(
+    path.join(repo, "strike/initiatives", initiativeId, "state.json"),
+    `${JSON.stringify(state, null, 2)}\n`,
+  );
+}
+
 function writeWorkflowCheckpointArtifact(repo, checkName) {
   if (
     checkName !== "ideaRefined" &&
@@ -630,8 +651,14 @@ function testBootstrapAndWorkflowProgression() {
   assert.ok(fs.existsSync(path.join(repo, "strike/user-guidance/review-lenses/verify-phase.md")));
   assert.ok(fs.existsSync(path.join(repo, "strike/user-guidance/review-lenses/verify-main-spec.md")));
   assert.ok(fs.existsSync(path.join(repo, "strike/state.json")));
+  assert.ok(fs.existsSync(path.join(repo, "strike/initiatives/gallery/state.json")));
   assert.ok(fs.existsSync(workspaceHelper(repo)));
   assert.ok(fs.existsSync(path.join(repo, "strike/initiatives/gallery")));
+  const rootState = readRootState(repo);
+  assert.equal(rootState.activeInitiativeId, "gallery");
+  assert.equal(rootState.initiatives[0].statePath, "initiatives/gallery/state.json");
+  assert.equal(rootState.initiatives[0].initiativeWorkflow, undefined);
+  assert.equal(readInitiativeState(repo, "gallery").status, undefined);
 
   let nextStep = run(repo, workspaceHelper(repo), ["next-step"]);
   assertNextStep(nextStep, {
@@ -838,7 +865,7 @@ function testBootstrapAndWorkflowProgression() {
     reason: "No active initiative.",
   });
 
-  const completedState = JSON.parse(fs.readFileSync(path.join(repo, "strike/state.json"), "utf8"));
+  const completedState = readRootState(repo);
   assert.equal(completedState.initiatives[0].status, "complete");
 
   const addedAfterComplete = run(repo, workspaceHelper(repo), [
@@ -1033,9 +1060,10 @@ function testOldInitiativeWorkflowNormalizesResearchGate() {
   const receipt = run(repo, helper, ["complete-check", "initiativeResearchComplete"]);
   assert.equal(receipt.completedCheck, "initiativeResearchComplete");
 
-  const normalizedState = JSON.parse(fs.readFileSync(statePath, "utf8"));
+  const normalizedState = readInitiativeState(repo, "gallery");
+  assert.equal(normalizedState.status, undefined);
   assert.deepEqual(
-    normalizedState.initiatives[0].initiativeWorkflow.map((item) => item.skill),
+    normalizedState.initiativeWorkflow.map((item) => item.skill),
     [
       "refine-idea",
       "research-initiative",
@@ -1046,7 +1074,7 @@ function testOldInitiativeWorkflowNormalizesResearchGate() {
     ],
   );
   assert.equal(
-    normalizedState.initiatives[0].initiativeWorkflow[1].verified.initiativeResearchComplete,
+    normalizedState.initiativeWorkflow[1].verified.initiativeResearchComplete,
     true,
   );
 }
@@ -1107,9 +1135,9 @@ function testRouteBackCommandContract() {
     artifacts: ["strike/initiatives/gallery/phases/phase-01/slices/slice-02/build-verification.md"],
   });
 
-  const stateAfterSliceBack = JSON.parse(fs.readFileSync(path.join(repo, "strike/state.json"), "utf8"));
-  assert.equal(stateAfterSliceBack.initiatives[0].phases[0].phaseWorkflow[2].verified.allSlicesVerified, false);
-  assert.equal(stateAfterSliceBack.initiatives[0].initiativeWorkflow[5].verified.allPhasesVerified, false);
+  const stateAfterSliceBack = readInitiativeState(repo, "gallery");
+  assert.equal(stateAfterSliceBack.phases[0].phaseWorkflow[2].verified.allSlicesVerified, false);
+  assert.equal(stateAfterSliceBack.initiativeWorkflow[5].verified.allPhasesVerified, false);
 
   complete(repo, "buildVerified", {
     phaseId: "phase-01",
@@ -1155,8 +1183,8 @@ function testRouteBackInvalidatesDownstreamScopes() {
     missing: ["specCreated"],
   });
 
-  let state = JSON.parse(fs.readFileSync(path.join(repo, "strike/state.json"), "utf8"));
-  const phase = state.initiatives[0].phases[0];
+  let state = readInitiativeState(repo, "gallery");
+  const phase = state.phases[0];
   assert.deepEqual(
     phase.phaseWorkflow.flatMap((item) => Object.values(item.verified)),
     [false, false, false],
@@ -1183,9 +1211,9 @@ function testRouteBackInvalidatesDownstreamScopes() {
     missing: ["slicesCreated"],
   });
 
-  state = JSON.parse(fs.readFileSync(path.join(repo, "strike/state.json"), "utf8"));
-  assert.equal(state.initiatives[0].initiativeWorkflow[5].verified.allPhasesVerified, false);
-  for (const slice of state.initiatives[0].phases[0].slices) {
+  state = readInitiativeState(repo, "gallery");
+  assert.equal(state.initiativeWorkflow[5].verified.allPhasesVerified, false);
+  for (const slice of state.phases[0].slices) {
     assert.deepEqual(
       slice.sliceWorkflow.flatMap((item) => Object.values(item.verified)),
       [false, false, false, false, false],
@@ -1208,8 +1236,7 @@ function testDeterministicRegistrationOrder() {
   run(repo, localHelper, ["add-slice", "phase-01", "1-b", "First slice follow-up"]);
   run(repo, localHelper, ["add-slice", "phase-01", "1", "First slice"]);
 
-  const state = JSON.parse(fs.readFileSync(path.join(repo, "strike/state.json"), "utf8"));
-  const initiative = state.initiatives[0];
+  const initiative = readInitiativeState(repo, "gallery");
   assert.deepEqual(
     initiative.phases.map((phase) => phase.id),
     ["phase-01", "phase-01-b", "phase-02", "phase-10"],
@@ -1280,6 +1307,154 @@ function testInitiativeLifecycle() {
   runFail(repo, localHelper, ["set-active", "missing"], /Initiative not found/);
 }
 
+function testSplitStateSkipsMissingInactiveDetails() {
+  const repo = tempRepo();
+  run(repo, helper, ["init", "gallery", "Gallery"]);
+  const localHelper = workspaceHelper(repo);
+
+  run(repo, localHelper, ["add-initiative", "payment-system", "Payment system"]);
+  const inactiveDetailPath = path.join(repo, "strike/initiatives/gallery/state.json");
+  fs.rmSync(inactiveDetailPath);
+
+  const listed = run(repo, localHelper, ["list-initiatives"]);
+  assert.equal(listed.activeInitiativeId, "payment-system");
+  assert.deepEqual(
+    listed.initiatives.map(({ id, status }) => [id, status]),
+    [
+      ["gallery", "paused"],
+      ["payment-system", "active"],
+    ],
+  );
+
+  const nextStep = run(repo, localHelper, ["next-step"]);
+  assertNextStep(nextStep, {
+    initiativeId: "payment-system",
+    skill: "refine-idea",
+    missing: ["ideaRefined"],
+  });
+
+  complete(repo, "ideaRefined", {
+    initiativeId: "payment-system",
+    skill: "research-initiative",
+    missing: ["initiativeResearchComplete"],
+  });
+  assert.equal(fs.existsSync(inactiveDetailPath), false);
+  runFail(repo, localHelper, ["set-active", "gallery"], /Initiative state file is missing/);
+}
+
+function testActiveOperationsDoNotRewriteInactiveDetails() {
+  const repo = tempRepo();
+  run(repo, helper, ["init", "gallery", "Gallery"]);
+  const localHelper = workspaceHelper(repo);
+  const inactiveDetailPath = path.join(repo, "strike/initiatives/gallery/state.json");
+  const inactiveDetail = readInitiativeState(repo, "gallery");
+  inactiveDetail.status = "active";
+  inactiveDetail.customSentinel = "preserve inactive detail";
+  writeInitiativeState(repo, "gallery", inactiveDetail);
+  const expectedInactiveDetail = fs.readFileSync(inactiveDetailPath, "utf8");
+
+  run(repo, localHelper, ["add-initiative", "payment-system", "Payment system"]);
+  assert.equal(fs.readFileSync(inactiveDetailPath, "utf8"), expectedInactiveDetail);
+  assert.equal(readInitiativeState(repo, "payment-system").status, undefined);
+
+  complete(repo, "ideaRefined", {
+    initiativeId: "payment-system",
+    skill: "research-initiative",
+    missing: ["initiativeResearchComplete"],
+  });
+  assert.equal(fs.readFileSync(inactiveDetailPath, "utf8"), expectedInactiveDetail);
+}
+
+function testRootStatusOverridesLegacyDetailStatus() {
+  const repo = tempRepo();
+  run(repo, helper, ["init", "gallery", "Gallery"]);
+  const localHelper = workspaceHelper(repo);
+  run(repo, localHelper, ["add-initiative", "payment-system", "Payment system"]);
+
+  const galleryDetail = readInitiativeState(repo, "gallery");
+  galleryDetail.status = "active";
+  writeInitiativeState(repo, "gallery", galleryDetail);
+
+  const paymentDetail = readInitiativeState(repo, "payment-system");
+  paymentDetail.status = "complete";
+  writeInitiativeState(repo, "payment-system", paymentDetail);
+
+  const listed = run(repo, localHelper, ["list-initiatives"]);
+  assert.deepEqual(
+    listed.initiatives.map(({ id, status }) => [id, status]),
+    [
+      ["gallery", "paused"],
+      ["payment-system", "active"],
+    ],
+  );
+
+  const nextStep = run(repo, localHelper, ["next-step"]);
+  assertNextStep(nextStep, {
+    initiativeId: "payment-system",
+    skill: "refine-idea",
+    missing: ["ideaRefined"],
+  });
+}
+
+function testSplitStateReconcilesStaleActiveInitiativeId() {
+  const repo = tempRepo();
+  run(repo, helper, ["init", "gallery", "Gallery"]);
+  const localHelper = workspaceHelper(repo);
+
+  const rootState = readRootState(repo);
+  rootState.activeInitiativeId = "missing";
+  writeRootState(repo, rootState);
+
+  const nextStep = run(repo, localHelper, ["next-step"]);
+  assertNextStep(nextStep, {
+    initiativeId: "gallery",
+    skill: "refine-idea",
+    missing: ["ideaRefined"],
+  });
+
+  complete(repo, "ideaRefined", {
+    skill: "research-initiative",
+    missing: ["initiativeResearchComplete"],
+  });
+  const repairedRootState = readRootState(repo);
+  assert.equal(repairedRootState.activeInitiativeId, "gallery");
+}
+
+function testSplitStateRejectsMalformedRootEntries() {
+  const repo = tempRepo();
+  run(repo, helper, ["init", "gallery", "Gallery"]);
+  const localHelper = workspaceHelper(repo);
+
+  const badPathState = readRootState(repo);
+  badPathState.initiatives[0].statePath = "../outside/state.json";
+  writeRootState(repo, badPathState);
+  runFail(repo, localHelper, ["list-initiatives"], /Initiative statePath mismatch/);
+
+  const badCanonicalState = readRootState(repo);
+  badCanonicalState.initiatives[0].statePath = "initiatives/other/state.json";
+  writeRootState(repo, badCanonicalState);
+  runFail(repo, localHelper, ["next-step"], /expected initiatives\/gallery\/state\.json/);
+
+  const badIdState = readRootState(repo);
+  badIdState.activeInitiativeId = "../outside";
+  badIdState.initiatives[0].id = "../outside";
+  badIdState.initiatives[0].statePath = "initiatives/../outside/state.json";
+  writeRootState(repo, badIdState);
+  runFail(repo, localHelper, ["list-initiatives"], /lowercase letters, numbers, and dashes/);
+}
+
+function testSplitStateRejectsMismatchedDetailId() {
+  const repo = tempRepo();
+  run(repo, helper, ["init", "gallery", "Gallery"]);
+  const localHelper = workspaceHelper(repo);
+
+  const detail = readInitiativeState(repo, "gallery");
+  detail.id = "payment-system";
+  writeInitiativeState(repo, "gallery", detail);
+
+  runFail(repo, localHelper, ["next-step"], /Initiative state id mismatch/);
+}
+
 testBootstrapAndWorkflowProgression();
 testUserCheckpointRequiredForIdeaResearchAndGrill();
 testPhaseAndSliceRegistrationRequired();
@@ -1292,5 +1467,11 @@ testRouteBackCommandContract();
 testRouteBackInvalidatesDownstreamScopes();
 testDeterministicRegistrationOrder();
 testInitiativeLifecycle();
+testSplitStateSkipsMissingInactiveDetails();
+testActiveOperationsDoNotRewriteInactiveDetails();
+testRootStatusOverridesLegacyDetailStatus();
+testSplitStateReconcilesStaleActiveInitiativeId();
+testSplitStateRejectsMalformedRootEntries();
+testSplitStateRejectsMismatchedDetailId();
 
 console.log("state helper tests passed");

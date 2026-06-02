@@ -31,14 +31,17 @@ strike/
 PROJECT_LANGUAGE.md
 ```
 
-`strike/state.json` stores workflow progress. Markdown files under
-`strike/initiatives/<initiative-id>/` store idea, decision, spec, phase,
-slice, research, plan, build, and verification artifacts. Initiative research
-reports are audited under `research/audits/` before Grill can run. Optional
-`supporting-artifacts/` files preserve concise decision-discussion notes such as
-schema reasoning, architecture tradeoffs, provider routing, and data lifecycle.
-Existing workspaces should refresh the copied helper with `sync-helper` after a
-plugin update so new workflow gates are available locally.
+`strike/state.json` keeps a compact initiative index and is authoritative for
+initiative lifecycle status. Each initiative's detailed workflow progress lives
+in `strike/initiatives/<initiative-id>/state.json`.
+Markdown files under `strike/initiatives/<initiative-id>/` store idea, decision,
+spec, phase, slice, research, plan, build, and verification artifacts.
+Initiative research reports are audited under `research/audits/` before Grill
+can run. Optional `supporting-artifacts/` files preserve concise
+decision-discussion notes such as schema reasoning, architecture tradeoffs,
+provider routing, and data lifecycle. Existing workspaces should refresh the
+copied helper with `sync-helper` after a plugin update so new workflow gates are
+available locally.
 `strike/user-guidance/implementation-discipline/` is user-owned project
 guidance for how Strike should plan, build, fix, and verify code in this
 repo. `strike/user-guidance/review-lenses/` contains user-owned additive
@@ -166,9 +169,11 @@ strike/
 PROJECT_LANGUAGE.md
 ```
 
-`strike/state.json` stores workflow progress. Markdown files under
-`strike/initiatives/<initiative-id>/` store the artifacts for each staged
-skill. `PROJECT_LANGUAGE.md` is the project language file that Strike and the
+`strike/state.json` keeps a compact initiative index and is authoritative for
+initiative lifecycle status. Detailed workflow progress lives in
+`strike/initiatives/<initiative-id>/state.json`. Markdown files under
+`strike/initiatives/<initiative-id>/` store the artifacts for each staged skill.
+`PROJECT_LANGUAGE.md` is the project language file that Strike and the
 `language` utility keep current as durable language crystallizes.
 `strike/user-guidance/implementation-discipline/` is the
 user's editable implementation guidance folder.

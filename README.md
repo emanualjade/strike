@@ -110,11 +110,14 @@ strike/
 PROJECT_LANGUAGE.md
 ```
 
-`strike/state.json` tracks workflow progress. Markdown files under
-`strike/initiatives/<initiative-id>/` store the artifacts.
+`strike/state.json` keeps a compact initiative index and is authoritative for
+initiative lifecycle status. Each initiative's detailed workflow progress lives
+in `strike/initiatives/<initiative-id>/state.json`.
+Markdown files under `strike/initiatives/<initiative-id>/` store the artifacts.
 
 ```text
 strike/state.json
+strike/initiatives/<initiative-id>/state.json
 strike/initiatives/<initiative-id>/idea.md
 strike/initiatives/<initiative-id>/research/scope.md
 strike/initiatives/<initiative-id>/research/<research-item-id>.md

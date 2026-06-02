@@ -8,6 +8,8 @@ import { fileURLToPath } from "node:url";
 const SCRIPT_FILE = fileURLToPath(import.meta.url);
 const DEFAULT_STATE_PATH = "strike/state.json";
 const WORKSPACE_ROOT = "strike";
+const STATE_VERSION = 2;
+const INITIATIVE_STATE_VERSION = 2;
 const LANGUAGE_FILE = "PROJECT_LANGUAGE.md";
 const USER_GUIDANCE_DIR = "user-guidance";
 const IMPLEMENTATION_DISCIPLINE_DIR = "implementation-discipline";
@@ -238,7 +240,8 @@ export function createInitiative(id, name = id) {
 
 export function createInitialState(id, name = id) {
   return {
-    version: 1,
+    version: STATE_VERSION,
+    activeInitiativeId: id,
     initiatives: [createInitiative(id, name)],
   };
 }
@@ -247,21 +250,91 @@ export function normalizeState(state) {
   if (!state || typeof state !== "object") return state;
   if (!Array.isArray(state.initiatives)) return state;
 
+  state.version = STATE_VERSION;
   for (const initiative of state.initiatives) {
-    initiative.initiativeWorkflow = normalizeWorkflow(
-      initiative.initiativeWorkflow,
-      INITIATIVE_WORKFLOW,
-    );
+    if (!initiative || typeof initiative !== "object") {
+      throw new Error("Initiative entry must be an object.");
+    }
+    validateId(initiative.id, "Initiative id");
+    if (initiative.statePath !== undefined) {
+      validateSplitInitiativeEntry(initiative);
+    }
+  }
 
-    for (const phase of initiative.phases ?? []) {
-      phase.phaseWorkflow = normalizeWorkflow(phase.phaseWorkflow, PHASE_WORKFLOW);
-      for (const slice of phase.slices ?? []) {
-        slice.sliceWorkflow = normalizeWorkflow(slice.sliceWorkflow, SLICE_WORKFLOW);
-      }
+  let active = state.initiatives.find((initiative) => initiative.status === "active");
+  if (!active && state.activeInitiativeId) {
+    const candidate = state.initiatives.find((initiative) => initiative.id === state.activeInitiativeId);
+    if (candidate && candidate.status !== "complete") {
+      candidate.status = "active";
+      active = candidate;
+    }
+  }
+  state.activeInitiativeId = active?.id ?? null;
+
+  for (const initiative of state.initiatives) {
+    if (isDetailedInitiative(initiative)) {
+      normalizeInitiative(initiative);
+    } else if (initiative && typeof initiative === "object") {
+      initiative.status ??= "paused";
+      initiative.name ??= initiative.id;
     }
   }
 
   return state;
+}
+
+function isDetailedInitiative(initiative) {
+  return Array.isArray(initiative?.initiativeWorkflow) || Array.isArray(initiative?.phases);
+}
+
+function normalizeInitiative(initiative) {
+  if (!initiative || typeof initiative !== "object") return initiative;
+  initiative.status ??= "paused";
+  initiative.name ??= initiative.id;
+  initiative.initiativeWorkflow = normalizeWorkflow(
+    initiative.initiativeWorkflow,
+    INITIATIVE_WORKFLOW,
+  );
+
+  for (const phase of initiative.phases ?? []) {
+    phase.phaseWorkflow = normalizeWorkflow(phase.phaseWorkflow, PHASE_WORKFLOW);
+    for (const slice of phase.slices ?? []) {
+      slice.sliceWorkflow = normalizeWorkflow(slice.sliceWorkflow, SLICE_WORKFLOW);
+    }
+  }
+
+  initiative.phases ??= [];
+  return initiative;
+}
+
+export function createStateIndex(state) {
+  normalizeState(state);
+  const active = getActiveInitiative(state);
+  return {
+    version: STATE_VERSION,
+    activeInitiativeId: active?.id ?? null,
+    initiatives: (state.initiatives ?? []).map((initiative) => initiativeSummary(initiative)),
+  };
+}
+
+function initiativeSummary(initiative) {
+  return {
+    id: initiative.id,
+    name: initiative.name ?? initiative.id,
+    status: initiative.status ?? "paused",
+    statePath: initiativeStateRelativePath(initiative.id),
+  };
+}
+
+function initiativeStateDocument(initiative) {
+  normalizeInitiative(initiative);
+  return {
+    version: INITIATIVE_STATE_VERSION,
+    id: initiative.id,
+    name: initiative.name ?? initiative.id,
+    initiativeWorkflow: initiative.initiativeWorkflow,
+    phases: initiative.phases ?? [],
+  };
 }
 
 function normalizeWorkflow(workflow, template) {
@@ -294,11 +367,7 @@ export function getActiveInitiative(state) {
 export function listInitiatives(state) {
   normalizeState(state);
   const initiatives = Array.isArray(state?.initiatives) ? state.initiatives : [];
-  return initiatives.map((initiative) => ({
-    id: initiative.id,
-    name: initiative.name ?? initiative.id,
-    status: initiative.status ?? "paused",
-  }));
+  return initiatives.map((initiative) => initiativeSummary(initiative));
 }
 
 export function addInitiative(state, id, name = id) {
@@ -1144,14 +1213,139 @@ function workflowForCurrentScope(state, current) {
   return workflow;
 }
 
-function readState(filePath) {
-  return normalizeState(JSON.parse(fs.readFileSync(filePath, "utf8")));
+function readState(filePath, options = {}) {
+  const state = normalizeState(JSON.parse(fs.readFileSync(filePath, "utf8")));
+  return normalizeState(hydrateState(filePath, state, options));
 }
 
 function writeState(filePath, state) {
+  normalizeState(state);
+  const workspaceRoot = path.dirname(filePath);
+  for (const initiative of state.initiatives ?? []) {
+    if (!isDetailedInitiative(initiative)) {
+      continue;
+    }
+    writeJsonFile(
+      initiativeStatePath(workspaceRoot, initiative.id),
+      initiativeStateDocument(initiative),
+    );
+  }
+  writeJsonFile(filePath, createStateIndex(state));
+}
+
+function hydrateState(filePath, state, options = {}) {
+  if (!isSplitStateIndex(state)) {
+    return state;
+  }
+
+  const hydrate = options.hydrate ?? "active";
+  if (hydrate === "none") {
+    return state;
+  }
+
+  const workspaceRoot = path.dirname(filePath);
+  const ids = initiativeIdsToHydrate(state, options);
+  return {
+    ...state,
+    initiatives: (state.initiatives ?? []).map((entry) => {
+      if (!ids.has(entry.id)) {
+        return entry;
+      }
+      return hydrateInitiativeState(workspaceRoot, state, entry);
+    }),
+  };
+}
+
+function initiativeIdsToHydrate(state, options = {}) {
+  if (options.hydrate === "all") {
+    return new Set((state.initiatives ?? []).map((entry) => entry.id));
+  }
+
+  const ids = new Set(options.initiativeIds ?? []);
+  if (options.initiativeId) {
+    ids.add(options.initiativeId);
+  }
+  if (options.hydrate === "active" || (!options.hydrate && ids.size === 0)) {
+    const activeId =
+      state.activeInitiativeId ??
+      (state.initiatives ?? []).find((entry) => entry.status === "active")?.id;
+    if (activeId) {
+      ids.add(activeId);
+    }
+  }
+  return ids;
+}
+
+function hydrateInitiativeState(workspaceRoot, rootState, entry) {
+  if (entry?.initiativeWorkflow || entry?.phases) {
+    return entry;
+  }
+
+  validateSplitInitiativeEntry(entry);
+  const detailPath = initiativeStatePath(workspaceRoot, entry.id);
+  if (!fs.existsSync(detailPath)) {
+    throw new Error(`Initiative state file is missing for ${entry.id}: ${detailPath}`);
+  }
+
+  const detail = JSON.parse(fs.readFileSync(detailPath, "utf8"));
+  if (detail?.id && detail.id !== entry.id) {
+    throw new Error(`Initiative state id mismatch for ${entry.id}: detail file contains ${detail.id}`);
+  }
+  return {
+    ...detail,
+    id: entry.id,
+    name: entry.name ?? detail.name ?? entry.id,
+    status: entry.status ?? (rootState.activeInitiativeId === entry.id ? "active" : "paused"),
+  };
+}
+
+function hydrateInitiativeById(statePath, state, initiativeId) {
+  const workspaceRoot = path.dirname(statePath);
+  const index = (state.initiatives ?? []).findIndex((entry) => entry.id === initiativeId);
+  if (index === -1) {
+    throw new Error(`Initiative not found: ${initiativeId}`);
+  }
+  state.initiatives[index] = hydrateInitiativeState(workspaceRoot, state, state.initiatives[index]);
+  normalizeInitiative(state.initiatives[index]);
+  return state.initiatives[index];
+}
+
+function isSplitStateIndex(state) {
+  return (
+    state &&
+    typeof state === "object" &&
+    state.version >= STATE_VERSION &&
+    Array.isArray(state.initiatives) &&
+    state.initiatives.some((entry) => entry?.statePath)
+  );
+}
+
+function initiativeStateRelativePath(initiativeId) {
+  validateId(initiativeId, "Initiative id");
+  return `initiatives/${initiativeId}/state.json`;
+}
+
+function initiativeStatePath(workspaceRoot, initiativeId) {
+  const detailPath = path.resolve(workspaceRoot, initiativeStateRelativePath(initiativeId));
+  const initiativesRoot = path.resolve(workspaceRoot, "initiatives");
+  if (!detailPath.startsWith(`${initiativesRoot}${path.sep}`)) {
+    throw new Error(`Initiative state path must stay inside ${initiativesRoot}: ${detailPath}`);
+  }
+  return detailPath;
+}
+
+function validateSplitInitiativeEntry(entry) {
+  validateId(entry.id, "Initiative id");
+  const expectedPath = initiativeStateRelativePath(entry.id);
+  if (entry.statePath !== undefined && entry.statePath !== expectedPath) {
+    throw new Error(`Initiative statePath mismatch for ${entry.id}: expected ${expectedPath}`);
+  }
+}
+
+function writeJsonFile(filePath, value) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   const tempPath = `${filePath}.${process.pid}.tmp`;
-  fs.writeFileSync(tempPath, `${JSON.stringify(state, null, 2)}\n`);
+  fs.writeFileSync(tempPath, `${JSON.stringify(value, null, 2)}\n`);
   fs.renameSync(tempPath, filePath);
 }
 
@@ -1180,7 +1374,7 @@ function parseArgs(args) {
 }
 
 function validateId(id, label) {
-  if (!/^[a-z0-9][a-z0-9-]*$/.test(id)) {
+  if (typeof id !== "string" || !/^[a-z0-9][a-z0-9-]*$/.test(id)) {
     throw new Error(`${label} must use lowercase letters, numbers, and dashes: ${id}`);
   }
 }
@@ -1364,7 +1558,7 @@ export function main() {
   }
 
   if (command === "list-initiatives") {
-    const state = readState(statePath);
+    const state = readState(statePath, { hydrate: "none" });
     const active = getActiveInitiative(state);
     printJson({
       activeInitiativeId: active?.id ?? null,
@@ -1378,13 +1572,13 @@ export function main() {
     if (!id) {
       throw new Error("Usage: state.mjs add-initiative <initiative-id> [name] [--state path]");
     }
-    const state = readState(statePath);
+    const state = readState(statePath, { hydrate: "none" });
     const initiative = addInitiative(state, id, args.slice(1).join(" ") || id);
     const initiativePath = path.join(path.dirname(statePath), "initiatives", initiative.id);
     fs.mkdirSync(initiativePath, { recursive: true });
     writeState(statePath, state);
     printJson({
-      initiative,
+      initiative: initiativeSummary(initiative),
       initiativePath,
       nextStep: getNextStep(state),
       initiatives: listInitiatives(state),
@@ -1397,11 +1591,12 @@ export function main() {
     if (!id) {
       throw new Error("Usage: state.mjs set-active <initiative-id> [--state path]");
     }
-    const state = readState(statePath);
+    const state = readState(statePath, { hydrate: "none" });
     const initiative = setActiveInitiative(state, id);
+    hydrateInitiativeById(statePath, state, initiative.id);
     writeState(statePath, state);
     printJson({
-      initiative,
+      initiative: initiativeSummary(initiative),
       nextStep: getNextStep(state),
       initiatives: listInitiatives(state),
     });
@@ -1413,7 +1608,7 @@ export function main() {
     const initiative = finishInitiative(state, args[0] ?? null);
     writeState(statePath, state);
     printJson({
-      initiative,
+      initiative: initiativeSummary(initiative),
       nextStep: getNextStep(state),
       initiatives: listInitiatives(state),
     });

@@ -85,58 +85,95 @@ surface the specific state question before continuing.
 
 ## State
 
-Strike stores workflow facts in `strike/state.json`.
+Strike stores the initiative index in `strike/state.json`. The root index is
+authoritative for initiative lifecycle fields such as `status` and
+`activeInitiativeId`. Detailed workflow facts for one initiative live in that
+initiative's own state file:
 
-Example:
+```text
+strike/state.json
+strike/initiatives/<initiative-id>/state.json
+```
+
+Agents may read state files when the helper output is unclear or repair is
+needed, but keep the read focused:
+
+- read `strike/state.json` to see the active initiative and short initiative
+  list
+- read only `strike/initiatives/<initiative-id>/state.json` for detailed
+  progress on the active or explicitly selected initiative
+- do not read every initiative state file unless switching initiatives,
+  repairing cross-initiative state, or answering a user question about multiple
+  initiatives
+
+Root state example:
 
 ```json
 {
-  "version": 1,
+  "version": 2,
+  "activeInitiativeId": "gallery",
   "initiatives": [
     {
       "id": "gallery",
       "name": "Gallery",
       "status": "active",
-      "initiativeWorkflow": [
-        { "skill": "refine-idea", "verified": { "ideaRefined": true } },
-        { "skill": "research-initiative", "verified": { "initiativeResearchComplete": true } },
-        { "skill": "grill-idea", "verified": { "decisionsResolved": true } },
-        { "skill": "create-main-spec", "verified": { "specCreated": true } },
-        { "skill": "create-development-phases", "verified": { "phasesCreated": true } },
-        { "skill": "verify-main-spec", "verified": { "allPhasesVerified": false } }
+      "statePath": "initiatives/gallery/state.json"
+    },
+    {
+      "id": "billing-ledger",
+      "name": "Billing Ledger",
+      "status": "complete",
+      "statePath": "initiatives/billing-ledger/state.json"
+    }
+  ]
+}
+```
+
+Initiative state example:
+
+```json
+{
+  "version": 2,
+  "id": "gallery",
+  "name": "Gallery",
+  "initiativeWorkflow": [
+    { "skill": "refine-idea", "verified": { "ideaRefined": true } },
+    { "skill": "research-initiative", "verified": { "initiativeResearchComplete": true } },
+    { "skill": "grill-idea", "verified": { "decisionsResolved": true } },
+    { "skill": "create-main-spec", "verified": { "specCreated": true } },
+    { "skill": "create-development-phases", "verified": { "phasesCreated": true } },
+    { "skill": "verify-main-spec", "verified": { "allPhasesVerified": false } }
+  ],
+  "phases": [
+    {
+      "id": "phase-01",
+      "name": "Upload and display",
+      "phaseWorkflow": [
+        { "skill": "create-phase-spec", "verified": { "phaseSpecCreated": true } },
+        { "skill": "create-phase-slices", "verified": { "slicesCreated": true } },
+        { "skill": "verify-phase", "verified": { "allSlicesVerified": false } }
       ],
-      "phases": [
+      "slices": [
         {
-          "id": "phase-01",
-          "name": "Upload and display",
-          "phaseWorkflow": [
-            { "skill": "create-phase-spec", "verified": { "phaseSpecCreated": true } },
-            { "skill": "create-phase-slices", "verified": { "slicesCreated": true } },
-            { "skill": "verify-phase", "verified": { "allSlicesVerified": false } }
-          ],
-          "slices": [
-            {
-              "id": "slice-01",
-              "name": "Upload image",
-              "sliceWorkflow": [
-                { "skill": "research-slice", "verified": { "researchComplete": true } },
-                { "skill": "plan-slice", "verified": { "planCreated": true } },
-                { "skill": "verify-slice-plan", "verified": { "planVerified": true } },
-                { "skill": "build-slice", "verified": { "implemented": true } },
-                { "skill": "verify-slice-build", "verified": { "buildVerified": true } }
-              ]
-            },
-            {
-              "id": "slice-02",
-              "name": "Display gallery",
-              "sliceWorkflow": [
-                { "skill": "research-slice", "verified": { "researchComplete": false } },
-                { "skill": "plan-slice", "verified": { "planCreated": false } },
-                { "skill": "verify-slice-plan", "verified": { "planVerified": false } },
-                { "skill": "build-slice", "verified": { "implemented": false } },
-                { "skill": "verify-slice-build", "verified": { "buildVerified": false } }
-              ]
-            }
+          "id": "slice-01",
+          "name": "Upload image",
+          "sliceWorkflow": [
+            { "skill": "research-slice", "verified": { "researchComplete": true } },
+            { "skill": "plan-slice", "verified": { "planCreated": true } },
+            { "skill": "verify-slice-plan", "verified": { "planVerified": true } },
+            { "skill": "build-slice", "verified": { "implemented": true } },
+            { "skill": "verify-slice-build", "verified": { "buildVerified": true } }
+          ]
+        },
+        {
+          "id": "slice-02",
+          "name": "Display gallery",
+          "sliceWorkflow": [
+            { "skill": "research-slice", "verified": { "researchComplete": false } },
+            { "skill": "plan-slice", "verified": { "planCreated": false } },
+            { "skill": "verify-slice-plan", "verified": { "planVerified": false } },
+            { "skill": "build-slice", "verified": { "implemented": false } },
+            { "skill": "verify-slice-build", "verified": { "buildVerified": false } }
           ]
         }
       ]
@@ -145,7 +182,7 @@ Example:
 }
 ```
 
-Markdown files store the actual artifacts. `state.json` stores progress facts.
+Markdown files store the actual artifacts. State files store progress facts.
 
 The helper derives the next workflow step from the verification matrices.
 
@@ -289,9 +326,9 @@ Default outputs:
   and `research/index.md`
 - `grill-idea` -> `decisions.md`, optionally `supporting-artifacts/<topic>.md`
 - `create-main-spec` -> `main-spec.md`
-- `create-development-phases` -> `development-plan.md`, `phases/<phase-id>/phase.md`, and `state.json` phase entries
+- `create-development-phases` -> `development-plan.md`, `phases/<phase-id>/phase.md`, and initiative state phase entries
 - `create-phase-spec` -> `phases/<phase-id>/phase-spec.md`
-- `create-phase-slices` -> `phases/<phase-id>/slices/<slice-id>/slice.md` and `state.json` slice entries
+- `create-phase-slices` -> `phases/<phase-id>/slices/<slice-id>/slice.md` and initiative state slice entries
 - `research-slice` -> `phases/<phase-id>/slices/<slice-id>/research.md`
 - `plan-slice` -> `phases/<phase-id>/slices/<slice-id>/plan.md`
 - `verify-slice-plan` -> `phases/<phase-id>/slices/<slice-id>/plan-verification.md`
@@ -339,8 +376,9 @@ The helper should own:
 - reopening a specific slice check from phase-level verification
 - listing missing verification items
 
-Edit `state.json` directly only when the helper does not support the needed
-operation yet. Keep the same state shape.
+Edit state files directly only when the helper does not support the needed
+operation yet. Keep the same state shape and touch only the compact root index
+or the relevant initiative-local state file.
 
 ## Running A Workflow Skill
 

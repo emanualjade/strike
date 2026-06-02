@@ -2,6 +2,22 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.10.15 - 2026-06-02
+
+- Split Strike workflow state so root `strike/state.json` is a compact
+  initiative index and detailed progress lives in
+  `strike/initiatives/<initiative-id>/state.json`.
+- Kept helper commands stable while adding v1-to-v2 migration on the next helper
+  write, plus compact initiative summaries for list/add/set/finish outputs.
+- Made helper reads and writes selective so missing or stale inactive initiative
+  detail files do not block active initiative progress or get rewritten by
+  unrelated active-scope operations.
+- Made root initiative status authoritative, removed lifecycle status from new
+  initiative detail files, and validated split-state IDs and detail paths before
+  hydrating or writing initiative state.
+- Updated Strike instructions, README, tests, and validation to keep state reads
+  focused on the active initiative instead of every historical initiative.
+
 ## 0.10.14 - 2026-06-02
 
 - Clarified that phase verification returns control to `go` after

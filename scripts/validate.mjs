@@ -607,9 +607,10 @@ function validateStrikeContract() {
   const verifyPhasePath = "plugins/strike/skills/verify-phase/SKILL.md";
   const verifyMainPath = "plugins/strike/skills/verify-main-spec/SKILL.md";
   const verificationEvidencePath = "plugins/strike/references/verification-evidence.md";
+  const pluginReadmePath = "plugins/strike/README.md";
   const dogfoodPath = "docs/dogfood.md";
 
-  if (![strikePath, helperPath, refinePath, researchInitiativePath, grillPath, createMainPath, createDevPath, createPhasePath, researchPath, createSlicesPath, planPath, verifyPath, buildPath, verifyBuildPath, fixPath, verifyPhasePath, verifyMainPath, verificationEvidencePath, dogfoodPath].every(exists)) {
+  if (![strikePath, helperPath, refinePath, researchInitiativePath, grillPath, createMainPath, createDevPath, createPhasePath, researchPath, createSlicesPath, planPath, verifyPath, buildPath, verifyBuildPath, fixPath, verifyPhasePath, verifyMainPath, verificationEvidencePath, pluginReadmePath, dogfoodPath].every(exists)) {
     return;
   }
 
@@ -631,6 +632,7 @@ function validateStrikeContract() {
   const verifyPhaseText = fs.readFileSync(path.join(root, verifyPhasePath), "utf8");
   const verifyMainText = fs.readFileSync(path.join(root, verifyMainPath), "utf8");
   const verificationEvidenceText = fs.readFileSync(path.join(root, verificationEvidencePath), "utf8");
+  const pluginReadmeText = fs.readFileSync(path.join(root, pluginReadmePath), "utf8");
   const dogfoodText = fs.readFileSync(path.join(root, dogfoodPath), "utf8");
 
   const strikeWorkflowSkillTexts = {
@@ -707,7 +709,19 @@ function validateStrikeContract() {
   requireText(helperText, "requireResearchAudits", helperPath);
   requireText(helperText, "researchAuditsById", helperPath);
   requireText(helperText, "safeResearchAuditPath", helperPath);
+  requireText(helperText, "STATE_VERSION = 2", helperPath);
+  requireText(helperText, "INITIATIVE_STATE_VERSION = 2", helperPath);
   requireText(helperText, "normalizeState", helperPath);
+  requireText(helperText, "createStateIndex", helperPath);
+  requireText(helperText, "hydrateState", helperPath);
+  requireText(helperText, "hydrateInitiativeById", helperPath);
+  requireText(helperText, "initiativeStateRelativePath", helperPath);
+  requireText(helperText, "initiativeStatePath", helperPath);
+  requireText(helperText, "validateSplitInitiativeEntry", helperPath);
+  requireText(helperText, "Initiative state id mismatch", helperPath);
+  requireText(helperText, "statePath: initiativeStateRelativePath", helperPath);
+  requireText(helperText, 'readState(statePath, { hydrate: "none" })', helperPath);
+  requireText(helperText, "if (!isDetailedInitiative(initiative))", helperPath);
   requireText(helperText, 'command === "sync-helper"', helperPath);
   requireText(helperText, "isStrikeStateHelper", helperPath);
   requireText(helperText, "Ready to research: yes", helperPath);
@@ -746,6 +760,16 @@ function validateStrikeContract() {
   requireText(strikeText, "Must Fix count: 0", strikePath);
   requireText(strikeText, "No material research needed: yes", strikePath);
   requireText(strikeText, "sync-helper", strikePath);
+  requireText(strikeText, "Strike stores the initiative index in `strike/state.json`", strikePath);
+  requireText(strikeText, "authoritative for initiative lifecycle fields", strikePath);
+  requireText(strikeText, "strike/initiatives/<initiative-id>/state.json", strikePath);
+  requireText(strikeText, "read only `strike/initiatives/<initiative-id>/state.json`", strikePath);
+  requireText(strikeText, "do not read every initiative state file", strikePath);
+  requireText(strikeText, "\"statePath\": \"initiatives/gallery/state.json\"", strikePath);
+  requireText(strikeText, "State files store progress facts", strikePath);
+  requireText(pluginReadmeText, "`strike/state.json` keeps a compact initiative index", pluginReadmePath);
+  requireText(pluginReadmeText, "authoritative for\ninitiative lifecycle status", pluginReadmePath);
+  requireText(pluginReadmeText, "`strike/initiatives/<initiative-id>/state.json`", pluginReadmePath);
   requireText(strikeText, "Do not complete `decisionsResolved` unless `decisions.md` contains", strikePath);
   requireText(strikeText, "## Decision Review", strikePath);
   requireText(strikeText, "`Verdict: pass` or `Verdict: accepted-risk`", strikePath);

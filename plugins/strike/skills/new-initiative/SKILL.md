@@ -28,9 +28,11 @@ node <this skill dir>/scripts/state.mjs init <initiative-id> [name]
 
 This initializes `PROJECT_LANGUAGE.md`,
 `strike/user-guidance/`, `strike/state.json`, copies the helper to
-`strike/scripts/state.mjs`, and creates the first initiative directory. It
-does not overwrite existing project language, implementation discipline, or user
-review lens files.
+`strike/scripts/state.mjs`, and creates the first initiative directory with its
+own `state.json`. The root `strike/state.json` stays a compact initiative index;
+detailed workflow progress lives in
+`strike/initiatives/<initiative-id>/state.json`. It does not overwrite existing
+project language, implementation discipline, or user review lens files.
 
 If `strike/state.json` already exists, add a new active initiative:
 
