@@ -469,7 +469,7 @@ function assertInstalledRuntime(pluginRoot, ctx, label) {
     );
     const stateInitJson = parseJson(stateInitResult.stdout, `${label} state init`);
     assert(
-      stateInitJson.current?.skill === "refine-idea",
+      stateInitJson.nextStep?.skill === "refine-idea",
       `${ctx.host} ${label} state init did not start at refine-idea.`,
     );
     assertFile(path.join(consumerRepo, "PROJECT_LANGUAGE.md"), `${ctx.host} ${label} state init`);
@@ -477,19 +477,19 @@ function assertInstalledRuntime(pluginRoot, ctx, label) {
     assertFile(path.join(consumerRepo, "strike/scripts/state.mjs"), `${ctx.host} ${label} state init`);
 
     const workspaceStateScript = path.join(consumerRepo, "strike/scripts/state.mjs");
-    const stateCurrentResult = runCommand(
+    const stateNextStepResult = runCommand(
       ctx,
-      `${label}-state-current`,
+      `${label}-state-next-step`,
       process.execPath,
-      [workspaceStateScript, "current"],
+      [workspaceStateScript, "next-step"],
       {
         cwd: consumerRepo,
       },
     );
-    const stateCurrentJson = parseJson(stateCurrentResult.stdout, `${label} state current`);
+    const stateNextStepJson = parseJson(stateNextStepResult.stdout, `${label} state next-step`);
     assert(
-      stateCurrentJson.artifacts?.includes("strike/initiatives/gallery/idea.md"),
-      `${ctx.host} ${label} state current did not resolve the refine-idea artifact.`,
+      stateNextStepJson.artifacts?.includes("strike/initiatives/gallery/idea.md"),
+      `${ctx.host} ${label} state next-step did not resolve the refine-idea artifact.`,
     );
 
     const stateCompleteResult = runCommand(
@@ -503,8 +503,28 @@ function assertInstalledRuntime(pluginRoot, ctx, label) {
     );
     const stateCompleteJson = parseJson(stateCompleteResult.stdout, `${label} state complete-check`);
     assert(
-      stateCompleteJson.skill === "grill-idea",
-      `${ctx.host} ${label} complete-check did not advance to grill-idea.`,
+      stateCompleteJson.status === "recorded" &&
+        stateCompleteJson.completedCheck === "ideaRefined" &&
+        stateCompleteJson.runNext === "node strike/scripts/state.mjs next-step",
+      `${ctx.host} ${label} complete-check did not return a completion receipt.`,
+    );
+
+    const stateNextStepAfterCompleteResult = runCommand(
+      ctx,
+      `${label}-state-next-step-after-complete`,
+      process.execPath,
+      [workspaceStateScript, "next-step"],
+      {
+        cwd: consumerRepo,
+      },
+    );
+    const stateNextStepAfterCompleteJson = parseJson(
+      stateNextStepAfterCompleteResult.stdout,
+      `${label} state next-step after complete-check`,
+    );
+    assert(
+      stateNextStepAfterCompleteJson.skill === "grill-idea",
+      `${ctx.host} ${label} next-step did not advance to grill-idea after complete-check.`,
     );
   } finally {
     writeFileSync(

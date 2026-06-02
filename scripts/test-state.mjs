@@ -57,16 +57,44 @@ function workspaceHelper(repo) {
   return path.join(repo, "strike/scripts/state.mjs");
 }
 
-function assertCurrent(current, expected) {
+function assertNextStep(nextStep, expected) {
   for (const [key, value] of Object.entries(expected)) {
-    assert.deepEqual(current[key], value, `${key} should match`);
+    assert.deepEqual(nextStep[key], value, `${key} should match`);
   }
 }
 
 function complete(repo, checkName, expected) {
-  const current = run(repo, workspaceHelper(repo), ["complete-check", checkName]);
-  assertCurrent(current, expected);
-  return current;
+  const receipt = run(repo, workspaceHelper(repo), ["complete-check", checkName]);
+  assertNextStep(receipt, {
+    status: "recorded",
+    completedCheck: checkName,
+    runNext: "node strike/scripts/state.mjs next-step",
+  });
+  assert.ok(receipt.initiativeId, "completion receipt should name the initiative");
+  assert.ok(receipt.skill, "completion receipt should name the completed skill");
+
+  const nextStep = run(repo, workspaceHelper(repo), ["next-step"]);
+  assertNextStep(nextStep, expected);
+  return nextStep;
+}
+
+function writeArtifact(repo, relativePath, content = "# Test Artifact\n\nReady.\n") {
+  const artifactPath = path.join(repo, relativePath);
+  fs.mkdirSync(path.dirname(artifactPath), { recursive: true });
+  fs.writeFileSync(artifactPath, content);
+}
+
+function writePhaseArtifacts(repo, initiativeId, phaseIds) {
+  writeArtifact(repo, `strike/initiatives/${initiativeId}/development-plan.md`);
+  for (const phaseId of phaseIds) {
+    writeArtifact(repo, `strike/initiatives/${initiativeId}/phases/${phaseId}/phase.md`);
+  }
+}
+
+function writeSliceArtifacts(repo, initiativeId, phaseId, sliceIds) {
+  for (const sliceId of sliceIds) {
+    writeArtifact(repo, `strike/initiatives/${initiativeId}/phases/${phaseId}/slices/${sliceId}/slice.md`);
+  }
 }
 
 function bootstrapTwoSliceWorkflow(repo) {
@@ -75,10 +103,12 @@ function bootstrapTwoSliceWorkflow(repo) {
   complete(repo, "decisionsResolved", { skill: "create-main-spec" });
   complete(repo, "specCreated", { skill: "create-development-phases" });
   run(repo, workspaceHelper(repo), ["add-phase", "1", "Upload and display"]);
+  writePhaseArtifacts(repo, "gallery", ["phase-01"]);
   complete(repo, "phasesCreated", { phaseId: "phase-01", skill: "create-phase-spec" });
   complete(repo, "phaseSpecCreated", { phaseId: "phase-01", skill: "create-phase-slices" });
   run(repo, workspaceHelper(repo), ["add-slice", "phase-01", "1", "Upload image"]);
   run(repo, workspaceHelper(repo), ["add-slice", "phase-01", "2", "Display gallery"]);
+  writeSliceArtifacts(repo, "gallery", "phase-01", ["slice-01", "slice-02"]);
   complete(repo, "slicesCreated", {
     phaseId: "phase-01",
     sliceId: "slice-01",
@@ -98,7 +128,7 @@ function testBootstrapAndWorkflowProgression() {
   const repo = tempRepo();
 
   const init = run(repo, helper, ["init", "gallery", "Gallery"]);
-  assert.equal(init.current.skill, "refine-idea");
+  assert.equal(init.nextStep.skill, "refine-idea");
   assert.ok(fs.existsSync(path.join(repo, "PROJECT_LANGUAGE.md")));
   assert.match(fs.readFileSync(path.join(repo, "PROJECT_LANGUAGE.md"), "utf8"), /^# Project Language/m);
   assert.ok(fs.existsSync(path.join(repo, "strike/user-guidance/implementation-discipline/global.md")));
@@ -122,8 +152,8 @@ function testBootstrapAndWorkflowProgression() {
   assert.ok(fs.existsSync(workspaceHelper(repo)));
   assert.ok(fs.existsSync(path.join(repo, "strike/initiatives/gallery")));
 
-  let current = run(repo, workspaceHelper(repo), ["current"]);
-  assertCurrent(current, {
+  let nextStep = run(repo, workspaceHelper(repo), ["next-step"]);
+  assertNextStep(nextStep, {
     skill: "refine-idea",
     missing: ["ideaRefined"],
     artifacts: ["strike/initiatives/gallery/idea.md"],
@@ -151,6 +181,7 @@ function testBootstrapAndWorkflowProgression() {
   const phase = run(repo, workspaceHelper(repo), ["add-phase", "1", "Upload and display"]);
   assert.equal(phase.phase.id, "phase-01");
   assert.ok(fs.existsSync(path.join(repo, "strike/initiatives/gallery/phases/phase-01")));
+  writePhaseArtifacts(repo, "gallery", ["phase-01"]);
 
   complete(repo, "phasesCreated", {
     phaseId: "phase-01",
@@ -168,6 +199,7 @@ function testBootstrapAndWorkflowProgression() {
   run(repo, workspaceHelper(repo), ["add-slice", "phase-1", "1", "Upload image"]);
   run(repo, workspaceHelper(repo), ["add-slice", "01", "slice-2", "Display gallery"]);
   assert.ok(fs.existsSync(path.join(repo, "strike/initiatives/gallery/phases/phase-01/slices/slice-02")));
+  writeSliceArtifacts(repo, "gallery", "phase-01", ["slice-01", "slice-02"]);
 
   complete(repo, "slicesCreated", {
     phaseId: "phase-01",
@@ -191,7 +223,7 @@ function testBootstrapAndWorkflowProgression() {
     artifacts: ["strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan-verification.md"],
   });
   const reopenedResearch = run(repo, workspaceHelper(repo), ["reopen-check", "researchComplete"]);
-  assertCurrent(reopenedResearch, {
+  assertNextStep(reopenedResearch, {
     phaseId: "phase-01",
     sliceId: "slice-01",
     skill: "research-slice",
@@ -251,7 +283,7 @@ function testBootstrapAndWorkflowProgression() {
     artifacts: ["strike/initiatives/gallery/phases/phase-01/verification.md"],
   });
   const reopenedSliceBuild = run(repo, workspaceHelper(repo), ["reopen-slice-check", "phase-1", "2", "buildVerified"]);
-  assertCurrent(reopenedSliceBuild, {
+  assertNextStep(reopenedSliceBuild, {
     phaseId: "phase-01",
     sliceId: "slice-02",
     skill: "verify-slice-build",
@@ -270,7 +302,7 @@ function testBootstrapAndWorkflowProgression() {
     artifacts: ["strike/initiatives/gallery/verification.md"],
   });
   const reopenedPhaseFinal = run(repo, workspaceHelper(repo), ["reopen-phase-check", "1", "allSlicesVerified"]);
-  assertCurrent(reopenedPhaseFinal, {
+  assertNextStep(reopenedPhaseFinal, {
     phaseId: "phase-01",
     skill: "verify-phase",
     missing: ["allSlicesVerified"],
@@ -282,7 +314,7 @@ function testBootstrapAndWorkflowProgression() {
     artifacts: ["strike/initiatives/gallery/verification.md"],
   });
   const reopenedPhaseSlices = run(repo, workspaceHelper(repo), ["reopen-phase-check", "phase-1", "slicesCreated"]);
-  assertCurrent(reopenedPhaseSlices, {
+  assertNextStep(reopenedPhaseSlices, {
     phaseId: "phase-01",
     skill: "create-phase-slices",
     missing: ["slicesCreated"],
@@ -310,10 +342,79 @@ function testBootstrapAndWorkflowProgression() {
     artifacts: ["strike/initiatives/gallery/verification.md"],
   });
 
-  current = run(repo, workspaceHelper(repo), ["complete-check", "allPhasesVerified"]);
-  assertCurrent(current, {
-    status: "complete",
-    initiativeId: "gallery",
+  nextStep = complete(repo, "allPhasesVerified", {
+    status: "idle",
+    reason: "No active initiative.",
+  });
+
+  const completedState = JSON.parse(fs.readFileSync(path.join(repo, "strike/state.json"), "utf8"));
+  assert.equal(completedState.initiatives[0].status, "complete");
+
+  const addedAfterComplete = run(repo, workspaceHelper(repo), [
+    "add-initiative",
+    "payment-system",
+    "Payment system",
+  ]);
+  assert.deepEqual(
+    addedAfterComplete.initiatives.map(({ id, status }) => [id, status]),
+    [
+      ["gallery", "complete"],
+      ["payment-system", "active"],
+    ],
+  );
+}
+
+function testPhaseAndSliceRegistrationRequired() {
+  const repo = tempRepo();
+  run(repo, helper, ["init", "gallery", "Gallery"]);
+  const localHelper = workspaceHelper(repo);
+
+  complete(repo, "ideaRefined", { skill: "grill-idea" });
+  complete(repo, "decisionsResolved", { skill: "create-main-spec" });
+  complete(repo, "specCreated", { skill: "create-development-phases" });
+  runFail(repo, localHelper, ["complete-check", "phasesCreated"], /at least one phase/);
+
+  fs.mkdirSync(path.join(repo, "strike/initiatives/gallery/phases/phase-01"), { recursive: true });
+  fs.mkdirSync(path.join(repo, "strike/initiatives/gallery/phases/phase-02"), { recursive: true });
+  run(repo, localHelper, ["add-phase", "1", "Upload and display"]);
+  runFail(repo, localHelper, ["complete-check", "phasesCreated"], /phase-02/);
+  run(repo, localHelper, ["add-phase", "2", "Export gallery"]);
+  runFail(repo, localHelper, ["complete-check", "phasesCreated"], /development-plan\.md/);
+  writeArtifact(repo, "strike/initiatives/gallery/development-plan.md", "   \n");
+  runFail(repo, localHelper, ["complete-check", "phasesCreated"], /development-plan\.md/);
+  writeArtifact(repo, "strike/initiatives/gallery/development-plan.md");
+  runFail(repo, localHelper, ["complete-check", "phasesCreated"], /phase-01\/phase\.md/);
+  writeArtifact(repo, "strike/initiatives/gallery/phases/phase-01/phase.md");
+  runFail(repo, localHelper, ["complete-check", "phasesCreated"], /phase-02\/phase\.md/);
+  writeArtifact(repo, "strike/initiatives/gallery/phases/phase-02/phase.md");
+  complete(repo, "phasesCreated", { phaseId: "phase-01", skill: "create-phase-spec" });
+  complete(repo, "phaseSpecCreated", { phaseId: "phase-01", skill: "create-phase-slices" });
+
+  fs.mkdirSync(path.join(repo, "strike/initiatives/gallery/phases/phase-01/slices/slice-01"), {
+    recursive: true,
+  });
+  fs.mkdirSync(path.join(repo, "strike/initiatives/gallery/phases/phase-01/slices/slice-02"), {
+    recursive: true,
+  });
+  runFail(repo, localHelper, ["complete-check", "slicesCreated"], /at least one slice/);
+
+  run(repo, localHelper, ["add-slice", "phase-01", "1", "Upload image"]);
+  runFail(repo, localHelper, ["complete-check", "slicesCreated"], /slice-02/);
+  run(repo, localHelper, ["add-slice", "phase-01", "2", "Display gallery"]);
+  runFail(repo, localHelper, ["complete-check", "slicesCreated"], /slice-01\/slice\.md/);
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/phases/phase-01/slices/slice-01/slice.md",
+    "\n\t\n",
+  );
+  runFail(repo, localHelper, ["complete-check", "slicesCreated"], /slice-01\/slice\.md/);
+  writeArtifact(repo, "strike/initiatives/gallery/phases/phase-01/slices/slice-01/slice.md");
+  runFail(repo, localHelper, ["complete-check", "slicesCreated"], /slice-02\/slice\.md/);
+  writeArtifact(repo, "strike/initiatives/gallery/phases/phase-01/slices/slice-02/slice.md");
+  complete(repo, "slicesCreated", {
+    phaseId: "phase-01",
+    sliceId: "slice-01",
+    skill: "research-slice",
   });
 }
 
@@ -346,7 +447,7 @@ function testNewInitiativeHelperWrapper() {
   const repo = tempRepo();
 
   const init = run(repo, newInitiativeHelper, ["init", "ledger", "Ledger"]);
-  assert.equal(init.current.skill, "refine-idea");
+  assert.equal(init.nextStep.skill, "refine-idea");
   assert.ok(fs.existsSync(path.join(repo, "PROJECT_LANGUAGE.md")));
   assert.ok(fs.existsSync(path.join(repo, "strike/user-guidance/implementation-discipline/global.md")));
   assert.ok(fs.existsSync(path.join(repo, "strike/user-guidance/review-lenses/global.md")));
@@ -396,7 +497,7 @@ function testRouteBackCommandContract() {
   });
 
   const reopenedPlan = run(repo, localHelper, ["reopen-check", "planCreated"]);
-  assertCurrent(reopenedPlan, {
+  assertNextStep(reopenedPlan, {
     phaseId: "phase-01",
     sliceId: "slice-01",
     skill: "plan-slice",
@@ -426,7 +527,7 @@ function testRouteBackCommandContract() {
     "slice-02",
     "buildVerified",
   ]);
-  assertCurrent(reopenedSlice, {
+  assertNextStep(reopenedSlice, {
     phaseId: "phase-01",
     sliceId: "slice-02",
     skill: "verify-slice-build",
@@ -453,7 +554,7 @@ function testRouteBackCommandContract() {
     "phase-01",
     "allSlicesVerified",
   ]);
-  assertCurrent(reopenedPhase, {
+  assertNextStep(reopenedPhase, {
     phaseId: "phase-01",
     skill: "verify-phase",
     missing: ["allSlicesVerified"],
@@ -477,7 +578,7 @@ function testRouteBackInvalidatesDownstreamScopes() {
   complete(repo, "allSlicesVerified", { skill: "verify-main-spec" });
 
   const reopenedMainSpec = run(repo, localHelper, ["reopen-check", "specCreated"]);
-  assertCurrent(reopenedMainSpec, {
+  assertNextStep(reopenedMainSpec, {
     skill: "create-main-spec",
     missing: ["specCreated"],
   });
@@ -504,7 +605,7 @@ function testRouteBackInvalidatesDownstreamScopes() {
   completeSlice(repo, { phaseId: "phase-01", skill: "verify-phase" });
 
   const reopenedPhaseSlices = run(repo, localHelper, ["reopen-check", "slicesCreated"]);
-  assertCurrent(reopenedPhaseSlices, {
+  assertNextStep(reopenedPhaseSlices, {
     phaseId: "phase-01",
     skill: "create-phase-slices",
     missing: ["slicesCreated"],
@@ -554,8 +655,8 @@ function testInitiativeLifecycle() {
 
   const added = run(repo, localHelper, ["add-initiative", "payment-system", "Payment system"]);
   assert.equal(added.initiative.id, "payment-system");
-  assert.equal(added.current.initiativeId, "payment-system");
-  assert.equal(added.current.skill, "refine-idea");
+  assert.equal(added.nextStep.initiativeId, "payment-system");
+  assert.equal(added.nextStep.skill, "refine-idea");
   assert.ok(fs.existsSync(path.join(repo, "strike/initiatives/payment-system")));
   assert.deepEqual(
     added.initiatives.map(({ id, status }) => [id, status]),
@@ -580,7 +681,7 @@ function testInitiativeLifecycle() {
 
   const gallery = run(repo, localHelper, ["set-active", "gallery"]);
   assert.equal(gallery.initiative.id, "gallery");
-  assert.equal(gallery.current.initiativeId, "gallery");
+  assert.equal(gallery.nextStep.initiativeId, "gallery");
   assert.deepEqual(
     gallery.initiatives.map(({ id, status }) => [id, status]),
     [
@@ -592,7 +693,7 @@ function testInitiativeLifecycle() {
   const finished = run(repo, localHelper, ["finish-initiative"]);
   assert.equal(finished.initiative.id, "gallery");
   assert.equal(finished.initiative.status, "complete");
-  assert.equal(finished.current.status, "idle");
+  assert.equal(finished.nextStep.status, "idle");
   assert.deepEqual(
     finished.initiatives.map(({ id, status }) => [id, status]),
     [
@@ -602,12 +703,13 @@ function testInitiativeLifecycle() {
   );
 
   const payment = run(repo, localHelper, ["set-active", "payment-system"]);
-  assert.equal(payment.current.initiativeId, "payment-system");
-  assert.equal(payment.current.skill, "refine-idea");
+  assert.equal(payment.nextStep.initiativeId, "payment-system");
+  assert.equal(payment.nextStep.skill, "refine-idea");
   runFail(repo, localHelper, ["set-active", "missing"], /Initiative not found/);
 }
 
 testBootstrapAndWorkflowProgression();
+testPhaseAndSliceRegistrationRequired();
 testStrictCommands();
 testNewInitiativeHelperWrapper();
 testInitPreservesProjectGuidanceFiles();

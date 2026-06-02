@@ -54,9 +54,9 @@ scattering a separate utility.
 - The second target run compressed several `complete-check` calls into one shell
   command after writing artifacts. This did not make the run fake, but it made
   state alone weaker evidence of stage-by-stage discipline.
-- `current` returned `status: "blocked"` when no initiative was active after a
-  successful finish, which read like a failure even though both initiatives were
-  complete.
+- The workflow-position command returned `status: "blocked"` when no initiative
+  was active after a successful finish, which read like a failure even though
+  both initiatives were complete.
 - Codex logged repeated icon warnings from other installed plugin metadata in
   the temporary Codex home. The installed Strike cache did not contain those
   icon fields.
@@ -70,8 +70,8 @@ script runner for `node --test`; no dependencies were installed.
 
 ## Strike Improvements
 
-- Skill text: added step discipline so Strike agents complete one current check,
-  then rerun `current` before continuing.
+- Skill text: added step discipline so Strike agents complete one returned
+  check, then ask the helper for the next step before continuing.
 - State helper: changed the no-active-initiative current status from `blocked`
   to `idle`.
 - Tests: updated state-helper tests for `idle` and added validator coverage for

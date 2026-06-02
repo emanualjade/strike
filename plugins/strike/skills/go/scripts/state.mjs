@@ -298,7 +298,7 @@ function pauseActiveInitiatives(state) {
   }
 }
 
-export function getCurrentState(state) {
+export function getNextStep(state) {
   const initiative = getActiveInitiative(state);
   if (!initiative) {
     return { status: "idle", reason: "No active initiative." };
@@ -338,10 +338,10 @@ export function getCurrentState(state) {
   return { status: "complete", initiativeId: initiative.id };
 }
 
-export function markCurrent(state, verificationKey) {
-  const current = getCurrentState(state);
+export function completeCheck(state, verificationKey, options = {}) {
+  const current = getNextStep(state);
   if (current.status !== "active") {
-    throw new Error(`Cannot mark current verification: current status is ${current.status}.`);
+    throw new Error(`Cannot complete verification: next-step status is ${current.status}.`);
   }
 
   const item = findCurrentWorkflowItem(state, current);
@@ -360,12 +360,149 @@ export function markCurrent(state, verificationKey) {
     throw new Error(`Verification key "${verificationKey}" is already complete for ${item.skill}.`);
   }
 
+  validateCompletionPreconditions(state, current, verificationKey, options);
   verified[verificationKey] = true;
-  return getCurrentState(state);
+  const next = getNextStep(state);
+  if (next.status === "complete") {
+    const initiative = (state.initiatives ?? []).find((entry) => entry.id === next.initiativeId);
+    if (initiative) {
+      initiative.status = "complete";
+    }
+  }
+  return completionReceipt(current, verificationKey);
+}
+
+function completionReceipt(current, verificationKey) {
+  const receipt = {
+    status: "recorded",
+    initiativeId: current.initiativeId,
+    skill: current.skill,
+    completedCheck: verificationKey,
+    runNext: "node strike/scripts/state.mjs next-step",
+  };
+
+  if (current.phaseId) {
+    receipt.phaseId = current.phaseId;
+  }
+  if (current.sliceId) {
+    receipt.sliceId = current.sliceId;
+  }
+
+  return receipt;
+}
+
+function validateCompletionPreconditions(state, current, verificationKey, options = {}) {
+  if (verificationKey === "phasesCreated") {
+    const initiative = (state.initiatives ?? []).find((item) => item.id === current.initiativeId);
+    if (!initiative || (initiative.phases ?? []).length === 0) {
+      throw new Error("Cannot complete phasesCreated until at least one phase has been added with add-phase.");
+    }
+
+    const unregisteredPhaseIds = unregisteredArtifactIds(
+      phaseArtifactIds(options.statePath, current.initiativeId),
+      (initiative.phases ?? []).map((phase) => phase.id),
+    );
+    if (unregisteredPhaseIds.length > 0) {
+      throw new Error(
+        `Cannot complete phasesCreated until these phase directories are registered with add-phase: ${unregisteredPhaseIds.join(", ")}.`,
+      );
+    }
+
+    requireContentArtifacts("phasesCreated", [
+      artifactFilePath(options.statePath, current.initiativeId, "development-plan.md"),
+      ...(initiative.phases ?? []).map((phase) =>
+        artifactFilePath(options.statePath, current.initiativeId, "phases", phase.id, "phase.md"),
+      ),
+    ]);
+  }
+
+  if (verificationKey === "slicesCreated") {
+    const initiative = (state.initiatives ?? []).find((item) => item.id === current.initiativeId);
+    const phase = (initiative?.phases ?? []).find((item) => item.id === current.phaseId);
+    if (!phase || (phase.slices ?? []).length === 0) {
+      throw new Error("Cannot complete slicesCreated until at least one slice has been added with add-slice.");
+    }
+
+    const unregisteredSliceIds = unregisteredArtifactIds(
+      sliceArtifactIds(options.statePath, current.initiativeId, current.phaseId),
+      (phase.slices ?? []).map((slice) => slice.id),
+    );
+    if (unregisteredSliceIds.length > 0) {
+      throw new Error(
+        `Cannot complete slicesCreated until these slice directories are registered with add-slice: ${unregisteredSliceIds.join(", ")}.`,
+      );
+    }
+
+    requireContentArtifacts(
+      "slicesCreated",
+      (phase.slices ?? []).map((slice) =>
+        artifactFilePath(
+          options.statePath,
+          current.initiativeId,
+          "phases",
+          current.phaseId,
+          "slices",
+          slice.id,
+          "slice.md",
+        ),
+      ),
+    );
+  }
+}
+
+function unregisteredArtifactIds(artifactIds, registeredIds) {
+  const registered = new Set(registeredIds);
+  return artifactIds.filter((id) => !registered.has(id));
+}
+
+function requireContentArtifacts(verificationKey, artifactPaths) {
+  const missing = artifactPaths.filter((artifactPath) => !hasFileContent(artifactPath));
+  if (missing.length > 0) {
+    throw new Error(
+      `Cannot complete ${verificationKey} until these artifacts exist and contain content: ${missing.join(", ")}.`,
+    );
+  }
+}
+
+function hasFileContent(filePath) {
+  if (!fs.existsSync(filePath)) return false;
+  const stat = fs.statSync(filePath);
+  if (!stat.isFile()) return false;
+  return fs.readFileSync(filePath, "utf8").trim().length > 0;
+}
+
+function artifactFilePath(statePath = DEFAULT_STATE_PATH, initiativeId, ...segments) {
+  return path.join(path.dirname(statePath), "initiatives", initiativeId, ...segments);
+}
+
+function phaseArtifactIds(statePath = DEFAULT_STATE_PATH, initiativeId) {
+  const phasesRoot = path.join(path.dirname(statePath), "initiatives", initiativeId, "phases");
+  return childIds(phasesRoot, "phase-");
+}
+
+function sliceArtifactIds(statePath = DEFAULT_STATE_PATH, initiativeId, phaseId) {
+  const slicesRoot = path.join(
+    path.dirname(statePath),
+    "initiatives",
+    initiativeId,
+    "phases",
+    phaseId,
+    "slices",
+  );
+  return childIds(slicesRoot, "slice-");
+}
+
+function childIds(root, prefix) {
+  if (!fs.existsSync(root)) return [];
+  return fs
+    .readdirSync(root, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && entry.name.startsWith(prefix))
+    .map((entry) => entry.name)
+    .sort((left, right) => compareNumberedIds(left, right, prefix.slice(0, -1)));
 }
 
 export function reopenCheck(state, verificationKey) {
-  const current = getCurrentState(state);
+  const current = getNextStep(state);
   if (current.status !== "active") {
     throw new Error(`Cannot reopen verification: current status is ${current.status}.`);
   }
@@ -373,7 +510,7 @@ export function reopenCheck(state, verificationKey) {
   const workflow = workflowForCurrentScope(state, current);
   reopenWorkflowCheck(workflow, verificationKey, "current scope");
   reopenCurrentScopeDependents(state, current, verificationKey);
-  return getCurrentState(state);
+  return getNextStep(state);
 }
 
 export function reopenPhaseCheck(state, phaseId, verificationKey) {
@@ -396,7 +533,7 @@ export function reopenPhaseCheck(state, phaseId, verificationKey) {
     }
   }
   reopenWorkflowKey(initiative.initiativeWorkflow, "allPhasesVerified");
-  return getCurrentState(state);
+  return getNextStep(state);
 }
 
 export function reopenSliceCheck(state, phaseId, sliceId, verificationKey) {
@@ -421,7 +558,7 @@ export function reopenSliceCheck(state, phaseId, sliceId, verificationKey) {
   reopenWorkflowCheck(slice.sliceWorkflow, verificationKey, `${normalizedPhaseId}/${normalizedSliceId}`);
   reopenWorkflowKey(phase.phaseWorkflow, "allSlicesVerified");
   reopenWorkflowKey(initiative.initiativeWorkflow, "allPhasesVerified");
-  return getCurrentState(state);
+  return getNextStep(state);
 }
 
 function reopenWorkflowCheck(workflow, verificationKey, label) {
@@ -778,7 +915,7 @@ function initWorkspace(id, name, statePath) {
     languagePath: paths.languagePath,
     implementationDisciplinePath: paths.implementationDisciplinePath,
     reviewLensesPath: paths.reviewLensesPath,
-    current: getCurrentState(state),
+    nextStep: getNextStep(state),
   };
 }
 
@@ -855,8 +992,8 @@ export function main() {
     return;
   }
 
-  if (command === "current") {
-    printJson(getCurrentState(readState(statePath)));
+  if (command === "next-step") {
+    printJson(getNextStep(readState(statePath)));
     return;
   }
 
@@ -883,7 +1020,7 @@ export function main() {
     printJson({
       initiative,
       initiativePath,
-      current: getCurrentState(state),
+      nextStep: getNextStep(state),
       initiatives: listInitiatives(state),
     });
     return;
@@ -899,7 +1036,7 @@ export function main() {
     writeState(statePath, state);
     printJson({
       initiative,
-      current: getCurrentState(state),
+      nextStep: getNextStep(state),
       initiatives: listInitiatives(state),
     });
     return;
@@ -911,21 +1048,21 @@ export function main() {
     writeState(statePath, state);
     printJson({
       initiative,
-      current: getCurrentState(state),
+      nextStep: getNextStep(state),
       initiatives: listInitiatives(state),
     });
     return;
   }
 
-  if (command === "complete-check" || command === "mark-current") {
+  if (command === "complete-check") {
     const verificationKey = args[0];
     if (!verificationKey) {
       throw new Error("Usage: state.mjs complete-check <check-name> [--state path]");
     }
     const state = readState(statePath);
-    const current = markCurrent(state, verificationKey);
+    const receipt = completeCheck(state, verificationKey, { statePath });
     writeState(statePath, state);
-    printJson(current);
+    printJson(receipt);
     return;
   }
 
@@ -988,7 +1125,7 @@ export function main() {
     printJson({
       phase,
       phasePath,
-      current: getCurrentState(state),
+      nextStep: getNextStep(state),
     });
     return;
   }
@@ -1020,13 +1157,13 @@ export function main() {
     printJson({
       slice,
       slicePath,
-      current: getCurrentState(state),
+      nextStep: getNextStep(state),
     });
     return;
   }
 
   throw new Error(
-    "Usage: state.mjs <template|init|current|list-initiatives|add-initiative|set-active|finish-initiative|complete-check|reopen-check|reopen-phase-check|reopen-slice-check|add-phase|add-slice> ...",
+    "Usage: state.mjs <template|init|next-step|list-initiatives|add-initiative|set-active|finish-initiative|complete-check|reopen-check|reopen-phase-check|reopen-slice-check|add-phase|add-slice> ...",
   );
 }
 

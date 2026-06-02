@@ -2,12 +2,23 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.10.7 - 2026-06-02
+
+- Renamed the workflow state prompt from `current` to `next-step` and made
+  completion receipts direct agents back to `next-step` before continuing.
+- Hardened workflow state completion so phase, slice, and verification checks
+  require real artifacts before they can be marked complete.
+- Improved final verification guidance for CLI/API workflows, including
+  preserved-path smoke checks and non-UI screenshot status as `Not applicable`.
+- Tightened dogfood and host-smoke guidance around honest workflow runs and
+  installed-runtime confidence.
+
 ## 0.10.6 - 2026-06-01
 
 - Simplified the primary Strike entry skills to `new-initiative` and `go`.
 - Aligned generated workspace paths, docs, tests, and validators on `strike/`.
-- Added workflow step-discipline guidance so agents complete one current check
-  and rerun `current` before continuing.
+- Added workflow step-discipline guidance so agents complete one returned check
+  and rerun `next-step` before continuing.
 - Changed finished/no-active workflow state from `blocked` to `idle`.
 - Removed the retired workflow backup tree so the repo keeps one active Strike
   shape.

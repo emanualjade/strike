@@ -58,16 +58,16 @@ At the start of every run, inspect the existing Strike workspace.
 If `strike/state.json` exists, run:
 
 ```text
-node strike/scripts/state.mjs current
+node strike/scripts/state.mjs next-step
 ```
 
-If `current` returns `status: "active"`, resume from the returned workflow
+If `next-step` returns `status: "active"`, resume from the returned workflow
 skill unless the user asks to jump, revisit, or repair an earlier step.
 
 If there is no workflow state, tell the user to start with
 `new-initiative`.
 
-If state exists but no initiative is active, `current` returns
+If state exists but no initiative is active, `next-step` returns
 `status: "idle"`. Run:
 
 ```text
@@ -142,22 +142,39 @@ Example:
 
 Markdown files store the actual artifacts. `state.json` stores progress facts.
 
-The helper derives the current workflow position from the verification matrices.
+The helper derives the next workflow step from the verification matrices.
 
 ## Step Discipline
 
 Move one Strike workflow step at a time.
 
-- Run `node strike/scripts/state.mjs current`.
-- Do the one workflow skill returned by `current`.
-- Complete only the first check named in that `current.missing` list.
-- Run `node strike/scripts/state.mjs current` again before doing another
+- Run `node strike/scripts/state.mjs next-step`.
+- Do the one workflow skill returned by `next-step`.
+- Complete only the first check named in that result's `missing` list.
+- Run `node strike/scripts/state.mjs next-step` again before doing another
   workflow skill.
 
 Do not batch multiple `complete-check` commands together. Do not mark later
 checks complete just because their artifacts already exist. If you created more
-than one artifact while working, still re-enter through `current` after each
+than one artifact while working, still re-enter through `next-step` after each
 completed check and let the helper decide the next step.
+
+The JSON returned by `complete-check` is only a receipt. It intentionally does
+not return the next workflow skill, missing checks, or artifact paths. Always
+run `next-step` again before doing or completing another workflow step.
+
+Treat the `next-step` result as an exclusive gate. Do not create or edit artifacts
+owned by later workflow skills until `next-step` points to that skill. In
+particular:
+
+- Do not edit implementation files, tests, package metadata, or runtime docs
+  until the `next-step` result's `skill` is `build-slice`.
+- Do not write verification artifacts until the `next-step` result's `skill`
+  is the matching verifier.
+- Do not backfill planning artifacts around code that was already built.
+- Repo inspection for the current step is fine; implementation is not.
+- If you accidentally do later-step work early, stop and report the workflow
+  violation instead of backfilling documents and marking checks complete.
 
 ## Workspace Helper
 
@@ -203,7 +220,7 @@ stage file.
 After bootstrap, use the workspace helper:
 
 ```text
-node strike/scripts/state.mjs current
+node strike/scripts/state.mjs next-step
 node strike/scripts/state.mjs list-initiatives
 node strike/scripts/state.mjs set-active <initiative-id>
 node strike/scripts/state.mjs finish-initiative [initiative-id]
@@ -269,7 +286,7 @@ decisions at that scope.
 Use the state helper for workflow state:
 
 ```text
-node strike/scripts/state.mjs current
+node strike/scripts/state.mjs next-step
 node strike/scripts/state.mjs complete-check <check-name>
 node strike/scripts/state.mjs reopen-check <check-name>
 node strike/scripts/state.mjs reopen-phase-check <phase-id> <check-name>
@@ -279,8 +296,8 @@ node strike/scripts/state.mjs reopen-slice-check <phase-id> <slice-id> <check-na
 The helper should own:
 
 - creating starter state
-- calculating current workflow position
-- resolving artifact paths for the current workflow skill
+- calculating the next workflow step
+- resolving artifact paths for the next workflow skill
 - adding phases and slices
 - marking verification items complete
 - reopening verification items when a later verification routes back
@@ -293,17 +310,24 @@ operation yet. Keep the same state shape.
 
 ## Running A Workflow Skill
 
-Use the workspace helper to get the current skill, missing check, and artifact
+Use the workspace helper to get the next skill, missing check, and artifact
 path:
 
 ```text
-node strike/scripts/state.mjs current
+node strike/scripts/state.mjs next-step
 ```
 
-Run the current workflow skill with the returned context and artifact path. Use
+Run the returned workflow skill with its context and artifact path. Use
 the first value in `missing` as the completion check for that step. If the host
 cannot invoke a skill from inside this skill, read that skill's `SKILL.md` from
 the installed Strike plugin and follow it directly with the same arguments.
+
+Stay inside that one skill's ownership boundary. For example, `refine-idea`
+may inspect enough context to clarify the request, but it must not create
+decisions, specs, phase files, slices, code, tests, or verification evidence.
+`create-development-phases` may create phase stubs and register them with
+`add-phase`, but it must not create phase specs, slices, code, or verification
+evidence.
 
 After the artifact is created and checked, complete the matching check:
 
@@ -311,9 +335,10 @@ After the artifact is created and checked, complete the matching check:
 node strike/scripts/state.mjs complete-check <check-name>
 ```
 
-Complete only that one returned check, then run
-`node strike/scripts/state.mjs current` again. Do not chain multiple
-`complete-check` commands in one shell command.
+Complete only that one returned check. The completion receipt is not a workflow
+position; run `node strike/scripts/state.mjs next-step` again to learn the next
+allowed step. Do not chain multiple `complete-check` commands in one shell
+command.
 
 Do not complete `researchComplete` unless `research.md` says
 `Ready for planning: yes`. If it says `Ready for planning: no`, follow the
@@ -322,7 +347,7 @@ decision from `Reason` and `## Questions Or Blockers`.
 
 Do not complete `planCreated` if `plan.md` says `Split Recommendation` is
 `Needed: yes`. Split the active slice, add any replacement slice stubs with
-`add-slice`, run `reopen-check researchComplete`, then continue from `current`.
+`add-slice`, run `reopen-check researchComplete`, then continue from `next-step`.
 
 Do not complete `phasesCreated` until `development-plan.md` exists, each
 planned phase has a phase stub, and each planned phase has been added with
@@ -354,14 +379,11 @@ Do not complete `allPhasesVerified` unless the initiative `verification.md`
 says `Ready: yes`. If it says `Ready: no` and `Fix Needed: yes`, run `fix`,
 then run `verify-main-spec` again.
 
-After completing `allPhasesVerified`, run:
-
-```text
-node strike/scripts/state.mjs finish-initiative
-```
-
-This marks the initiative complete so future `list-initiatives` output does
-not show finished work as active.
+Completing `allPhasesVerified` marks the initiative complete. Run `next-step`
+after the completion receipt; it should report `status: "idle"` unless another
+initiative is active. `finish-initiative` still exists for explicit recovery of
+older state or manual closure, but a normal Strike run does not need it
+after the final check.
 
 ## Failed Verification Loop
 
@@ -394,7 +416,7 @@ acceptance criteria.
 
 If `fix` writes `Fixed: no` and `Route Back` says `Needed: yes`, run the named
 route-back `Command` with its `Phase`, `Slice`, and `Check`, then continue from
-`current`. If `fix` writes `Fixed: no` without route-back, surface the
+`next-step`. If `fix` writes `Fixed: no` without route-back, surface the
 unresolved decision without broadening the feature.
 
 ## Slice Git Checkpoint
@@ -417,28 +439,27 @@ Route back only when the issue cannot honestly be repaired inside the current
 verification loop.
 
 When any artifact's `Route Back` says `Needed: yes`, run its named `Command`
-with its `Phase`, `Slice`, and `Check`, then continue from the helper's next
-current state.
+with its `Phase`, `Slice`, and `Check`, then continue from `next-step`.
 
 For current-scope route-back:
 
 ```text
 node strike/scripts/state.mjs reopen-check <owning-check-name>
-node strike/scripts/state.mjs current
+node strike/scripts/state.mjs next-step
 ```
 
 For a specific slice route-back:
 
 ```text
 node strike/scripts/state.mjs reopen-slice-check <phase-id> <slice-id> <owning-check-name>
-node strike/scripts/state.mjs current
+node strike/scripts/state.mjs next-step
 ```
 
 For a specific phase route-back:
 
 ```text
 node strike/scripts/state.mjs reopen-phase-check <phase-id> <owning-check-name>
-node strike/scripts/state.mjs current
+node strike/scripts/state.mjs next-step
 ```
 
 Use route-back for missing decisions, changed accepted scope, untrustworthy
@@ -469,12 +490,12 @@ smaller slice whenever possible. Use canonical suffix IDs such as `slice-03-b`
 and `slice-03-c` for the additional slices so workflow state can keep moving in
 order.
 
-If the owning earlier check is already open, `current` should already point at
+If the owning earlier check is already open, `next-step` should already point at
 the owning skill; run that skill instead of editing state by hand.
 
 ## Workflow Handoff Pattern
 
-Run `current`, invoke the returned skill with the relevant artifact paths, then
+Run `next-step`, invoke the returned skill with the relevant artifact paths, then
 complete the returned check only after the step's artifact passes its gate.
 
 Initiative setup:
@@ -523,8 +544,8 @@ Verification gates:
   it says `Ready: yes`.
 - `verify-main-spec`: pass the main spec, development plan, and every phase
   verification; write the initiative `verification.md`; complete
-  `allPhasesVerified` only when it says `Ready: yes`, then run
-  `finish-initiative`.
+  `allPhasesVerified` only when it says `Ready: yes`. The helper marks the
+  initiative complete.
 
 ## Basic Rule
 

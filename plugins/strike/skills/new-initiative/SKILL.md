@@ -50,15 +50,22 @@ After initialization, continue with the same workflow mechanics as
 `go`:
 
 ```text
-node strike/scripts/state.mjs current
+node strike/scripts/state.mjs next-step
 ```
 
 Invoke the returned workflow skill with the original user request, the returned
 artifact path, and the returned completion check.
 
+Do not implement from inside `new-initiative` itself. `new-initiative` only
+creates or selects the initiative and then hands off to the step returned by
+`next-step`. Treat that `next-step` result as an exclusive gate: do not create code,
+tests, package files, verification artifacts, phase specs, or slice artifacts
+until `next-step` points to the workflow skill that owns them.
+
 After each workflow skill finishes, complete only the one check returned by
-`current`, then run `node strike/scripts/state.mjs current` again before
-continuing. Do not batch multiple `complete-check` commands together.
+`next-step`. The completion receipt is not a workflow position and intentionally
+does not name the next skill. Run `node strike/scripts/state.mjs next-step` again
+before continuing. Do not batch multiple `complete-check` commands together.
 
 If the work is interrupted after initialization, resume later with
 `go`.

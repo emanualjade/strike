@@ -117,6 +117,16 @@ Phase ID:
 ## Phase-Spec Focus
 ```
 
+When running inside Strike, writing the development plan and phase stubs is not
+enough to finish this step. Register every planned phase in workflow state:
+
+```text
+node strike/scripts/state.mjs add-phase <phase-id> [name]
+```
+
+Run `add-phase` for each phase before `complete-check phasesCreated`. Do not use
+`complete-check phasesCreated` as a probe for whether registration is needed.
+
 ## Rules
 
 - Create phases around outcomes.

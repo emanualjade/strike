@@ -46,6 +46,10 @@ Verify the completed initiative against the main spec and record final evidence.
   and upstream/downstream impact that spans phases.
 - Inspect slice artifacts or changed files when phase evidence is too thin.
 - Run or inspect final checks when needed.
+- When accepted scope changes an existing user-facing command, API, route,
+  integration, or workflow, include final smoke evidence for both the
+  new/changed path and one preserved existing path. If no preserved path exists,
+  record that explicitly.
 - Record skipped checks, replacement evidence, residual risks, and blockers.
 - Do not edit phase, slice, or implementation artifacts; write issues for
   `fix`, or route back only when `fix` cannot honestly repair the problem.
@@ -54,6 +58,13 @@ Verify the completed initiative against the main spec and record final evidence.
 
 For a UI or user-facing initiative, run one final browser or user-flow check
 across the accepted scope before final verification passes.
+
+User-flow checks are not only browser checks. For CLI, API, integration,
+automation, or backend workflow changes, use representative commands, requests,
+or calls. When the initiative changes an existing user-facing command, API,
+route, integration, or workflow, smoke-test the changed/new path and at least
+one preserved existing path so final verification proves the new behavior did
+not break an obvious old entry point.
 
 For UI work, include at least one visual screenshot check after representative
 data exists. Inspect the screenshot for:
@@ -173,7 +184,7 @@ Result:
 -
 
 ## Visual Screenshot Check
-Passed: yes / no / blocked
+Status: passed / blocked / Not applicable
 Screenshot:
 Viewport:
 Findings:
@@ -241,6 +252,13 @@ Next:
   accepted-scope `Must Fix` issue.
 - Do not treat deferred work or residual risk as complete unless the main spec
   explicitly excludes it from the accepted scope.
+- For non-UI work, write `Status: Not applicable` in
+  `## Visual Screenshot Check`. Do not write `Passed: no`; that reads like a
+  failed screenshot rather than a non-applicable check.
+- When an existing user-facing command, API, route, integration, or workflow was
+  changed, do not mark final verification ready unless final checks include
+  smoke evidence for the changed/new path and one preserved existing path, or
+  explicitly explain why no preserved path exists.
 - Do not edit phase, slice, or implementation artifacts.
 - When readiness fails because initiative, phase, slice, artifact,
   implementation, or evidence issues can be repaired inside accepted scope,

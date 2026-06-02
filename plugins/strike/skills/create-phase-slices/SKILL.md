@@ -126,6 +126,16 @@ dependency-map file.
 If no slice output root is provided, ask the user where they would like to save
 the slice stubs.
 
+When running inside Strike, writing slice stubs is not enough to finish this
+step. Register every planned slice in workflow state:
+
+```text
+node strike/scripts/state.mjs add-slice <phase-id> <slice-id> [name]
+```
+
+Run `add-slice` for each slice before `complete-check slicesCreated`. Do not use
+`complete-check slicesCreated` as a probe for whether registration is needed.
+
 Use this shape for each slice:
 
 ```md
