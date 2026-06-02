@@ -2,6 +2,18 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.10.13 - 2026-06-02
+
+- Tightened slice-specific and planning-time research so agents start from
+  `research/index.md`, relevant initiative research reports, and their audits
+  before adding narrower research.
+- Required new slice or planning research to use official or primary sources for
+  external/current/high-stakes facts and record how it changes, narrows, or
+  confirms initiative research.
+- Updated the Strike handoff so `research-slice`, `plan-slice`, and
+  `verify-slice-plan` receive relevant initiative research reports and audits,
+  not just a vague research summary.
+
 ## 0.10.12 - 2026-06-02
 
 - Relaxed slice sizing from strict thin-slice file counts to a cohesion-based

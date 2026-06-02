@@ -587,17 +587,18 @@ Phase setup:
 
 Slice loop:
 
-- `research-slice`: pass `main-spec.md`, relevant initiative research,
-  relevant `supporting-artifacts/`, `phase-spec.md`, and `slice.md`; write
-  `research.md`; complete `researchComplete` only when it says
-  `Ready for planning: yes`.
-- `plan-slice`: pass `main-spec.md`, relevant initiative research,
-  relevant `supporting-artifacts/`, `phase-spec.md`, `slice.md`, and
-  `research.md`; write `plan.md` with a focused `Verification Evidence Plan`;
-  complete
+- `research-slice`: pass `main-spec.md`, `research/index.md`, relevant
+  initiative research reports and audits, relevant `supporting-artifacts/`,
+  `phase-spec.md`, and `slice.md`; write `research.md`; complete
+  `researchComplete` only when it says `Ready for planning: yes`.
+- `plan-slice`: pass `main-spec.md`, `research/index.md`, relevant initiative
+  research reports and audits, relevant `supporting-artifacts/`, `phase-spec.md`,
+  `slice.md`, and `research.md`; write `plan.md` with a focused
+  `Verification Evidence Plan`; complete
   `planCreated` only when `Split Recommendation` is `Needed: no`.
-- `verify-slice-plan`: pass the slice artifacts plus relevant initiative
-  research and `supporting-artifacts/`; write `plan-verification.md`; complete
+- `verify-slice-plan`: pass the slice artifacts plus `research/index.md`,
+  relevant initiative research reports and audits, and `supporting-artifacts/`;
+  write `plan-verification.md`; complete
   `planVerified` only when it says `Ready: yes`.
 - `build-slice`: pass `plan.md`, `plan-verification.md`, relevant
   `supporting-artifacts/` named in the plan, and repo files named by the plan;

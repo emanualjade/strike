@@ -97,6 +97,15 @@ repo code, then the research stage fixes the reports and records the audit
 rollup in `research/index.md`. This is Strike workflow policy, not a host schema
 requirement.
 
+2026-06-02 update: slice-specific and planning-time research must inherit
+audited initiative research before adding narrower findings. `research-slice`,
+`plan-slice`, and `verify-slice-plan` now receive `research/index.md`, relevant
+per-item reports, and relevant audit files so agents do not redo or contradict
+the global provider/model/API, repo-pattern, schema, queue, file/blob, or
+auth/payment research without a narrower question, freshness concern,
+contradiction, missing fact, or accepted-risk audit caveat. This is Strike
+workflow policy, not a host schema requirement.
+
 2026-06-02 update: Grill now requires a read-only `Decision Review` section in
 `decisions.md` before `decisionsResolved` can complete. The review checks for
 blind spots, unsupported assumptions, unresolved consequential decision nodes,

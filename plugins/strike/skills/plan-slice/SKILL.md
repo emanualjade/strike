@@ -13,7 +13,8 @@ Create a concrete implementation plan for one slice.
 ## Inputs
 
 - slice stub or slice context
-- initiative research index and relevant reports when they affect this slice
+- initiative research index, relevant reports, and relevant audits when they
+  affect this slice
 - supporting artifacts relevant to this slice, when present
 - slice research from the current slice's `research.md`
 - phase spec
@@ -26,8 +27,9 @@ Create a concrete implementation plan for one slice.
 
 ## Process
 
-- Read the slice stub, relevant initiative research, relevant supporting
-  artifacts, slice research, and relevant spec context.
+- Read the slice stub, `research/index.md`, relevant initiative research
+  reports and audits, relevant supporting artifacts, slice research, and
+  relevant spec context.
 - Read the bundled `references/verification-evidence.md` from the Strike plugin
   root.
 - Read `strike/user-guidance/implementation-discipline/global.md` and
@@ -53,7 +55,9 @@ Create a concrete implementation plan for one slice.
 - Use the slice research as planning input.
 - Use initiative research as inherited constraints. Do not plan behavior that
   contradicts provider/model/API/database/file/queue constraints recorded
-  before Grill.
+  before Grill. Treat passing or accepted-risk initiative research as baseline
+  evidence, and read the relevant per-item report and audit before adding new
+  tactical research.
 - If `supporting-artifacts/` exists, scan it and read only files relevant to
   this slice. Use them to understand schema reasoning, architecture tradeoffs,
   provider routing, data lifecycle, permissions, or operational constraints.
@@ -88,8 +92,9 @@ Create a concrete implementation plan for one slice.
 
 Initiative research captures provider/model/API, database/schema, file/blob,
 queue/job, auth/payment, and repo-pattern constraints that shaped the spec. Use
-it as inherited context when relevant. Slice research is the required
-implementation-specific evidence check for this slice.
+`research/index.md`, relevant per-item reports, and relevant audits as inherited
+context when relevant. Slice research is the required implementation-specific
+evidence check for this slice.
 
 Supporting artifacts are optional decision-discussion notes. Use them when
 relevant, but do not treat them as standalone scope. Accepted decisions and
@@ -104,14 +109,19 @@ In Strike, it lives at:
 strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/research.md
 ```
 
-If you have reason to do more research on your own you should feel free to do that.
-If you need to discover the canonical way of doing things and not guessing you should do more research.
+If you have reason to do more research on your own you should feel free to do
+that, but do not redo initiative-level research unless the slice has a narrower
+question, freshness concern, contradiction, missing fact, or accepted-risk audit
+caveat. If you need to discover the canonical way of doing things and not
+guessing you should do more research from official or primary sources when the
+fact is external, current, or high-stakes.
 
 Record how the plan uses the existing research in `Research Used`. If research
 was marked unnecessary, say why instead of inventing findings. Record only new
 planning-time findings in `Implementation Research Additions`, using the same
-compact style: source, finding, and why it matters. Do not paste raw notes, long
-excerpts, search trails, or link dumps.
+compact style: source, finding, why it matters, and how it changes, narrows, or
+confirms initiative research. Do not paste raw notes, long excerpts, search
+trails, or link dumps.
 
 ## Output
 

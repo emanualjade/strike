@@ -17,7 +17,7 @@ making things up.
 
 - slice or slice context
 - relevant spec or phase context
-- initiative research index and relevant reports, when present
+- initiative research index, relevant reports, and relevant audits when present
 - supporting artifacts relevant to this slice, when present
 
 ## What Matters
@@ -39,10 +39,17 @@ making things up.
 - Use light repo reading if it helps identify the stack, existing
   integration, domain terms, or whether the repo already has a clear pattern.
   Deeper local implementation planning belongs in `plan-slice`.
-- Use initiative research as baseline evidence for provider/model/API,
-  database/schema, file/blob, queue/job, auth/payment, and repo architecture
-  constraints. Slice research should not be the first place basic provider
-  capabilities are discovered.
+- Before doing slice-specific research, read `research/index.md` and any
+  relevant per-item reports and audit files it references. Treat passing or
+  accepted-risk initiative research as inherited baseline evidence for
+  provider/model/API, database/schema, file/blob, queue/job, auth/payment, and
+  repo architecture constraints. Slice research should not be the first place
+  basic provider capabilities are discovered.
+- Do not redo initiative-level provider/model/API or repo-pattern research
+  inside a slice unless the slice has a narrower question, freshness concern,
+  contradiction, missing fact, or accepted-risk audit caveat. When new external
+  facts are needed, use official or primary sources and record how the new
+  finding changes, narrows, or confirms the initiative research.
 - If `supporting-artifacts/` exists, scan it and read only files relevant to
   this slice's domain, schema, architecture, provider routing, data lifecycle,
   permissions, or operational concerns.
