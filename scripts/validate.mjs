@@ -791,6 +791,8 @@ function validateStrikeContract() {
   requireText(strikeText, "## Slice Git Checkpoint", strikePath);
   requireText(strikeText, "After `buildVerified` is complete for a slice, commit and push that slice", strikePath);
   requireText(strikeText, "After completing `buildVerified`, complete the slice git checkpoint", strikePath);
+  requireText(strikeText, "Slice boundaries are normal workflow handoffs too", strikePath);
+  requireText(strikeText, "they are not a stop condition for `go`", strikePath);
   requireText(strikeText, "Do not prescribe extra git inspection commands", strikePath);
   requireText(strikeText, "then commit and push that completed slice before moving on", strikePath);
 
@@ -1254,6 +1256,8 @@ function validateStrikeContract() {
   requireText(verifyBuildText, "patched\n  without checking existing repo precedent", verifyBuildPath);
   requireText(verifyBuildText, "Give every `Must Fix` item a stable short issue ID", verifyBuildPath);
   requireText(verifyBuildText, "complete-check buildVerified", verifyBuildPath);
+  requireText(verifyBuildText, "Do not start another slice from inside `verify-slice-build`", verifyBuildPath);
+  requireText(verifyBuildText, "return control to\n  `go` so the orchestrator can run `next-step`", verifyBuildPath);
   requireText(strikeText, "build-verification.md", strikePath);
   requireText(strikeText, "Verified: yes", strikePath);
   requireText(strikeText, "finish-initiative", strikePath);

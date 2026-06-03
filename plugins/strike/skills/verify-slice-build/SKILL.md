@@ -343,7 +343,9 @@ Reason:
   `Command: None`, `Phase: None`, `Slice: None`, and `Check: None`.
 - After writing `Verified: yes`, Strike can run
   `node strike/scripts/state.mjs complete-check buildVerified`.
-- Do not start another slice.
+- Do not start another slice from inside `verify-slice-build`; return control to
+  `go` so the orchestrator can run `next-step` and continue if another slice is
+  ready.
 - Do not verify the whole phase.
 - Keep Browser Clickthrough and automated tests separate. Passing one does not
   satisfy the other.

@@ -18,6 +18,9 @@ All notable changes to Strike will be recorded here.
 - Tuned slice sizing language toward small cohesive vertical slices and small
   focused buildable slices, with medium slices now sized around 5-10 likely
   files when the work is cohesive.
+- Clarified that completed slice verification returns control to `go`; after the
+  slice git checkpoint, `go` should continue to the next slice's `research-slice`
+  when `next-step` says it is ready.
 - Updated Strike instructions, README, tests, and validation to keep state reads
   focused on the active initiative instead of every historical initiative.
 

@@ -209,6 +209,13 @@ Phase boundaries are normal workflow handoffs, not automatic pauses. If
 `create-phase-spec`, continue with that returned step unless the user asked to
 pause or the workflow is blocked.
 
+Slice boundaries are normal workflow handoffs too. After `buildVerified`
+completes and the slice git checkpoint is done, run `next-step`. If it returns
+the next slice's `research-slice`, continue with that returned step unless the
+user asked to pause or the workflow is blocked. Stage-local verifier instructions
+such as not starting another slice mean that verifier does not own next-slice
+work; they are not a stop condition for `go`.
+
 Treat the `next-step` result as an exclusive gate. Do not create or edit artifacts
 owned by later workflow skills until `next-step` points to that skill. In
 particular:
