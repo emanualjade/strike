@@ -109,7 +109,9 @@ and source links or repo paths used as evidence. Do not edit files.
    implications, and readiness result.
 7. Run the read-only phase research audit.
 8. Fix `research.md` for audit `Must Fix` findings, record any accepted risk,
-   and write `research-audit.md`.
+   and write `research-audit.md`. If `research.md` changes after audit findings
+   are returned, rerun the phase research audit and use the fresh audit result
+   before writing `Ready for slicing: yes`.
 
 ## Output
 
@@ -216,6 +218,8 @@ Reason:
   `research.md` has a `## Research Audit` entry, the audit says
   `Review results returned: yes`, the audit verdict is `pass` or
   `accepted-risk`, and `Must Fix count: 0`.
+- If `research.md` changes after audit findings are returned, rerun the phase
+  research audit before writing `Ready for slicing: yes`.
 - If a material phase fact is missing and cannot be resolved, write
   `Ready for slicing: no` and record the blocker.
 - If a product, security, data, permission, architecture, or phase-boundary

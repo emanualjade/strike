@@ -373,8 +373,9 @@ checkpoint. When material research is approved, each per-item report must be
 audited before Grill can run. Phase research is the official implementation
 research gate after each phase spec and before slice creation. It may conclude
 that initiative research already covers the phase, but `research.md` must still
-say `Ready for slicing: yes` and `research-audit.md` must show a passing or
-accepted-risk audit with `Must Fix count: 0` before slices are created.
+say `Ready for slicing: yes` and `research-audit.md` must say
+`Review results returned: yes`, `Verdict: pass` or `Verdict: accepted-risk`,
+and `Must Fix count: 0` before slices are created.
 Slice-specific research is no longer a separate workflow gate; `plan-slice` adds
 only narrow source-backed research deltas when initiative and phase research do
 not cover a slice detail.
@@ -449,19 +450,20 @@ command.
 
 Do not complete `phaseResearchComplete` unless the phase `research.md` says
 `Ready for slicing: yes`, contains a `## Research Audit` rollup, and
-`research-audit.md` says `Verdict: pass` or `Verdict: accepted-risk` with
-`Must Fix count: 0`. If `research.md` says `Ready for slicing: no`, follow the
-research output: route back, repair missing research, or surface the unresolved
-decision from `Reason` and `## Questions Or Blockers`.
+`research-audit.md` says `Review results returned: yes`, `Verdict: pass` or
+`Verdict: accepted-risk`, and `Must Fix count: 0`. If `research.md` says
+`Ready for slicing: no`, follow the research output: route back, repair missing
+research, or surface the unresolved decision from `Reason` and
+`## Questions Or Blockers`.
 
-Do not complete `planCreated` if `plan.md` says `Split Recommendation` is
-`Needed: yes`. Read that section's `Route Back` before acting. When the route
-back is the normal local split path, split the active slice, add any replacement
-slice stubs with `add-slice`, run `reopen-check planCreated`, then continue from
-`next-step`. If the route back says to reopen `slicesCreated` or
-`phaseResearchComplete`, follow that command instead because the plan is saying
-the phase slice list or phase research must be repaired before local slice
-planning can continue.
+Do not complete `planCreated` unless `plan.md` says `Split Recommendation` is
+`Needed: no` and `Route Back` says `Needed: no`. Read `Route Back` before
+acting. When the route back is the normal local split path, split the active
+slice, add any replacement slice stubs with `add-slice`, run
+`reopen-check planCreated`, then continue from `next-step`. If the route back
+says to reopen `slicesCreated` or `phaseResearchComplete`, follow that command
+instead because the plan is saying the phase slice list or phase research must
+be repaired before local slice planning can continue.
 
 Do not complete `ideaRefined` unless `idea.md` contains `## User Checkpoint`,
 records a non-empty `User response:`, and says `Ready to continue: yes`.
@@ -472,14 +474,17 @@ contains `## User Checkpoint`, records a non-empty `User response:`, and says
 each approved research item has a non-empty report file and a non-empty audit
 file referenced by `research/index.md`. The index must show `Verdict: pass` or
 `Verdict: accepted-risk` and `Must Fix count: 0` for every approved research
-item. If no material research is needed, `research/scope.md` must explicitly
-say `No material research needed: yes`.
+item, and each audit file must say `Review results returned: yes`,
+`Verdict: pass` or `Verdict: accepted-risk`, and `Must Fix count: 0`. If no
+material research is needed, `research/scope.md` must explicitly say
+`No material research needed: yes`.
 
 Do not complete `decisionsResolved` unless `decisions.md` contains
-`## User Checkpoint`, records a non-empty `User response:`, and says
-`Ready to continue: yes`, and contains `## Decision Review` with
-`Review results returned: yes`, `Verdict: pass` or `Verdict: accepted-risk`,
-and `Must Fix count: 0`.
+`## Decision Review` with `Review results returned: yes`, `Verdict: pass` or
+`Verdict: accepted-risk`, and `Must Fix count: 0`, then a later
+post-review `## User Checkpoint` that records a non-empty `User response:` and
+says `Ready to continue: yes`. A checkpoint captured before the final passing
+decision review is stale and does not satisfy this gate.
 
 Do not complete `phasesCreated` until `development-plan.md` exists, each
 planned phase has a phase stub, and each planned phase has been added with
@@ -488,29 +493,35 @@ planned phase has a phase stub, and each planned phase has been added with
 Do not complete `slicesCreated` until each planned slice has a slice stub and
 has been added with `add-slice`.
 
-Do not complete `implemented` unless `build.md` says `Built: yes`. If it says
-`Built: no` and `Route Back` says `Needed: yes`, run the named route-back
-`Command` with its `Phase`, `Slice`, and `Check`.
+Do not complete `implemented` unless `build.md` says `Built: yes`,
+`Fix Needed` is not `yes`, and `Route Back` says `Needed: no`. If it says
+`Built: no`, `Fix Needed: yes`, or `Route Back` says `Needed: yes`, run the
+named local fix or route-back `Command` with its `Phase`, `Slice`, and `Check`.
 
 Do not complete `planVerified` unless `plan-verification.md` says
-`Review results returned: yes` and `Ready: yes`.
+`Review results returned: yes`, `Ready: yes`, `Fix Needed: no`, and
+`Route Back` says `Needed: no`.
 If it says `Ready: no` and `Fix Needed: yes`, run `fix`, then run
 `verify-slice-plan` again.
 
 Do not complete `buildVerified` unless `build-verification.md` says
-`Review results returned: yes` and `Verified: yes`. If it says `Verified: no`
-and `Fix Needed: yes`, run `fix`, then run `verify-slice-build` again.
+`Review results returned: yes`, `Verified: yes`, `Fix Needed: no`,
+`Route Back` says `Needed: no`, and `Post-browser visual/browser lenses` is
+`pass` or `not run`. If it says `Verified: no` and `Fix Needed: yes`, run
+`fix`, then run `verify-slice-build` again.
 
 After completing `buildVerified`, complete the slice git checkpoint before
 moving to the next slice.
 
 Do not complete `allSlicesVerified` unless the phase `verification.md` says
-`Review results returned: yes` and `Ready: yes`. If it says `Ready: no` and
-`Fix Needed: yes`, run `fix`, then run `verify-phase` again.
+`Review results returned: yes`, `Ready: yes`, `Fix Needed: no`, and
+`Route Back` says `Needed: no`. If it says `Ready: no` and `Fix Needed: yes`,
+run `fix`, then run `verify-phase` again.
 
 Do not complete `allPhasesVerified` unless the initiative `verification.md`
-says `Review results returned: yes` and `Ready: yes`. If it says `Ready: no`
-and `Fix Needed: yes`, run `fix`, then run `verify-main-spec` again.
+says `Review results returned: yes`, `Ready: yes`, `Fix Needed: no`, and
+`Route Back` says `Needed: no`. If it says `Ready: no` and
+`Fix Needed: yes`, run `fix`, then run `verify-main-spec` again.
 
 Completing `allPhasesVerified` marks the initiative complete. Run `next-step`
 after the completion receipt; it should report `status: "idle"` unless another
@@ -642,13 +653,15 @@ Initiative setup:
   research item, and `research/index.md`; complete
   `initiativeResearchComplete` only after the research scope checkpoint says
   `Ready to research: yes`, the index says `Ready for grill: yes`, and every
-  approved research item has a report file plus a passing or accepted-risk
-  audit with no unresolved Must Fix findings.
+  approved research item has a report file plus an audit file that says
+  `Review results returned: yes`, `Verdict: pass` or
+  `Verdict: accepted-risk`, and `Must Fix count: 0`.
 - `grill-idea`: pass `idea.md` plus `research/scope.md`,
   `research/index.md`, and relevant research reports; write `decisions.md`; complete
-  `decisionsResolved` only after the user checkpoint says
-  `Ready to continue: yes` and the decision review has no unresolved Must Fix
-  findings. If decision discussion creates relevant
+  `decisionsResolved` only after the final decision review says
+  `Review results returned: yes`, `Verdict: pass` or
+  `Verdict: accepted-risk`, and `Must Fix count: 0`, followed by a post-review
+  user checkpoint that says `Ready to continue: yes`. If decision discussion creates relevant
   schema/architecture/provider/data notes, write them under
   `supporting-artifacts/` and link them from `decisions.md`.
 - `create-main-spec`: pass `idea.md`, initiative research, `decisions.md`, and
@@ -669,8 +682,9 @@ Phase setup:
   initiative research reports and audits, relevant `supporting-artifacts/`,
   `development-plan.md`, and `phase-spec.md`; write the phase's `research.md`
   and `research-audit.md`; complete `phaseResearchComplete` only when research
-  says `Ready for slicing: yes` and the audit has no unresolved Must Fix
-  findings.
+  says `Ready for slicing: yes` and `research-audit.md` says
+  `Review results returned: yes`, `Verdict: pass` or
+  `Verdict: accepted-risk`, and `Must Fix count: 0`.
 - `create-phase-slices`: pass the phase spec plus relevant initiative research,
   phase research, phase research audit, and `supporting-artifacts/`; write one
   `slice.md` per slice. Run `add-slice <phase-id> <slice-id> [name]` for every
@@ -683,38 +697,43 @@ Slice loop:
   `supporting-artifacts/`, `phase-spec.md`, and `slice.md`; write `plan.md`
   with a focused `Verification Plan` and any narrow slice-specific research
   delta; complete
-  `planCreated` only when `Split Recommendation` is `Needed: no`.
+  `planCreated` only when `Split Recommendation` is `Needed: no` and
+  `Route Back` is `Needed: no`.
 - `verify-slice-plan`: pass the slice artifacts plus `research/index.md`,
   relevant initiative research reports and audits, phase `research.md`, phase
   `research-audit.md`, and `supporting-artifacts/`; write
   `plan-verification.md`; complete
-  `planVerified` only when it says `Review results returned: yes` and
-  `Ready: yes`.
+  `planVerified` only when it says `Review results returned: yes`,
+  `Ready: yes`, `Fix Needed: no`, and `Route Back` is `Needed: no`.
 - `build-slice`: pass `plan.md`, `plan-verification.md`, relevant
   `supporting-artifacts/` named in the plan, and repo files named by the plan;
   implement the work, add/update planned automated tests, run focused
   verification evidence checks, use existing repo precedent before patching
   technical symptoms or integration/dataflow behavior, and write `build.md`;
-  complete `implemented` only when it says `Built: yes`.
+  complete `implemented` only when it says `Built: yes`, `Fix Needed` is not
+  `yes`, and `Route Back` is `Needed: no`.
 - `verify-slice-build`: pass the slice artifacts, relevant
   `supporting-artifacts/`, and changed files; write `build-verification.md`;
   confirm grouped verification evidence, including Browser Clickthrough for
   browser-visible work; complete `buildVerified` only when it says
-  `Review results returned: yes` and `Verified: yes`, then commit and push that
-  completed slice before moving on.
+  `Review results returned: yes`, `Verified: yes`, `Fix Needed: no`,
+  `Route Back` is `Needed: no`, and post-browser visual/browser lenses are
+  `pass` or `not run`, then commit and push that completed slice before moving
+  on.
 
 Verification gates:
 
 - `verify-phase`: pass the phase spec, phase research, phase research audit,
   relevant initiative research, relevant `supporting-artifacts/`, and completed
   slice evidence for the phase; write the phase's `verification.md`; complete
-  `allSlicesVerified` only when it says `Review results returned: yes` and
-  `Ready: yes`.
+  `allSlicesVerified` only when it says `Review results returned: yes`,
+  `Ready: yes`, `Fix Needed: no`, and `Route Back` is `Needed: no`.
 - `verify-main-spec`: pass the main spec, initiative research,
   `supporting-artifacts/`, development plan, and every phase verification; write
   the initiative `verification.md`; complete
-  `allPhasesVerified` only when it says `Review results returned: yes` and
-  `Ready: yes`. The helper marks the initiative complete.
+  `allPhasesVerified` only when it says `Review results returned: yes`,
+  `Ready: yes`, `Fix Needed: no`, and `Route Back` is `Needed: no`. The helper
+  marks the initiative complete.
 
 ## Basic Rule
 

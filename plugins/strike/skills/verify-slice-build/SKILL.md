@@ -99,7 +99,9 @@ Verify one slice build and record build verification.
      representative data, click feature controls/actions, observe expected
      states/results, and capture screenshots
    - after Browser Checks, run any justified visual/browser review lens whose
-     rubric requires completed browser evidence
+     rubric requires completed browser evidence, then summarize that status in
+     `Read-Only Review` as `Post-browser visual/browser lenses: pass` or
+     `not run`
 8. Write `build-verification.md`: categorize issues, set `Verified`, set
    `Fix Needed`, and write route-back instructions when needed.
 
@@ -119,6 +121,9 @@ Run these required review agents in the same pre-browser batch:
   acceptance work, not as the whole phase. Check whether the build satisfies the
   slice outcome and acceptance criteria, stays inside accepted slice scope,
   follows plan intent, and has the non-browser evidence needed for this slice.
+  This audit reviews evidence already recorded in `build.md`; the verifier
+  separately owns fresh automated command results running in the same
+  pre-browser batch and synthesizes both sources before the gate decision.
   Treat final browser proof as pending, not failed. Return a concise
   `Browser Proof Needed` checklist with route/page, representative data,
   controls/actions, expected states/results, screenshots, and any browser
@@ -312,10 +317,11 @@ Reason:
 
 ## Read-Only Review
 Review results returned: yes / no
-- Required audits:
-- Conditional risk lenses:
-- User review lenses:
-- Summary:
+Required audits: pass / issues / blocked
+Conditional risk lenses: pass / issues / blocked / not run
+User review lenses: pass / issues / blocked / not run
+Post-browser visual/browser lenses: pass / issues / blocked / not run
+Summary:
 
 ## Skipped / Residual Risk
 -
@@ -383,10 +389,13 @@ Reason:
   risk lenses, user review lenses, required checks, or Browser Clickthrough.
 - The pre-browser gate is clean: no accepted-scope `Must Fix`, failed required
   check, or blocked required audit remains.
-- All required review agents, justified conditional risk lenses, and applicable
-  user review lenses have returned. The artifact says `Review results returned:
-  yes` only after their returned findings have been synthesized into
-  `## Issues`.
+- All required review agents, justified conditional risk lenses, post-browser
+  visual/browser lenses, and applicable user review lenses have returned. The
+  artifact says `Review results returned: yes` only after their returned
+  findings have been synthesized into `## Issues`.
+- `Post-browser visual/browser lenses` is recorded as `pass` when those lenses
+  ran and passed, or `not run` when no browser-evidence-dependent lens applied.
+  `issues`, `blocked`, or a missing status prevents verification from passing.
 
 ### Browser Blockers
 
@@ -402,6 +411,8 @@ Reason:
 
 - When verification fails because the implementation, tests, evidence, or local
   artifacts can be repaired inside accepted scope, write `Fix Needed: yes`.
+- If the fix would edit phase `research.md` or `research-audit.md`, route back
+  to `phaseResearchComplete` instead so the phase research audit can be rerun.
 - When verification fails because phase research is missing, weak, contradicted,
   or broad enough that the slice plan/build cannot honestly be repaired locally,
   route with `Command: reopen-phase-check`, `Phase: <phase-id>`, `Slice: None`,

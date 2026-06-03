@@ -112,9 +112,10 @@ One slice is correct when splitting would create fake work.
   do not create slices; surface the blocker or route back.
 - Read the current phase's `research-audit.md` and preserve any accepted risks,
   follow-ups, or source-backed constraints that affect slice boundaries.
-- If `research-audit.md` does not say `Verdict: pass` or
-  `Verdict: accepted-risk` with `Must Fix count: 0`, do not create slices;
-  route back to `phaseResearchComplete`.
+- If `research-audit.md` does not show all required audit fields, do not create
+  slices; route back to `phaseResearchComplete`. Required fields are:
+  `Review results returned: yes`, `Verdict: pass` or
+  `Verdict: accepted-risk`, and `Must Fix count: 0`.
 - Read relevant initiative research constraints when they affect slice
   boundaries, provider/model capabilities, data/schema work, file/blob flows,
   queues/jobs, auth/payment behavior, or repo-pattern risk.

@@ -111,6 +111,8 @@ function writeWorkflowCheckpointArtifact(repo, checkName) {
     checkName !== "ideaRefined" &&
     checkName !== "initiativeResearchComplete" &&
     checkName !== "decisionsResolved" &&
+    checkName !== "specCreated" &&
+    checkName !== "phaseSpecCreated" &&
     checkName !== "phaseResearchComplete" &&
     checkName !== "planCreated" &&
     checkName !== "planVerified" &&
@@ -130,6 +132,23 @@ function writeWorkflowCheckpointArtifact(repo, checkName) {
   const state = JSON.parse(fs.readFileSync(statePath, "utf8"));
   const initiative = state.initiatives.find((item) => item.status === "active");
   if (!initiative) {
+    return;
+  }
+
+  if (checkName === "specCreated") {
+    writeArtifact(repo, path.join("strike/initiatives", initiative.id, "main-spec.md"));
+    return;
+  }
+
+  if (checkName === "phaseSpecCreated") {
+    const current = run(repo, workspaceHelper(repo), ["next-step"]);
+    if (!current.phaseId) {
+      return;
+    }
+    writeArtifact(
+      repo,
+      path.join("strike/initiatives", initiative.id, "phases", current.phaseId, "phase-spec.md"),
+    );
     return;
   }
 
@@ -203,7 +222,9 @@ Reason: Research is complete enough for grilling.
         path.join("strike/initiatives", initiative.id, "research/audits/repo-patterns.md"),
         `# Research Audit: Existing Repo Patterns
 
+Review results returned: yes
 Verdict: pass
+Must Fix count: 0
 
 ## Must Fix
 - None.
@@ -292,6 +313,14 @@ Needed: no
 Reason: Fixture slice is buildable.
 Replacement slices:
 - None.
+
+## Route Back
+Needed: no
+Command: None
+Phase: None
+Slice: None
+Check: None
+Reason: None.
 `,
     );
     return;
@@ -323,8 +352,9 @@ Replacement slices:
 
 ## Read-Only Review
 Review results returned: yes
-- Required subagents: pass
-- Summary: Fixture review passed.
+Required audits: pass
+Post-browser visual/browser lenses: not run
+Summary: Fixture review passed.
 
 ## Verification Result
 ${resultField}: yes
@@ -396,11 +426,6 @@ Reason: None.
       path.join("strike/initiatives", initiative.id, artifactName),
       `# Idea Decisions
 
-## User Checkpoint
-Prompt: Are you ready to continue?
-User response: Yes, continue.
-Ready to continue: yes
-
 ## Decision Review
 Reviewer: inline
 Review results returned: yes
@@ -410,6 +435,11 @@ Findings addressed:
 - None.
 Accepted risks:
 - None.
+
+## User Checkpoint
+Prompt: Are you ready to continue after decision review?
+User response: Yes, continue.
+Ready to continue: yes
 `,
     );
     return;
@@ -510,6 +540,38 @@ Ready to continue: yes
 Prompt: Are you ready?
 User response: Yes, continue.
 Ready to continue: yes
+Ready to continue: no
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "ideaRefined"], /Ready to continue: yes/);
+
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/idea.md",
+    `# Refined Idea
+
+## User Checkpoint
+Prompt: Earlier checkpoint.
+User response: Yes, continue.
+Ready to continue: yes
+
+## User Checkpoint
+Prompt: Latest checkpoint.
+User response:
+Ready to continue: yes
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "ideaRefined"], /non-empty User response/);
+
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/idea.md",
+    `# Refined Idea
+
+## User Checkpoint
+Prompt: Are you ready?
+User response: Yes, continue.
+Ready to continue: yes
 `,
   );
   complete(repo, "ideaRefined", { skill: "research-initiative" });
@@ -531,6 +593,54 @@ Ready to continue: yes
 
 ## User Checkpoint
 Prompt: Research these topics?
+User response:
+Ready to research: yes
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "initiativeResearchComplete"], /non-empty User response/);
+
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/research/scope.md",
+    `# Initiative Research Scope
+
+## Research Items
+- ID: repo-patterns
+  Topic: Existing repo patterns
+  Category: repo
+  Why it matters: The implementation should reuse local precedent.
+  Questions to answer:
+  Expected sources:
+
+## User Checkpoint
+Prompt: Research these topics?
+User response: Yes, research these.
+Ready to research: yes
+Ready to research: no
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "initiativeResearchComplete"], /Ready to research: yes/);
+
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/research/scope.md",
+    `# Initiative Research Scope
+
+## Research Items
+- ID: repo-patterns
+  Topic: Existing repo patterns
+  Category: repo
+  Why it matters: The implementation should reuse local precedent.
+  Questions to answer:
+  Expected sources:
+
+## User Checkpoint
+Prompt: Earlier checkpoint.
+User response: Yes, research these.
+Ready to research: yes
+
+## User Checkpoint
+Prompt: Latest checkpoint.
 User response:
 Ready to research: yes
 `,
@@ -599,6 +709,55 @@ Reason: Still missing approved research.
   Verdict: pass
   Must Fix count: 0
 
+## Notes
+Ready for grill: yes
+Reason: This note is not the readiness section.
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "initiativeResearchComplete"], /Ready for grill: yes/);
+
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/research/index.md",
+    `# Initiative Research Index
+
+## Reports
+- ID: repo-patterns
+  File: repo-patterns.md
+  Topic: Existing repo patterns
+  Status: complete
+
+## Research Audit
+- ID: repo-patterns
+  Audit file: audits/repo-patterns.md
+  Verdict: pass
+  Must Fix count: 0
+
+## Ready For Grill
+Ready for grill: yes
+Ready for grill: no
+Reason: Research is complete enough for grilling.
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "initiativeResearchComplete"], /Ready for grill: yes/);
+
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/research/index.md",
+    `# Initiative Research Index
+
+## Reports
+- ID: repo-patterns
+  File: repo-patterns.md
+  Topic: Existing repo patterns
+  Status: complete
+
+## Research Audit
+- ID: repo-patterns
+  Audit file: audits/repo-patterns.md
+  Verdict: pass
+  Must Fix count: 0
+
 ## Ready For Grill
 Ready for grill: yes
 Reason: Research is complete enough for grilling.
@@ -625,6 +784,77 @@ Reason: Research is complete enough for grilling.
     `# Research Audit: Existing Repo Patterns
 
 Verdict: pass
+
+## Must Fix
+- None.
+
+## Evidence Checked
+- Test fixture.
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "initiativeResearchComplete"], /Review results returned/);
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/research/audits/repo-patterns.md",
+    `# Research Audit: Existing Repo Patterns
+
+Review results returned: yes
+Review results returned: no
+Verdict: pass
+
+## Must Fix
+- None.
+
+## Evidence Checked
+- Test fixture.
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "initiativeResearchComplete"], /Review results returned/);
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/research/audits/repo-patterns.md",
+    `# Research Audit: Existing Repo Patterns
+
+Review results returned: yes
+Verdict: needs-fix
+Must Fix count: 0
+
+## Must Fix
+- One issue remains.
+
+## Evidence Checked
+- Test fixture.
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "initiativeResearchComplete"], /audit file/);
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/research/audits/repo-patterns.md",
+    `# Research Audit: Existing Repo Patterns
+
+Review results returned: yes
+Verdict: pass
+Must Fix count: 0
+
+Verdict: needs-fix
+Must Fix count: 1
+
+## Must Fix
+- Later finding supersedes stale pass.
+
+## Evidence Checked
+- Test fixture.
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "initiativeResearchComplete"], /audit file/);
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/research/audits/repo-patterns.md",
+    `# Research Audit: Existing Repo Patterns
+
+Review results returned: yes
+Verdict: pass
+Must Fix count: 0
 
 ## Must Fix
 - None.
@@ -833,7 +1063,142 @@ Accepted risks:
 - Minor follow-up risk accepted.
 `,
   );
+  runFail(repo, localHelper, ["complete-check", "decisionsResolved"], /Ready to continue: yes/);
+
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/decisions.md",
+    `# Idea Decisions
+
+## Decision Review
+Reviewer: subagent
+Review results returned: yes
+Verdict: pass
+Must Fix count: 0
+Findings addressed:
+- None.
+Accepted risks:
+- None.
+
+## User Checkpoint
+Prompt: Are you ready for spec after this decision review?
+User response: Yes, continue.
+Ready to continue: yes
+
+## Decision Review
+Reviewer: subagent
+Review results returned: yes
+Verdict: needs-fix
+Must Fix count: 1
+Findings addressed:
+- One finding remains.
+Accepted risks:
+- None.
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "decisionsResolved"], /Verdict: pass or accepted-risk/);
+
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/decisions.md",
+    `# Idea Decisions
+
+## Decision Review
+Reviewer: subagent
+Review results returned: yes
+Verdict: accepted-risk
+Must Fix count: 0
+Findings addressed:
+- None.
+Accepted risks:
+- Minor follow-up risk accepted.
+
+## User Checkpoint
+Prompt: Are you ready for spec after this decision review?
+User response: Yes, continue.
+Ready to continue: yes
+Ready to continue: no
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "decisionsResolved"], /Ready to continue: yes/);
+
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/decisions.md",
+    `# Idea Decisions
+
+## Decision Review
+Reviewer: subagent
+Review results returned: yes
+Verdict: accepted-risk
+Must Fix count: 0
+Findings addressed:
+- None.
+Accepted risks:
+- Minor follow-up risk accepted.
+
+## User Checkpoint
+Prompt: Are you ready for spec after this decision review?
+User response: Not yet.
+Ready to continue: no
+
+## User Checkpoint
+Prompt: Are you ready for spec after this decision review?
+User response: Yes, now continue.
+Ready to continue: yes
+`,
+  );
   complete(repo, "decisionsResolved", { skill: "create-main-spec" });
+}
+
+function testNoMaterialResearchUsesLatestScopeFlag() {
+  const repo = tempRepo();
+  run(repo, helper, ["init", "gallery", "Gallery"]);
+  const localHelper = workspaceHelper(repo);
+
+  complete(repo, "ideaRefined", { skill: "research-initiative" });
+
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/research/scope.md",
+    `# Initiative Research Scope
+
+## User Checkpoint
+Prompt: No research needed?
+User response: Yes, continue without research.
+Ready to research: yes
+
+No material research needed: yes
+No material research needed: no
+`,
+  );
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/research/index.md",
+    `# Initiative Research Index
+
+## Ready For Grill
+Ready for grill: yes
+Reason: No material research is needed.
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "initiativeResearchComplete"], /No material research needed: yes/);
+
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/research/scope.md",
+    `# Initiative Research Scope
+
+## User Checkpoint
+Prompt: No research needed?
+User response: Yes, continue without research.
+Ready to research: yes
+
+No material research needed: no
+No material research needed: yes
+`,
+  );
+  complete(repo, "initiativeResearchComplete", { skill: "grill-idea" });
 }
 
 function writeSliceArtifacts(repo, initiativeId, phaseId, sliceIds) {
@@ -1144,6 +1509,27 @@ function testPhaseAndSliceRegistrationRequired() {
   writeArtifact(
     repo,
     "strike/initiatives/gallery/phases/phase-01/research.md",
+    "# Phase Research\n\nReady for slicing: yes\nReady for slicing: no\n",
+  );
+  runFail(repo, localHelper, ["complete-check", "phaseResearchComplete"], /Ready for slicing: yes/);
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/phases/phase-01/research.md",
+    `# Phase Research
+
+## Research Audit
+Audit file: research-audit.md
+Verdict: pass
+Must Fix count: 0
+
+## Notes
+Ready for slicing: yes
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "phaseResearchComplete"], /Ready for slicing: yes/);
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/phases/phase-01/research.md",
     `# Phase Research
 
 ## Research Audit
@@ -1189,6 +1575,31 @@ Ready for slicing: yes
 
 ## Research Audit
 Audit file: research-audit.md
+Verdict: pass
+Must Fix count: 0
+
+## Research Audit
+Audit file: research-audit.md
+Verdict: needs-fix
+Must Fix count: 1
+
+## Ready For Slicing
+Ready for slicing: yes
+`,
+  );
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/phases/phase-01/research-audit.md",
+    "# Phase Research Audit\n\nReview results returned: yes\nVerdict: pass\nMust Fix count: 0\n",
+  );
+  runFail(repo, localHelper, ["complete-check", "phaseResearchComplete"], /Verdict: pass or accepted-risk/);
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/phases/phase-01/research.md",
+    `# Phase Research
+
+## Research Audit
+Audit file: research-audit.md
 Verdict: accepted-risk
 Must Fix count: 0
 
@@ -1202,6 +1613,45 @@ Ready for slicing: yes
     "# Phase Research Audit\n\nVerdict: accepted-risk\nMust Fix count: 0\n",
   );
   runFail(repo, localHelper, ["complete-check", "phaseResearchComplete"], /Review results returned: yes/);
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/phases/phase-01/research-audit.md",
+    "# Phase Research Audit\n\nReview results returned: yes\nReview results returned: no\nVerdict: accepted-risk\nMust Fix count: 0\n",
+  );
+  runFail(repo, localHelper, ["complete-check", "phaseResearchComplete"], /Review results returned: yes/);
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/phases/phase-01/research-audit.md",
+    `# Phase Research Audit
+
+## Review Status
+Review results returned: yes
+
+## Verdict
+Verdict: pass
+Must Fix count: 0
+
+## Verdict
+Verdict: needs-fix
+Must Fix count: 1
+Reason: Later audit result supersedes stale pass.
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "phaseResearchComplete"], /Verdict: pass or accepted-risk/);
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/phases/phase-01/research-audit.md",
+    `# Phase Research Audit
+
+Review results returned: yes
+Verdict: pass
+Must Fix count: 0
+
+Verdict: needs-fix
+Must Fix count: 1
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "phaseResearchComplete"], /Verdict: pass or accepted-risk/);
   writeArtifact(
     repo,
     "strike/initiatives/gallery/phases/phase-01/research-audit.md",
@@ -1241,6 +1691,45 @@ Ready for slicing: yes
     sliceId: "slice-01",
     skill: "plan-slice",
   });
+}
+
+function testSpecArtifactCompletionPreconditions() {
+  {
+    const repo = tempRepo();
+    run(repo, helper, ["init", "gallery", "Gallery"]);
+    const localHelper = workspaceHelper(repo);
+
+    complete(repo, "ideaRefined", { skill: "research-initiative" });
+    complete(repo, "initiativeResearchComplete", { skill: "grill-idea" });
+    complete(repo, "decisionsResolved", { skill: "create-main-spec" });
+
+    runFail(repo, localHelper, ["complete-check", "specCreated"], /main-spec\.md/);
+    writeArtifact(repo, "strike/initiatives/gallery/main-spec.md", " \n");
+    runFail(repo, localHelper, ["complete-check", "specCreated"], /main-spec\.md/);
+    writeArtifact(repo, "strike/initiatives/gallery/main-spec.md");
+    complete(repo, "specCreated", { skill: "create-development-phases" });
+  }
+
+  {
+    const repo = tempRepo();
+    run(repo, helper, ["init", "gallery", "Gallery"]);
+    const localHelper = workspaceHelper(repo);
+
+    complete(repo, "ideaRefined", { skill: "research-initiative" });
+    complete(repo, "initiativeResearchComplete", { skill: "grill-idea" });
+    complete(repo, "decisionsResolved", { skill: "create-main-spec" });
+    complete(repo, "specCreated", { skill: "create-development-phases" });
+    run(repo, localHelper, ["add-phase", "1", "Upload and display"]);
+    writeArtifact(repo, "strike/initiatives/gallery/development-plan.md");
+    writeArtifact(repo, "strike/initiatives/gallery/phases/phase-01/phase.md");
+    complete(repo, "phasesCreated", { phaseId: "phase-01", skill: "create-phase-spec" });
+
+    runFail(repo, localHelper, ["complete-check", "phaseSpecCreated"], /phase-spec\.md/);
+    writeArtifact(repo, "strike/initiatives/gallery/phases/phase-01/phase-spec.md", " \n");
+    runFail(repo, localHelper, ["complete-check", "phaseSpecCreated"], /phase-spec\.md/);
+    writeArtifact(repo, "strike/initiatives/gallery/phases/phase-01/phase-spec.md");
+    complete(repo, "phaseSpecCreated", { phaseId: "phase-01", skill: "research-phase" });
+  }
 }
 
 function testStrictCommands() {
@@ -1483,8 +1972,9 @@ Ready for slicing: yes
 
   const nextStep = run(repo, localHelper, ["next-step"]);
   assertNextStep(nextStep, {
-    status: "idle",
-    reason: "No active initiative.",
+    phaseId: "phase-01",
+    skill: "create-phase-slices",
+    missing: ["slicesCreated"],
   });
 
   const normalizedState = readInitiativeState(repo, "gallery");
@@ -1494,16 +1984,16 @@ Ready for slicing: yes
     ["create-phase-spec", "research-phase", "create-phase-slices", "verify-phase"],
   );
   assert.equal(phase.phaseWorkflow[1].verified.phaseResearchComplete, true);
-  assert.equal(phase.phaseWorkflow[2].verified.slicesCreated, true);
-  assert.equal(phase.phaseWorkflow[3].verified.allSlicesVerified, true);
-  assert.equal(normalizedState.initiativeWorkflow[5].verified.allPhasesVerified, true);
+  assert.equal(phase.phaseWorkflow[2].verified.slicesCreated, false);
+  assert.equal(phase.phaseWorkflow[3].verified.allSlicesVerified, false);
+  assert.equal(normalizedState.initiativeWorkflow[5].verified.allPhasesVerified, false);
   assert.deepEqual(
     phase.slices[0].sliceWorkflow.map((item) => item.skill),
     ["plan-slice", "verify-slice-plan", "build-slice", "verify-slice-build"],
   );
   for (const item of phase.slices[0].sliceWorkflow) {
     for (const value of Object.values(item.verified)) {
-      assert.equal(value, true);
+      assert.equal(value, false);
     }
   }
 }
@@ -1625,6 +2115,123 @@ Fix Needed: no
     );
 
     runFail(repo, localHelper, ["complete-check", "planVerified"], /Review results returned: yes/);
+
+    writeArtifact(
+      repo,
+      "strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan-verification.md",
+      `# Slice Plan Verification
+
+## Read-Only Review
+Review results returned: yes
+Review results returned: no
+
+## Build Readiness
+Ready: yes
+Reason: Later review-return status supersedes stale yes.
+Fix Needed: no
+`,
+    );
+    runFail(repo, localHelper, ["complete-check", "planVerified"], /Review results returned: yes/);
+
+    writeArtifact(
+      repo,
+      "strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan-verification.md",
+      `# Slice Plan Verification
+
+## Read-Only Review
+Review results returned: yes
+
+## Build Readiness
+Ready: yes
+Ready: no
+Reason: Later readiness status supersedes stale yes.
+Fix Needed: no
+`,
+    );
+    runFail(repo, localHelper, ["complete-check", "planVerified"], /Ready: yes/);
+
+    writeArtifact(
+      repo,
+      "strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan-verification.md",
+      `# Slice Plan Verification
+
+## Read-Only Review
+Review results returned: yes
+
+## Build Readiness
+Ready: yes
+Reason: Later fix-needed status supersedes stale no.
+Fix Needed: no
+Fix Needed: yes
+`,
+    );
+    runFail(repo, localHelper, ["complete-check", "planVerified"], /Fix Needed: no/);
+
+    writeArtifact(
+      repo,
+      "strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan-verification.md",
+      `# Slice Plan Verification
+
+## Read-Only Review
+Review results returned: yes
+
+## Build Readiness
+Ready: yes
+Reason: Ready but missing route-back status.
+Fix Needed: no
+`,
+    );
+    runFail(repo, localHelper, ["complete-check", "planVerified"], /Route Back/);
+  }
+
+  {
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    complete(repo, "planCreated", {
+      phaseId: "phase-01",
+      sliceId: "slice-01",
+      skill: "verify-slice-plan",
+      missing: ["planVerified"],
+      artifacts: ["strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan-verification.md"],
+    });
+
+    writeArtifact(
+      repo,
+      "strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan-verification.md",
+      `# Slice Plan Verification
+
+## Read-Only Review
+Review results returned: yes
+
+## Build Readiness
+Ready: yes
+Reason: The plan is ready.
+Fix Needed: no
+
+## Route Back
+Needed: no
+Command: None
+Phase: None
+Slice: None
+Check: None
+Reason: None.
+
+## Notes
+Needed: yes
+Reason: This unrelated note must not count as route-back.
+`,
+    );
+
+    const receipt = run(repo, localHelper, ["complete-check", "planVerified"]);
+    assertNextStep(receipt, {
+      status: "recorded",
+      phaseId: "phase-01",
+      sliceId: "slice-01",
+      skill: "verify-slice-plan",
+      completedCheck: "planVerified",
+    });
   }
 
   {
@@ -1658,6 +2265,128 @@ Fix Needed: no
     );
 
     runFail(repo, localHelper, ["complete-check", "buildVerified"], /Review results returned: yes/);
+  }
+
+  {
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    complete(repo, "planCreated", { skill: "verify-slice-plan" });
+    complete(repo, "planVerified", { skill: "build-slice" });
+    complete(repo, "implemented", {
+      phaseId: "phase-01",
+      sliceId: "slice-01",
+      skill: "verify-slice-build",
+      missing: ["buildVerified"],
+      artifacts: ["strike/initiatives/gallery/phases/phase-01/slices/slice-01/build-verification.md"],
+    });
+
+    writeArtifact(
+      repo,
+      "strike/initiatives/gallery/phases/phase-01/slices/slice-01/build-verification.md",
+      `# Slice Build Verification
+
+## Read-Only Review
+Review results returned: yes
+
+## Verification Result
+Verified: yes
+Reason: Fixture says verified but omits post-browser lens status.
+Fix Needed: no
+
+## Route Back
+Needed: no
+Command: None
+Phase: None
+Slice: None
+Check: None
+Reason: None.
+`,
+    );
+
+    runFail(repo, localHelper, ["complete-check", "buildVerified"], /post-browser review status/);
+
+    writeArtifact(
+      repo,
+      "strike/initiatives/gallery/phases/phase-01/slices/slice-01/build-verification.md",
+      `# Slice Build Verification
+
+## Read-Only Review
+Review results returned: yes
+Post-browser visual/browser lenses: issues
+
+## Verification Result
+Verified: yes
+Reason: Fixture says verified despite post-browser issues.
+Fix Needed: no
+
+## Route Back
+Needed: no
+Command: None
+Phase: None
+Slice: None
+Check: None
+Reason: None.
+`,
+    );
+
+    runFail(repo, localHelper, ["complete-check", "buildVerified"], /post-browser review status/);
+
+    writeArtifact(
+      repo,
+      "strike/initiatives/gallery/phases/phase-01/slices/slice-01/build-verification.md",
+      `# Slice Build Verification
+
+## Read-Only Review
+Review results returned: yes
+Post-browser visual/browser lenses: pass
+
+## Verification Result
+Verified: yes
+Reason: Fixture says verified but omits route-back status.
+Fix Needed: no
+`,
+    );
+
+    runFail(repo, localHelper, ["complete-check", "buildVerified"], /Route Back/);
+
+    writeArtifact(
+      repo,
+      "strike/initiatives/gallery/phases/phase-01/slices/slice-01/build-verification.md",
+      `# Slice Build Verification
+
+## Read-Only Review
+Review results returned: yes
+Required audits: pass
+Conditional risk lenses: not run
+User review lenses: not run
+Post-browser visual/browser lenses: pass
+Summary: Fixture review passed.
+
+## Verification Result
+Verified: yes
+Reason: Fixture follows the documented build-verification template.
+Fix Needed: no
+
+## Route Back
+Needed: no
+Command: None
+Phase: None
+Slice: None
+Check: None
+Reason: None.
+`,
+    );
+
+    const receipt = run(repo, localHelper, ["complete-check", "buildVerified"]);
+    assertNextStep(receipt, {
+      status: "recorded",
+      phaseId: "phase-01",
+      sliceId: "slice-01",
+      skill: "verify-slice-build",
+      completedCheck: "buildVerified",
+    });
   }
 
   {
@@ -1745,6 +2474,92 @@ Reason: This line is unrelated and must not satisfy split readiness.
       `# Slice Plan
 
 ## Split Recommendation
+Needed: no
+Reason: The slice is buildable but forgot route-back status.
+Replacement slices:
+- None.
+`,
+    );
+
+    runFail(repo, localHelper, ["complete-check", "planCreated"], /Route Back/);
+  }
+
+  {
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    writeArtifact(
+      repo,
+      "strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan.md",
+      `# Slice Plan
+
+## Split Recommendation
+Needed: no
+Reason: The slice itself is not too large.
+
+## Route Back
+Needed: yes
+Command: reopen-phase-check
+Phase: phase-01
+Slice: None
+Check: phaseResearchComplete
+Reason: Phase research is insufficient.
+`,
+    );
+
+    runFail(repo, localHelper, ["complete-check", "planCreated"], /Route Back/);
+  }
+
+  {
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    writeArtifact(
+      repo,
+      "strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan.md",
+      `# Slice Plan
+
+## Split Recommendation
+Needed: yes
+Needed: no
+Reason: Later split decision supersedes stale yes.
+Replacement slices:
+- None.
+
+## Route Back
+Needed: yes
+Needed: no
+Command: None
+Phase: None
+Slice: None
+Check: None
+Reason: Later route-back decision supersedes stale yes.
+`,
+    );
+
+    const receipt = run(repo, localHelper, ["complete-check", "planCreated"]);
+    assertNextStep(receipt, {
+      status: "recorded",
+      phaseId: "phase-01",
+      sliceId: "slice-01",
+      skill: "plan-slice",
+      completedCheck: "planCreated",
+    });
+  }
+
+  {
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    writeArtifact(
+      repo,
+      "strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan.md",
+      `# Slice Plan
+
+## Split Recommendation
 Reason: Missing Needed field.
 
 # Appendix
@@ -1804,6 +2619,103 @@ Reason: Fixture route back required.
     );
 
     runFail(repo, localHelper, ["complete-check", "implemented"], /Built: yes/);
+  }
+
+  {
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    complete(repo, "planCreated", { skill: "verify-slice-plan" });
+    complete(repo, "planVerified", { skill: "build-slice" });
+
+    writeArtifact(
+      repo,
+      "strike/initiatives/gallery/phases/phase-01/slices/slice-01/build.md",
+      `# Slice Build
+
+Built: yes
+Built: no
+Fix Needed: no
+
+## Route Back
+Needed: no
+`,
+    );
+
+    runFail(repo, localHelper, ["complete-check", "implemented"], /Built: yes/);
+
+    writeArtifact(
+      repo,
+      "strike/initiatives/gallery/phases/phase-01/slices/slice-01/build.md",
+      `# Slice Build
+
+Built: yes
+Fix Needed: no
+Fix Needed: yes
+
+## Route Back
+Needed: no
+`,
+    );
+
+    runFail(repo, localHelper, ["complete-check", "implemented"], /Built: yes/);
+  }
+
+  {
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    complete(repo, "planCreated", { skill: "verify-slice-plan" });
+    complete(repo, "planVerified", { skill: "build-slice" });
+
+    writeArtifact(
+      repo,
+      "strike/initiatives/gallery/phases/phase-01/slices/slice-01/build.md",
+      `# Slice Build
+
+Built: yes
+Fix Needed: no
+
+## Notes
+Needed: yes
+Reason: This note is unrelated and must not count as route-back.
+`,
+    );
+
+    runFail(repo, localHelper, ["complete-check", "implemented"], /Route Back/);
+
+    writeArtifact(
+      repo,
+      "strike/initiatives/gallery/phases/phase-01/slices/slice-01/build.md",
+      `# Slice Build
+
+Built: yes
+Fix Needed: no
+
+## Route Back
+Needed: no
+Command: None
+Phase: None
+Slice: None
+Check: None
+Reason: None.
+
+## Notes
+Needed: yes
+Reason: This note is unrelated and must not count as route-back.
+`,
+    );
+
+    const receipt = run(repo, localHelper, ["complete-check", "implemented"]);
+    assertNextStep(receipt, {
+      status: "recorded",
+      phaseId: "phase-01",
+      sliceId: "slice-01",
+      skill: "build-slice",
+      completedCheck: "implemented",
+    });
   }
 }
 
@@ -1978,14 +2890,12 @@ function testInitiativeLifecycle() {
     ],
   );
 
-  const finished = run(repo, localHelper, ["finish-initiative"]);
-  assert.equal(finished.initiative.id, "gallery");
-  assert.equal(finished.initiative.status, "complete");
-  assert.equal(finished.nextStep.status, "idle");
+  runFail(repo, localHelper, ["finish-initiative"], /allPhasesVerified/);
+  const afterFailedFinish = run(repo, localHelper, ["list-initiatives"]);
   assert.deepEqual(
-    finished.initiatives.map(({ id, status }) => [id, status]),
+    afterFailedFinish.initiatives.map(({ id, status }) => [id, status]),
     [
-      ["gallery", "complete"],
+      ["gallery", "active"],
       ["payment-system", "paused"],
     ],
   );
@@ -2146,7 +3056,9 @@ function testSplitStateRejectsMismatchedDetailId() {
 
 testBootstrapAndWorkflowProgression();
 testUserCheckpointRequiredForIdeaResearchAndGrill();
+testNoMaterialResearchUsesLatestScopeFlag();
 testPhaseAndSliceRegistrationRequired();
+testSpecArtifactCompletionPreconditions();
 testStrictCommands();
 testNewInitiativeHelperWrapper();
 testInitPreservesProjectGuidanceFiles();

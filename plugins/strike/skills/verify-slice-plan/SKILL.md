@@ -59,8 +59,8 @@ Verify one slice plan is ready to build.
    - `strike/initiatives/<initiative-id>/phases/<phase-id>/research.md` is
      present and says `Ready for slicing: yes`
    - `strike/initiatives/<initiative-id>/phases/<phase-id>/research-audit.md`
-     is present and says `Verdict: pass` or `Verdict: accepted-risk` with
-     `Must Fix count: 0`
+     is present and says `Review results returned: yes` and `Verdict: pass` or
+     `Verdict: accepted-risk` with `Must Fix count: 0`
    - the plan's `Research And Artifacts Used` names relevant initiative
      research, phase research, phase research audit, supporting artifacts, and any
      slice-specific research delta
@@ -209,7 +209,8 @@ Reason:
 - Phase research is present, useful enough for planning, not placeholder-only,
   not contradicted without evidence, and says `Ready for slicing: yes`.
 - Phase research audit is present, not contradicted without evidence, and says
-  `Verdict: pass` or `Verdict: accepted-risk` with `Must Fix count: 0`.
+  `Review results returned: yes`, `Verdict: pass` or
+  `Verdict: accepted-risk`, and `Must Fix count: 0`.
 - The plan's `Research And Artifacts Used` identifies relevant initiative
   research, phase research, phase research audit, supporting artifacts, and any
   slice-specific research delta.
@@ -237,6 +238,10 @@ Reason:
 - Browser-visible work has a Browser Clickthrough plan naming the actual feature
   route/page, dev/local environment and DB/runtime, representative data,
   controls/actions, expected states/results, and Visual Evidence screenshots.
+- A plan is not ready when it defers all Browser Clickthrough to a later slice
+  even though the current accepted slice creates or changes browser-visible
+  behavior. Broader later browser proof can supplement this slice's evidence; it
+  cannot replace this slice's own clickthrough plan.
 - E2E Tests name specs to add/update when repo infrastructure and workflow risk
   require E2E coverage.
 - No accepted-scope `Must Fix` issue remains from required plan audits or user
@@ -249,8 +254,9 @@ Reason:
 
 - Mark `Ready: no` when required phase research is missing, placeholder-only,
   contradicted without evidence, or says `Ready for slicing: no`.
-- Mark `Ready: no` when required phase research audit is missing, contradicted
-  without evidence, or has unresolved `Must Fix` findings.
+- Mark `Ready: no` when required phase research audit is missing, lacks
+  `Review results returned: yes`, is contradicted without evidence, or has
+  unresolved `Must Fix` findings.
 - Mark `Ready: no` when the plan omits relevant initiative or phase research,
   hides a material research gap, or leaves the builder to guess.
 - Route broad missing research back to `phaseResearchComplete`.
@@ -263,8 +269,10 @@ Reason:
 
 ### Fix Or Route Back
 
-- When readiness fails because the plan, research, or related artifact can be
-  repaired inside accepted scope, write `Fix Needed: yes`.
+- When readiness fails because the plan or slice-local artifact can be repaired
+  inside accepted scope, write `Fix Needed: yes`.
+- If the fix would edit phase `research.md` or `research-audit.md`, route back
+  to `phaseResearchComplete` instead so the phase research audit can be rerun.
 - Route back only when a real decision, scope change, or untrustworthy upstream
   artifact cannot honestly be repaired by `fix`.
 

@@ -72,9 +72,10 @@ and how it will be verified.
   - `strike/user-guidance/implementation-discipline/plan-slice.md`
 - If phase research says `Ready for slicing: no`, do not plan; surface the
   blocker or route back to `phaseResearchComplete`.
-- If phase `research-audit.md` does not say `Verdict: pass` or
-  `Verdict: accepted-risk` with `Must Fix count: 0`, do not plan; route back to
-  `phaseResearchComplete`.
+- If phase `research-audit.md` does not show all required audit fields, do not
+  plan; route back to `phaseResearchComplete`. Required fields are:
+  `Review results returned: yes`, `Verdict: pass` or
+  `Verdict: accepted-risk`, and `Must Fix count: 0`.
 - Use initiative research as inherited constraints. Do not plan behavior that
   contradicts provider/model/API/database/file/queue constraints recorded before
   Grill. Treat passing or accepted-risk initiative research as baseline evidence,
@@ -222,6 +223,11 @@ Replacement slices:
   the actual route, representative data, controls/actions, expected states, and
   screenshots. Logging in, navigating to a route shell, or inspecting DOM is not
   enough.
+- Do not defer all Browser Clickthrough to a later slice when the current
+  accepted slice creates or changes browser-visible behavior. A later slice or
+  phase may run broader end-to-end browser proof, but the current
+  browser-visible slice still needs clickthrough for its own accepted controls,
+  states, and screenshots.
 - Browser Clickthrough does not replace relevant automated tests, and automated
   tests do not replace Browser Clickthrough.
 - Do not plan to switch environments to make verification easier. Unit,

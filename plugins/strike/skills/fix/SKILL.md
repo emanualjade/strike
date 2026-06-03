@@ -59,6 +59,9 @@ Fix issues from a failed Strike verification pass.
   scope, or architecture decision, write `Fixed: no`, explain the needed
   decision, and return to the verifier or route-back flow without inventing the
   answer.
+- When the repair would edit audited phase `research.md` or
+  `research-audit.md`, write `Fixed: no` with `Route Back` to
+  `phaseResearchComplete` so Strike reruns the phase research step and its audit.
 - If the issue belongs to an earlier workflow step instead of a contained
   repair, write `Fixed: no` and fill in `## Route Back`.
 

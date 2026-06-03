@@ -14,7 +14,6 @@ const LANGUAGE_FILE = "PROJECT_LANGUAGE.md";
 const USER_GUIDANCE_DIR = "user-guidance";
 const IMPLEMENTATION_DISCIPLINE_DIR = "implementation-discipline";
 const REVIEW_LENSES_DIR = "review-lenses";
-const RESEARCH_SCOPE_RE = /^No material research needed:[^\S\r\n]*yes\b/mi;
 const IMPLEMENTATION_DISCIPLINE_TEMPLATES = new Map([
   [
     "global.md",
@@ -301,6 +300,26 @@ function normalizeInitiative(initiative) {
     for (const slice of phase.slices ?? []) {
       slice.sliceWorkflow = normalizeWorkflow(slice.sliceWorkflow, SLICE_WORKFLOW);
     }
+    if (workflowHasIncompleteCheck(phase.phaseWorkflow, PHASE_UPSTREAM_CHECKS)) {
+      for (const slice of phase.slices ?? []) {
+        resetWorkflow(slice.sliceWorkflow);
+      }
+    }
+    if ((phase.slices ?? []).some((slice) => !workflowComplete(slice.sliceWorkflow))) {
+      reopenWorkflowKey(phase.phaseWorkflow, "allSlicesVerified");
+    }
+  }
+
+  if (workflowHasIncompleteCheck(initiative.initiativeWorkflow, INITIATIVE_UPSTREAM_CHECKS)) {
+    for (const phase of initiative.phases ?? []) {
+      resetWorkflow(phase.phaseWorkflow);
+      for (const slice of phase.slices ?? []) {
+        resetWorkflow(slice.sliceWorkflow);
+      }
+    }
+  }
+  if ((initiative.phases ?? []).some((phase) => !workflowComplete(phase.phaseWorkflow))) {
+    reopenWorkflowKey(initiative.initiativeWorkflow, "allPhasesVerified");
   }
 
   initiative.phases ??= [];
@@ -345,17 +364,52 @@ function normalizeWorkflow(workflow, template) {
     }
   }
 
+  let downstreamBlocked = false;
   return template.map(([skill, checks]) => {
     const existingVerified = bySkill.get(skill)?.verified;
     const verified =
       existingVerified && typeof existingVerified === "object" && !Array.isArray(existingVerified)
         ? existingVerified
         : {};
+    const normalizedVerified = {};
+    let itemComplete = true;
+    for (const check of checks) {
+      const complete = !downstreamBlocked && verified[check] === true;
+      normalizedVerified[check] = complete;
+      if (!complete) {
+        itemComplete = false;
+      }
+    }
+    if (!itemComplete) {
+      downstreamBlocked = true;
+    }
     return {
       skill,
-      verified: Object.fromEntries(checks.map((check) => [check, verified[check] === true])),
+      verified: normalizedVerified,
     };
   });
+}
+
+function workflowHasIncompleteCheck(workflow, checkNames) {
+  for (const item of workflow ?? []) {
+    for (const [check, complete] of Object.entries(item.verified ?? {})) {
+      if (checkNames.has(check) && complete !== true) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function workflowComplete(workflow) {
+  for (const item of workflow ?? []) {
+    for (const complete of Object.values(item.verified ?? {})) {
+      if (complete !== true) {
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 export function getActiveInitiative(state) {
@@ -404,9 +458,17 @@ export function finishInitiative(state, id = null) {
   if (!initiative) {
     throw new Error(id ? `Initiative not found: ${id}` : "Cannot finish initiative: no active initiative.");
   }
+  if (!initiativeVerificationComplete(initiative)) {
+    throw new Error("Cannot finish initiative until allPhasesVerified is complete.");
+  }
 
   initiative.status = "complete";
   return initiative;
+}
+
+function initiativeVerificationComplete(initiative) {
+  const finalItem = (initiative.initiativeWorkflow ?? []).find((item) => item.skill === "verify-main-spec");
+  return finalItem?.verified?.allPhasesVerified === true;
 }
 
 function pauseActiveInitiatives(state) {
@@ -538,6 +600,18 @@ function validateCompletionPreconditions(state, current, verificationKey, option
     const decisionsPath = artifactFilePath(options.statePath, current.initiativeId, "decisions.md");
     requireUserCheckpoint("decisionsResolved", decisionsPath);
     requireDecisionReview("decisionsResolved", decisionsPath);
+  }
+
+  if (verificationKey === "specCreated") {
+    requireContentArtifacts("specCreated", [
+      artifactFilePath(options.statePath, current.initiativeId, "main-spec.md"),
+    ]);
+  }
+
+  if (verificationKey === "phaseSpecCreated") {
+    requireContentArtifacts("phaseSpecCreated", [
+      artifactFilePath(options.statePath, current.initiativeId, "phases", current.phaseId, "phase-spec.md"),
+    ]);
   }
 
   if (verificationKey === "planCreated") {
@@ -714,11 +788,11 @@ function requireUserCheckpoint(verificationKey, artifactPath) {
   }
 
   const text = fs.readFileSync(artifactPath, "utf8");
-  const hasCheckpoint = /^## User Checkpoint\b/mi.test(text);
-  const hasReadyYes = /^Ready to continue:[^\S\r\n]*yes\b/mi.test(text);
-  const hasUserResponse = /^User response:[^\S\r\n]*\S.+$/mi.test(text);
+  const checkpoint = markdownLastSection(text, "User Checkpoint");
+  const hasReadyYes = latestFieldValue(checkpoint?.body ?? "", "Ready to continue", "yes|no") === "yes";
+  const hasUserResponse = /^User response:[^\S\r\n]*\S.+$/mi.test(checkpoint?.body ?? "");
 
-  if (!hasCheckpoint || !hasReadyYes || !hasUserResponse) {
+  if (!checkpoint || !hasReadyYes || !hasUserResponse) {
     throw new Error(
       `Cannot complete ${verificationKey} until ${artifactPath} has ## User Checkpoint, a non-empty User response, and Ready to continue: yes.`,
     );
@@ -733,20 +807,29 @@ function requireDecisionReview(verificationKey, artifactPath) {
   }
 
   const text = fs.readFileSync(artifactPath, "utf8");
-  const hasReview = /^## Decision Review\b/mi.test(text);
-  const verdict = text.match(/^Verdict:[^\S\r\n]*(pass|accepted-risk|needs-fix)\b/mi)?.[1].toLowerCase();
-  const mustFixCountText = text.match(/^Must Fix count:[^\S\r\n]*(\d+)\s*$/mi)?.[1];
-  const mustFixCount = Number.parseInt(mustFixCountText ?? "", 10);
-  const reviewReturned = /^Review results returned:[^\S\r\n]*yes\b/mi.test(text);
+  const finalReview = markdownLastSection(text, "Decision Review");
+  const fields = reviewFields(finalReview?.body ?? "");
 
   if (
-    !hasReview ||
-    !reviewReturned ||
-    (verdict !== "pass" && verdict !== "accepted-risk") ||
-    mustFixCount !== 0
+    !finalReview ||
+    !fields.reviewReturned ||
+    (fields.verdict !== "pass" && fields.verdict !== "accepted-risk") ||
+    fields.mustFixCount !== 0
   ) {
     throw new Error(
       `Cannot complete ${verificationKey} until ${artifactPath} has ## Decision Review with Review results returned: yes, Verdict: pass or accepted-risk, and Must Fix count: 0.`,
+    );
+  }
+
+  const postReviewCheckpoint = markdownLastSectionAfter(text, "User Checkpoint", finalReview.index);
+  const hasPostReviewCheckpoint =
+    postReviewCheckpoint &&
+    latestFieldValue(postReviewCheckpoint, "Ready to continue", "yes|no") === "yes" &&
+    /^User response:[^\S\r\n]*\S.+$/mi.test(postReviewCheckpoint);
+
+  if (!hasPostReviewCheckpoint) {
+    throw new Error(
+      `Cannot complete ${verificationKey} until ${artifactPath} has a post-review ## User Checkpoint with a non-empty User response and Ready to continue: yes after the final passing ## Decision Review.`,
     );
   }
 }
@@ -760,11 +843,16 @@ function requireSlicePlanReady(verificationKey, artifactPath) {
 
   const text = fs.readFileSync(artifactPath, "utf8");
   const splitRecommendation = markdownSection(text, "Split Recommendation");
-  const splitNeededNo = splitRecommendation && /^Needed:[^\S\r\n]*no\b/mi.test(splitRecommendation);
-  const splitNeededYes = splitRecommendation && /^Needed:[^\S\r\n]*yes\b/mi.test(splitRecommendation);
-  if (!splitNeededNo || splitNeededYes) {
+  const splitNeeded = splitRecommendation ? latestFieldValue(splitRecommendation, "Needed", "yes|no") : null;
+  const routeBack = routeBackField(text);
+  if (splitNeeded !== "no") {
     throw new Error(
       `Cannot complete ${verificationKey} until ${artifactPath} has Split Recommendation with Needed: no.`,
+    );
+  }
+  if (routeBack !== "no") {
+    throw new Error(
+      `Cannot complete ${verificationKey} until ${artifactPath} has Route Back with Needed: no.`,
     );
   }
 }
@@ -777,10 +865,12 @@ function requireSliceBuildReady(verificationKey, artifactPath) {
   }
 
   const text = fs.readFileSync(artifactPath, "utf8");
-  const builtYes = /^Built:[^\S\r\n]*yes\b/mi.test(text);
-  if (!builtYes || hasRouteBackNeededYes(text) || /^Fix Needed:[^\S\r\n]*yes\b/mi.test(text)) {
+  const builtYes = latestFieldValue(text, "Built", "yes|no") === "yes";
+  const fixNeededYes = latestFieldValue(text, "Fix Needed", "yes|no") === "yes";
+  const routeBack = routeBackField(text);
+  if (!builtYes || routeBack !== "no" || fixNeededYes) {
     throw new Error(
-      `Cannot complete ${verificationKey} until ${artifactPath} says Built: yes and has no route-back or fix needed.`,
+      `Cannot complete ${verificationKey} until ${artifactPath} says Built: yes, has Route Back with Needed: no, and has no fix needed.`,
     );
   }
 }
@@ -793,38 +883,57 @@ function requireReviewedVerificationArtifact(verificationKey, artifactPath, resu
   }
 
   const text = fs.readFileSync(artifactPath, "utf8");
-  const reviewReturned = /^Review results returned:[^\S\r\n]*yes\b/mi.test(text);
-  const resultYes = new RegExp(`^${escapeRegExp(resultField)}:[^\\S\\r\\n]*yes\\b`, "im").test(text);
-  const fixNeededNo = /^Fix Needed:[^\S\r\n]*no\b/mi.test(text);
+  const reviewReturned = latestFieldValue(text, "Review results returned", "yes|no") === "yes";
+  const resultYes = latestFieldValue(text, resultField, "yes|no") === "yes";
+  const fixNeededNo = latestFieldValue(text, "Fix Needed", "yes|no") === "no";
+  const routeBack = routeBackField(text);
+  const postBrowserLensStatus =
+    verificationKey === "buildVerified"
+      ? latestFieldValue(text, "Post-browser visual/browser lenses", "pass|issues|blocked|not run")
+      : null;
 
   if (
     !reviewReturned ||
     !resultYes ||
     !fixNeededNo ||
-    hasRouteBackNeededYes(text) ||
+    routeBack !== "no" ||
+    (verificationKey === "buildVerified" &&
+      postBrowserLensStatus !== "pass" &&
+      postBrowserLensStatus !== "not run") ||
     hasStaleMarker(text) ||
     hasBlockingReviewText(text)
   ) {
     throw new Error(
-      `Cannot complete ${verificationKey} until ${artifactPath} says Review results returned: yes, ${resultField}: yes, Fix Needed: no, has no route-back needed, and has no stale or blocking review findings.`,
+      `Cannot complete ${verificationKey} until ${artifactPath} says Review results returned: yes, ${resultField}: yes, Fix Needed: no, Route Back with Needed: no, required post-browser review status when applicable, and has no stale or blocking review findings.`,
     );
   }
 }
 
 function hasRouteBackNeededYes(text) {
-  return /^Needed:[^\S\r\n]*yes\b/mi.test(text);
+  return routeBackField(text) === "yes";
+}
+
+function routeBackField(text) {
+  const routeBack = markdownSection(text, "Route Back");
+  return routeBack ? latestFieldValue(routeBack, "Needed", "yes|no") : null;
 }
 
 function hasStaleMarker(text) {
-  return /^Stale:[^\S\r\n]*yes\b/mi.test(text);
+  return latestFieldValue(text, "Stale", "yes|no") === "yes";
 }
 
 function hasBlockingReviewText(text) {
+  const verdict = latestFieldValue(text, "Verdict", "pass|accepted-risk|needs-fix|blocked");
+  const automatedChecks = latestFieldValue(text, "Automated checks", "pass|issues|blocked|failed");
+  const readyForBrowser = latestFieldValue(text, "Ready for browser", "yes|no");
+  const mustFixCount = Number.parseInt(latestFieldValue(text, "Must Fix count", "\\d+") ?? "", 10);
   return (
-    /^Verdict:[^\S\r\n]*blocked\b/mi.test(text) ||
-    /^Automated checks:[^\S\r\n]*(issues|blocked|failed)\b/mi.test(text) ||
-    /^Ready for browser:[^\S\r\n]*no\b/mi.test(text) ||
-    /^Must Fix count:[^\S\r\n]*[1-9]\d*\b/mi.test(text) ||
+    verdict === "blocked" ||
+    automatedChecks === "issues" ||
+    automatedChecks === "blocked" ||
+    automatedChecks === "failed" ||
+    readyForBrowser === "no" ||
+    mustFixCount > 0 ||
     /^Suggested Category:[^\S\r\n]*Must Fix\b/mi.test(text) ||
     /^Severity:[^\S\r\n]*Must Fix\b/mi.test(text)
   );
@@ -835,15 +944,71 @@ function escapeRegExp(value) {
 }
 
 function markdownSection(text, heading) {
-  const headingPattern = new RegExp(`^##[ \\t]+${escapeRegExp(heading)}[ \\t]*$`, "im");
-  const match = headingPattern.exec(text);
-  if (!match) return null;
+  return markdownLastSection(text, heading)?.body ?? null;
+}
 
-  const start = match.index + match[0].length;
-  const nextHeadingPattern = /^#{1,2}[ \t]+\S.*$/gim;
-  nextHeadingPattern.lastIndex = start;
-  const next = nextHeadingPattern.exec(text);
-  return text.slice(start, next ? next.index : text.length);
+function markdownLastSection(text, heading) {
+  const sections = markdownSections(text, heading);
+  return sections.at(-1) ?? null;
+}
+
+function markdownSections(text, heading) {
+  const headingPattern = new RegExp(`^##[ \\t]+${escapeRegExp(heading)}[ \\t]*$`, "gim");
+  const sections = [];
+  let match;
+  while ((match = headingPattern.exec(text)) !== null) {
+    const start = match.index + match[0].length;
+    const nextHeadingPattern = /^#{1,2}[ \t]+\S.*$/gim;
+    nextHeadingPattern.lastIndex = start;
+    const next = nextHeadingPattern.exec(text);
+    sections.push({ index: match.index, body: text.slice(start, next ? next.index : text.length) });
+  }
+  return sections;
+}
+
+function reviewFields(text) {
+  const verdict = latestFieldValue(text, "Verdict", "pass|accepted-risk|needs-fix");
+  const mustFixCountText = latestFieldValue(text, "Must Fix count", "\\d+");
+  const mustFixCount = Number.parseInt(mustFixCountText ?? "", 10);
+  const reviewReturned = latestFieldValue(text, "Review results returned", "yes|no") === "yes";
+  return { reviewReturned, verdict, mustFixCount };
+}
+
+function latestFieldValue(text, fieldName, valuePattern) {
+  return lastRegexMatch(
+    text,
+    new RegExp(`^${escapeRegExp(fieldName)}:[^\\S\\r\\n]*(${valuePattern})\\b`, "gmi"),
+  )?.[1].toLowerCase();
+}
+
+function lastRegexMatch(text, pattern) {
+  let last = null;
+  for (const match of text.matchAll(pattern)) {
+    last = match;
+  }
+  return last;
+}
+
+function markdownSectionAfter(text, heading, afterIndex) {
+  return markdownLastSectionAfter(text, heading, afterIndex);
+}
+
+function markdownLastSectionAfter(text, heading, afterIndex) {
+  const headingPattern = new RegExp(`^##[ \\t]+${escapeRegExp(heading)}[ \\t]*$`, "gim");
+  let last = null;
+  let match;
+  while ((match = headingPattern.exec(text)) !== null) {
+    if (match.index <= afterIndex) {
+      continue;
+    }
+
+    const start = match.index + match[0].length;
+    const nextHeadingPattern = /^#{1,2}[ \t]+\S.*$/gim;
+    nextHeadingPattern.lastIndex = start;
+    const next = nextHeadingPattern.exec(text);
+    last = text.slice(start, next ? next.index : text.length);
+  }
+  return last;
 }
 
 function requireResearchScopeCheckpoint(verificationKey, artifactPath) {
@@ -854,11 +1019,11 @@ function requireResearchScopeCheckpoint(verificationKey, artifactPath) {
   }
 
   const text = fs.readFileSync(artifactPath, "utf8");
-  const hasCheckpoint = /^## User Checkpoint\b/mi.test(text);
-  const hasReadyYes = /^Ready to research:[^\S\r\n]*yes\b/mi.test(text);
-  const hasUserResponse = /^User response:[^\S\r\n]*\S.+$/mi.test(text);
+  const checkpoint = markdownLastSection(text, "User Checkpoint");
+  const hasReadyYes = latestFieldValue(checkpoint?.body ?? "", "Ready to research", "yes|no") === "yes";
+  const hasUserResponse = /^User response:[^\S\r\n]*\S.+$/mi.test(checkpoint?.body ?? "");
 
-  if (!hasCheckpoint || !hasReadyYes || !hasUserResponse) {
+  if (!checkpoint || !hasReadyYes || !hasUserResponse) {
     throw new Error(
       `Cannot complete ${verificationKey} until ${artifactPath} has ## User Checkpoint, a non-empty User response, and Ready to research: yes.`,
     );
@@ -873,7 +1038,8 @@ function requireReadyForGrill(verificationKey, artifactPath) {
   }
 
   const text = fs.readFileSync(artifactPath, "utf8");
-  if (!/^Ready for grill:[^\S\r\n]*yes\b/mi.test(text)) {
+  const readySection = markdownSection(text, "Ready For Grill");
+  if (latestFieldValue(readySection ?? "", "Ready for grill", "yes|no") !== "yes") {
     throw new Error(
       `Cannot complete ${verificationKey} until ${artifactPath} says Ready for grill: yes.`,
     );
@@ -888,7 +1054,8 @@ function requireReadyForSlicing(verificationKey, artifactPath) {
   }
 
   const text = fs.readFileSync(artifactPath, "utf8");
-  if (!/^Ready for slicing:[^\S\r\n]*yes\b/mi.test(text)) {
+  const readySection = markdownSection(text, "Ready For Slicing");
+  if (latestFieldValue(readySection ?? "", "Ready for slicing", "yes|no") !== "yes") {
     throw new Error(
       `Cannot complete ${verificationKey} until ${artifactPath} says Ready for slicing: yes.`,
     );
@@ -904,22 +1071,19 @@ function requirePhaseResearchAudit(verificationKey, researchPath, auditPath) {
 
   const researchText = fs.readFileSync(researchPath, "utf8");
   const auditText = fs.readFileSync(auditPath, "utf8");
-  const researchHasAuditRollup = /^## Research Audit\b/mi.test(researchText);
-  const researchVerdict = researchText.match(/^Verdict:[^\S\r\n]*(pass|needs-fix|accepted-risk)\b/mi)?.[1].toLowerCase();
-  const researchMustFixCountText = researchText.match(/^Must Fix count:[^\S\r\n]*(\d+)\s*$/mi)?.[1];
-  const researchMustFixCount = Number.parseInt(researchMustFixCountText ?? "", 10);
-  const auditVerdict = auditText.match(/^Verdict:[^\S\r\n]*(pass|needs-fix|accepted-risk)\b/mi)?.[1].toLowerCase();
-  const auditMustFixCountText = auditText.match(/^Must Fix count:[^\S\r\n]*(\d+)\s*$/mi)?.[1];
-  const auditMustFixCount = Number.parseInt(auditMustFixCountText ?? "", 10);
-  const auditReviewReturned = /^Review results returned:[^\S\r\n]*yes\b/mi.test(auditText);
+  const researchAuditRollup = markdownLastSection(researchText, "Research Audit");
+  const researchFields = reviewFields(researchAuditRollup?.body ?? "");
+  const auditStatusSection = markdownLastSection(auditText, "Review Status");
+  const auditVerdictSection = markdownLastSection(auditText, "Verdict");
+  const auditFields = reviewFields(`${auditStatusSection?.body ?? auditText}\n${auditVerdictSection?.body ?? auditText}`);
   const hasPassingResearchRollup =
-    researchHasAuditRollup &&
-    (researchVerdict === "pass" || researchVerdict === "accepted-risk") &&
-    researchMustFixCount === 0;
+    Boolean(researchAuditRollup) &&
+    (researchFields.verdict === "pass" || researchFields.verdict === "accepted-risk") &&
+    researchFields.mustFixCount === 0;
   const hasPassingAudit =
-    auditReviewReturned &&
-    (auditVerdict === "pass" || auditVerdict === "accepted-risk") &&
-    auditMustFixCount === 0;
+    auditFields.reviewReturned &&
+    (auditFields.verdict === "pass" || auditFields.verdict === "accepted-risk") &&
+    auditFields.mustFixCount === 0;
 
   if (!hasPassingResearchRollup || !hasPassingAudit) {
     throw new Error(
@@ -934,7 +1098,7 @@ function requireResearchReports(verificationKey, scopePath, indexPath) {
   const approvedItemIds = researchItemIds(scopeText);
 
   if (approvedItemIds.length === 0) {
-    if (!RESEARCH_SCOPE_RE.test(scopeText)) {
+    if (!noMaterialResearchNeeded(scopeText)) {
       throw new Error(
         `Cannot complete ${verificationKey} until ${scopePath} either lists approved research item IDs or says No material research needed: yes.`,
       );
@@ -966,6 +1130,10 @@ function requireResearchReports(verificationKey, scopePath, indexPath) {
   }
 }
 
+function noMaterialResearchNeeded(scopeText) {
+  return latestFieldValue(scopeText, "No material research needed", "yes|no") === "yes";
+}
+
 function requireResearchAudits(verificationKey, scopePath, indexPath) {
   const scopeText = fs.readFileSync(scopePath, "utf8");
   const indexText = fs.readFileSync(indexPath, "utf8");
@@ -991,12 +1159,23 @@ function requireResearchAudits(verificationKey, scopePath, indexPath) {
     const auditPath = safeResearchAuditPath(researchRoot, audit.file);
     if (!auditPath || !hasFileContent(auditPath)) {
       missing.push(`${itemId} (${audit.file})`);
+      continue;
+    }
+
+    const auditText = fs.readFileSync(auditPath, "utf8");
+    const auditFields = reviewFields(auditText);
+    const auditFilePasses =
+      auditFields.reviewReturned &&
+      (auditFields.verdict === "pass" || auditFields.verdict === "accepted-risk") &&
+      auditFields.mustFixCount === 0;
+    if (!auditFilePasses) {
+      missing.push(`${itemId} (${audit.file}: audit file not passing)`);
     }
   }
 
   if (missing.length > 0) {
     throw new Error(
-      `Cannot complete ${verificationKey} until each approved research item has a non-empty audit file with Verdict pass or accepted-risk and Must Fix count 0 referenced by ${indexPath}: ${missing.join(", ")}.`,
+      `Cannot complete ${verificationKey} until each approved research item has a non-empty audit file with Review results returned: yes, Verdict pass or accepted-risk, and Must Fix count 0 referenced by ${indexPath}: ${missing.join(", ")}.`,
     );
   }
 }
@@ -1981,7 +2160,9 @@ export function main() {
   }
 
   if (command === "finish-initiative") {
-    const state = readState(statePath);
+    const state = args[0]
+      ? readState(statePath, { initiativeId: args[0] })
+      : readState(statePath);
     const initiative = finishInitiative(state, args[0] ?? null);
     writeState(statePath, state);
     printJson({

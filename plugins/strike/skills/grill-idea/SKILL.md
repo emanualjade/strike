@@ -68,17 +68,19 @@ decision nodes remain unresolved.
 - You may draft `decisions.md` as working notes, but do not treat a draft as a
   substitute for live Grill questioning. If drafting reveals a consequential
   fork, stop and ask the user before finalizing the decision record.
-- Initiate a user checkpoint before finishing, even when provided decision files,
-  schemas, planning docs, or repo context seem to answer the pressure points.
-  Summarize the resolved decisions, accepted assumptions, and deferred decisions,
-  then ask whether the user is ready to move on or wants to discuss more.
-- Wait for the user's answer to that checkpoint. Existing artifacts can inform
-  the decision record, but they do not replace hearing from the user.
 - Before completing Grill, run a read-only decision review of the final
   `decisions.md`. Use a subagent or custom agent when available; otherwise run a
   separate inline review pass. The reviewer must not edit files.
 - If the decision review finds `Must Fix` issues, address them in `decisions.md`
   or ask the next user question, then rerun the review before completing.
+- Initiate a user checkpoint after the decision review has returned and all
+  review-driven edits or questions are resolved, even when provided decision
+  files, schemas, planning docs, or repo context seem to answer the pressure
+  points. Summarize the post-review resolved decisions, accepted assumptions,
+  and deferred decisions, then ask whether the user is ready to move on or wants
+  to discuss more.
+- Wait for the user's answer to that checkpoint. Existing artifacts can inform
+  the decision record, but they do not replace hearing from the user.
 - Recommend defaults for reversible low-risk details.
 - Record user-stated decisions, accepted assumptions, deferred decisions, and
   blockers.
@@ -213,11 +215,6 @@ Why:
 - Accepted assumptions:
 - Deferred decisions:
 
-## User Checkpoint
-Prompt:
-User response:
-Ready to continue: yes / no
-
 ## Decision Review
 Reviewer: subagent / inline
 Review results returned: yes / no
@@ -227,6 +224,11 @@ Findings addressed:
 -
 Accepted risks:
 -
+
+## User Checkpoint
+Prompt:
+User response:
+Ready to continue: yes / no
 
 ## Blocking Question
 None.
@@ -301,7 +303,11 @@ findings. Do not edit files.
   `Review results returned: yes`, `Verdict: pass` or
   `Verdict: accepted-risk`, and `Must Fix count: 0`.
 - Do not let decision review replace user questioning. If review finds a
-  spec-blocking choice, ask the user one question and rerun the review.
+  spec-blocking choice, ask the user one question, update the decision record,
+  rerun the review, and then get a fresh final user checkpoint.
+- Do not treat a user checkpoint captured before the final passing decision
+  review as sufficient. The final checkpoint must reflect the post-review
+  decision record.
 - Do not move to the final checkpoint while consequential decision nodes remain
   unresolved.
 - Do not treat provided docs, prior schemas, planning files, or silence as the

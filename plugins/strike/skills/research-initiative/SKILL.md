@@ -41,7 +41,9 @@ not the grill, spec, phase research, phase plan, or slice planning.
 7. Audit each report independently before writing the final index. Use a
    separate read-only audit reviewer per approved item.
 8. Assess audit findings, fix the reports, and update each report's audit
-   status. Do not delegate the final acceptance decision to the audit reviewer.
+   status. If a report changes after its audit, rerun that report's read-only
+   audit and use the fresh audit result. Do not delegate the final acceptance
+   decision to the audit reviewer.
 9. Write `research/index.md` as the rollup used by Grill, Main Spec, phase
    specs, and slice planning.
 
@@ -229,6 +231,9 @@ Use this shape:
 - Source or file:
   Why checked:
 
+## Review Status
+Review results returned: yes / no
+
 ## Accurate Claims
 -
 
@@ -244,6 +249,7 @@ Use this shape:
 
 ## Verdict
 Verdict: pass / needs-fix / accepted-risk
+Must Fix count:
 Reason:
 ```
 
@@ -305,8 +311,11 @@ and say `No material research needed: yes`. `index.md` should say
 - Do not complete this gate until `scope.md` records a user response and
   `Ready to research: yes`.
 - Do not write `Ready for grill: yes` unless every approved research item has a
-  report, an audit file, a `## Research Audit` entry, and no unresolved audit
-  `Must Fix` findings.
+  report, an audit file with `Review results returned: yes`, `Verdict: pass` or
+  `Verdict: accepted-risk`, and `Must Fix count: 0`, a `## Research Audit`
+  entry, and no unresolved audit `Must Fix` findings.
+- If any approved research report changes after its audit findings are returned,
+  rerun that item's audit before writing `Ready for grill: yes`.
 - If research reveals an unresolved consequential question, write `Ready for
   grill: no`, list the blocker in `Open Questions`, and ask the user before
   continuing.

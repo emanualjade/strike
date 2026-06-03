@@ -2,6 +2,27 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.10.18 - 2026-06-03
+
+- Required explicit `Route Back` status across slice plans, builds, and reviewed
+  verification artifacts so omitted route-back sections cannot satisfy gates.
+- Required `build-verification.md` to record post-browser visual/browser lens
+  status before `buildVerified` can pass.
+- Made decision review checkpoints use the latest user checkpoint after the
+  latest passing decision review, so an earlier "not ready" checkpoint does not
+  block a later accepted continuation.
+- Hardened workflow helper normalization so reopened upstream checks reset
+  downstream phase and slice progress instead of letting stale completions
+  stand.
+- Required main spec and phase spec artifacts before their gates can complete,
+  and required final initiative completion to wait for `allPhasesVerified`.
+- Tightened initiative and phase research audit gates to require returned audit
+  results with pass or accepted-risk verdicts and zero Must Fix findings.
+- Clarified that browser-visible slices need their own dev/local Browser
+  Clickthrough instead of deferring all browser proof to a later slice.
+- Added dogfood notes for the receipt calculator workflow pass and expanded
+  state-helper and validation coverage for the stricter gate contracts.
+
 ## 0.10.17 - 2026-06-03
 
 - Tightened slice plan gate checks so `planCreated` only passes when the actual
