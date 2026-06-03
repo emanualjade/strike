@@ -455,8 +455,13 @@ research output: route back, repair missing research, or surface the unresolved
 decision from `Reason` and `## Questions Or Blockers`.
 
 Do not complete `planCreated` if `plan.md` says `Split Recommendation` is
-`Needed: yes`. Split the active slice, add any replacement slice stubs with
-`add-slice`, run `reopen-check planCreated`, then continue from `next-step`.
+`Needed: yes`. Read that section's `Route Back` before acting. When the route
+back is the normal local split path, split the active slice, add any replacement
+slice stubs with `add-slice`, run `reopen-check planCreated`, then continue from
+`next-step`. If the route back says to reopen `slicesCreated` or
+`phaseResearchComplete`, follow that command instead because the plan is saying
+the phase slice list or phase research must be repaired before local slice
+planning can continue.
 
 Do not complete `ideaRefined` unless `idea.md` contains `## User Checkpoint`,
 records a non-empty `User response:`, and says `Ready to continue: yes`.

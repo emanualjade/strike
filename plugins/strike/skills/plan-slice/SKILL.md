@@ -241,7 +241,9 @@ Replacement slices:
   update instead of a build-ready plan. Name the replacement slices clearly
   enough that Strike can edit the current slice into the first replacement
   slice, create any extra slice stubs, and register them with `add-slice`. Set
-  `Route Back` to the exact helper command Strike should run, usually
-  `reopen-phase-check <phase-id> slicesCreated` when slice stubs need to be
-  remade or `reopen-phase-check <phase-id> phaseResearchComplete` when phase
+  `Route Back` to the exact helper command Strike should run after applying the
+  local split, usually `reopen-check planCreated`. Use
+  `reopen-phase-check <phase-id> slicesCreated` only when the phase's whole
+  slice list must be regenerated instead of replacing the active slice from this
+  plan. Use `reopen-phase-check <phase-id> phaseResearchComplete` when phase
   research must be repaired.

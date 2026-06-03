@@ -759,7 +759,10 @@ function requireSlicePlanReady(verificationKey, artifactPath) {
   }
 
   const text = fs.readFileSync(artifactPath, "utf8");
-  if (!/^Needed:[^\S\r\n]*no\b/mi.test(text) || /^Needed:[^\S\r\n]*yes\b/mi.test(text)) {
+  const splitRecommendation = markdownSection(text, "Split Recommendation");
+  const splitNeededNo = splitRecommendation && /^Needed:[^\S\r\n]*no\b/mi.test(splitRecommendation);
+  const splitNeededYes = splitRecommendation && /^Needed:[^\S\r\n]*yes\b/mi.test(splitRecommendation);
+  if (!splitNeededNo || splitNeededYes) {
     throw new Error(
       `Cannot complete ${verificationKey} until ${artifactPath} has Split Recommendation with Needed: no.`,
     );
@@ -829,6 +832,18 @@ function hasBlockingReviewText(text) {
 
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function markdownSection(text, heading) {
+  const headingPattern = new RegExp(`^##[ \\t]+${escapeRegExp(heading)}[ \\t]*$`, "im");
+  const match = headingPattern.exec(text);
+  if (!match) return null;
+
+  const start = match.index + match[0].length;
+  const nextHeadingPattern = /^#{1,2}[ \t]+\S.*$/gim;
+  nextHeadingPattern.lastIndex = start;
+  const next = nextHeadingPattern.exec(text);
+  return text.slice(start, next ? next.index : text.length);
 }
 
 function requireResearchScopeCheckpoint(verificationKey, artifactPath) {
@@ -1256,17 +1271,7 @@ function reviewedArtifactPathsAffectedByReopen(state, current, verificationKey, 
 
   if (current.sliceId) {
     if (verificationKey === "planVerified") {
-      paths.push(
-        artifactFilePath(
-          statePath,
-          current.initiativeId,
-          "phases",
-          current.phaseId,
-          "slices",
-          current.sliceId,
-          "plan-verification.md",
-        ),
-      );
+      addSliceVerifications(current.phaseId, current.sliceId);
     } else if (verificationKey === "buildVerified") {
       paths.push(
         artifactFilePath(

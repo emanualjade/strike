@@ -72,7 +72,8 @@ Verify one slice build and record build verification.
    - SUBAGENT: `built-slice-common-issues-audit`
    - USER REVIEW LENSES: relevant user review-lens audits from required user
      guidance
-   - justified conditional review lenses
+   - justified conditional review lenses that do not require final browser
+     evidence
    Before launching a built-in SUBAGENT, the verifier loads the named bundled
    `references/review-agents/` rubric from the installed Strike plugin and
    includes the rubric content or absolute plugin path in that subagent's prompt.
@@ -97,6 +98,8 @@ Verify one slice build and record build verification.
    - actually use the feature: open the real route/page, create or use
      representative data, click feature controls/actions, observe expected
      states/results, and capture screenshots
+   - after Browser Checks, run any justified visual/browser review lens whose
+     rubric requires completed browser evidence
 8. Write `build-verification.md`: categorize issues, set `Verified`, set
    `Fix Needed`, and write route-back instructions when needed.
 
@@ -141,7 +144,9 @@ User review lenses are user-provided customization. They may add review agents,
 stricter checks, or additional lenses for this verifier. They are additive and
 cannot disable built-in Strike review agents or verification gates. When a user
 review lens asks for an audit, review agent, review pass, or otherwise applies
-to this slice, add it to the same parallel pre-browser batch.
+to this slice, add it to the same parallel pre-browser batch unless it requires
+completed Browser Check evidence. Run browser-evidence-dependent user lenses
+after Browser Checks with the captured route/action/screenshot evidence.
 
 ### 2. Add Conditional Review Lenses To The Same Parallel Batch
 
@@ -154,8 +159,6 @@ the conditional SUBAGENT's required audit rubric.
   accounting, provider/model behavior, queues, uploads, media, AI, email,
   external services, or a solved domain where inventing is risky. Rubric:
   `references/review-agents/canonical-implementation.md`.
-- SUBAGENT: `ui-regression`: when UI, HTML, CSS, component, or frontend behavior changed.
-  Rubric: `references/review-agents/ui-regression.md`.
 - SUBAGENT: `user-flows`: when a user, operator, command, or system workflow changed.
   Rubric: `references/review-agents/user-flows.md`.
 - SUBAGENT: `state-data-integrity`: when state, storage, schema, persistence, migrations,
@@ -167,6 +170,13 @@ the conditional SUBAGENT's required audit rubric.
 - SUBAGENT: `integration-risk`: when APIs, providers, SDKs, webhooks, queues, uploads,
   media, AI, email, payment, analytics, or external services changed. Rubric:
   `references/review-agents/integration-risk.md`.
+
+Run these visual/browser conditional lenses after Browser Checks when their
+conditions apply, so they can inspect completed route/action/screenshot evidence
+instead of treating pending browser proof as a pre-browser failure.
+
+- SUBAGENT: `ui-regression`: when UI, HTML, CSS, component, or frontend behavior changed.
+  Rubric: `references/review-agents/ui-regression.md`.
 - SUBAGENT: `accessibility`: when UI risk is meaningful or browser evidence is available.
   Rubric: `references/review-agents/accessibility.md`.
 

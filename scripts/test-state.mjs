@@ -1725,6 +1725,47 @@ function testPlanAndBuildCompletionPreconditions() {
       "strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan.md",
       `# Slice Plan
 
+## Development Plan
+Needed: no
+Reason: This line is unrelated and must not satisfy split readiness.
+`,
+    );
+
+    runFail(repo, localHelper, ["complete-check", "planCreated"], /Needed: no/);
+  }
+
+  {
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    writeArtifact(
+      repo,
+      "strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan.md",
+      `# Slice Plan
+
+## Split Recommendation
+Reason: Missing Needed field.
+
+# Appendix
+Needed: no
+Reason: This top-level section is not part of Split Recommendation.
+`,
+    );
+
+    runFail(repo, localHelper, ["complete-check", "planCreated"], /Needed: no/);
+  }
+
+  {
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    writeArtifact(
+      repo,
+      "strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan.md",
+      `# Slice Plan
+
 ## Split Recommendation
 Needed: yes
 Reason: Fixture split required.
@@ -1767,27 +1808,52 @@ Reason: Fixture route back required.
 }
 
 function testReopenMarksReviewedArtifactsStale() {
-  const repo = tempRepo();
-  bootstrapTwoSliceWorkflow(repo);
-  const localHelper = workspaceHelper(repo);
+  {
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
 
-  complete(repo, "planCreated", { skill: "verify-slice-plan" });
-  complete(repo, "planVerified", { skill: "build-slice" });
-  complete(repo, "implemented", { skill: "verify-slice-build" });
-  complete(repo, "buildVerified", { phaseId: "phase-01", sliceId: "slice-02", skill: "plan-slice" });
+    complete(repo, "planCreated", { skill: "verify-slice-plan" });
+    complete(repo, "planVerified", { skill: "build-slice" });
+    complete(repo, "implemented", { skill: "verify-slice-build" });
+    complete(repo, "buildVerified", { phaseId: "phase-01", sliceId: "slice-02", skill: "plan-slice" });
 
-  const planVerificationPath =
-    "strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan-verification.md";
-  const buildVerificationPath =
-    "strike/initiatives/gallery/phases/phase-01/slices/slice-01/build-verification.md";
+    const planVerificationPath =
+      "strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan-verification.md";
+    const buildVerificationPath =
+      "strike/initiatives/gallery/phases/phase-01/slices/slice-01/build-verification.md";
 
-  run(repo, localHelper, ["reopen-slice-check", "phase-01", "slice-01", "planCreated"]);
+    run(repo, localHelper, ["reopen-slice-check", "phase-01", "slice-01", "planCreated"]);
 
-  assert.match(fs.readFileSync(path.join(repo, planVerificationPath), "utf8"), /^Stale: yes$/m);
-  assert.match(fs.readFileSync(path.join(repo, buildVerificationPath), "utf8"), /^Stale: yes$/m);
+    assert.match(fs.readFileSync(path.join(repo, planVerificationPath), "utf8"), /^Stale: yes$/m);
+    assert.match(fs.readFileSync(path.join(repo, buildVerificationPath), "utf8"), /^Stale: yes$/m);
 
-  complete(repo, "planCreated", { skill: "verify-slice-plan" });
-  runFail(repo, localHelper, ["complete-check", "planVerified"], /stale or blocking/);
+    complete(repo, "planCreated", { skill: "verify-slice-plan" });
+    runFail(repo, localHelper, ["complete-check", "planVerified"], /stale or blocking/);
+  }
+
+  {
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    complete(repo, "planCreated", { skill: "verify-slice-plan" });
+    complete(repo, "planVerified", { skill: "build-slice" });
+    complete(repo, "implemented", { skill: "verify-slice-build" });
+    complete(repo, "buildVerified", { phaseId: "phase-01", sliceId: "slice-02", skill: "plan-slice" });
+
+    const planVerificationPath =
+      "strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan-verification.md";
+    const buildVerificationPath =
+      "strike/initiatives/gallery/phases/phase-01/slices/slice-01/build-verification.md";
+
+    run(repo, localHelper, ["reopen-slice-check", "phase-01", "slice-01", "planVerified"]);
+
+    assert.match(fs.readFileSync(path.join(repo, planVerificationPath), "utf8"), /^Stale: yes$/m);
+    assert.match(fs.readFileSync(path.join(repo, buildVerificationPath), "utf8"), /^Stale: yes$/m);
+
+    runFail(repo, localHelper, ["complete-check", "planVerified"], /stale or blocking/);
+  }
 }
 
 function testRouteBackInvalidatesDownstreamScopes() {

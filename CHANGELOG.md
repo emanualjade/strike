@@ -2,6 +2,18 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.10.17 - 2026-06-03
+
+- Tightened slice plan gate checks so `planCreated` only passes when the actual
+  `Split Recommendation` section says `Needed: no`.
+- Marked downstream slice build verification artifacts stale when reopening
+  `planVerified`, preventing old build verification from satisfying a reopened
+  plan.
+- Clarified split-recommendation route-back handling between `plan-slice` and
+  `go`.
+- Moved browser-evidence-dependent build review lenses until after Browser
+  Checks so UI audits inspect completed route/action/screenshot evidence.
+
 ## 0.10.16 - 2026-06-03
 
 - Added `research-phase` as the official implementation research gate after
