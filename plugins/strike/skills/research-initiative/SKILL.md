@@ -11,7 +11,7 @@ allowed-tools: Read Write Edit Bash Grep Glob WebFetch WebSearch Agent
 Run the pre-grill research gate for an initiative.
 
 This step makes consequential facts available before the idea is grilled. It is
-not the grill, spec, phase plan, or slice research.
+not the grill, spec, phase research, phase plan, or slice planning.
 
 ## Inputs
 
@@ -36,12 +36,10 @@ not the grill, spec, phase plan, or slice research.
 5. Wait for the user's answer. Update `research/scope.md` with their response
    and the approved scope.
 6. Research each approved item independently and write one final-quality report
-   per item under `research/`. When the host supports subagents or custom
-   agents, use a separate research pass for each approved item. If not, run
-   separate inline passes and keep their findings isolated by item.
+   per item under `research/`. Use a separate research pass for each approved
+   item and keep findings isolated by item.
 7. Audit each report independently before writing the final index. Use a
-   separate read-only audit reviewer per approved item when supported, or a
-   separate inline audit pass when not.
+   separate read-only audit reviewer per approved item.
 8. Assess audit findings, fix the reports, and update each report's audit
    status. Do not delegate the final acceptance decision to the audit reviewer.
 9. Write `research/index.md` as the rollup used by Grill, Main Spec, phase
@@ -107,9 +105,7 @@ items.
 Audit each per-item report before `research/index.md` can say
 `Ready for grill: yes`.
 
-- Use a separate read-only reviewer per approved report when the host supports
-  subagents or custom agents.
-- If subagents are unavailable, run one separate inline audit pass per report.
+- Use a separate read-only reviewer per approved report.
 - Give the audit reviewer the finished report, the approved item scope, and the
   relevant source/repo expectations. Do not give it the research worker's
   private reasoning or excuses.

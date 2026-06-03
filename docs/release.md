@@ -57,7 +57,8 @@ Release only after the version and changelog changes are committed and pushed.
 pnpm install --frozen-lockfile --ignore-scripts
 ```
 
-3. Run `pnpm run test` and `pnpm run validate:publish` locally when practical.
+3. Run `pnpm run release:validate` locally when practical. This includes the
+   repo tests, publish validation, and Claude plugin/marketplace validators.
 4. Commit the release changes.
 5. Push the commit to GitHub.
 6. Run:

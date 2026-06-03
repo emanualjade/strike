@@ -56,8 +56,8 @@ grill-idea
 create-main-spec
 create-development-phases
 create-phase-spec
+research-phase
 create-phase-slices
-research-slice
 plan-slice
 verify-slice-plan
 build-slice
@@ -93,9 +93,10 @@ stays modular; in normal use, let Strike call them with the right context
 and output paths.
 
 - `create-phase-spec`: define one phase clearly enough to slice.
+- `research-phase`: research and audit granular phase-level implementation facts before slicing.
 - `create-phase-slices`: split one phase into implementation slices.
-- `research-slice`: research one implementation slice before planning.
-- `plan-slice`: create one concrete implementation plan.
+- `plan-slice`: create one concrete implementation plan, adding only narrow
+  slice-specific research deltas when needed.
 - `verify-slice-plan`: check that a slice plan is ready to build.
 - `build-slice`: implement one planned slice.
 - `verify-slice-build`: verify one built slice.

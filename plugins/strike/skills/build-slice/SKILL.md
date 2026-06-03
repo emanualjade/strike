@@ -17,21 +17,24 @@ Implement one planned slice.
 - repo files named by the plan
 - shared verification evidence taxonomy from the Strike plugin root's
   `references/verification-evidence.md`
-- user implementation guidance from
-  `strike/user-guidance/implementation-discipline/global.md` and
-  `strike/user-guidance/implementation-discipline/build-slice.md`
+- Required user-provided customization from the consuming repo's Strike
+  workspace:
+  - user implementation-discipline guidance:
+    - `strike/user-guidance/implementation-discipline/global.md`
+    - `strike/user-guidance/implementation-discipline/build-slice.md`
 - supporting artifacts named in the verified plan, when present
-- optional slice, research, or phase-spec context only when the verified plan is
-  unclear, stale, or appears to conflict with the repo
+- optional slice, phase research/audit, or phase-spec context only when the
+  verified plan is unclear, stale, or appears to conflict with the repo
 
 ## Process
 
 - Treat `plan.md` as the primary build handoff.
 - Read the bundled `references/verification-evidence.md` from the Strike plugin
   root.
-- Read `strike/user-guidance/implementation-discipline/global.md` and
-  `strike/user-guidance/implementation-discipline/build-slice.md` if they
-  exist, and apply the relevant guidance while editing.
+- Read required user-provided customization and apply the relevant guidance
+  while editing:
+  - `strike/user-guidance/implementation-discipline/global.md`
+  - `strike/user-guidance/implementation-discipline/build-slice.md`
 - If `plan-verification.md` does not say `Ready: yes`, write `Built: no` with
   route back to `verify-slice-plan` and do not edit implementation files.
 - Skim the plan's `Development Plan`, `Research And Artifacts Used`,
@@ -66,16 +69,15 @@ Implement one planned slice.
   the dev environment or mutate env files just to avoid writing fixtures or test
   setup.
 - For browser-visible work, create, seed, upload, fixture, or safely mock the
-  representative data named by the plan in the dev/local app environment, then
-  run the planned Browser Clickthrough there and capture the planned Visual
-  Evidence screenshots. Do not switch Browser Clickthrough to a test DB or test
-  environment just because the dev/local environment is harder to prepare.
-- Do not declare Browser Clickthrough blocked after one failed browser URL,
-  navigation attempt, timeout, or browser tool. Treat the browser as available:
-  try valid alternate local URL forms such as `localhost`, `127.0.0.1`, the
-  assigned dev-server host/port, and, for static apps that can run from disk, an
-  absolute `file://` URL. If one browser automation surface blocks the URL, try
-  another available browser surface before recording failure.
+  representative data named by the plan so `verify-slice-build` can run final
+  Browser Clickthrough in the dev/local app environment. You may record a
+  developer smoke attempt in `build.md`, but final Browser Clickthrough and
+  Visual Evidence are owned by `verify-slice-build`.
+- If you run a developer browser smoke attempt, do not switch it to a test DB or
+  test environment just because the dev/local environment is harder to prepare.
+  A local URL policy, navigation timeout, or browser-tool failure is not proof
+  that browser verification is impossible; record the issue for
+  `verify-slice-build` instead of claiming final browser proof.
 - Record changed files, verification evidence by category, and important
   implementation notes in `build.md`.
 - Use engineering judgment for ordinary implementation details inside the
@@ -86,8 +88,9 @@ Implement one planned slice.
 - If the build discovers a relevant schema/architecture/provider/data note in
   `supporting-artifacts/` that the plan did not account for, write `Built: no`
   with route back to `plan-slice` instead of silently expanding scope.
-- If the verified plan cannot be followed without expanding or redesigning the
-  slice, write `Built: no` with route back to `plan-slice`.
+- If implementation findings change the accepted slice boundary or make the
+  verified plan stale, incomplete, unsafe, or outside the accepted slice, write
+  `Built: no` with route back to `plan-slice`.
 
 ## Output
 
@@ -176,12 +179,12 @@ Reason:
 
 ## Rules
 
-- Keep work inside one slice.
-- Do not broaden the slice to include unrelated cleanup or future work.
+- Build within the accepted slice and verified plan.
+- Keep unrelated cleanup and future work outside this build.
 - Do not improvise around a bad plan; write `Built: no` and route back to the
   owning workflow step so Strike can continue.
-- Do not re-evaluate whether the slice is well-shaped. That was handled by
-  research, planning, and plan verification.
+- Use the accepted slice boundary from upstream artifacts; route back only when
+  implementation findings change the plan or boundary.
 - Do not route back for ordinary implementation choices that fit the verified
   plan.
 - Read upstream artifacts only when they are needed to clarify or challenge the
@@ -197,18 +200,17 @@ Reason:
 - Do not claim verification.
 - Preserve unrelated user work.
 - Follow the repo's package manager, test, security, and editing rules.
-- Keep automated tests and Browser Clickthrough separate. Browser Clickthrough
-  does not replace relevant automated tests, and automated tests do not replace
-  Browser Clickthrough for browser-visible work.
+- Keep automated tests and Browser Clickthrough separate. Automated tests do not
+  replace Browser Clickthrough for browser-visible work, but final Browser
+  Clickthrough is the responsibility of `verify-slice-build`.
 - Keep environments separate too. Automated tests run in the repo's test/E2E
-  environment. Browser Clickthrough runs in the dev/local app environment unless
-  the repo or user explicitly says otherwise. If the planned environment cannot
-  run, write `Built: no`, record the blocker, and route back instead of silently
-  switching environments.
-- A local URL policy, navigation timeout, or browser-tool failure is not proof
-  that Browser Clickthrough is impossible. Record it, retry with alternate local
-  URL forms and another available browser surface, and only then record browser
-  verification as blocked or failed.
+  environment. Browser setup for final verifier proof belongs in the dev/local
+  app environment unless the repo or user explicitly says otherwise. If the
+  planned environment cannot be prepared, write `Built: no`, record the blocker,
+  and route back instead of silently switching environments.
+- Do not claim final browser verification from `build-slice`. Record prepared
+  data, routes, commands, and any developer smoke notes so `verify-slice-build`
+  can run the final browser check after review audits pass.
 - Do not treat missing representative local data as a blocker when it can be
   created, seeded, uploaded, fixture-backed, or safely mocked inside accepted
   scope.

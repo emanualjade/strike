@@ -220,6 +220,7 @@ Ready to continue: yes / no
 
 ## Decision Review
 Reviewer: subagent / inline
+Review results returned: yes / no
 Verdict: pass / needs-fix / accepted-risk
 Must Fix count:
 Findings addressed:
@@ -296,8 +297,9 @@ findings. Do not edit files.
   UI. Ask plainly and wait when the answer matters.
 - Do not mark decisions ready to continue without `## User Checkpoint` showing
   that you asked the user whether to move on and received their answer.
-- Do not complete Grill without `## Decision Review` showing `Verdict: pass` or
-  `Verdict: accepted-risk` and `Must Fix count: 0`.
+- Do not complete Grill without `## Decision Review` showing
+  `Review results returned: yes`, `Verdict: pass` or
+  `Verdict: accepted-risk`, and `Must Fix count: 0`.
 - Do not let decision review replace user questioning. If review finds a
   spec-blocking choice, ask the user one question and rerun the review.
 - Do not move to the final checkpoint while consequential decision nodes remain

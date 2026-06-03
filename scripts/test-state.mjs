@@ -110,7 +110,14 @@ function writeWorkflowCheckpointArtifact(repo, checkName) {
   if (
     checkName !== "ideaRefined" &&
     checkName !== "initiativeResearchComplete" &&
-    checkName !== "decisionsResolved"
+    checkName !== "decisionsResolved" &&
+    checkName !== "phaseResearchComplete" &&
+    checkName !== "planCreated" &&
+    checkName !== "planVerified" &&
+    checkName !== "implemented" &&
+    checkName !== "buildVerified" &&
+    checkName !== "allSlicesVerified" &&
+    checkName !== "allPhasesVerified"
   ) {
     return;
   }
@@ -209,6 +216,174 @@ Verdict: pass
     return;
   }
 
+  if (checkName === "phaseResearchComplete") {
+    const current = run(repo, workspaceHelper(repo), ["next-step"]);
+    if (!current.phaseId) {
+      return;
+    }
+    writeArtifact(
+      repo,
+      path.join("strike/initiatives", initiative.id, "phases", current.phaseId, "research.md"),
+      `# Phase Research
+
+## Additional Phase Research
+Additional phase research needed: no
+Reason: Initiative research covers this phase for the test fixture.
+
+## Research Audit
+Audit file: research-audit.md
+Verdict: pass
+Must Fix count: 0
+Notes: Fixture audit passed.
+
+## Ready For Slicing
+Ready for slicing: yes
+Reason: Phase research is complete enough for slicing.
+`,
+    );
+    writeArtifact(
+      repo,
+      path.join("strike/initiatives", initiative.id, "phases", current.phaseId, "research-audit.md"),
+      `# Phase Research Audit
+
+Review results returned: yes
+
+## Issues
+### Must Fix
+- None.
+
+## Verdict
+Verdict: pass
+Must Fix count: 0
+Reason: Fixture phase research audit passed.
+`,
+    );
+    return;
+  }
+
+  if (checkName === "planCreated") {
+    const current = run(repo, workspaceHelper(repo), ["next-step"]);
+    if (!current.phaseId || !current.sliceId) {
+      return;
+    }
+    const planPath = path.join(
+      repo,
+      "strike/initiatives",
+      initiative.id,
+      "phases",
+      current.phaseId,
+      "slices",
+      current.sliceId,
+      "plan.md",
+    );
+    if (fs.existsSync(planPath)) {
+      return;
+    }
+    writeArtifact(
+      repo,
+      path.relative(repo, planPath),
+      `# Slice Plan
+
+## Development Plan
+Fixture plan.
+
+## Split Recommendation
+Needed: no
+Reason: Fixture slice is buildable.
+Replacement slices:
+- None.
+`,
+    );
+    return;
+  }
+
+  if (
+    checkName === "planVerified" ||
+    checkName === "buildVerified" ||
+    checkName === "allSlicesVerified" ||
+    checkName === "allPhasesVerified"
+  ) {
+    const current = run(repo, workspaceHelper(repo), ["next-step"]);
+    const reviewedArtifact = reviewedGateArtifact(repo, initiative.id, current, checkName);
+    if (!reviewedArtifact) {
+      return;
+    }
+    const { artifactPath, resultField } = reviewedArtifact;
+    if (fs.existsSync(artifactPath)) {
+      const existingText = fs.readFileSync(artifactPath, "utf8");
+      if (!/^Stale:[^\S\r\n]*yes\b/mi.test(existingText)) {
+        return;
+      }
+    }
+    const relativePath = path.relative(repo, artifactPath);
+    writeArtifact(
+      repo,
+      relativePath,
+      `# Fixture Verification
+
+## Read-Only Review
+Review results returned: yes
+- Required subagents: pass
+- Summary: Fixture review passed.
+
+## Verification Result
+${resultField}: yes
+Reason: Fixture verification passed.
+Fix Needed: no
+
+## Route Back
+Needed: no
+Command: None
+Phase: None
+Slice: None
+Check: None
+Reason: None.
+`,
+    );
+    return;
+  }
+
+  if (checkName === "implemented") {
+    const current = run(repo, workspaceHelper(repo), ["next-step"]);
+    if (!current.phaseId || !current.sliceId) {
+      return;
+    }
+    const buildPath = path.join(
+      repo,
+      "strike/initiatives",
+      initiative.id,
+      "phases",
+      current.phaseId,
+      "slices",
+      current.sliceId,
+      "build.md",
+    );
+    if (fs.existsSync(buildPath)) {
+      return;
+    }
+    writeArtifact(
+      repo,
+      path.relative(repo, buildPath),
+      `# Slice Build
+
+Built: yes
+
+## Verification Evidence
+### Static / Build Checks
+- Fixture check passed.
+
+## Route Back
+Needed: no
+Command: None
+Phase: None
+Slice: None
+Check: None
+Reason: None.
+`,
+    );
+    return;
+  }
+
   const artifactName = checkName === "ideaRefined" ? "idea.md" : "decisions.md";
   const artifactPath = path.join(repo, "strike/initiatives", initiative.id, artifactName);
   if (fs.existsSync(artifactPath)) {
@@ -228,6 +403,7 @@ Ready to continue: yes
 
 ## Decision Review
 Reviewer: inline
+Review results returned: yes
 Verdict: pass
 Must Fix count: 0
 Findings addressed:
@@ -250,6 +426,49 @@ User response: Yes, continue.
 Ready to continue: yes
 `,
   );
+}
+
+function reviewedGateArtifact(repo, initiativeId, current, checkName) {
+  const initiativeRoot = path.join(repo, "strike/initiatives", initiativeId);
+  if (checkName === "planVerified" && current.phaseId && current.sliceId) {
+    return {
+      artifactPath: path.join(
+        initiativeRoot,
+        "phases",
+        current.phaseId,
+        "slices",
+        current.sliceId,
+        "plan-verification.md",
+      ),
+      resultField: "Ready",
+    };
+  }
+  if (checkName === "buildVerified" && current.phaseId && current.sliceId) {
+    return {
+      artifactPath: path.join(
+        initiativeRoot,
+        "phases",
+        current.phaseId,
+        "slices",
+        current.sliceId,
+        "build-verification.md",
+      ),
+      resultField: "Verified",
+    };
+  }
+  if (checkName === "allSlicesVerified" && current.phaseId) {
+    return {
+      artifactPath: path.join(initiativeRoot, "phases", current.phaseId, "verification.md"),
+      resultField: "Ready",
+    };
+  }
+  if (checkName === "allPhasesVerified") {
+    return {
+      artifactPath: path.join(initiativeRoot, "verification.md"),
+      resultField: "Ready",
+    };
+  }
+  return null;
 }
 
 function writePhaseArtifacts(repo, initiativeId, phaseIds) {
@@ -537,6 +756,29 @@ Ready to continue: yes
 
 ## Decision Review
 Reviewer: subagent
+Verdict: pass
+Must Fix count: 0
+Findings addressed:
+- None.
+Accepted risks:
+- None.
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "decisionsResolved"], /Review results returned: yes/);
+
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/decisions.md",
+    `# Idea Decisions
+
+## User Checkpoint
+Prompt: Are you ready for spec?
+User response: Yes, continue.
+Ready to continue: yes
+
+## Decision Review
+Reviewer: subagent
+Review results returned: yes
 Verdict: needs-fix
 Must Fix count: 0
 Findings addressed:
@@ -559,6 +801,7 @@ Ready to continue: yes
 
 ## Decision Review
 Reviewer: subagent
+Review results returned: yes
 Verdict: pass
 Must Fix count: 1
 Findings addressed:
@@ -581,6 +824,7 @@ Ready to continue: yes
 
 ## Decision Review
 Reviewer: subagent
+Review results returned: yes
 Verdict: accepted-risk
 Must Fix count: 0
 Findings addressed:
@@ -607,19 +851,19 @@ function bootstrapTwoSliceWorkflow(repo) {
   run(repo, workspaceHelper(repo), ["add-phase", "1", "Upload and display"]);
   writePhaseArtifacts(repo, "gallery", ["phase-01"]);
   complete(repo, "phasesCreated", { phaseId: "phase-01", skill: "create-phase-spec" });
-  complete(repo, "phaseSpecCreated", { phaseId: "phase-01", skill: "create-phase-slices" });
+  complete(repo, "phaseSpecCreated", { phaseId: "phase-01", skill: "research-phase" });
+  complete(repo, "phaseResearchComplete", { phaseId: "phase-01", skill: "create-phase-slices" });
   run(repo, workspaceHelper(repo), ["add-slice", "phase-01", "1", "Upload image"]);
   run(repo, workspaceHelper(repo), ["add-slice", "phase-01", "2", "Display gallery"]);
   writeSliceArtifacts(repo, "gallery", "phase-01", ["slice-01", "slice-02"]);
   complete(repo, "slicesCreated", {
     phaseId: "phase-01",
     sliceId: "slice-01",
-    skill: "research-slice",
+    skill: "plan-slice",
   });
 }
 
 function completeSlice(repo, expectedAfterBuildVerified) {
-  complete(repo, "researchComplete", { skill: "plan-slice" });
   complete(repo, "planCreated", { skill: "verify-slice-plan" });
   complete(repo, "planVerified", { skill: "build-slice" });
   complete(repo, "implemented", { skill: "verify-slice-build" });
@@ -709,6 +953,15 @@ function testBootstrapAndWorkflowProgression() {
   });
   complete(repo, "phaseSpecCreated", {
     phaseId: "phase-01",
+    skill: "research-phase",
+    missing: ["phaseResearchComplete"],
+    artifacts: [
+      "strike/initiatives/gallery/phases/phase-01/research.md",
+      "strike/initiatives/gallery/phases/phase-01/research-audit.md",
+    ],
+  });
+  complete(repo, "phaseResearchComplete", {
+    phaseId: "phase-01",
     skill: "create-phase-slices",
     missing: ["slicesCreated"],
     artifacts: ["strike/initiatives/gallery/phases/phase-01/slices/<slice-id>/slice.md"],
@@ -722,13 +975,6 @@ function testBootstrapAndWorkflowProgression() {
   complete(repo, "slicesCreated", {
     phaseId: "phase-01",
     sliceId: "slice-01",
-    skill: "research-slice",
-    missing: ["researchComplete"],
-    artifacts: ["strike/initiatives/gallery/phases/phase-01/slices/slice-01/research.md"],
-  });
-  complete(repo, "researchComplete", {
-    phaseId: "phase-01",
-    sliceId: "slice-01",
     skill: "plan-slice",
     missing: ["planCreated"],
     artifacts: ["strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan.md"],
@@ -740,15 +986,8 @@ function testBootstrapAndWorkflowProgression() {
     missing: ["planVerified"],
     artifacts: ["strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan-verification.md"],
   });
-  const reopenedResearch = run(repo, workspaceHelper(repo), ["reopen-check", "researchComplete"]);
-  assertNextStep(reopenedResearch, {
-    phaseId: "phase-01",
-    sliceId: "slice-01",
-    skill: "research-slice",
-    missing: ["researchComplete"],
-    artifacts: ["strike/initiatives/gallery/phases/phase-01/slices/slice-01/research.md"],
-  });
-  complete(repo, "researchComplete", {
+  const reopenedPlan = run(repo, workspaceHelper(repo), ["reopen-check", "planCreated"]);
+  assertNextStep(reopenedPlan, {
     phaseId: "phase-01",
     sliceId: "slice-01",
     skill: "plan-slice",
@@ -777,13 +1016,6 @@ function testBootstrapAndWorkflowProgression() {
     artifacts: ["strike/initiatives/gallery/phases/phase-01/slices/slice-01/build-verification.md"],
   });
   complete(repo, "buildVerified", {
-    phaseId: "phase-01",
-    sliceId: "slice-02",
-    skill: "research-slice",
-    missing: ["researchComplete"],
-    artifacts: ["strike/initiatives/gallery/phases/phase-01/slices/slice-02/research.md"],
-  });
-  complete(repo, "researchComplete", {
     phaseId: "phase-01",
     sliceId: "slice-02",
     skill: "plan-slice",
@@ -841,15 +1073,13 @@ function testBootstrapAndWorkflowProgression() {
   complete(repo, "slicesCreated", {
     phaseId: "phase-01",
     sliceId: "slice-01",
-    skill: "research-slice",
-    missing: ["researchComplete"],
+    skill: "plan-slice",
+    missing: ["planCreated"],
   });
-  complete(repo, "researchComplete", { phaseId: "phase-01", sliceId: "slice-01", skill: "plan-slice" });
   complete(repo, "planCreated", { phaseId: "phase-01", sliceId: "slice-01", skill: "verify-slice-plan" });
   complete(repo, "planVerified", { phaseId: "phase-01", sliceId: "slice-01", skill: "build-slice" });
   complete(repo, "implemented", { phaseId: "phase-01", sliceId: "slice-01", skill: "verify-slice-build" });
-  complete(repo, "buildVerified", { phaseId: "phase-01", sliceId: "slice-02", skill: "research-slice" });
-  complete(repo, "researchComplete", { phaseId: "phase-01", sliceId: "slice-02", skill: "plan-slice" });
+  complete(repo, "buildVerified", { phaseId: "phase-01", sliceId: "slice-02", skill: "plan-slice" });
   complete(repo, "planCreated", { phaseId: "phase-01", sliceId: "slice-02", skill: "verify-slice-plan" });
   complete(repo, "planVerified", { phaseId: "phase-01", sliceId: "slice-02", skill: "build-slice" });
   complete(repo, "implemented", { phaseId: "phase-01", sliceId: "slice-02", skill: "verify-slice-build" });
@@ -907,7 +1137,83 @@ function testPhaseAndSliceRegistrationRequired() {
   runFail(repo, localHelper, ["complete-check", "phasesCreated"], /phase-02\/phase\.md/);
   writeArtifact(repo, "strike/initiatives/gallery/phases/phase-02/phase.md");
   complete(repo, "phasesCreated", { phaseId: "phase-01", skill: "create-phase-spec" });
-  complete(repo, "phaseSpecCreated", { phaseId: "phase-01", skill: "create-phase-slices" });
+  complete(repo, "phaseSpecCreated", { phaseId: "phase-01", skill: "research-phase" });
+  runFail(repo, localHelper, ["complete-check", "phaseResearchComplete"], /phase research/);
+  writeArtifact(repo, "strike/initiatives/gallery/phases/phase-01/research.md", "# Phase Research\n\nReady for slicing: no\n");
+  runFail(repo, localHelper, ["complete-check", "phaseResearchComplete"], /Ready for slicing: yes/);
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/phases/phase-01/research.md",
+    `# Phase Research
+
+## Research Audit
+Audit file: research-audit.md
+Verdict: pass
+Must Fix count: 0
+
+## Ready For Slicing
+Ready for slicing: yes
+`,
+  );
+  runFail(repo, localHelper, ["complete-check", "phaseResearchComplete"], /phase research audit/);
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/phases/phase-01/research-audit.md",
+    "# Phase Research Audit\n\nVerdict: needs-fix\nMust Fix count: 1\n",
+  );
+  runFail(repo, localHelper, ["complete-check", "phaseResearchComplete"], /Verdict: pass or accepted-risk/);
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/phases/phase-01/research.md",
+    `# Phase Research
+
+## Research Audit
+Audit file: research-audit.md
+Verdict: needs-fix
+Must Fix count: 1
+
+## Ready For Slicing
+Ready for slicing: yes
+`,
+  );
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/phases/phase-01/research-audit.md",
+    "# Phase Research Audit\n\nReview results returned: yes\nVerdict: pass\nMust Fix count: 0\n",
+  );
+  runFail(repo, localHelper, ["complete-check", "phaseResearchComplete"], /Verdict: pass or accepted-risk/);
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/phases/phase-01/research.md",
+    `# Phase Research
+
+## Research Audit
+Audit file: research-audit.md
+Verdict: accepted-risk
+Must Fix count: 0
+
+## Ready For Slicing
+Ready for slicing: yes
+`,
+  );
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/phases/phase-01/research-audit.md",
+    "# Phase Research Audit\n\nVerdict: accepted-risk\nMust Fix count: 0\n",
+  );
+  runFail(repo, localHelper, ["complete-check", "phaseResearchComplete"], /Review results returned: yes/);
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/phases/phase-01/research-audit.md",
+    "# Phase Research Audit\n\nReview results returned: yes\nVerdict: accepted-risk\nMust Fix count: 0\n",
+  );
+  const phaseResearchReceipt = run(repo, localHelper, ["complete-check", "phaseResearchComplete"]);
+  assertNextStep(phaseResearchReceipt, {
+    status: "recorded",
+    phaseId: "phase-01",
+    skill: "research-phase",
+    completedCheck: "phaseResearchComplete",
+  });
 
   fs.mkdirSync(path.join(repo, "strike/initiatives/gallery/phases/phase-01/slices/slice-01"), {
     recursive: true,
@@ -933,7 +1239,7 @@ function testPhaseAndSliceRegistrationRequired() {
   complete(repo, "slicesCreated", {
     phaseId: "phase-01",
     sliceId: "slice-01",
-    skill: "research-slice",
+    skill: "plan-slice",
   });
 }
 
@@ -1020,6 +1326,31 @@ console.log(DEFAULT_STATE_PATH, INITIATIVE_WORKFLOW, command);
   assert.equal(secondSync.refreshed, false);
 }
 
+function testSyncHelperRepairsMissingGuidanceFiles() {
+  const repo = tempRepo();
+  const localHelper = workspaceHelper(repo);
+  fs.mkdirSync(path.dirname(localHelper), { recursive: true });
+  fs.writeFileSync(localHelper, fs.readFileSync(helper, "utf8"));
+
+  const existingGuidancePath = path.join(
+    repo,
+    "strike/user-guidance/implementation-discipline/global.md",
+  );
+  fs.mkdirSync(path.dirname(existingGuidancePath), { recursive: true });
+  fs.writeFileSync(existingGuidancePath, "# Global Implementation Discipline\n\n- Keep me.\n");
+
+  const sync = run(repo, helper, ["sync-helper"]);
+  assert.equal(sync.refreshed, false);
+  assert.equal(
+    fs.readFileSync(existingGuidancePath, "utf8"),
+    "# Global Implementation Discipline\n\n- Keep me.\n",
+  );
+  assert.ok(fs.existsSync(path.join(repo, "PROJECT_LANGUAGE.md")));
+  assert.ok(fs.existsSync(path.join(repo, "strike/user-guidance/implementation-discipline/build-slice.md")));
+  assert.ok(fs.existsSync(path.join(repo, "strike/user-guidance/review-lenses/global.md")));
+  assert.ok(fs.existsSync(path.join(repo, "strike/user-guidance/review-lenses/verify-main-spec.md")));
+}
+
 function testOldInitiativeWorkflowNormalizesResearchGate() {
   const repo = tempRepo();
   const statePath = path.join(repo, "strike/state.json");
@@ -1079,16 +1410,109 @@ function testOldInitiativeWorkflowNormalizesResearchGate() {
   );
 }
 
+function testOldPhaseAndSliceWorkflowNormalizesPhaseResearchGate() {
+  const repo = tempRepo();
+  run(repo, helper, ["init", "gallery", "Gallery"]);
+  const localHelper = workspaceHelper(repo);
+
+  writeInitiativeState(repo, "gallery", {
+    version: 1,
+    id: "gallery",
+    name: "Gallery",
+    initiativeWorkflow: [
+      { skill: "refine-idea", verified: { ideaRefined: true } },
+      { skill: "research-initiative", verified: { initiativeResearchComplete: true } },
+      { skill: "grill-idea", verified: { decisionsResolved: true } },
+      { skill: "create-main-spec", verified: { specCreated: true } },
+      { skill: "create-development-phases", verified: { phasesCreated: true } },
+      { skill: "verify-main-spec", verified: { allPhasesVerified: true } },
+    ],
+    phases: [
+      {
+        id: "phase-01",
+        name: "Upload and display",
+        phaseWorkflow: [
+          { skill: "create-phase-spec", verified: { phaseSpecCreated: true } },
+          { skill: "create-phase-slices", verified: { slicesCreated: true } },
+          { skill: "verify-phase", verified: { allSlicesVerified: true } },
+        ],
+        slices: [
+          {
+            id: "slice-01",
+            name: "Upload image",
+            sliceWorkflow: [
+              { skill: "research-slice", verified: { researchComplete: true } },
+              { skill: "plan-slice", verified: { planCreated: true } },
+              { skill: "verify-slice-plan", verified: { planVerified: true } },
+              { skill: "build-slice", verified: { implemented: true } },
+              { skill: "verify-slice-build", verified: { buildVerified: true } },
+            ],
+          },
+        ],
+      },
+    ],
+  });
+
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/phases/phase-01/research.md",
+    `# Phase Research
+
+## Research Audit
+Audit file: research-audit.md
+Verdict: pass
+Must Fix count: 0
+
+## Ready For Slicing
+Ready for slicing: yes
+`,
+  );
+  writeArtifact(
+    repo,
+    "strike/initiatives/gallery/phases/phase-01/research-audit.md",
+    "# Phase Research Audit\n\nReview results returned: yes\nVerdict: pass\nMust Fix count: 0\n",
+  );
+
+  const receipt = run(repo, localHelper, ["complete-check", "phaseResearchComplete"]);
+  assertNextStep(receipt, {
+    status: "recorded",
+    phaseId: "phase-01",
+    skill: "research-phase",
+    completedCheck: "phaseResearchComplete",
+  });
+
+  const nextStep = run(repo, localHelper, ["next-step"]);
+  assertNextStep(nextStep, {
+    status: "idle",
+    reason: "No active initiative.",
+  });
+
+  const normalizedState = readInitiativeState(repo, "gallery");
+  const phase = normalizedState.phases[0];
+  assert.deepEqual(
+    phase.phaseWorkflow.map((item) => item.skill),
+    ["create-phase-spec", "research-phase", "create-phase-slices", "verify-phase"],
+  );
+  assert.equal(phase.phaseWorkflow[1].verified.phaseResearchComplete, true);
+  assert.equal(phase.phaseWorkflow[2].verified.slicesCreated, true);
+  assert.equal(phase.phaseWorkflow[3].verified.allSlicesVerified, true);
+  assert.equal(normalizedState.initiativeWorkflow[5].verified.allPhasesVerified, true);
+  assert.deepEqual(
+    phase.slices[0].sliceWorkflow.map((item) => item.skill),
+    ["plan-slice", "verify-slice-plan", "build-slice", "verify-slice-build"],
+  );
+  for (const item of phase.slices[0].sliceWorkflow) {
+    for (const value of Object.values(item.verified)) {
+      assert.equal(value, true);
+    }
+  }
+}
+
 function testRouteBackCommandContract() {
   const repo = tempRepo();
   bootstrapTwoSliceWorkflow(repo);
   const localHelper = workspaceHelper(repo);
 
-  complete(repo, "researchComplete", {
-    phaseId: "phase-01",
-    sliceId: "slice-01",
-    skill: "plan-slice",
-  });
   complete(repo, "planCreated", {
     phaseId: "phase-01",
     sliceId: "slice-01",
@@ -1109,7 +1533,7 @@ function testRouteBackCommandContract() {
   complete(repo, "planCreated", { phaseId: "phase-01", sliceId: "slice-01", skill: "verify-slice-plan" });
   complete(repo, "planVerified", { phaseId: "phase-01", sliceId: "slice-01", skill: "build-slice" });
   complete(repo, "implemented", { phaseId: "phase-01", sliceId: "slice-01", skill: "verify-slice-build" });
-  complete(repo, "buildVerified", { phaseId: "phase-01", sliceId: "slice-02", skill: "research-slice" });
+  complete(repo, "buildVerified", { phaseId: "phase-01", sliceId: "slice-02", skill: "plan-slice" });
 
   completeSlice(repo, {
     phaseId: "phase-01",
@@ -1136,7 +1560,10 @@ function testRouteBackCommandContract() {
   });
 
   const stateAfterSliceBack = readInitiativeState(repo, "gallery");
-  assert.equal(stateAfterSliceBack.phases[0].phaseWorkflow[2].verified.allSlicesVerified, false);
+  assert.equal(
+    stateAfterSliceBack.phases[0].phaseWorkflow.find((item) => item.skill === "verify-phase").verified.allSlicesVerified,
+    false,
+  );
   assert.equal(stateAfterSliceBack.initiativeWorkflow[5].verified.allPhasesVerified, false);
 
   complete(repo, "buildVerified", {
@@ -1168,12 +1595,207 @@ function testRouteBackCommandContract() {
   runFail(repo, localHelper, ["reopen-slice-check", "phase-01", "slice-02", "allSlicesVerified"], /Unknown verification key/);
 }
 
+function testReviewedVerifierRequiresReturnedReviewResults() {
+  {
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    complete(repo, "planCreated", {
+      phaseId: "phase-01",
+      sliceId: "slice-01",
+      skill: "verify-slice-plan",
+      missing: ["planVerified"],
+      artifacts: ["strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan-verification.md"],
+    });
+
+    writeArtifact(
+      repo,
+      "strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan-verification.md",
+      `# Slice Plan Verification
+
+## Read-Only Review
+- Required plan audits: pass
+
+## Build Readiness
+Ready: yes
+Reason: Fixture says ready but omits returned review evidence.
+Fix Needed: no
+`,
+    );
+
+    runFail(repo, localHelper, ["complete-check", "planVerified"], /Review results returned: yes/);
+  }
+
+  {
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    complete(repo, "planCreated", { skill: "verify-slice-plan" });
+    complete(repo, "planVerified", { skill: "build-slice" });
+    complete(repo, "implemented", {
+      phaseId: "phase-01",
+      sliceId: "slice-01",
+      skill: "verify-slice-build",
+      missing: ["buildVerified"],
+      artifacts: ["strike/initiatives/gallery/phases/phase-01/slices/slice-01/build-verification.md"],
+    });
+
+    writeArtifact(
+      repo,
+      "strike/initiatives/gallery/phases/phase-01/slices/slice-01/build-verification.md",
+      `# Slice Build Verification
+
+## Read-Only Review
+- Required build audits: pass
+
+## Verification Result
+Verified: yes
+Reason: Fixture says verified but omits returned review evidence.
+Fix Needed: no
+`,
+    );
+
+    runFail(repo, localHelper, ["complete-check", "buildVerified"], /Review results returned: yes/);
+  }
+
+  {
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    completeSlice(repo, { phaseId: "phase-01", sliceId: "slice-02", skill: "plan-slice" });
+    completeSlice(repo, { phaseId: "phase-01", skill: "verify-phase" });
+
+    writeArtifact(
+      repo,
+      "strike/initiatives/gallery/phases/phase-01/verification.md",
+      `# Phase Verification
+
+## Read-Only Review
+- Required phase audits: pass
+
+## Verification Result
+Ready: yes
+Reason: Fixture says ready but omits returned review evidence.
+Fix Needed: no
+`,
+    );
+
+    runFail(repo, localHelper, ["complete-check", "allSlicesVerified"], /Review results returned: yes/);
+  }
+
+  {
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    completeSlice(repo, { phaseId: "phase-01", sliceId: "slice-02", skill: "plan-slice" });
+    completeSlice(repo, { phaseId: "phase-01", skill: "verify-phase" });
+    complete(repo, "allSlicesVerified", { skill: "verify-main-spec" });
+
+    writeArtifact(
+      repo,
+      "strike/initiatives/gallery/verification.md",
+      `# Initiative Verification
+
+## Read-Only Review
+- Required final audits: pass
+
+## Verification Result
+Ready: yes
+Reason: Fixture says ready but omits returned review evidence.
+Fix Needed: no
+`,
+    );
+
+    runFail(repo, localHelper, ["complete-check", "allPhasesVerified"], /Review results returned: yes/);
+  }
+}
+
+function testPlanAndBuildCompletionPreconditions() {
+  {
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    writeArtifact(
+      repo,
+      "strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan.md",
+      `# Slice Plan
+
+## Split Recommendation
+Needed: yes
+Reason: Fixture split required.
+Replacement slices:
+- slice-01
+- slice-02
+`,
+    );
+
+    runFail(repo, localHelper, ["complete-check", "planCreated"], /Needed: no/);
+  }
+
+  {
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    complete(repo, "planCreated", { skill: "verify-slice-plan" });
+    complete(repo, "planVerified", { skill: "build-slice" });
+
+    writeArtifact(
+      repo,
+      "strike/initiatives/gallery/phases/phase-01/slices/slice-01/build.md",
+      `# Slice Build
+
+Built: no
+
+## Route Back
+Needed: yes
+Command: reopen-check
+Phase: None
+Slice: None
+Check: planVerified
+Reason: Fixture route back required.
+`,
+    );
+
+    runFail(repo, localHelper, ["complete-check", "implemented"], /Built: yes/);
+  }
+}
+
+function testReopenMarksReviewedArtifactsStale() {
+  const repo = tempRepo();
+  bootstrapTwoSliceWorkflow(repo);
+  const localHelper = workspaceHelper(repo);
+
+  complete(repo, "planCreated", { skill: "verify-slice-plan" });
+  complete(repo, "planVerified", { skill: "build-slice" });
+  complete(repo, "implemented", { skill: "verify-slice-build" });
+  complete(repo, "buildVerified", { phaseId: "phase-01", sliceId: "slice-02", skill: "plan-slice" });
+
+  const planVerificationPath =
+    "strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan-verification.md";
+  const buildVerificationPath =
+    "strike/initiatives/gallery/phases/phase-01/slices/slice-01/build-verification.md";
+
+  run(repo, localHelper, ["reopen-slice-check", "phase-01", "slice-01", "planCreated"]);
+
+  assert.match(fs.readFileSync(path.join(repo, planVerificationPath), "utf8"), /^Stale: yes$/m);
+  assert.match(fs.readFileSync(path.join(repo, buildVerificationPath), "utf8"), /^Stale: yes$/m);
+
+  complete(repo, "planCreated", { skill: "verify-slice-plan" });
+  runFail(repo, localHelper, ["complete-check", "planVerified"], /stale or blocking/);
+}
+
 function testRouteBackInvalidatesDownstreamScopes() {
   const repo = tempRepo();
   bootstrapTwoSliceWorkflow(repo);
   const localHelper = workspaceHelper(repo);
 
-  completeSlice(repo, { phaseId: "phase-01", sliceId: "slice-02", skill: "research-slice" });
+  completeSlice(repo, { phaseId: "phase-01", sliceId: "slice-02", skill: "plan-slice" });
   completeSlice(repo, { phaseId: "phase-01", skill: "verify-phase" });
   complete(repo, "allSlicesVerified", { skill: "verify-main-spec" });
 
@@ -1187,21 +1809,22 @@ function testRouteBackInvalidatesDownstreamScopes() {
   const phase = state.phases[0];
   assert.deepEqual(
     phase.phaseWorkflow.flatMap((item) => Object.values(item.verified)),
-    [false, false, false],
+    [false, false, false, false],
   );
   for (const slice of phase.slices) {
     assert.deepEqual(
       slice.sliceWorkflow.flatMap((item) => Object.values(item.verified)),
-      [false, false, false, false, false],
+      [false, false, false, false],
     );
   }
 
   complete(repo, "specCreated", { skill: "create-development-phases" });
   complete(repo, "phasesCreated", { phaseId: "phase-01", skill: "create-phase-spec" });
 
-  complete(repo, "phaseSpecCreated", { phaseId: "phase-01", skill: "create-phase-slices" });
-  complete(repo, "slicesCreated", { phaseId: "phase-01", sliceId: "slice-01", skill: "research-slice" });
-  completeSlice(repo, { phaseId: "phase-01", sliceId: "slice-02", skill: "research-slice" });
+  complete(repo, "phaseSpecCreated", { phaseId: "phase-01", skill: "research-phase" });
+  complete(repo, "phaseResearchComplete", { phaseId: "phase-01", skill: "create-phase-slices" });
+  complete(repo, "slicesCreated", { phaseId: "phase-01", sliceId: "slice-01", skill: "plan-slice" });
+  completeSlice(repo, { phaseId: "phase-01", sliceId: "slice-02", skill: "plan-slice" });
   completeSlice(repo, { phaseId: "phase-01", skill: "verify-phase" });
 
   const reopenedPhaseSlices = run(repo, localHelper, ["reopen-check", "slicesCreated"]);
@@ -1216,7 +1839,7 @@ function testRouteBackInvalidatesDownstreamScopes() {
   for (const slice of state.phases[0].slices) {
     assert.deepEqual(
       slice.sliceWorkflow.flatMap((item) => Object.values(item.verified)),
-      [false, false, false, false, false],
+      [false, false, false, false],
     );
   }
 }
@@ -1462,8 +2085,13 @@ testStrictCommands();
 testNewInitiativeHelperWrapper();
 testInitPreservesProjectGuidanceFiles();
 testSyncHelperRefreshesRecognizedWorkspaceHelper();
+testSyncHelperRepairsMissingGuidanceFiles();
 testOldInitiativeWorkflowNormalizesResearchGate();
+testOldPhaseAndSliceWorkflowNormalizesPhaseResearchGate();
 testRouteBackCommandContract();
+testReviewedVerifierRequiresReturnedReviewResults();
+testPlanAndBuildCompletionPreconditions();
+testReopenMarksReviewedArtifactsStale();
 testRouteBackInvalidatesDownstreamScopes();
 testDeterministicRegistrationOrder();
 testInitiativeLifecycle();

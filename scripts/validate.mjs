@@ -506,6 +506,7 @@ function validateRuntimeReferenceBoundary() {
     /^plugins\/strike\/references\/language\.md$/,
     /^plugins\/strike\/references\/slug-policy\.md$/,
     /^plugins\/strike\/references\/verification-evidence\.md$/,
+    /^plugins\/strike\/references\/review-agents\/[a-z0-9-]+\.md$/,
     /^plugins\/strike\/references\/scripts\/[a-z0-9-]+\.mjs$/,
   ];
 
@@ -588,6 +589,12 @@ function requireText(text, needle, context) {
   }
 }
 
+function requireAbsentText(text, needle, context) {
+  if (text.includes(needle)) {
+    fail(`${context}: should not include ${needle}`);
+  }
+}
+
 function validateStrikeContract() {
   const strikePath = "plugins/strike/skills/go/SKILL.md";
   const helperPath = "plugins/strike/skills/go/scripts/state.mjs";
@@ -597,7 +604,7 @@ function validateStrikeContract() {
   const createMainPath = "plugins/strike/skills/create-main-spec/SKILL.md";
   const createDevPath = "plugins/strike/skills/create-development-phases/SKILL.md";
   const createPhasePath = "plugins/strike/skills/create-phase-spec/SKILL.md";
-  const researchPath = "plugins/strike/skills/research-slice/SKILL.md";
+  const researchPhasePath = "plugins/strike/skills/research-phase/SKILL.md";
   const createSlicesPath = "plugins/strike/skills/create-phase-slices/SKILL.md";
   const planPath = "plugins/strike/skills/plan-slice/SKILL.md";
   const verifyPath = "plugins/strike/skills/verify-slice-plan/SKILL.md";
@@ -607,10 +614,74 @@ function validateStrikeContract() {
   const verifyPhasePath = "plugins/strike/skills/verify-phase/SKILL.md";
   const verifyMainPath = "plugins/strike/skills/verify-main-spec/SKILL.md";
   const verificationEvidencePath = "plugins/strike/references/verification-evidence.md";
+  const reviewOutputDisciplinePath = "plugins/strike/references/review-agents/output-discipline.md";
+  const planReadinessAuditPath = "plugins/strike/references/review-agents/plan-implementation-readiness-audit.md";
+  const canonicalReadinessAuditPath = "plugins/strike/references/review-agents/canonical-readiness-audit.md";
+  const fullPlanAuditPath = "plugins/strike/references/review-agents/full-plan-audit.md";
+  const builtAcceptanceAuditPath = "plugins/strike/references/review-agents/built-slice-acceptance-audit.md";
+  const builtCodeAuditPath = "plugins/strike/references/review-agents/built-slice-code-audit.md";
+  const builtCommonIssuesAuditPath = "plugins/strike/references/review-agents/built-slice-common-issues-audit.md";
+  const phaseSpecCoverageAuditPath = "plugins/strike/references/review-agents/phase-spec-coverage.md";
+  const crossSliceIntegrationAuditPath = "plugins/strike/references/review-agents/cross-slice-integration.md";
+  const mainSpecCoverageAuditPath = "plugins/strike/references/review-agents/main-spec-coverage.md";
+  const crossPhaseIntegrationAuditPath = "plugins/strike/references/review-agents/cross-phase-integration.md";
+  const readinessRiskAuditPath = "plugins/strike/references/review-agents/readiness-risk.md";
+  const canonicalImplementationAuditPath = "plugins/strike/references/review-agents/canonical-implementation.md";
+  const stateDataIntegrityAuditPath = "plugins/strike/references/review-agents/state-data-integrity.md";
+  const securityPrivacyAuditPath = "plugins/strike/references/review-agents/security-privacy.md";
+  const integrationRiskAuditPath = "plugins/strike/references/review-agents/integration-risk.md";
+  const uiRegressionAuditPath = "plugins/strike/references/review-agents/ui-regression.md";
+  const userFlowsAuditPath = "plugins/strike/references/review-agents/user-flows.md";
+  const accessibilityAuditPath = "plugins/strike/references/review-agents/accessibility.md";
   const pluginReadmePath = "plugins/strike/README.md";
   const dogfoodPath = "docs/dogfood.md";
+  const releasePath = "docs/release.md";
 
-  if (![strikePath, helperPath, refinePath, researchInitiativePath, grillPath, createMainPath, createDevPath, createPhasePath, researchPath, createSlicesPath, planPath, verifyPath, buildPath, verifyBuildPath, fixPath, verifyPhasePath, verifyMainPath, verificationEvidencePath, pluginReadmePath, dogfoodPath].every(exists)) {
+  const contractPaths = [
+    strikePath,
+    helperPath,
+    refinePath,
+    researchInitiativePath,
+    grillPath,
+    createMainPath,
+    createDevPath,
+    createPhasePath,
+    researchPhasePath,
+    createSlicesPath,
+    planPath,
+    verifyPath,
+    buildPath,
+    verifyBuildPath,
+    fixPath,
+    verifyPhasePath,
+    verifyMainPath,
+    verificationEvidencePath,
+    reviewOutputDisciplinePath,
+    planReadinessAuditPath,
+    canonicalReadinessAuditPath,
+    fullPlanAuditPath,
+    builtAcceptanceAuditPath,
+    builtCodeAuditPath,
+    builtCommonIssuesAuditPath,
+    phaseSpecCoverageAuditPath,
+    crossSliceIntegrationAuditPath,
+    mainSpecCoverageAuditPath,
+    crossPhaseIntegrationAuditPath,
+    readinessRiskAuditPath,
+    canonicalImplementationAuditPath,
+    stateDataIntegrityAuditPath,
+    securityPrivacyAuditPath,
+    integrationRiskAuditPath,
+    uiRegressionAuditPath,
+    userFlowsAuditPath,
+    accessibilityAuditPath,
+    pluginReadmePath,
+    dogfoodPath,
+    releasePath,
+  ];
+  const missingContractPaths = contractPaths.filter((contractPath) => !exists(contractPath));
+  if (missingContractPaths.length > 0) {
+    fail(`validateStrikeContract missing required paths: ${missingContractPaths.join(", ")}`);
     return;
   }
 
@@ -622,7 +693,7 @@ function validateStrikeContract() {
   const createMainText = fs.readFileSync(path.join(root, createMainPath), "utf8");
   const createDevText = fs.readFileSync(path.join(root, createDevPath), "utf8");
   const createPhaseText = fs.readFileSync(path.join(root, createPhasePath), "utf8");
-  const researchText = fs.readFileSync(path.join(root, researchPath), "utf8");
+  const researchPhaseText = fs.readFileSync(path.join(root, researchPhasePath), "utf8");
   const createSlicesText = fs.readFileSync(path.join(root, createSlicesPath), "utf8");
   const planText = fs.readFileSync(path.join(root, planPath), "utf8");
   const verifyText = fs.readFileSync(path.join(root, verifyPath), "utf8");
@@ -632,8 +703,28 @@ function validateStrikeContract() {
   const verifyPhaseText = fs.readFileSync(path.join(root, verifyPhasePath), "utf8");
   const verifyMainText = fs.readFileSync(path.join(root, verifyMainPath), "utf8");
   const verificationEvidenceText = fs.readFileSync(path.join(root, verificationEvidencePath), "utf8");
+  const reviewOutputDisciplineText = fs.readFileSync(path.join(root, reviewOutputDisciplinePath), "utf8");
+  const planReadinessAuditText = fs.readFileSync(path.join(root, planReadinessAuditPath), "utf8");
+  const canonicalReadinessAuditText = fs.readFileSync(path.join(root, canonicalReadinessAuditPath), "utf8");
+  const fullPlanAuditText = fs.readFileSync(path.join(root, fullPlanAuditPath), "utf8");
+  const builtAcceptanceAuditText = fs.readFileSync(path.join(root, builtAcceptanceAuditPath), "utf8");
+  const builtCodeAuditText = fs.readFileSync(path.join(root, builtCodeAuditPath), "utf8");
+  const builtCommonIssuesAuditText = fs.readFileSync(path.join(root, builtCommonIssuesAuditPath), "utf8");
+  const phaseSpecCoverageAuditText = fs.readFileSync(path.join(root, phaseSpecCoverageAuditPath), "utf8");
+  const crossSliceIntegrationAuditText = fs.readFileSync(path.join(root, crossSliceIntegrationAuditPath), "utf8");
+  const mainSpecCoverageAuditText = fs.readFileSync(path.join(root, mainSpecCoverageAuditPath), "utf8");
+  const crossPhaseIntegrationAuditText = fs.readFileSync(path.join(root, crossPhaseIntegrationAuditPath), "utf8");
+  const readinessRiskAuditText = fs.readFileSync(path.join(root, readinessRiskAuditPath), "utf8");
+  const canonicalImplementationAuditText = fs.readFileSync(path.join(root, canonicalImplementationAuditPath), "utf8");
+  const stateDataIntegrityAuditText = fs.readFileSync(path.join(root, stateDataIntegrityAuditPath), "utf8");
+  const securityPrivacyAuditText = fs.readFileSync(path.join(root, securityPrivacyAuditPath), "utf8");
+  const integrationRiskAuditText = fs.readFileSync(path.join(root, integrationRiskAuditPath), "utf8");
+  const uiRegressionAuditText = fs.readFileSync(path.join(root, uiRegressionAuditPath), "utf8");
+  const userFlowsAuditText = fs.readFileSync(path.join(root, userFlowsAuditPath), "utf8");
+  const accessibilityAuditText = fs.readFileSync(path.join(root, accessibilityAuditPath), "utf8");
   const pluginReadmeText = fs.readFileSync(path.join(root, pluginReadmePath), "utf8");
   const dogfoodText = fs.readFileSync(path.join(root, dogfoodPath), "utf8");
+  const releaseText = fs.readFileSync(path.join(root, releasePath), "utf8");
 
   const strikeWorkflowSkillTexts = {
     [strikePath]: strikeText,
@@ -643,7 +734,7 @@ function validateStrikeContract() {
     [createMainPath]: createMainText,
     [createDevPath]: createDevText,
     [createPhasePath]: createPhaseText,
-    [researchPath]: researchText,
+    [researchPhasePath]: researchPhaseText,
     [createSlicesPath]: createSlicesText,
     [planPath]: planText,
     [verifyPath]: verifyText,
@@ -665,10 +756,21 @@ function validateStrikeContract() {
     }
   }
 
-  const researchListIndex = strikeText.indexOf("`research-slice/SKILL.md`");
+  const phaseSpecListIndex = strikeText.indexOf("`create-phase-spec/SKILL.md`");
+  const phaseResearchListIndex = strikeText.indexOf("`research-phase/SKILL.md`");
+  const createSlicesListIndex = strikeText.indexOf("`create-phase-slices/SKILL.md`");
   const planListIndex = strikeText.indexOf("`plan-slice/SKILL.md`");
-  if (researchListIndex === -1 || planListIndex === -1 || researchListIndex > planListIndex) {
-    fail(`${strikePath}: research-slice must appear before plan-slice in the workflow list`);
+  if (
+    phaseSpecListIndex === -1 ||
+    phaseResearchListIndex === -1 ||
+    createSlicesListIndex === -1 ||
+    phaseSpecListIndex > phaseResearchListIndex ||
+    phaseResearchListIndex > createSlicesListIndex
+  ) {
+    fail(`${strikePath}: research-phase must appear between create-phase-spec and create-phase-slices in the workflow list`);
+  }
+  if (planListIndex === -1) {
+    fail(`${strikePath}: plan-slice must appear in the workflow list`);
   }
   const refineListIndex = strikeText.indexOf("`refine-idea/SKILL.md`");
   const initiativeResearchListIndex = strikeText.indexOf("`research-initiative/SKILL.md`");
@@ -683,10 +785,21 @@ function validateStrikeContract() {
     fail(`${strikePath}: research-initiative must appear between refine-idea and grill-idea in the workflow list`);
   }
 
-  const helperResearchIndex = helperText.indexOf('["research-slice", ["researchComplete"]]');
+  const helperPhaseSpecIndex = helperText.indexOf('["create-phase-spec", ["phaseSpecCreated"]]');
+  const helperPhaseResearchIndex = helperText.indexOf('["research-phase", ["phaseResearchComplete"]]');
+  const helperSlicesIndex = helperText.indexOf('["create-phase-slices", ["slicesCreated"]]');
   const helperPlanIndex = helperText.indexOf('["plan-slice", ["planCreated"]]');
-  if (helperResearchIndex === -1 || helperPlanIndex === -1 || helperResearchIndex > helperPlanIndex) {
-    fail(`${helperPath}: research-slice must appear before plan-slice in the slice workflow`);
+  if (
+    helperPhaseSpecIndex === -1 ||
+    helperPhaseResearchIndex === -1 ||
+    helperSlicesIndex === -1 ||
+    helperPhaseSpecIndex > helperPhaseResearchIndex ||
+    helperPhaseResearchIndex > helperSlicesIndex
+  ) {
+    fail(`${helperPath}: research-phase must appear between create-phase-spec and create-phase-slices in the phase workflow`);
+  }
+  if (helperPlanIndex === -1) {
+    fail(`${helperPath}: plan-slice must appear in the slice workflow`);
   }
   const helperRefineIndex = helperText.indexOf('["refine-idea", ["ideaRefined"]]');
   const helperInitiativeResearchIndex = helperText.indexOf(
@@ -723,6 +836,8 @@ function validateStrikeContract() {
   requireText(helperText, 'readState(statePath, { hydrate: "none" })', helperPath);
   requireText(helperText, "if (!isDetailedInitiative(initiative))", helperPath);
   requireText(helperText, 'command === "sync-helper"', helperPath);
+  requireText(helperText, "createGuidanceFiles(paths.implementationDisciplinePath", helperPath);
+  requireText(helperText, "createReviewLensFiles(paths.reviewLensesPath)", helperPath);
   requireText(helperText, "isStrikeStateHelper", helperPath);
   requireText(helperText, "Ready to research: yes", helperPath);
   requireText(helperText, "Ready for grill: yes", helperPath);
@@ -730,7 +845,20 @@ function validateStrikeContract() {
   requireText(helperText, "<research-item-id>.md", helperPath);
   requireText(helperText, "audits/<research-item-id>.md", helperPath);
   requireText(helperText, "initiativeResearchComplete", helperPath);
-  requireText(helperText, 'case "research-slice":', helperPath);
+  requireText(helperText, '["research-phase", ["phaseResearchComplete"]]', helperPath);
+  requireText(helperText, "requireReadyForSlicing", helperPath);
+  requireText(helperText, "requirePhaseResearchAudit", helperPath);
+  requireText(helperText, "requireSlicePlanReady", helperPath);
+  requireText(helperText, "requireSliceBuildReady", helperPath);
+  requireText(helperText, "markStaleArtifactsAfterReopen", helperPath);
+  requireText(helperText, "Stale: yes", helperPath);
+  requireText(helperText, "Fix Needed: no", helperPath);
+  requireText(helperText, "has no route-back needed, and has no stale or blocking review findings", helperPath);
+  requireText(helperText, "Ready for slicing: yes", helperPath);
+  requireText(helperText, "research-audit.md", helperPath);
+  requireText(helperText, 'case "research-phase":', helperPath);
+  requireAbsentText(helperText, '["research-slice", ["researchComplete"]]', helperPath);
+  requireAbsentText(helperText, 'case "research-slice":', helperPath);
   requireText(helperText, 'command === "reopen-check"', helperPath);
   requireText(helperText, 'command === "reopen-phase-check"', helperPath);
   requireText(helperText, 'command === "reopen-slice-check"', helperPath);
@@ -748,7 +876,7 @@ function validateStrikeContract() {
   requireText(strikeText, "Must Fix", strikePath);
   requireText(strikeText, "Follow-Up", strikePath);
   requireText(strikeText, "Accepted Risk", strikePath);
-  requireText(strikeText, "reopen-check researchComplete", strikePath);
+  requireText(strikeText, "reopen-phase-check <phase-id> phaseResearchComplete", strikePath);
   requireText(strikeText, "reopen-phase-check", strikePath);
   requireText(strikeText, "reopen-slice-check", strikePath);
   requireText(strikeText, "Built: yes", strikePath);
@@ -772,17 +900,25 @@ function validateStrikeContract() {
   requireText(pluginReadmeText, "`strike/initiatives/<initiative-id>/state.json`", pluginReadmePath);
   requireText(strikeText, "Do not complete `decisionsResolved` unless `decisions.md` contains", strikePath);
   requireText(strikeText, "## Decision Review", strikePath);
+  requireText(strikeText, "`Review results returned: yes`, `Verdict: pass` or `Verdict: accepted-risk`", strikePath);
   requireText(strikeText, "`Verdict: pass` or `Verdict: accepted-risk`", strikePath);
+  requireText(strikeText, "Do not complete `planVerified` unless `plan-verification.md` says\n`Review results returned: yes` and `Ready: yes`", strikePath);
+  requireText(strikeText, "Do not complete `buildVerified` unless `build-verification.md` says\n`Review results returned: yes` and `Verified: yes`", strikePath);
+  requireText(strikeText, "Do not complete `allSlicesVerified` unless the phase `verification.md` says\n`Review results returned: yes` and `Ready: yes`", strikePath);
+  requireText(strikeText, "Do not complete `allPhasesVerified` unless the initiative `verification.md`\nsays `Review results returned: yes` and `Ready: yes`", strikePath);
   requireText(strikeText, "`research-initiative`: pass `idea.md`", strikePath);
   requireText(strikeText, "missing or weak initiative research -> `reopen-check initiativeResearchComplete`", strikePath);
   requireText(strikeText, "supporting-artifacts/", strikePath);
-  requireText(strikeText, "`research-slice`: pass `main-spec.md`, `research/index.md`, relevant\n  initiative research reports and audits", strikePath);
-  requireText(strikeText, "`plan-slice`: pass `main-spec.md`, `research/index.md`, relevant initiative\n  research reports and audits", strikePath);
+  requireText(strikeText, "`research-phase`: pass `main-spec.md`, `research/index.md`, relevant\n  initiative research reports and audits", strikePath);
+  requireText(strikeText, "`research-audit.md` says `Verdict: pass` or `Verdict: accepted-risk`", strikePath);
+  requireText(strikeText, "complete `phaseResearchComplete` only when research\n  says `Ready for slicing: yes`", strikePath);
+  requireText(strikeText, "`plan-slice`: pass `main-spec.md`, `research/index.md`, relevant initiative\n  research reports and audits, phase `research.md`, phase `research-audit.md`", strikePath);
   requireText(strikeText, "`verify-slice-plan`: pass the slice artifacts plus `research/index.md`,\n  relevant initiative research reports and audits", strikePath);
+  requireText(strikeText, "phase\n  `research-audit.md`, and `supporting-artifacts/`; write", strikePath);
   requireText(strikeText, "It is not\nhidden source of truth", strikePath);
   requireText(strikeText, "pass `plan.md`, `plan-verification.md`, relevant\n  `supporting-artifacts/` named in the plan", strikePath);
-  requireText(strikeText, "write `plan.md` with a focused", strikePath);
-  requireText(strikeText, "`Verification Plan`; complete", strikePath);
+  requireText(strikeText, "with a focused `Verification Plan`", strikePath);
+  requireText(strikeText, "narrow slice-specific research\n  delta; complete", strikePath);
   requireText(strikeText, "Split Recommendation` is\n`Needed: yes`", strikePath);
   requireText(strikeText, "read that skill's `SKILL.md` from\nthe installed Strike plugin", strikePath);
   requireText(strikeText, "add/update planned automated tests, run focused\n  verification evidence checks", strikePath);
@@ -794,10 +930,12 @@ function validateStrikeContract() {
   requireText(strikeText, "Slice boundaries are normal workflow handoffs too", strikePath);
   requireText(strikeText, "they are not a stop condition for `go`", strikePath);
   requireText(strikeText, "Do not prescribe extra git inspection commands", strikePath);
-  requireText(strikeText, "then commit and push that completed slice before moving on", strikePath);
+  requireText(strikeText, "`Review results returned: yes` and `Verified: yes`, then commit and push that\n  completed slice before moving on", strikePath);
 
   requireText(helperText, "requireUserCheckpoint", helperPath);
   requireText(helperText, "requireDecisionReview", helperPath);
+  requireText(helperText, "requireReviewedVerificationArtifact", helperPath);
+  requireText(helperText, "Review results returned: yes", helperPath);
   requireText(helperText, "Ready to continue: yes", helperPath);
   requireText(helperText, "non-empty User response", helperPath);
 
@@ -808,13 +946,23 @@ function validateStrikeContract() {
   requireText(verificationEvidenceText, "Do not modify env files, DB targets, or runtime mode", verificationEvidencePath);
   requireText(verificationEvidenceText, "A failed first browser route, URL form, or browser tool is not enough", verificationEvidencePath);
   requireText(verificationEvidenceText, "try another available\nbrowser surface before failing verification", verificationEvidencePath);
+  requireText(verificationEvidenceText, "keyboard, focus, accessibility, or alternate-input actions attempted", verificationEvidencePath);
+  requireText(verificationEvidenceText, "Do not add custom app key\nhandlers solely to satisfy an automation quirk", verificationEvidencePath);
   requireText(dogfoodText, "## Browser Checks", dogfoodPath);
+  requireText(dogfoodText, "## Run Modes", dogfoodPath);
+  requireText(dogfoodText, "Local source workflow check", dogfoodPath);
+  requireText(dogfoodText, "do not\nrefresh or upgrade the installed plugin", dogfoodPath);
+  requireText(dogfoodText, "invoke skills from this checkout explicitly", dogfoodPath);
+  requireText(dogfoodText, "Installed-plugin behavior proven: no", dogfoodPath);
+  requireText(dogfoodText, "phase research/audit, slices, plan", dogfoodPath);
   requireText(dogfoodText, "### Nested Browser Harnesses", dogfoodPath);
   requireText(dogfoodText, "This observer check helps classify the failure; it\ndoes not replace target-agent browser evidence", dogfoodPath);
   requireText(dogfoodText, "target browser evidence: failed / missing", dogfoodPath);
   requireText(dogfoodText, "The target workflow remains unverified until the target agent completes the\nBrowser Clickthrough itself", dogfoodPath);
   requireText(dogfoodText, "keep observer browser checks separate from target evidence", dogfoodPath);
   requireText(dogfoodText, "## Browser Evidence", dogfoodPath);
+  requireText(releaseText, "pnpm run release:validate", releasePath);
+  requireText(releaseText, "Claude plugin/marketplace validators", releasePath);
 
   requireText(refineText, "Initiate a user checkpoint before finishing", refinePath);
   requireText(refineText, "Existing artifacts can inform\n  the refined idea, but they do not replace hearing from the user", refinePath);
@@ -841,7 +989,7 @@ function validateStrikeContract() {
   requireText(researchInitiativeText, "Do not combine distinct provider/model capabilities", researchInitiativePath);
   requireText(researchInitiativeText, "official or primary sources", researchInitiativePath);
   requireText(researchInitiativeText, "For OpenAI APIs and models", researchInitiativePath);
-  requireText(researchInitiativeText, "use a separate research pass for each approved item", researchInitiativePath);
+  requireText(researchInitiativeText, "Use a separate research pass for each approved\n   item", researchInitiativePath);
   requireText(researchInitiativeText, "Audit each per-item report before `research/index.md`", researchInitiativePath);
   requireText(researchInitiativeText, "Do not tell the research worker to rely on a later\naudit", researchInitiativePath);
   requireText(researchInitiativeText, "Use this audit prompt shape", researchInitiativePath);
@@ -855,6 +1003,10 @@ function validateStrikeContract() {
   requireText(researchInitiativeText, "Do not compress multiple material dependencies into one report", researchInitiativePath);
   requireText(researchInitiativeText, "no unresolved audit\n  `Must Fix` findings", researchInitiativePath);
   requireText(researchInitiativeText, "write `Ready for\n  grill: no`", researchInitiativePath);
+  requireAbsentText(researchInitiativeText, "when the host supports subagents", researchInitiativePath);
+  requireAbsentText(researchInitiativeText, "when supported", researchInitiativePath);
+  requireAbsentText(researchInitiativeText, "subagents are unavailable", researchInitiativePath);
+  requireAbsentText(researchInitiativeText, "inline audit pass", researchInitiativePath);
 
   requireText(grillText, "## Decision Depth", grillPath);
   requireText(grillText, "## Core Loop", grillPath);
@@ -864,6 +1016,8 @@ function validateStrikeContract() {
   requireText(grillText, "Do not silently decide product, scope, risk", grillPath);
   requireText(grillText, "## Decision Tree", grillPath);
   requireText(grillText, "## Decision Review", grillPath);
+  requireText(grillText, "Review results returned: yes / no", grillPath);
+  requireText(grillText, "Review results returned: yes", grillPath);
   requireText(grillText, "Decision review prompt", grillPath);
   requireText(grillText, "## Pressure Points", grillPath);
   requireText(grillText, "## Decision Checkpoint", grillPath);
@@ -946,6 +1100,9 @@ function validateStrikeContract() {
   requireText(createPhaseText, "core noun before qualifiers", createPhasePath);
   requireText(createPhaseText, "Likely Surfaces / Blast Radius", createPhasePath);
   requireText(createPhaseText, "Research / Watchouts", createPhasePath);
+  requireText(createPhaseText, "## Phase Research Needs", createPhasePath);
+  requireText(createPhaseText, "Use light official/source/repo checks only when needed", createPhasePath);
+  requireText(createPhaseText, "Leave proper\n  implementation research to `research-phase`", createPhasePath);
   requireText(createPhaseText, "Phase Boundary Check", createPhasePath);
   requireText(createPhaseText, "Too broad / small / stale / horizontal", createPhasePath);
   requireText(createPhaseText, "Slice Handoff", createPhasePath);
@@ -953,36 +1110,53 @@ function validateStrikeContract() {
   requireText(createPhaseText, "if the chat transcript is gone", createPhasePath);
 
   for (const heading of [
-    "## Decision",
+    "## Research Basis",
+    "## Additional Phase Research",
     "## Findings",
-    "## Slice Size Check",
-    "## Domain Notes",
+    "## Repo Patterns",
+    "## Slice Boundary Implications",
     "## Questions Or Blockers",
-    "## Ready For Planning",
+    "## Research Audit",
+    "## Ready For Slicing",
   ]) {
-    requireText(researchText, heading, researchPath);
+    requireText(researchPhaseText, heading, researchPhasePath);
   }
-  requireText(researchText, "Ready for planning: yes / no", researchPath);
-  requireText(researchText, "official docs", researchPath);
-  requireText(researchText, "source-backed evidence", researchPath);
-  requireText(researchText, "Label weak evidence as weak", researchPath);
-  requireText(researchText, "money, accounting", researchPath);
-  requireText(researchText, "Use this when `Needed: no`", researchPath);
-  requireText(researchText, "Before doing slice-specific research, read `research/index.md`", researchPath);
-  requireText(researchText, "relevant per-item reports and audit files", researchPath);
-  requireText(researchText, "accepted-risk initiative research as inherited baseline evidence", researchPath);
-  requireText(researchText, "Do not redo initiative-level provider/model/API", researchPath);
-  requireText(researchText, "changes, narrows, or confirms the initiative research", researchPath);
-  requireText(researchText, "supporting-artifacts/", researchPath);
-  requireText(researchText, "Do not write the slice plan", researchPath);
-  requireText(researchText, "Do not silently redo missing initiative-level research", researchPath);
-  requireText(researchText, "as short as possible", researchPath);
-  requireText(researchText, "Less verbose is\nbetter", researchPath);
-  requireText(researchText, "Record implications, not a diary", researchPath);
-  requireText(researchText, "Do not paste raw notes, long excerpts", researchPath);
-  requireText(researchText, "Too broad: yes / no", researchPath);
-  requireText(researchText, "edit the\n  current slice into the first smaller slice", researchPath);
+  requireText(researchPhaseText, "Ready for slicing: yes / no", researchPhasePath);
+  requireText(researchPhaseText, "Start from initiative research", researchPhasePath);
+  requireText(researchPhaseText, "Do not duplicate research already covered", researchPhasePath);
+  requireText(researchPhaseText, "phase-specific implementation gaps", researchPhasePath);
+  requireText(researchPhaseText, "official canonical, idiomatic, recommended way", researchPhasePath);
+  requireText(researchPhaseText, "specific third-party APIs, packages, plugins, SDKs, models", researchPhasePath);
+  requireText(researchPhaseText, "how should we use this\n  exact API/plugin/feature correctly here?", researchPhasePath);
+  requireText(researchPhaseText, "recommended usage patterns, integration flows, lifecycle expectations", researchPhasePath);
+  requireText(researchPhaseText, "payments, refunds, coupons, invoices, accounting", researchPhasePath);
+  requireText(researchPhaseText, "specific domain rule or official provider guidance", researchPhasePath);
+  requireText(researchPhaseText, "## Phase Research Audit", researchPhasePath);
+  requireText(researchPhaseText, "Read-only audit this phase research", researchPhasePath);
+  requireText(researchPhaseText, "research-audit.md", researchPhasePath);
+  requireText(researchPhaseText, "Verdict: pass / needs-fix / accepted-risk", researchPhasePath);
+  requireText(researchPhaseText, "Review results returned: yes / no", researchPhasePath);
+  requireText(researchPhaseText, "Must Fix count:", researchPhasePath);
+  requireText(researchPhaseText, "Do not write `Ready for slicing: yes` unless `research-audit.md` exists", researchPhasePath);
+  requireText(researchPhaseText, "`Review results returned: yes`", researchPhasePath);
+  requireText(researchPhaseText, "legacy slice research files", researchPhasePath);
+  requireText(researchPhaseText, "official or primary\n  sources", researchPhasePath);
+  requireText(researchPhaseText, "inspect actual files", researchPhasePath);
+  requireText(researchPhaseText, "no additional phase-specific research is needed", researchPhasePath);
+  requireText(researchPhaseText, "Do not create slices, slice plans", researchPhasePath);
+  requireText(researchPhaseText, "Do not silently redo initiative-level research", researchPhasePath);
+  requireText(researchPhaseText, "Record implications for slicing", researchPhasePath);
+  requireAbsentText(researchPhaseText, "when the host supports subagents", researchPhasePath);
+  requireAbsentText(researchPhaseText, "when supported", researchPhasePath);
+  requireAbsentText(researchPhaseText, "subagents are unavailable", researchPhasePath);
+  requireAbsentText(researchPhaseText, "inline audit pass", researchPhasePath);
 
+  requireText(createSlicesText, "phase research audit from the current phase's `research-audit.md`", createSlicesPath);
+  requireText(createSlicesText, "Read the current phase's `research-audit.md`", createSlicesPath);
+  requireText(createSlicesText, "does not say `Verdict: pass` or\n  `Verdict: accepted-risk` with `Must Fix count: 0`", createSlicesPath);
+  requireText(createSlicesText, "# Slice Boundary Blocker", createSlicesPath);
+  requireText(createSlicesText, "Check: phaseResearchComplete", createSlicesPath);
+  requireText(createSlicesText, "Use phase research and its audit as the inherited implementation research", createSlicesPath);
   requireText(createSlicesText, "Read relevant initiative research constraints", createSlicesPath);
   requireText(createSlicesText, "supporting-artifacts/", createSlicesPath);
   requireText(createSlicesText, "A vertical slice is one observable behavior path", createSlicesPath);
@@ -1021,17 +1195,24 @@ function validateStrikeContract() {
   requireText(planText, "Ensure what you are planning for is complete", planPath);
   requireText(planText, "table-stakes requirements", planPath);
   requireText(planText, "Use initiative research as inherited constraints", planPath);
-  requireText(planText, "Read the slice stub, phase spec, slice research, relevant initiative research", planPath);
+  requireText(planText, "Read the slice stub, phase spec, phase research, phase research audit", planPath);
+  requireText(planText, "Required user-provided customization from the consuming repo's Strike", planPath);
+  requireText(planText, "user implementation-discipline guidance", planPath);
+  requireText(planText, "strike/user-guidance/implementation-discipline/global.md", planPath);
+  requireText(planText, "strike/user-guidance/implementation-discipline/plan-slice.md", planPath);
+  requireText(planText, "Read required user-provided customization", planPath);
   requireText(planText, "Treat passing or accepted-risk initiative research as baseline evidence", planPath);
   requireText(planText, "relevant per-item report and audit before adding new tactical", planPath);
-  requireText(planText, "Prefer official or primary sources when\n  the fact is external, current, or high-stakes", planPath);
+  requireText(planText, "Prefer official or\n  primary sources when the fact is external, current, or high-stakes", planPath);
   requireText(planText, "supporting-artifacts/", planPath);
-  requireText(planText, "slice research", planPath);
-  requireText(planText, "current slice's `research.md`", planPath);
+  requireText(planText, "phase research", planPath);
+  requireText(planText, "current phase's `research.md`", planPath);
+  requireText(planText, "current phase's `research-audit.md`", planPath);
+  requireText(planText, "If phase `research-audit.md` does not say `Verdict: pass` or\n  `Verdict: accepted-risk` with `Must Fix count: 0`", planPath);
   requireText(planText, "current slice's `plan.md`", planPath);
-  requireText(planText, "Ready for planning: no", planPath);
-  requireText(planText, "Do tactical research as needed", planPath);
-  requireText(planText, "implementation, verification, or risk", planPath);
+  requireText(planText, "Ready for slicing: no", planPath);
+  requireText(planText, "Do narrow tactical research as needed", planPath);
+  requireText(planText, "planning reveals a slice-specific\n  detail", planPath);
   requireText(planText, "same class of problem before proposing a new pattern", planPath);
   requireText(planText, "core noun before qualifiers lens", planPath);
   requireText(planText, "adjective-noun siblings", planPath);
@@ -1058,84 +1239,175 @@ function validateStrikeContract() {
   requireText(planText, "small code snippets, schema shapes, type sketches", planPath);
   requireText(planText, "Do not default to a full test suite", planPath);
   requireText(planText, "test environment clickthrough as\n  equivalent proof", planPath);
+  requireText(planText, "## Route Back", planPath);
+  requireText(planText, "Command: None / reopen-phase-check / reopen-check", planPath);
   requireText(planText, "## Split Recommendation", planPath);
   requireText(planText, "Needed: yes / no", planPath);
-  requireText(planText, "bloated plan", planPath);
-  requireText(planText, "edit the current slice into the first smaller slice", planPath);
+  requireText(planText, "Work from the accepted slice boundary", planPath);
+  requireText(planText, "a clean,\n  complete implementation needs a different boundary", planPath);
+  requireText(planText, "edit the current slice into the first replacement\n  slice", planPath);
   requireText(planText, "stable repo paths, commands, constraints", planPath);
   requireText(planText, "tighten it before calling it build-ready", planPath);
 
-  requireText(verifyText, "## Research Gate", verifyPath);
+  requireText(verifyText, "## Research Basis", verifyPath);
   requireText(verifyText, "## Issues", verifyPath);
   requireText(verifyText, "### Must Fix", verifyPath);
   requireText(verifyText, "### Follow-Up", verifyPath);
   requireText(verifyText, "### Accepted Risk", verifyPath);
   requireText(verifyText, "Fix Needed: yes / no", verifyPath);
   requireText(verifyText, "## Route Back", verifyPath);
-  requireText(verifyText, "Ready for planning: yes", verifyPath);
-  requireText(verifyText, "current slice's `research.md`", verifyPath);
-  requireText(verifyText, "current slice's `plan.md`", verifyPath);
-  requireText(verifyText, "current phase's `phase-spec.md`", verifyPath);
-  requireText(verifyText, "supporting-artifacts/", verifyPath);
-  requireText(verifyText, "plan's `Development Plan`", verifyPath);
+  requireText(verifyText, "Ready for slicing: yes", verifyPath);
+  requireText(verifyText, "Required verification packet:", verifyPath);
+  requireText(verifyText, "strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/slice.md", verifyPath);
+  requireText(verifyText, "strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/plan.md", verifyPath);
+  requireText(verifyText, "strike/initiatives/<initiative-id>/phases/<phase-id>/phase-spec.md", verifyPath);
+  requireText(verifyText, "strike/initiatives/<initiative-id>/phases/<phase-id>/research.md", verifyPath);
+  requireText(verifyText, "strike/initiatives/<initiative-id>/phases/<phase-id>/research-audit.md", verifyPath);
+  requireText(verifyText, "optional context when needed:", verifyPath);
+  requireText(verifyText, "focused repo paths", verifyPath);
+  requireText(verifyText, "strike/initiatives/<initiative-id>/supporting-artifacts/", verifyPath);
+  requireText(verifyText, "Required user-provided customization from the consuming repo's Strike", verifyPath);
+  requireText(verifyText, "strike/user-guidance/review-lenses/global.md", verifyPath);
+  requireText(verifyText, "strike/user-guidance/review-lenses/verify-slice-plan.md", verifyPath);
+  requireText(verifyText, "strike/user-guidance/implementation-discipline/global.md", verifyPath);
+  requireText(verifyText, "strike/user-guidance/implementation-discipline/verify-slice-plan.md", verifyPath);
+  requireText(verifyText, "Read the required verification packet:", verifyPath);
+  requireText(verifyText, "Read required user-provided customization", verifyPath);
+  requireText(verifyText, "Load optional context only when needed", verifyPath);
+  requireText(verifyText, "read `strike/initiatives/<initiative-id>/supporting-artifacts/` when the", verifyPath);
+  requireText(verifyText, "inspect focused repo paths when local pattern claims", verifyPath);
+  requireText(verifyText, "Confirm the research basis", verifyPath);
+  requireText(verifyText, "Run the three required plan review agents described below in parallel", verifyPath);
+  requireText(verifyText, "Synthesize packet evidence, optional context, and review-agent findings", verifyPath);
+  requireText(verifyText, "Review results returned: yes / no", verifyPath);
+  requireText(verifyText, "Review results returned: yes", verifyPath);
+  requireText(verifyText, "Decide build readiness", verifyPath);
+  requireText(planReadinessAuditText, "plan's `Development Plan`", planReadinessAuditPath);
   requireText(verifyText, "## Supporting Artifacts", verifyPath);
-  requireText(verifyText, "supporting artifact usage", verifyPath);
-  requireText(verifyText, "relevant `supporting-artifacts/` notes are\n  ignored by the plan", verifyPath);
-  requireText(verifyText, "out-of-scope boundaries", verifyPath);
-  requireText(verifyText, "verification intent", verifyPath);
-  requireText(verifyText, "core\n  noun before qualifiers lens", verifyPath);
-  requireText(verifyText, "adjective-noun siblings", verifyPath);
-  requireText(verifyText, "concrete `Verification Plan`", verifyPath);
-  requireText(verifyText, "`Codebase Patterns` names", verifyPath);
-  requireText(verifyText, "`System Touchpoints` considers", verifyPath);
-  requireText(verifyText, "`Blast Radius` explains", verifyPath);
-  requireText(verifyText, "tests use the repo's test/E2E environment while Browser Clickthrough uses the\n  dev/local app environment", verifyPath);
-  requireText(verifyText, "verification environments are missing, swapped", verifyPath);
-  requireText(verifyText, "default full-suite command", verifyPath);
-  requireText(verifyText, "research `Slice Size Check`", verifyPath);
-  requireText(verifyText, "If it says `Too broad: yes`", verifyPath);
+  requireText(planReadinessAuditText, "optional supporting artifacts", planReadinessAuditPath);
+  requireText(verifyText, "Relevant `supporting-artifacts/` notes are represented by the plan", verifyPath);
+  requireText(planReadinessAuditText, "out-of-scope boundaries", planReadinessAuditPath);
+  requireText(planReadinessAuditText, "verification intent", planReadinessAuditPath);
+  requireText(planReadinessAuditText, "core noun before qualifiers lens", planReadinessAuditPath);
+  requireText(planReadinessAuditText, "adjective-noun siblings", planReadinessAuditPath);
+  requireText(planReadinessAuditText, "concrete `Verification Plan`", planReadinessAuditPath);
+  requireText(planReadinessAuditText, "using these categories: Static / Build Checks, Unit / Component / Integration", planReadinessAuditPath);
+  requireText(planReadinessAuditText, "Tests, E2E Tests, Browser Clickthrough, Visual Evidence, and Skipped / Not", planReadinessAuditPath);
+  requireText(planReadinessAuditText, "Applicable. Check that it separates automated tests from Browser Clickthrough", planReadinessAuditPath);
+  requireText(planReadinessAuditText, "`Codebase Patterns` names", planReadinessAuditPath);
+  requireText(planReadinessAuditText, "`System Touchpoints` covers", planReadinessAuditPath);
+  requireText(planReadinessAuditText, "`Blast Radius` explains", planReadinessAuditPath);
+  requireText(verifyText, "automated tests belong in the repo's test/E2E environment", verifyPath);
+  requireText(verifyText, "Verification environments are correct", verifyPath);
+  requireText(planReadinessAuditText, "vague default full-suite commands", planReadinessAuditPath);
   requireText(verifyText, "plan-verification.md", verifyPath);
-  requireText(verifyText, "read-only review subagents", verifyPath);
-  requireText(verifyText, "host does not support subagents", verifyPath);
-  requireText(verifyText, "inline lenses", verifyPath);
-  requireText(verifyText, "implementation-plan", verifyPath);
-  requireText(verifyText, "grouped verification\n  plan", verifyPath);
-  requireText(verifyText, "similar-precedent awareness", verifyPath);
-  requireText(verifyText, "`Codebase Patterns` is missing", verifyPath);
-  requireText(verifyText, "`System Touchpoints` or `Blast Radius` is\n  missing", verifyPath);
-  requireText(verifyText, "lacks a repo-precedent\n  scan", verifyPath);
-  requireText(verifyText, "Always run this subagent", verifyPath);
-  requireText(verifyText, "Always consider `canonical-implementation`", verifyPath);
-  requireText(verifyText, "official docs", verifyPath);
-  requireText(verifyText, "Stripe, Shopify, Amazon", verifyPath);
-  requireText(verifyText, "state-data-integrity", verifyPath);
-  requireText(verifyText, "security-privacy", verifyPath);
-  requireText(verifyText, "integration-risk", verifyPath);
-  requireText(verifyText, "ui-regression", verifyPath);
-  requireText(verifyText, "user-flows", verifyPath);
-  requireText(verifyText, "accessibility", verifyPath);
-  requireText(verifyText, "Suggested Category: Must Fix / Follow-Up / Accepted Risk", verifyPath);
+  requireText(verifyText, "Review agents are read-only", verifyPath);
+  requireText(verifyText, "references/review-agents/output-discipline.md", verifyPath);
+  requireText(verifyText, "includes that output\ncontract in each review-agent prompt", verifyPath);
+  requireText(verifyText, "### 1. Run Required Plan Audits In Parallel", verifyPath);
+  requireText(verifyText, "Run these three required read-only plan audits in parallel", verifyPath);
+  requireText(verifyText, "any applicable user review-lens agents in the same parallel batch", verifyPath);
+  requireText(verifyText, "When\n   launching a built-in SUBAGENT, include the named bundled\n   `references/review-agents/` file in that subagent's prompt as its required\n   audit rubric", verifyPath);
+  requireText(verifyText, "SUBAGENT: `plan-implementation-readiness-audit`", verifyPath);
+  requireText(verifyText, "references/review-agents/plan-implementation-readiness-audit.md", verifyPath);
+  requireText(verifyText, "SUBAGENT: `canonical-readiness-audit`", verifyPath);
+  requireText(verifyText, "references/review-agents/canonical-readiness-audit.md", verifyPath);
+  requireText(verifyText, "official, idiomatic, recommended way", verifyPath);
+  requireText(verifyText, "plausible\n  invented APIs, custom systems, handmade types", verifyPath);
+  requireText(verifyText, "SUBAGENT: `full-plan-audit`", verifyPath);
+  requireText(verifyText, "references/review-agents/full-plan-audit.md", verifyPath);
+  requireText(verifyText, "This is still a\n  plan audit, not a code audit", verifyPath);
+  requireText(verifyText, "### 2. Add User Review Lenses To The Same Parallel Batch", verifyPath);
+  requireText(verifyText, "USER REVIEW LENSES: relevant user review-lens audits from:", verifyPath);
+  requireText(verifyText, "User review lenses are user-provided customization", verifyPath);
+  requireText(verifyText, "add it to the same parallel review batch", verifyPath);
+  requireText(planReadinessAuditText, "Plan Implementation Readiness Audit", planReadinessAuditPath);
+  requireText(canonicalReadinessAuditText, "Canonical Readiness Audit", canonicalReadinessAuditPath);
+  requireText(canonicalReadinessAuditText, "official, idiomatic, recommended way", canonicalReadinessAuditPath);
+  requireText(canonicalReadinessAuditText, "do not accept a reasonable-sounding implementation as\n  canonical", canonicalReadinessAuditPath);
+  requireText(canonicalReadinessAuditText, "generated/package types", canonicalReadinessAuditPath);
+  requireText(canonicalReadinessAuditText, "mark it `Must Fix`", canonicalReadinessAuditPath);
+  requireText(fullPlanAuditText, "Full Plan Audit", fullPlanAuditPath);
+  requireText(fullPlanAuditText, "This is not an\nimplementation/code audit", fullPlanAuditPath);
+  requireText(fullPlanAuditText, "blast radius", fullPlanAuditPath);
+  requireText(fullPlanAuditText, "security and privacy", fullPlanAuditPath);
+  requireText(fullPlanAuditText, "tests and proof", fullPlanAuditPath);
+  requireText(planReadinessAuditText, "Static / Build Checks, Unit / Component / Integration\n  Tests, E2E Tests, Browser Clickthrough, Visual Evidence", planReadinessAuditPath);
+  requireText(planReadinessAuditText, "similar-precedent evidence", planReadinessAuditPath);
+  requireText(planReadinessAuditText, "repo-pattern-based home", planReadinessAuditPath);
+  requireText(verifyText, "`Codebase Patterns` names relevant repo examples", verifyPath);
+  requireText(verifyText, "`System Touchpoints` and `Blast Radius` cover", verifyPath);
+  requireText(verifyText, "includes a repo-precedent scan", verifyPath);
+  requireAbsentText(verifyText, "### 2. Add Conditional Review Lenses To The Same Parallel Batch", verifyPath);
+  requireAbsentText(verifyText, "SUBAGENT: `canonical-implementation`", verifyPath);
+  requireAbsentText(verifyText, "references/review-agents/state-data-integrity.md", verifyPath);
+  requireAbsentText(verifyText, "references/review-agents/security-privacy.md", verifyPath);
+  requireAbsentText(verifyText, "references/review-agents/integration-risk.md", verifyPath);
+  requireAbsentText(verifyText, "references/review-agents/ui-regression.md", verifyPath);
+  requireAbsentText(verifyText, "references/review-agents/user-flows.md", verifyPath);
+  requireAbsentText(verifyText, "references/review-agents/accessibility.md", verifyPath);
+  requireText(verifyText, "### 3. Synthesize Review Results", verifyPath);
+  requireText(verifyText, "Require every\nreview agent to follow the bundled output discipline", verifyPath);
+  requireText(verifyText, "return every `Must Fix`", verifyPath);
+  requireText(verifyText, "avoid low-value\nnits", verifyPath);
+  requireText(reviewOutputDisciplineText, "Review Agent Output Discipline", reviewOutputDisciplinePath);
+  requireText(reviewOutputDisciplineText, "Suggested Category: Must Fix / Follow-Up / Accepted Risk", reviewOutputDisciplinePath);
+  requireText(reviewOutputDisciplineText, "Findings: None", reviewOutputDisciplinePath);
+  requireText(reviewOutputDisciplineText, "Return every `Must Fix` finding", reviewOutputDisciplinePath);
+  requireText(reviewOutputDisciplineText, "Return only material `Follow-Up` findings", reviewOutputDisciplinePath);
+  requireText(reviewOutputDisciplineText, "Group repeated examples under one finding", reviewOutputDisciplinePath);
+  requireText(reviewOutputDisciplineText, "Do not report low-value nits", reviewOutputDisciplinePath);
+  requireText(reviewOutputDisciplineText, "Do not restate the rubric", reviewOutputDisciplinePath);
+  requireText(reviewOutputDisciplineText, "Evidence must be concrete", reviewOutputDisciplinePath);
   requireText(verifyText, "Command: None / reopen-check", verifyPath);
   requireText(verifyText, "Phase: None / <phase-id>", verifyPath);
   requireText(verifyText, "Slice: None / <slice-id>", verifyPath);
-  requireText(verifyText, "Check: None / researchComplete / planCreated", verifyPath);
+  requireText(verifyText, "Check: None / phaseResearchComplete / slicesCreated / planCreated", verifyPath);
+  requireText(verifyText, "### Verifier Conduct", verifyPath);
   requireText(verifyText, "Do not edit `plan.md`", verifyPath);
+  requireText(verifyText, "Do not build the slice", verifyPath);
+  requireText(verifyText, "Do not verify the slice build", verifyPath);
+  requireText(verifyText, "### `Ready: yes` Requires", verifyPath);
+  requireText(verifyText, "Phase research is present", verifyPath);
+  requireText(verifyText, "says `Ready for slicing: yes`", verifyPath);
+  requireText(verifyText, "Phase research audit is present", verifyPath);
+  requireText(verifyText, "`Verdict: pass` or `Verdict: accepted-risk` with `Must Fix count: 0`", verifyPath);
+  requireText(verifyText, "The plan's `Research And Artifacts Used` identifies relevant initiative", verifyPath);
+  requireText(verifyText, "Slice-specific research deltas are narrow", verifyPath);
+  requireText(verifyText, "The plan is complete, cohesive, buildable, and contained within the accepted\n  slice", verifyPath);
+  requireText(verifyText, "Relevant implementation discipline guidance is applied", verifyPath);
+  requireText(verifyText, "`Codebase Patterns` names relevant repo examples", verifyPath);
+  requireText(verifyText, "`System Touchpoints` and `Blast Radius` cover", verifyPath);
+  requireText(verifyText, "Relevant `supporting-artifacts/` notes are represented by the plan", verifyPath);
+  requireText(verifyText, "includes a repo-precedent scan", verifyPath);
+  requireText(verifyText, "`Verification Plan` is concrete", verifyPath);
+  requireText(verifyText, "Verification environments are correct", verifyPath);
+  requireText(verifyText, "Browser-visible work has a Browser Clickthrough plan", verifyPath);
+  requireText(verifyText, "E2E Tests name specs to add/update", verifyPath);
+  requireText(verifyText, "No accepted-scope `Must Fix` issue remains", verifyPath);
+  requireText(verifyText, "All required review agents and applicable user review lenses have returned", verifyPath);
+  requireText(verifyText, "### Research And Boundary Blockers", verifyPath);
   requireText(verifyText, "complete-check planVerified", verifyPath);
-  requireText(verifyText, "researchComplete", verifyPath);
+  requireText(verifyText, "phaseResearchComplete", verifyPath);
   requireText(verifyText, "planCreated", verifyPath);
-  requireText(verifyText, "research says `Too broad: yes`", verifyPath);
-  requireText(verifyText, "cohesive and verifiable in one focused build loop", verifyPath);
-  requireText(verifyText, "independent outcomes, cannot\n  be verified in one focused loop", verifyPath);
+  requireText(verifyText, "independent outcomes, cannot be verified in one focused loop", verifyPath);
   requireText(verifyText, "Give every `Must Fix` item a stable short issue ID", verifyPath);
   requireText(verifyText, "set `Fix Needed: no`", verifyPath);
-  requireText(verifyText, "route back to `researchComplete`", verifyPath);
-  requireText(verifyText, "rerun research and planning", verifyPath);
+  requireText(verifyText, "Route broad missing research back to `phaseResearchComplete`", verifyPath);
+  requireText(verifyText, "Route back only when a real decision", verifyPath);
+  requireText(verifyText, "### Fix Or Route Back", verifyPath);
+  requireText(verifyText, "### Completion", verifyPath);
 
   requireText(buildText, "verified slice plan from the current slice's `plan.md`", buildPath);
   requireText(buildText, "supporting-artifacts/", buildPath);
   requireText(buildText, "current slice's `plan-verification.md`", buildPath);
-  requireText(buildText, "optional slice, research, or phase-spec context only", buildPath);
+  requireText(buildText, "optional slice, phase research/audit, or phase-spec context only", buildPath);
+  requireText(buildText, "Required user-provided customization from the consuming repo's Strike", buildPath);
+  requireText(buildText, "user implementation-discipline guidance", buildPath);
+  requireText(buildText, "strike/user-guidance/implementation-discipline/global.md", buildPath);
+  requireText(buildText, "strike/user-guidance/implementation-discipline/build-slice.md", buildPath);
   requireText(buildText, "Treat `plan.md` as the primary build handoff", buildPath);
+  requireText(buildText, "Read required user-provided customization and apply the relevant guidance", buildPath);
   requireText(buildText, "If `plan-verification.md` does not say `Ready: yes`, write `Built: no`", buildPath);
   requireText(buildText, "route back to `verify-slice-plan` and do not edit implementation files", buildPath);
   requireText(buildText, "plan's `Development Plan`, `Research And Artifacts Used`,\n  `Codebase Patterns`, `System Touchpoints`, `Blast Radius`, `Verification Plan`", buildPath);
@@ -1144,9 +1416,9 @@ function validateStrikeContract() {
   requireText(buildText, "search for existing repo examples of the same class of problem", buildPath);
   requireText(buildText, "Add or update the focused Unit / Component / Integration Tests and E2E Tests", buildPath);
   requireText(buildText, "Run automated tests in the planned test/E2E environment", buildPath);
-  requireText(buildText, "Do not switch Browser Clickthrough to a test DB or test\n  environment", buildPath);
-  requireText(buildText, "Do not declare Browser Clickthrough blocked after one failed browser URL", buildPath);
-  requireText(buildText, "retry with alternate local\n  URL forms and another available browser surface", buildPath);
+  requireText(buildText, "so `verify-slice-build` can run final\n  Browser Clickthrough", buildPath);
+  requireText(buildText, "final Browser Clickthrough and\n  Visual Evidence are owned by `verify-slice-build`", buildPath);
+  requireText(buildText, "Do not claim final browser verification from `build-slice`", buildPath);
   requireText(buildText, "Do not default to a full suite", buildPath);
   requireText(buildText, "important\n  implementation notes", buildPath);
   requireText(buildText, "Use engineering judgment for ordinary implementation details", buildPath);
@@ -1168,57 +1440,195 @@ function validateStrikeContract() {
   requireText(buildText, "Slice: None / <slice-id>", buildPath);
   requireText(buildText, "Check: None / planCreated / planVerified", buildPath);
   requireText(buildText, "complete-check implemented", buildPath);
-  requireText(buildText, "verified plan cannot be followed without expanding or redesigning", buildPath);
+  requireText(buildText, "implementation findings change the accepted slice boundary", buildPath);
   requireText(buildText, "write `Built: no` and route back to the\n  owning workflow step so Strike can continue", buildPath);
-  requireText(buildText, "Do not re-evaluate whether the slice is well-shaped", buildPath);
+  requireText(buildText, "Use the accepted slice boundary from upstream artifacts", buildPath);
   requireText(buildText, "Read upstream artifacts only when they are needed", buildPath);
   requireText(buildText, "Keep environments separate too", buildPath);
   requireText(buildText, "Do not treat a failing command, provider response, workflow error, payload\n  limit", buildPath);
 
-  requireText(verifyBuildText, "current slice's `slice.md`", verifyBuildPath);
-  requireText(verifyBuildText, "supporting-artifacts/", verifyBuildPath);
-  requireText(verifyBuildText, "current slice's `research.md`", verifyBuildPath);
-  requireText(verifyBuildText, "current slice's `plan.md`", verifyBuildPath);
-  requireText(verifyBuildText, "current slice's `plan-verification.md`", verifyBuildPath);
-  requireText(verifyBuildText, "current slice's `build.md`", verifyBuildPath);
-  requireText(verifyBuildText, "current phase's `phase-spec.md`", verifyBuildPath);
+  requireText(verifyBuildText, "Required verification packet:", verifyBuildPath);
+  requireText(verifyBuildText, "- `build.md`", verifyBuildPath);
+  requireText(verifyBuildText, "- `plan.md`", verifyBuildPath);
+  requireText(verifyBuildText, "- `slice.md`", verifyBuildPath);
+  requireText(verifyBuildText, "optional context when needed:", verifyBuildPath);
+  requireText(verifyBuildText, "- `plan-verification.md`", verifyBuildPath);
+  requireText(verifyBuildText, "phase `research.md`", verifyBuildPath);
+  requireText(verifyBuildText, "phase `research-audit.md`", verifyBuildPath);
+  requireText(verifyBuildText, "- `phase-spec.md`", verifyBuildPath);
+  requireText(verifyBuildText, "Required user-provided customization from the consuming repo's Strike", verifyBuildPath);
+  requireText(verifyBuildText, "strike/user-guidance/review-lenses/global.md", verifyBuildPath);
+  requireText(verifyBuildText, "strike/user-guidance/review-lenses/verify-slice-build.md", verifyBuildPath);
+  requireText(verifyBuildText, "strike/user-guidance/implementation-discipline/global.md", verifyBuildPath);
+  requireText(verifyBuildText, "strike/user-guidance/implementation-discipline/verify-slice-build.md", verifyBuildPath);
+  requireText(verifyBuildText, "Bundled Strike review-agent instructions", verifyBuildPath);
+  requireText(verifyBuildText, "references/review-agents/built-slice-acceptance-audit.md", verifyBuildPath);
+  requireText(verifyBuildText, "references/review-agents/built-slice-code-audit.md", verifyBuildPath);
+  requireText(verifyBuildText, "references/review-agents/built-slice-common-issues-audit.md", verifyBuildPath);
+  requireText(verifyBuildText, "references/review-agents/canonical-implementation.md", verifyBuildPath);
+  requireText(verifyBuildText, "references/review-agents/state-data-integrity.md", verifyBuildPath);
+  requireText(verifyBuildText, "references/review-agents/security-privacy.md", verifyBuildPath);
+  requireText(verifyBuildText, "references/review-agents/integration-risk.md", verifyBuildPath);
+  requireText(verifyBuildText, "references/review-agents/ui-regression.md", verifyBuildPath);
+  requireText(verifyBuildText, "references/review-agents/user-flows.md", verifyBuildPath);
+  requireText(verifyBuildText, "references/review-agents/accessibility.md", verifyBuildPath);
+  requireText(verifyBuildText, "Read the required verification packet: `build.md`, `plan.md`, and\n   `slice.md`", verifyBuildPath);
+  requireText(verifyBuildText, "Confirm the slice is eligible for build verification", verifyBuildPath);
+  requireText(verifyBuildText, "workflow state or `plan-verification.md` shows the plan was ready", verifyBuildPath);
+  requireText(verifyBuildText, "Read required user-provided customization", verifyBuildPath);
+  requireText(verifyBuildText, "Load optional context only when needed", verifyBuildPath);
+  requireText(verifyBuildText, "read deeper into `plan-verification.md` when state is unclear", verifyBuildPath);
+  requireText(verifyBuildText, "read phase `research.md` and `research-audit.md`", verifyBuildPath);
+  requireText(verifyBuildText, "read `phase-spec.md` when phase scope, boundaries, acceptance intent", verifyBuildPath);
   requireText(verifyBuildText, "build-verification.md", verifyBuildPath);
   requireText(verifyBuildText, "Built: yes", verifyBuildPath);
-  requireText(verifyBuildText, "Confirm planned Unit / Component / Integration Tests and E2E Tests", verifyBuildPath);
-  requireText(verifyBuildText, "Confirm automated tests ran in the repo's test/E2E environment", verifyBuildPath);
-  requireText(verifyBuildText, "Do not default to a full test suite", verifyBuildPath);
-  requireText(verifyBuildText, "read-only review subagents", verifyBuildPath);
-  requireText(verifyBuildText, "host does not support subagents", verifyBuildPath);
-  requireText(verifyBuildText, "inline lenses", verifyBuildPath);
+  requireText(verifyBuildText, "Run the pre-browser verification batch in parallel", verifyBuildPath);
+  requireText(verifyBuildText, "SUBAGENT: `built-slice-acceptance-audit`", verifyBuildPath);
+  requireText(verifyBuildText, "SUBAGENT: `built-slice-code-audit`", verifyBuildPath);
+  requireText(verifyBuildText, "SUBAGENT: `built-slice-common-issues-audit`", verifyBuildPath);
+  requireText(verifyBuildText, "USER REVIEW LENSES: relevant user review-lens audits from required user\n     guidance", verifyBuildPath);
+  requireText(verifyBuildText, "Before launching a built-in SUBAGENT, the verifier loads the named bundled\n   `references/review-agents/` rubric", verifyBuildPath);
+  requireText(verifyBuildText, "automated slice checks in the repo's test runtime/server with test\n     DB/fixtures only", verifyBuildPath);
+  requireText(verifyBuildText, "Synthesize the pre-browser batch into a compact gate", verifyBuildPath);
+  requireText(verifyBuildText, "use the verification evidence categories shown in this skill", verifyBuildPath);
+  requireText(verifyBuildText, "use focused commands instead of defaulting to a full suite", verifyBuildPath);
+  requireText(verifyBuildText, "list only blocking issue IDs in the gate summary", verifyBuildPath);
+  requireText(verifyBuildText, "set `Ready for browser: yes` only when no accepted-scope `Must Fix`", verifyBuildPath);
+  requireText(verifyBuildText, "when `Ready for browser: no`, stop before Browser Checks", verifyBuildPath);
+  requireText(verifyBuildText, "Run Browser Checks for browser-visible work", verifyBuildPath);
+  requireText(verifyBuildText, "use the dev/local app environment and dev/local DB only", verifyBuildPath);
+  requireText(verifyBuildText, "actually use the feature", verifyBuildPath);
+  requireText(verifyBuildText, "Review agents are read-only", verifyBuildPath);
+  requireText(verifyBuildText, "references/review-agents/output-discipline.md", verifyBuildPath);
+  requireText(verifyBuildText, "includes that output\ncontract in each review-agent prompt", verifyBuildPath);
+  requireText(verifyBuildText, "### 1. Run Required Review Agents In Parallel", verifyBuildPath);
+  requireText(verifyBuildText, "Run these required review agents in the same pre-browser batch", verifyBuildPath);
+  requireText(verifyBuildText, "Review results returned: yes / no", verifyBuildPath);
+  requireText(verifyBuildText, "Review results returned: yes", verifyBuildPath);
+  requireText(verifyBuildText, "USER REVIEW LENSES: relevant user review-lens audits from:", verifyBuildPath);
+  requireText(verifyBuildText, "User review lenses are user-provided customization", verifyBuildPath);
+  requireText(verifyBuildText, "relevant user review-lens audits", verifyBuildPath);
+  requireText(verifyBuildText, "add it to the same parallel pre-browser batch", verifyBuildPath);
+  requireText(verifyBuildText, "### 2. Add Conditional Review Lenses To The Same Parallel Batch", verifyBuildPath);
+  requireText(verifyBuildText, "Only add these review lenses when the changed files", verifyBuildPath);
+  requireText(verifyBuildText, "Use the named bundled `references/review-agents/` file as\nthe conditional SUBAGENT's required audit rubric", verifyBuildPath);
+  requireText(verifyBuildText, "### 3. Synthesize Review Results", verifyBuildPath);
+  requireText(verifyBuildText, "review-agent findings", verifyBuildPath);
+  requireText(verifyBuildText, "follow the bundled output discipline", verifyBuildPath);
+  requireText(verifyBuildText, "return every `Must Fix`", verifyBuildPath);
+  requireText(verifyBuildText, "avoid low-value nits", verifyBuildPath);
+  requireText(verifyBuildText, "Write a compact `Pre-Browser Verification Batch` gate before any browser work", verifyBuildPath);
+  requireText(verifyBuildText, "blocking issue IDs", verifyBuildPath);
+  requireText(verifyBuildText, "If\nthe gate says `Ready for browser: no`, stop before Browser Checks", verifyBuildPath);
+  requireText(verifyBuildText, "### 4. Run Browser Checks", verifyBuildPath);
+  requireText(verifyBuildText, "run Browser Checks only after `Ready for browser:\nyes`", verifyBuildPath);
+  requireText(verifyBuildText, "Browser Proof Needed", verifyBuildPath);
+  requireText(verifyBuildText, "general quality and local\n  correctness", verifyBuildPath);
+  requireText(verifyBuildText, "recurring\n  slice-level failure patterns", verifyBuildPath);
+  requireText(builtAcceptanceAuditText, "Built Slice Acceptance Audit", builtAcceptanceAuditPath);
+  requireText(builtAcceptanceAuditText, "Browser Proof Needed", builtAcceptanceAuditPath);
+  requireText(builtAcceptanceAuditText, "final browser proof checklist", builtAcceptanceAuditPath);
+  requireText(builtAcceptanceAuditText, "Follow `references/review-agents/output-discipline.md`", builtAcceptanceAuditPath);
+  requireText(builtCodeAuditText, "Built Slice Code Audit", builtCodeAuditPath);
+  requireText(builtCodeAuditText, "code correctness and maintainability", builtCodeAuditPath);
+  requireText(builtCodeAuditText, "repo structure and utilities", builtCodeAuditPath);
+  requireText(builtCodeAuditText, "robustness and edge cases", builtCodeAuditPath);
+  requireText(builtCodeAuditText, "blast radius and regressions", builtCodeAuditPath);
+  requireText(builtCodeAuditText, "Follow `references/review-agents/output-discipline.md`", builtCodeAuditPath);
+  requireText(builtCommonIssuesAuditText, "Built Slice Common Issues Audit", builtCommonIssuesAuditPath);
+  requireText(builtCommonIssuesAuditText, "proper use of types", builtCommonIssuesAuditPath);
+  requireText(builtCommonIssuesAuditText, "package-exported types", builtCommonIssuesAuditPath);
+  requireText(builtCommonIssuesAuditText, "error handling integrity", builtCommonIssuesAuditPath);
+  requireText(builtCommonIssuesAuditText, "inspect the relevant package/SDK/ORM validation error types", builtCommonIssuesAuditPath);
+  requireText(builtCommonIssuesAuditText, "ephemeral UI/action state isolation", builtCommonIssuesAuditPath);
+  requireText(builtCommonIssuesAuditText, "react-hook-form", builtCommonIssuesAuditPath);
+  requireText(builtCommonIssuesAuditText, "post-submit data consistency", builtCommonIssuesAuditPath);
+  requireText(builtCommonIssuesAuditText, "design-system component reuse", builtCommonIssuesAuditPath);
+  requireText(builtCommonIssuesAuditText, "Follow `references/review-agents/output-discipline.md`", builtCommonIssuesAuditPath);
+  requireText(phaseSpecCoverageAuditText, "Phase Spec Coverage Review", phaseSpecCoverageAuditPath);
+  requireText(phaseSpecCoverageAuditText, "assembled phase work", phaseSpecCoverageAuditPath);
+  requireText(phaseSpecCoverageAuditText, "phase-level proof", phaseSpecCoverageAuditPath);
+  requireText(phaseSpecCoverageAuditText, "Follow `references/review-agents/output-discipline.md`", phaseSpecCoverageAuditPath);
+  requireText(crossSliceIntegrationAuditText, "Cross-Slice Integration Review", crossSliceIntegrationAuditPath);
+  requireText(crossSliceIntegrationAuditText, "handoffs and sequencing", crossSliceIntegrationAuditPath);
+  requireText(crossSliceIntegrationAuditText, "shared assumptions", crossSliceIntegrationAuditPath);
+  requireText(crossSliceIntegrationAuditText, "Follow `references/review-agents/output-discipline.md`", crossSliceIntegrationAuditPath);
+  requireText(mainSpecCoverageAuditText, "Main Spec Coverage Review", mainSpecCoverageAuditPath);
+  requireText(mainSpecCoverageAuditText, "assembled initiative work", mainSpecCoverageAuditPath);
+  requireText(mainSpecCoverageAuditText, "final proof", mainSpecCoverageAuditPath);
+  requireText(mainSpecCoverageAuditText, "Follow `references/review-agents/output-discipline.md`", mainSpecCoverageAuditPath);
+  requireText(crossPhaseIntegrationAuditText, "Cross-Phase Integration Review", crossPhaseIntegrationAuditPath);
+  requireText(crossPhaseIntegrationAuditText, "phase handoffs and sequencing", crossPhaseIntegrationAuditPath);
+  requireText(crossPhaseIntegrationAuditText, "shared assumptions", crossPhaseIntegrationAuditPath);
+  requireText(crossPhaseIntegrationAuditText, "Follow `references/review-agents/output-discipline.md`", crossPhaseIntegrationAuditPath);
+  requireText(readinessRiskAuditText, "Final Readiness Risk Review", readinessRiskAuditPath);
+  requireText(readinessRiskAuditText, "unresolved findings", readinessRiskAuditPath);
+  requireText(readinessRiskAuditText, "residual risk fit", readinessRiskAuditPath);
+  requireText(readinessRiskAuditText, "Follow `references/review-agents/output-discipline.md`", readinessRiskAuditPath);
+  requireText(canonicalImplementationAuditText, "Canonical Implementation Review", canonicalImplementationAuditPath);
+  requireText(canonicalImplementationAuditText, "official docs or primary sources", canonicalImplementationAuditPath);
+  requireText(canonicalImplementationAuditText, "Stripe, Shopify, or Amazon", canonicalImplementationAuditPath);
+  requireText(canonicalImplementationAuditText, "Follow `references/review-agents/output-discipline.md`", canonicalImplementationAuditPath);
+  requireText(stateDataIntegrityAuditText, "State Data Integrity Review", stateDataIntegrityAuditPath);
+  requireText(stateDataIntegrityAuditText, "source of truth", stateDataIntegrityAuditPath);
+  requireText(stateDataIntegrityAuditText, "durable references", stateDataIntegrityAuditPath);
+  requireText(securityPrivacyAuditText, "Security Privacy Review", securityPrivacyAuditPath);
+  requireText(securityPrivacyAuditText, "access control", securityPrivacyAuditPath);
+  requireText(securityPrivacyAuditText, "data exposure", securityPrivacyAuditPath);
+  requireText(integrationRiskAuditText, "Integration Risk Review", integrationRiskAuditPath);
+  requireText(integrationRiskAuditText, "integration contract", integrationRiskAuditPath);
+  requireText(integrationRiskAuditText, "durable handoff", integrationRiskAuditPath);
+  requireText(uiRegressionAuditText, "UI Regression Review", uiRegressionAuditPath);
+  requireText(uiRegressionAuditText, "design-system fit", uiRegressionAuditPath);
+  requireText(uiRegressionAuditText, "state isolation", uiRegressionAuditPath);
+  requireText(userFlowsAuditText, "User Flows Review", userFlowsAuditPath);
+  requireText(userFlowsAuditText, "flow completeness", userFlowsAuditPath);
+  requireText(userFlowsAuditText, "E2E and Browser Clickthrough", userFlowsAuditPath);
+  requireText(accessibilityAuditText, "Accessibility Review", accessibilityAuditPath);
+  requireText(accessibilityAuditText, "keyboard and focus", accessibilityAuditPath);
+  requireText(accessibilityAuditText, "screen-reader", accessibilityAuditPath);
+  for (const [auditPath, auditText] of [
+    [planReadinessAuditPath, planReadinessAuditText],
+    [phaseSpecCoverageAuditPath, phaseSpecCoverageAuditText],
+    [crossSliceIntegrationAuditPath, crossSliceIntegrationAuditText],
+    [stateDataIntegrityAuditPath, stateDataIntegrityAuditText],
+    [securityPrivacyAuditPath, securityPrivacyAuditText],
+    [integrationRiskAuditPath, integrationRiskAuditText],
+    [uiRegressionAuditPath, uiRegressionAuditText],
+    [userFlowsAuditPath, userFlowsAuditText],
+    [accessibilityAuditPath, accessibilityAuditText],
+  ]) {
+    requireText(auditText, "Follow `references/review-agents/output-discipline.md`", auditPath);
+  }
+  requireText(verifyBuildText, "conditional review lenses", verifyBuildPath);
   requireText(verifyBuildText, "canonical-implementation", verifyBuildPath);
-  requireText(verifyBuildText, "code-quality", verifyBuildPath);
-  requireText(verifyBuildText, "clear homes for UI, API/actions", verifyBuildPath);
-  requireText(verifyBuildText, "purpose names instead of vague buckets", verifyBuildPath);
-  requireText(verifyBuildText, "core noun before qualifiers for files, types", verifyBuildPath);
-  requireText(verifyBuildText, "small modules without hidden side effects", verifyBuildPath);
-  requireText(verifyBuildText, "centralized and documented env access", verifyBuildPath);
-  requireText(verifyBuildText, "useful debug evidence without leaking sensitive data", verifyBuildPath);
-  requireText(verifyBuildText, "loading,\n  empty, success, failure, recovery, accessibility, and responsive states", verifyBuildPath);
-  requireText(verifyBuildText, "technical symptoms, workflow errors, provider responses, payload\n  limits", verifyBuildPath);
-  requireText(verifyBuildText, "functionality", verifyBuildPath);
-  requireText(verifyBuildText, "spec-coverage", verifyBuildPath);
-  requireText(verifyBuildText, "edge-cases", verifyBuildPath);
   requireText(verifyBuildText, "ui-regression", verifyBuildPath);
   requireText(verifyBuildText, "user-flows", verifyBuildPath);
   requireText(verifyBuildText, "state-data-integrity", verifyBuildPath);
   requireText(verifyBuildText, "security-privacy", verifyBuildPath);
   requireText(verifyBuildText, "integration-risk", verifyBuildPath);
   requireText(verifyBuildText, "accessibility", verifyBuildPath);
-  requireText(verifyBuildText, "Suggested Category: Must Fix / Follow-Up / Accepted Risk", verifyBuildPath);
-  requireText(verifyBuildText, "run an actual Browser Clickthrough after the slice\nbuild", verifyBuildPath);
-  requireText(verifyBuildText, "Browser Clickthrough means using the feature", verifyBuildPath);
-  requireText(verifyBuildText, "Browser Clickthrough should run against the dev/local app environment", verifyBuildPath);
-  requireText(verifyBuildText, "Do not accept a single failed browser route, URL form, navigation timeout", verifyBuildPath);
-  requireText(verifyBuildText, "try another available browser surface before writing\n`Verified: no`", verifyBuildPath);
-  requireText(verifyBuildText, "Opening a route shell, logging in, navigating near the feature", verifyBuildPath);
-  requireText(verifyBuildText, "automated tests and Browser Clickthrough are separate gates", verifyBuildPath);
-  requireText(verifyBuildText, "tests\nbelong in the repo's test/E2E environment", verifyBuildPath);
+  requireText(reviewOutputDisciplineText, "Suggested Category: Must Fix / Follow-Up / Accepted Risk", reviewOutputDisciplinePath);
+  requireText(verifyBuildText, "verify by using the accepted feature in the browser", verifyBuildPath);
+  requireText(verifyBuildText, "dev/local app environment and dev/local DB/runtime", verifyBuildPath);
+  requireText(verifyBuildText, "click the feature controls/actions", verifyBuildPath);
+  requireText(verifyBuildText, "This is an execution check", verifyBuildPath);
+  requireText(verifyBuildText, "screenshots without using the feature does not satisfy Browser Clickthrough", verifyBuildPath);
+  requireText(verifyBuildText, "Automated tests and Browser Clickthrough are separate gates", verifyBuildPath);
+  requireText(verifyBuildText, "If the feature cannot be used successfully, write `Verified: no`", verifyBuildPath);
+  requireText(verifyBuildText, "Treat the browser as available", verifyBuildPath);
+  requireText(verifyBuildText, "Do not switch to a test DB/environment", verifyBuildPath);
   requireText(verifyBuildText, "## Issues", verifyBuildPath);
+  requireText(verifyBuildText, "## Pre-Browser Verification Batch", verifyBuildPath);
+  requireText(verifyBuildText, "Automated checks: pass / issues / blocked", verifyBuildPath);
+  requireText(verifyBuildText, "Required audits: pass / issues / blocked", verifyBuildPath);
+  requireText(verifyBuildText, "Conditional risk lenses: pass / issues / blocked / not run", verifyBuildPath);
+  requireText(verifyBuildText, "User review lenses: pass / issues / blocked / not run", verifyBuildPath);
+  requireText(verifyBuildText, "Browser proof needed:", verifyBuildPath);
+  requireText(verifyBuildText, "Blocking issue IDs:", verifyBuildPath);
+  requireText(verifyBuildText, "Ready for browser: yes / no", verifyBuildPath);
+  requireText(verifyBuildText, "## Browser Proof Checklist", verifyBuildPath);
+  requireText(verifyBuildText, "Concerns from acceptance audit:", verifyBuildPath);
   requireText(verifyBuildText, "## Verification Evidence", verifyBuildPath);
   requireText(verifyBuildText, "### Static / Build Checks", verifyBuildPath);
   requireText(verifyBuildText, "### Unit / Component / Integration Tests", verifyBuildPath);
@@ -1228,26 +1638,47 @@ function validateStrikeContract() {
   requireText(verifyBuildText, "### Skipped / Not Applicable", verifyBuildPath);
   requireText(verifyBuildText, "DB/runtime:", verifyBuildPath);
   requireText(verifyBuildText, "Fixtures/data setup:", verifyBuildPath);
+  requireText(verifyBuildText, "Required audits:", verifyBuildPath);
+  requireText(verifyBuildText, "Conditional risk lenses:", verifyBuildPath);
   requireText(verifyBuildText, "### Must Fix", verifyBuildPath);
   requireText(verifyBuildText, "### Follow-Up", verifyBuildPath);
   requireText(verifyBuildText, "### Accepted Risk", verifyBuildPath);
   requireText(verifyBuildText, "Verified: yes / no", verifyBuildPath);
   requireText(verifyBuildText, "Fix Needed: yes / no", verifyBuildPath);
-  requireText(verifyBuildText, "Command: None / reopen-check", verifyBuildPath);
+  requireText(verifyBuildText, "Command: None / reopen-check / reopen-phase-check", verifyBuildPath);
   requireText(verifyBuildText, "Phase: None / <phase-id>", verifyBuildPath);
   requireText(verifyBuildText, "Slice: None / <slice-id>", verifyBuildPath);
-  requireText(verifyBuildText, "Check: None / researchComplete / planCreated / planVerified / implemented", verifyBuildPath);
+  requireText(verifyBuildText, "Check: None / phaseResearchComplete / planCreated / planVerified / implemented", verifyBuildPath);
+  requireText(verifyBuildText, "### Verifier Conduct", verifyBuildPath);
   requireText(verifyBuildText, "Do not edit implementation files", verifyBuildPath);
-  requireText(verifyBuildText, "Browser Clickthrough was moved to a test DB/environment", verifyBuildPath);
-  requireText(verifyBuildText, "patched\n  without checking existing repo precedent", verifyBuildPath);
+  requireText(verifyBuildText, "### `Verified: yes` Requires", verifyBuildPath);
+  requireText(verifyBuildText, "`build.md` says `Built: yes`", verifyBuildPath);
+  requireText(verifyBuildText, "Do not collapse evidence into a generic \"checks\" bucket", verifyBuildPath);
+  requireText(verifyBuildText, "Automated tests ran in the repo's test/E2E environment", verifyBuildPath);
+  requireText(verifyBuildText, "Browser Clickthrough\n  ran in the dev/local app environment and dev/local DB/runtime", verifyBuildPath);
+  requireText(verifyBuildText, "feature\n  controls/actions clicked", verifyBuildPath);
+  requireText(verifyBuildText, "E2E Tests were added, updated, or run", verifyBuildPath);
+  requireText(verifyBuildText, "checked existing repo precedent for the same class\n  of problem", verifyBuildPath);
+  requireText(verifyBuildText, "No accepted-scope `Must Fix` issue remains", verifyBuildPath);
+  requireText(verifyBuildText, "The pre-browser gate is clean", verifyBuildPath);
+  requireText(verifyBuildText, "All required review agents, justified conditional risk lenses, and applicable", verifyBuildPath);
+  requireText(verifyBuildText, "Do\nnot add custom app key handlers solely to satisfy an automation quirk", verifyBuildPath);
+  requireText(verifyBuildText, "### Browser Blockers", verifyBuildPath);
+  requireText(verifyBuildText, "Do not run Browser Checks when the pre-browser gate has accepted-scope", verifyBuildPath);
+  requireText(verifyBuildText, "keep browser evidence not run because the pre-browser\n  gate failed", verifyBuildPath);
+  requireText(verifyBuildText, "### Fix Or Route Back", verifyBuildPath);
+  requireText(verifyBuildText, "route with `Command: reopen-phase-check`", verifyBuildPath);
+  requireText(verifyBuildText, "`Check: phaseResearchComplete`", verifyBuildPath);
   requireText(verifyBuildText, "Give every `Must Fix` item a stable short issue ID", verifyBuildPath);
+  requireText(verifyBuildText, "### Completion", verifyBuildPath);
   requireText(verifyBuildText, "complete-check buildVerified", verifyBuildPath);
   requireText(verifyBuildText, "Do not start another slice from inside `verify-slice-build`", verifyBuildPath);
   requireText(verifyBuildText, "return control to\n  `go` so the orchestrator can run `next-step`", verifyBuildPath);
   requireText(strikeText, "build-verification.md", strikePath);
   requireText(strikeText, "Verified: yes", strikePath);
   requireText(strikeText, "finish-initiative", strikePath);
-  requireText(strikeText, "oversized slice discovered before build", strikePath);
+  requireText(strikeText, "accepted slice boundary changes before build", strikePath);
+  requireText(strikeText, "phase research, phase research audit,\n  relevant initiative research", strikePath);
   requireText(strikeText, "preserve the original slice ID as the first\nsmaller slice", strikePath);
 
   requireText(fixText, "failed Strike verification pass", fixPath);
@@ -1257,6 +1688,11 @@ function validateStrikeContract() {
   requireText(fixText, "Closest existing pattern:", fixPath);
   requireText(fixText, "Ready for re-verification: yes / no", fixPath);
   requireText(fixText, "## Route Back", fixPath);
+  requireText(fixText, "Required user-provided customization from the consuming repo's Strike", fixPath);
+  requireText(fixText, "user implementation-discipline guidance", fixPath);
+  requireText(fixText, "strike/user-guidance/implementation-discipline/global.md", fixPath);
+  requireText(fixText, "strike/user-guidance/implementation-discipline/fix.md", fixPath);
+  requireText(fixText, "Read required user-provided customization and apply relevant guidance", fixPath);
   requireText(fixText, "Command: None / reopen-check / reopen-phase-check / reopen-slice-check", fixPath);
   requireText(fixText, "Phase: None / <phase-id>", fixPath);
   requireText(fixText, "Slice: None / <slice-id>", fixPath);
@@ -1269,32 +1705,67 @@ function validateStrikeContract() {
   requireText(fixText, "payload limit", fixPath);
 
   requireText(verifyPhaseText, "current phase's `phase-spec.md`", verifyPhasePath);
+  requireText(verifyPhaseText, "current phase's `research.md`", verifyPhasePath);
+  requireText(verifyPhaseText, "current phase's `research-audit.md`", verifyPhasePath);
+  requireText(verifyPhaseText, "Required verification packet:", verifyPhasePath);
+  requireText(verifyPhaseText, "optional context when needed:", verifyPhasePath);
   requireText(verifyPhaseText, "supporting-artifacts/", verifyPhasePath);
   requireText(verifyPhaseText, "each slice's `slice.md`", verifyPhasePath);
-  requireText(verifyPhaseText, "each slice's `research.md`", verifyPhasePath);
   requireText(verifyPhaseText, "each slice's `plan.md`", verifyPhasePath);
   requireText(verifyPhaseText, "each slice's `plan-verification.md`", verifyPhasePath);
   requireText(verifyPhaseText, "each slice's `build.md`", verifyPhasePath);
   requireText(verifyPhaseText, "each slice's `build-verification.md`", verifyPhasePath);
+  requireText(verifyPhaseText, "Bundled Strike review-agent instructions", verifyPhasePath);
+  requireText(verifyPhaseText, "references/review-agents/phase-spec-coverage.md", verifyPhasePath);
+  requireText(verifyPhaseText, "references/review-agents/cross-slice-integration.md", verifyPhasePath);
+  requireText(verifyPhaseText, "references/review-agents/state-data-integrity.md", verifyPhasePath);
+  requireText(verifyPhaseText, "references/review-agents/security-privacy.md", verifyPhasePath);
+  requireText(verifyPhaseText, "references/review-agents/integration-risk.md", verifyPhasePath);
+  requireText(verifyPhaseText, "references/review-agents/user-flows.md", verifyPhasePath);
+  requireText(verifyPhaseText, "Treat passed slice verification as the normal source of slice-local\n   confidence", verifyPhasePath);
+  requireText(verifyPhaseText, "Read deeper slice artifacts only when evidence is missing, thin", verifyPhasePath);
+  requireAbsentText(verifyPhaseText, "Read every slice artifact", verifyPhasePath);
+  requireText(verifyPhaseText, "Required user-provided customization from the consuming repo's Strike", verifyPhasePath);
+  requireText(verifyPhaseText, "strike/user-guidance/review-lenses/global.md", verifyPhasePath);
+  requireText(verifyPhaseText, "strike/user-guidance/review-lenses/verify-phase.md", verifyPhasePath);
+  requireText(verifyPhaseText, "strike/user-guidance/implementation-discipline/global.md", verifyPhasePath);
+  requireText(verifyPhaseText, "strike/user-guidance/implementation-discipline/verify-phase.md", verifyPhasePath);
+  requireText(verifyPhaseText, "Read required user-provided customization", verifyPhasePath);
   requireText(verifyPhaseText, "current phase's `verification.md`", verifyPhasePath);
   requireText(verifyPhaseText, "Verified: yes", verifyPhasePath);
-  requireText(verifyPhaseText, "read-only review subagents", verifyPhasePath);
-  requireText(verifyPhaseText, "host does not support subagents", verifyPhasePath);
-  requireText(verifyPhaseText, "inline lenses", verifyPhasePath);
+  requireText(verifyPhaseText, "Review agents are read-only", verifyPhasePath);
+  requireText(verifyPhaseText, "references/review-agents/output-discipline.md", verifyPhasePath);
+  requireText(verifyPhaseText, "includes that output\ncontract in each review-agent prompt", verifyPhasePath);
+  requireText(verifyPhaseText, "### 1. Run Required Review Agents In Parallel", verifyPhasePath);
+  requireText(verifyPhaseText, "Run these required review agents in parallel", verifyPhasePath);
+  requireText(verifyPhaseText, "Review results returned: yes / no", verifyPhasePath);
+  requireText(verifyPhaseText, "Review results returned: yes", verifyPhasePath);
+  requireText(verifyPhaseText, "SUBAGENT: `phase-spec-coverage`", verifyPhasePath);
+  requireText(verifyPhaseText, "SUBAGENT: `cross-slice-integration`", verifyPhasePath);
+  requireText(verifyPhaseText, "USER REVIEW LENSES: relevant user review-lens audits from:", verifyPhasePath);
+  requireText(verifyPhaseText, "User review lenses are user-provided customization", verifyPhasePath);
+  requireText(verifyPhaseText, "add it to the same parallel review batch", verifyPhasePath);
+  requireAbsentText(verifyPhaseText, "host does not support subagents", verifyPhasePath);
+  requireAbsentText(verifyPhaseText, "inline lenses", verifyPhasePath);
   requireText(verifyPhaseText, "Do not rerun a full slice code review", verifyPhasePath);
-  requireText(verifyPhaseText, "phase-spec-coverage", verifyPhasePath);
-  requireText(verifyPhaseText, "cross-slice-integration", verifyPhasePath);
-  requireText(verifyPhaseText, "phase-user-flows", verifyPhasePath);
-  requireText(verifyPhaseText, "phase-state-data-integrity", verifyPhasePath);
-  requireText(verifyPhaseText, "phase-security-privacy", verifyPhasePath);
-  requireText(verifyPhaseText, "phase-integration-risk", verifyPhasePath);
-  requireText(verifyPhaseText, "Suggested Category: Must Fix / Follow-Up / Accepted Risk", verifyPhasePath);
+  requireText(verifyPhaseText, "### 2. Add Conditional Review Lenses To The Same Parallel Batch", verifyPhasePath);
+  requireText(verifyPhaseText, "Only add these review lenses when completed phase evidence justifies them", verifyPhasePath);
+  requireText(verifyPhaseText, "Use\nthe named bundled `references/review-agents/` file as the conditional\nSUBAGENT's required audit rubric", verifyPhasePath);
+  requireText(verifyPhaseText, "SUBAGENT: `user-flows`", verifyPhasePath);
+  requireText(verifyPhaseText, "SUBAGENT: `state-data-integrity`", verifyPhasePath);
+  requireText(verifyPhaseText, "SUBAGENT: `security-privacy`", verifyPhasePath);
+  requireText(verifyPhaseText, "SUBAGENT: `integration-risk`", verifyPhasePath);
+  requireText(verifyPhaseText, "### 3. Synthesize Review Results", verifyPhasePath);
+  requireText(verifyPhaseText, "review-agent findings", verifyPhasePath);
+  requireText(verifyPhaseText, "follow the bundled output discipline", verifyPhasePath);
+  requireText(verifyPhaseText, "avoid low-value nits", verifyPhasePath);
   requireText(verifyPhaseText, "only when a user-facing flow spans\nmultiple slices", verifyPhasePath);
   requireText(verifyPhaseText, "Browser Clickthrough means using the feature", verifyPhasePath);
   requireText(verifyPhaseText, "supporting evidence only. They are not Browser Clickthrough", verifyPhasePath);
   requireText(verifyPhaseText, "did not include actual Browser Clickthrough", verifyPhasePath);
   requireText(verifyPhaseText, "Environment scope:", verifyPhasePath);
   requireText(verifyPhaseText, "using a test DB/environment\n  for dev/local Browser Clickthrough", verifyPhasePath);
+  requireText(verifyPhaseText, "Do not mark `Ready: yes` until all required review agents", verifyPhasePath);
   requireText(verifyPhaseText, "## Issues", verifyPhasePath);
   requireText(verifyPhaseText, "### Must Fix", verifyPhasePath);
   requireText(verifyPhaseText, "### Follow-Up", verifyPhasePath);
@@ -1303,7 +1774,7 @@ function validateStrikeContract() {
   requireText(verifyPhaseText, "Fix Needed: yes / no", verifyPhasePath);
   requireText(verifyPhaseText, "Slice: None / <slice-id>", verifyPhasePath);
   requireText(verifyPhaseText, "Command: None / reopen-check / reopen-slice-check", verifyPhasePath);
-  requireText(verifyPhaseText, "Check: None / phaseSpecCreated / slicesCreated / researchComplete / planCreated / planVerified / implemented / buildVerified", verifyPhasePath);
+  requireText(verifyPhaseText, "Check: None / phaseSpecCreated / phaseResearchComplete / slicesCreated / planCreated / planVerified / implemented / buildVerified", verifyPhasePath);
   requireText(verifyPhaseText, "Do not edit slice artifacts or implementation files", verifyPhasePath);
   requireText(verifyPhaseText, "Give every `Must Fix` item a stable short issue ID", verifyPhasePath);
   requireText(verifyPhaseText, "complete-check allSlicesVerified", verifyPhasePath);
@@ -1316,19 +1787,31 @@ function validateStrikeContract() {
   requireText(verifyMainText, "each phase's `phase.md`", verifyMainPath);
   requireText(verifyMainText, "each phase's `phase-spec.md`", verifyMainPath);
   requireText(verifyMainText, "each phase's `verification.md`", verifyMainPath);
+  requireText(verifyMainText, "Required user-provided customization from the consuming repo's Strike", verifyMainPath);
+  requireText(verifyMainText, "strike/user-guidance/review-lenses/global.md", verifyMainPath);
+  requireText(verifyMainText, "strike/user-guidance/review-lenses/verify-main-spec.md", verifyMainPath);
+  requireText(verifyMainText, "strike/user-guidance/implementation-discipline/global.md", verifyMainPath);
+  requireText(verifyMainText, "strike/user-guidance/implementation-discipline/verify-main-spec.md", verifyMainPath);
+  requireText(verifyMainText, "Bundled Strike review-agent instructions", verifyMainPath);
+  requireText(verifyMainText, "references/review-agents/main-spec-coverage.md", verifyMainPath);
+  requireText(verifyMainText, "references/review-agents/cross-phase-integration.md", verifyMainPath);
+  requireText(verifyMainText, "references/review-agents/readiness-risk.md", verifyMainPath);
+  requireText(verifyMainText, "Read required user-provided customization", verifyMainPath);
   requireText(verifyMainText, "current initiative's `verification.md`", verifyMainPath);
   requireText(verifyMainText, "read-only review subagents", verifyMainPath);
-  requireText(verifyMainText, "host does not support subagents", verifyMainPath);
-  requireText(verifyMainText, "inline lenses", verifyMainPath);
+  requireAbsentText(verifyMainText, "host does not support subagents", verifyMainPath);
+  requireAbsentText(verifyMainText, "inline lenses", verifyMainPath);
   requireText(verifyMainText, "Do not rerun full phase or slice audits", verifyMainPath);
+  requireText(verifyMainText, "Review results returned: yes / no", verifyMainPath);
+  requireText(verifyMainText, "Review results returned: yes", verifyMainPath);
   requireText(verifyMainText, "main-spec-coverage", verifyMainPath);
   requireText(verifyMainText, "cross-phase-integration", verifyMainPath);
   requireText(verifyMainText, "readiness-risk", verifyMainPath);
-  requireText(verifyMainText, "final-user-flows", verifyMainPath);
-  requireText(verifyMainText, "final-state-data-integrity", verifyMainPath);
-  requireText(verifyMainText, "final-security-privacy", verifyMainPath);
-  requireText(verifyMainText, "final-integration-risk", verifyMainPath);
-  requireText(verifyMainText, "Suggested Category: Must Fix / Follow-Up / Accepted Risk", verifyMainPath);
+  requireText(verifyMainText, "SUBAGENT: `user-flows`", verifyMainPath);
+  requireText(verifyMainText, "SUBAGENT: `state-data-integrity`", verifyMainPath);
+  requireText(verifyMainText, "SUBAGENT: `security-privacy`", verifyMainPath);
+  requireText(verifyMainText, "SUBAGENT: `integration-risk`", verifyMainPath);
+  requireText(verifyMainText, "includes that output\ncontract in each review-agent prompt", verifyMainPath);
   requireText(verifyMainText, "include final smoke evidence for both the\n  new/changed path and one preserved existing path", verifyMainPath);
   requireText(verifyMainText, "one final Browser Clickthrough or\nrepresentative user-flow check across the accepted scope", verifyMainPath);
   requireText(verifyMainText, "User-flow checks are not only browser checks", verifyMainPath);
@@ -1348,6 +1831,7 @@ function validateStrikeContract() {
   requireText(verifyMainText, "actual Browser Clickthrough or representative user-flow\n  exercise", verifyMainPath);
   requireText(verifyMainText, "Environment scope:", verifyMainPath);
   requireText(verifyMainText, "using a test\n  DB/environment for dev/local Browser Clickthrough", verifyMainPath);
+  requireText(verifyMainText, "Do not mark `Ready: yes` until all required review agents", verifyMainPath);
   requireText(verifyMainText, "## Issues", verifyMainPath);
   requireText(verifyMainText, "### Must Fix", verifyMainPath);
   requireText(verifyMainText, "### Follow-Up", verifyMainPath);
@@ -1357,7 +1841,7 @@ function validateStrikeContract() {
   requireText(verifyMainText, "Phase: None / <phase-id>", verifyMainPath);
   requireText(verifyMainText, "Slice: None / <slice-id>", verifyMainPath);
   requireText(verifyMainText, "Command: None / reopen-check / reopen-phase-check / reopen-slice-check", verifyMainPath);
-  requireText(verifyMainText, "Check: None / ideaRefined / initiativeResearchComplete / decisionsResolved / specCreated / phasesCreated / phaseSpecCreated / slicesCreated / researchComplete / planCreated / planVerified / implemented / buildVerified / allSlicesVerified", verifyMainPath);
+  requireText(verifyMainText, "Check: None / ideaRefined / initiativeResearchComplete / decisionsResolved / specCreated / phasesCreated / phaseSpecCreated / phaseResearchComplete / slicesCreated / planCreated / planVerified / implemented / buildVerified / allSlicesVerified", verifyMainPath);
   requireText(verifyMainText, "Do not edit phase, slice, or implementation artifacts", verifyMainPath);
   requireText(verifyMainText, "Give every `Must Fix` item a stable short issue ID", verifyMainPath);
   requireText(verifyMainText, "complete-check allPhasesVerified", verifyMainPath);
@@ -1365,7 +1849,11 @@ function validateStrikeContract() {
   const goPath = "plugins/strike/skills/go/SKILL.md";
   const goText = fs.readFileSync(path.join(root, goPath), "utf8");
   requireText(goText, "Do not batch multiple `complete-check` commands together", goPath);
+  requireText(goText, "close completed review agents from\nearlier gates", goPath);
+  requireText(goText, "Review results returned: yes", goPath);
   requireText(goText, "Complete only that one returned check", goPath);
+  requireText(goText, "must read implementation discipline `global.md` plus their own\nstage file", goPath);
+  requireText(goText, "Verifiers must also read review-lenses `global.md` plus their own\nstage file", goPath);
 
   const newInitiativePath = "plugins/strike/skills/new-initiative/SKILL.md";
   const newInitiativeText = fs.readFileSync(path.join(root, newInitiativePath), "utf8");

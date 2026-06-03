@@ -2,6 +2,44 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.10.16 - 2026-06-03
+
+- Added `research-phase` as the official implementation research gate after
+  `create-phase-spec` and before `create-phase-slices`.
+- Required `research-phase` to produce a read-only phase `research-audit.md`
+  with no unresolved Must Fix findings before `phaseResearchComplete` can pass.
+- Moved granular official/canonical API, package, plugin, model, and domain
+  research to the phase level, with slice planning limited to narrow
+  slice-specific research deltas when needed.
+- Removed `research-slice` as an official workflow gate so slices advance from
+  `create-phase-slices` directly to `plan-slice`.
+- Clarified that completed slice verification returns control to `go`; after the
+  slice git checkpoint, `go` should continue to the next slice's `plan-slice`
+  when `next-step` says it is ready.
+- Made `create-phase-slices` the primary slice-sizing owner and changed later
+  slice stages to work from the accepted slice boundary, routing back only when
+  new evidence changes that boundary.
+- Simplified `verify-slice-plan`, `verify-slice-build`, and `verify-phase`
+  context loading so each verifier starts from a compact required packet and
+  reads deeper context only when evidence, risk, contradiction, or route-back
+  questions require it.
+- Reworked slice verification around parallel read-only review agents, shared
+  bundled review rubrics, user review lenses, and a compact pre-browser gate
+  before final dev/local Browser Clickthrough.
+- Simplified slice plan verification around three required parallel plan audits:
+  implementation readiness, canonical readiness, and a full senior plan audit.
+- Split slice code review into acceptance, general code quality, and recurring
+  common-issue audits, with shared output discipline for `Must Fix`,
+  `Follow-Up`, and `Accepted Risk` findings.
+- Made user-provided implementation-discipline and review-lens customization
+  explicit and required in planning, build, fix, and verification skills.
+- Grouped `verify-slice-plan` and `verify-slice-build` rules into clearer
+  verifier conduct, pass requirements, blockers, route-back, and completion
+  sections.
+- Reworked `verify-phase` review around parallel phase-level review agents, with
+  bundled rubrics for phase spec coverage, cross-slice integration, and
+  conditional risk lenses.
+
 ## 0.10.15 - 2026-06-02
 
 - Split Strike workflow state so root `strike/state.json` is a compact

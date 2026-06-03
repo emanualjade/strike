@@ -11,6 +11,30 @@ Dogfooding is a learning loop, not a release gate. Use it to find workflow,
 skill, and software-quality problems before release. Host smoke tests remain the
 deterministic release gate.
 
+## Run Modes
+
+Use precise mode labels so evidence is not overstated.
+
+- Installed-plugin dogfood: the target agent uses the installed Strike plugin
+  like a normal user. This is the preferred product-quality dogfood mode.
+- Local source workflow check: the maintainer drives Strike from this checkout
+  to validate unreleased workflow changes without updating the locally installed
+  plugin. This is useful for prompt and state-machine debugging, but it is not a
+  pure installed-plugin dogfood run.
+
+When the user asks to keep the local installed Strike plugin stable, do not
+refresh or upgrade the installed plugin during a local source workflow check.
+Record the mode, source checkout, target workspace, and any observer edits in
+the run notes.
+
+For a local source workflow check, invoke skills from this checkout explicitly
+instead of the installed `$strike` plugin. In Codex, tell the target agent to
+read the relevant `plugins/strike/skills/<skill>/SKILL.md` from this checkout
+and run the copied helper from the target workspace. In Claude Code, use the
+documented local plugin path only when updating the installed plugin is allowed;
+otherwise treat the run as a manual source-check, not installed-plugin dogfood.
+The run notes must say: `Installed-plugin behavior proven: no`.
+
 ## Workspace
 
 Use `~/Sites` for local dogfood projects.
@@ -52,6 +76,10 @@ source and version.
 If the installed plugin is stale or from the wrong source, refresh it before the
 dogfood run. Record that in the dogfood notes because stale installs make the
 results misleading.
+
+Skip this refresh step for local source workflow checks when the user has asked
+to leave the installed plugin untouched. In that mode, use the checkout files as
+the source under test and record that installed-plugin behavior was not proven.
 
 When dogfooding unreleased local changes, make sure the target host points at
 this checkout, not public `main`. For Codex local checkout runs, refresh with:
@@ -112,6 +140,12 @@ after the target agent finishes a step. The observer may also inspect files,
 record notes, and answer product questions. If the observer has to create
 artifacts, edit code, or advance state to make the run pass, the dogfood run is
 invalid and should be restarted or recorded as failed.
+
+For a local source workflow check, observer edits to Strike itself are allowed
+only when they are the point of the check and are recorded as workflow findings.
+Observer-created target artifacts, observer-advanced target state, and manual
+backfilled workflow files still do not count as installed-plugin dogfood
+evidence.
 
 ## Review Handling
 
@@ -241,9 +275,9 @@ agent:
    necessary, record the run as failed or restart it.
 10. Inspect generated artifacts and code after the run.
 11. Confirm the target agent actually went through the expected stages: idea,
-   decisions, main spec, development phases, phase spec, slices, research,
-   plan, plan verification, build, build verification/review, phase
-   verification, and main-spec verification.
+   initiative research, decisions, main spec, development phases, phase spec,
+   phase research/audit, slices, plan, plan verification, build, build
+   verification/review, phase verification, and main-spec verification.
 12. Run the dogfood project's own checks when available.
 13. Record what worked, what failed, and what should change in Strike.
 14. For any Strike process failure found during dogfood, patch the Strike
@@ -262,6 +296,8 @@ Host:
 Host version:
 Workspace:
 Scenario:
+Run mode:
+Installed-plugin behavior proven: yes / no
 
 ## Result
 

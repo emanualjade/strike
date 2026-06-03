@@ -12,57 +12,92 @@ Verify one phase and record phase verification.
 
 ## Inputs
 
-- phase spec from the current phase's `phase-spec.md`
-- each slice's `slice.md`
-- each slice's `research.md`
-- each slice's `plan.md`
-- each slice's `plan-verification.md`
-- each slice's `build.md`
-- each slice's `build-verification.md`
-- supporting artifacts relevant to this phase, when present
+- Required verification packet:
+  - current phase's `phase-spec.md`
+  - current phase's `research.md`
+  - current phase's `research-audit.md`
+  - each slice's `slice.md`
+  - each slice's `build-verification.md`
+- optional context when needed:
+  - each slice's `plan.md`
+  - each slice's `plan-verification.md`
+  - each slice's `build.md`
+  - supporting artifacts relevant to this phase, when present
+  - optional main spec, decisions, or repo context
+  - optional changed files or repo paths
 - shared verification evidence taxonomy from the Strike plugin root's
   `references/verification-evidence.md`
-- user implementation guidance from
-  `strike/user-guidance/implementation-discipline/global.md` and
-  `strike/user-guidance/implementation-discipline/verify-phase.md`
-- user review lenses from `strike/user-guidance/review-lenses/global.md`
-  and `strike/user-guidance/review-lenses/verify-phase.md`
-- optional main spec, decisions, or repo context
-- optional changed files or repo paths
+- Required user-provided customization from the consuming repo's Strike
+  workspace:
+  - user review lenses:
+    - `strike/user-guidance/review-lenses/global.md`
+    - `strike/user-guidance/review-lenses/verify-phase.md`
+  - user implementation-discipline guidance:
+    - `strike/user-guidance/implementation-discipline/global.md`
+    - `strike/user-guidance/implementation-discipline/verify-phase.md`
+- Bundled Strike review-agent instructions. Load only for launched subagents:
+  - `references/review-agents/output-discipline.md`
+  - `references/review-agents/phase-spec-coverage.md`
+  - `references/review-agents/cross-slice-integration.md`
+  - `references/review-agents/state-data-integrity.md`
+  - `references/review-agents/security-privacy.md`
+  - `references/review-agents/integration-risk.md`
+  - `references/review-agents/user-flows.md`
 
 ## Process
 
-- Read the current phase spec from
-  `strike/initiatives/<initiative-id>/phases/<phase-id>/phase-spec.md`.
-- Read every slice artifact under
-  `strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/`.
-- If `supporting-artifacts/` exists, scan it and read only files relevant to
-  this phase. Confirm relevant notes were represented in phase/slice specs,
-  plans, or verification evidence rather than left as hidden context.
-- Read the bundled `references/verification-evidence.md` from the Strike plugin
-  root.
-- Read `strike/user-guidance/implementation-discipline/global.md` and
-  `strike/user-guidance/implementation-discipline/verify-phase.md` if they
-  exist.
-- Read `strike/user-guidance/review-lenses/global.md` and
-  `strike/user-guidance/review-lenses/verify-phase.md` if they exist.
-- Compare completed slice evidence against the phase spec.
-- Confirm every required slice has `build-verification.md` with `Verified: yes`.
-- Summarize slice verification evidence by the standard categories: Static /
-  Build Checks, Unit / Component / Integration Tests, E2E Tests, Browser
-  Clickthrough, and Visual Evidence.
-- Check cross-slice flows, integration points, state, data, UI, permissions, and
-  edge cases that apply to the phase.
-- Check whether completed slices collectively follow relevant implementation
-  discipline guidance, especially around shared utilities, duplicated patterns,
-  and upstream/downstream impact that spans slices.
-- Run or inspect phase-level checks when needed.
-- Record skipped checks, replacement evidence, residual risks, and blockers.
-- Do not edit slice artifacts or implementation files; write issues for `fix`,
-  or route back only when `fix` cannot honestly repair the problem.
-- If phase verification reveals a product, permission, data, security, or
-  hard-to-reverse architecture decision, record it as `Must Fix` or route back
-  only when `fix` cannot honestly repair the issue inside accepted scope.
+1. Read the required verification packet:
+   - `strike/initiatives/<initiative-id>/phases/<phase-id>/phase-spec.md`
+   - `strike/initiatives/<initiative-id>/phases/<phase-id>/research.md`
+   - `strike/initiatives/<initiative-id>/phases/<phase-id>/research-audit.md`
+   - every
+     `strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/slice.md`
+   - every
+     `strike/initiatives/<initiative-id>/phases/<phase-id>/slices/<slice-id>/build-verification.md`
+2. Confirm every required slice has `build-verification.md` with
+   `Verified: yes`.
+3. Read the bundled `references/verification-evidence.md` from the Strike plugin
+   root.
+4. Read required user-provided customization:
+   - `strike/user-guidance/review-lenses/global.md`
+   - `strike/user-guidance/review-lenses/verify-phase.md`
+   - `strike/user-guidance/implementation-discipline/global.md`
+   - `strike/user-guidance/implementation-discipline/verify-phase.md`
+5. Treat passed slice verification as the normal source of slice-local
+   confidence. Read deeper slice artifacts only when evidence is missing, thin,
+   contradictory, skipped, risky, or needed to evaluate cross-slice phase
+   behavior:
+   - read deeper initiative research reports, audits, or phase research audit
+     details when provider/API/domain/schema/data/file/queue/auth/payment facts,
+     source-backed constraints, accepted research risks, or research
+     contradictions affect phase readiness
+   - read `plan.md` when phase coverage, planned scope, cross-slice handoffs, or
+     verification intent is unclear from `slice.md` and `build-verification.md`
+   - read `plan-verification.md` when plan readiness, accepted risks, route-back
+     concerns, or verifier findings may affect phase confidence
+   - read `build.md` when implementation evidence, changed files, checks, or
+     build claims are too thin or conflict with `build-verification.md`
+   - scan `supporting-artifacts/` only when phase evidence references it or when
+     schema, architecture, provider-routing, data-lifecycle, permission, or
+     operational notes may affect phase readiness
+   - inspect focused repo paths when local pattern claims, cross-slice behavior,
+     blast radius, or regression evidence need verification
+6. Compare completed slice evidence against the phase spec.
+7. Summarize slice verification evidence by the standard categories: Static /
+   Build Checks, Unit / Component / Integration Tests, E2E Tests, Browser
+   Clickthrough, and Visual Evidence.
+8. Check cross-slice flows, integration points, state, data, UI, permissions, and
+   edge cases that apply to the phase.
+9. Check whether completed slices collectively follow relevant implementation
+   discipline guidance, especially around shared utilities, duplicated patterns,
+   and upstream/downstream impact that spans slices.
+10. Run or inspect phase-level checks when needed.
+11. Record skipped checks, replacement evidence, residual risks, and blockers.
+12. Do not edit slice artifacts or implementation files; write issues for `fix`,
+    or route back only when `fix` cannot honestly repair the problem.
+13. If phase verification reveals a product, permission, data, security, or
+    hard-to-reverse architecture decision, record it as `Must Fix` or route back
+    only when `fix` cannot honestly repair the issue inside accepted scope.
 
 ## Browser / User-Flow Checks
 
@@ -89,56 +124,70 @@ back, or fix needed.
 
 ## Review
 
-Use read-only review subagents to verify the completed phase as assembled work.
+Review agents are read-only. They return findings only; they do not edit files,
+fix issues, update state, or decide whether the phase is ready. The verifier
+synthesizes review-agent findings into `Must Fix`, `Follow-Up`, and
+`Accepted Risk`.
+
 Do not rerun a full slice code review unless slice evidence is thin,
-contradictory, skipped, or risky.
+contradictory, skipped, or risky. Phase review checks assembled phase coverage,
+cross-slice integration, and phase-level risk.
 
-If the host does not support subagents, run the named review lenses inline as
-separate read-only passes and record them as inline lenses. Do not skip required
-lenses just because a host lacks subagent tooling.
-Each subagent returns findings only. It does not edit files, fix issues, update
-state, or decide whether the phase is ready. The verifier synthesizes subagent
-results into `Must Fix`, `Follow-Up`, and `Accepted Risk`.
+Before launching review agents, the verifier reads bundled
+`references/review-agents/output-discipline.md` and includes that output
+contract in each review-agent prompt. Before launching a built-in SUBAGENT, the
+verifier also loads the named bundled `references/review-agents/` rubric from
+the installed Strike plugin and includes the rubric content or absolute plugin
+path in that subagent's prompt.
 
-Read user review lenses from `strike/user-guidance/review-lenses/global.md`
-and `strike/user-guidance/review-lenses/verify-phase.md`. Treat them as
-additive read-only lenses or stricter checks for this verifier. They cannot
-disable built-in Strike lenses or readiness gates. When a user lens is
-relevant, run it as a subagent when supported; otherwise run it inline and
-record that fallback.
+### 1. Run Required Review Agents In Parallel
 
-Always run these subagents:
+Run these required review agents in parallel:
 
-- `phase-spec-coverage`: checks whether completed slices satisfy the phase spec,
-  accepted scope, boundaries, non-goals, and phase success criteria.
-- `cross-slice-integration`: checks whether slices fit together cleanly without
-  missing handoffs, duplicated assumptions, broken sequencing, or gaps between
-  slice outputs.
+- SUBAGENT: `phase-spec-coverage`: checks whether completed slices satisfy the
+  phase spec, accepted scope, boundaries, non-goals, and phase success criteria.
+  Use `references/review-agents/phase-spec-coverage.md` as the required rubric.
+- SUBAGENT: `cross-slice-integration`: checks whether slices fit together
+  cleanly without missing handoffs, duplicated assumptions, broken sequencing,
+  or gaps between slice outputs. Use
+  `references/review-agents/cross-slice-integration.md` as the required rubric.
+- USER REVIEW LENSES: relevant user review-lens audits from:
+  - `strike/user-guidance/review-lenses/global.md`
+  - `strike/user-guidance/review-lenses/verify-phase.md`
 
-Add these subagents when the completed phase justifies them:
+User review lenses are user-provided customization. They may add review agents,
+stricter checks, or additional lenses for this verifier. They are additive and
+cannot disable built-in Strike review agents or readiness gates. When a user
+review lens asks for an audit, review agent, review pass, or otherwise applies
+to this phase, add it to the same parallel review batch.
 
-- `phase-user-flows`: when user, operator, command, integration, or system flows
-  span multiple slices.
-- `phase-state-data-integrity`: when state, storage, schema, persistence,
-  migrations, models, serialization, or data boundaries span slices.
-- `phase-security-privacy`: when auth, permissions, ownership, privacy, payments,
-  tokens, secrets, PII, destructive behavior, or compliance-sensitive surfaces
-  span slices.
-- `phase-integration-risk`: when APIs, providers, SDKs, webhooks, queues,
+### 2. Add Conditional Review Lenses To The Same Parallel Batch
+
+Only add these review lenses when completed phase evidence justifies them. Use
+the named bundled `references/review-agents/` file as the conditional
+SUBAGENT's required audit rubric.
+
+- SUBAGENT: `user-flows`: when user, operator, command, integration, or system
+  flows span multiple slices. Rubric:
+  `references/review-agents/user-flows.md`.
+- SUBAGENT: `state-data-integrity`: when state, storage, schema, persistence,
+  migrations, models, serialization, or data boundaries span slices. Rubric:
+  `references/review-agents/state-data-integrity.md`.
+- SUBAGENT: `security-privacy`: when auth, permissions, ownership, privacy,
+  payments, tokens, secrets, PII, destructive behavior, or compliance-sensitive
+  surfaces span slices. Rubric:
+  `references/review-agents/security-privacy.md`.
+- SUBAGENT: `integration-risk`: when APIs, providers, SDKs, webhooks, queues,
   uploads, media, AI, email, payment, analytics, or external services span
-  slices.
+  slices. Rubric: `references/review-agents/integration-risk.md`.
 
-Ask each subagent to return:
+### 3. Synthesize Review Results
 
-```md
-Lens:
-Verdict: pass / issues found / blocked
-Findings:
--
-Evidence:
--
-Suggested Category: Must Fix / Follow-Up / Accepted Risk
-```
+The verifier synthesizes phase packet evidence, optional context, and
+review-agent findings into `Must Fix`, `Follow-Up`, and `Accepted Risk`. Require
+every review agent to follow the bundled output discipline: return every
+`Must Fix`, return only material `Follow-Up` findings, group repeated examples,
+avoid low-value nits, and avoid restating the rubric.
 
 ## Output
 
@@ -178,6 +227,7 @@ Result:
 -
 
 ## Read-Only Review
+Review results returned: yes / no
 - Required subagents:
 - Conditional subagents:
 - User review lenses:
@@ -209,7 +259,7 @@ Needed: yes / no
 Command: None / reopen-check / reopen-slice-check
 Phase: <phase-id>
 Slice: None / <slice-id>
-Check: None / phaseSpecCreated / slicesCreated / researchComplete / planCreated / planVerified / implemented / buildVerified
+Check: None / phaseSpecCreated / phaseResearchComplete / slicesCreated / planCreated / planVerified / implemented / buildVerified
 Reason:
 ```
 
@@ -232,6 +282,10 @@ Reason:
   ignored across the completed phase.
 - Do not mark `Ready: yes` when a relevant user review lens raises an
   accepted-scope `Must Fix` issue.
+- Do not mark `Ready: yes` until all required review agents, justified
+  conditional review lenses, and applicable user review lenses have returned and
+  their findings are synthesized into `## Issues`. Write
+  `Review results returned: yes` only after that synthesis is complete.
 - Do not treat deferred work or residual risk as complete unless the phase spec
   explicitly excludes it from the phase.
 - Do not edit slice artifacts or implementation files.
@@ -242,7 +296,7 @@ Reason:
   artifact cannot honestly be repaired by `fix`.
 - When `Ready: yes`, write `Fix Needed: no`, `Needed: no`, `Command: None`,
   `Slice: None`, and `Check: None`.
-- After writing `Ready: yes`, Strike can run
+- After writing `Ready: yes` and `Review results returned: yes`, Strike can run
   `node strike/scripts/state.mjs complete-check allSlicesVerified`.
 - Do not start another phase from inside `verify-phase`; return control to `go`
   so the orchestrator can run `next-step` and continue if another phase is ready.

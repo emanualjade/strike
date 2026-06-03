@@ -22,31 +22,50 @@ Verify the completed initiative against the main spec and record final evidence.
 - each phase's `verification.md`
 - shared verification evidence taxonomy from the Strike plugin root's
   `references/verification-evidence.md`
-- user implementation guidance from
-  `strike/user-guidance/implementation-discipline/global.md` and
-  `strike/user-guidance/implementation-discipline/verify-main-spec.md`
-- user review lenses from `strike/user-guidance/review-lenses/global.md`
-  and `strike/user-guidance/review-lenses/verify-main-spec.md`
-- optional slice artifacts when phase evidence needs inspection
+- Required user-provided customization from the consuming repo's Strike
+  workspace:
+  - user review lenses:
+    - `strike/user-guidance/review-lenses/global.md`
+    - `strike/user-guidance/review-lenses/verify-main-spec.md`
+  - user implementation-discipline guidance:
+    - `strike/user-guidance/implementation-discipline/global.md`
+    - `strike/user-guidance/implementation-discipline/verify-main-spec.md`
+- Bundled Strike review-agent instructions. Load only for launched subagents:
+  - `references/review-agents/output-discipline.md`
+  - `references/review-agents/main-spec-coverage.md`
+  - `references/review-agents/cross-phase-integration.md`
+  - `references/review-agents/readiness-risk.md`
+  - `references/review-agents/user-flows.md`
+  - `references/review-agents/state-data-integrity.md`
+  - `references/review-agents/security-privacy.md`
+  - `references/review-agents/integration-risk.md`
+- optional phase/slice/build/fix artifacts when completed phase evidence needs
+  inspection
 - optional decisions, changed files, checks, or repo context
 
 ## Process
 
-- Read the current initiative files from
-  `strike/initiatives/<initiative-id>/`.
+- Read the required verification packet:
+  - `main-spec.md`
+  - `research/scope.md` and `research/index.md`
+  - `development-plan.md`
+  - each phase's `phase.md`
+  - each phase's `phase-spec.md`
+  - each phase's `verification.md`
 - If `supporting-artifacts/` exists, scan it and read only files relevant to
   final readiness. Confirm accepted decisions and constraints from relevant
   notes were carried into `decisions.md`, `main-spec.md`, phase specs, plans,
   or verification evidence.
-- Read every phase artifact under
-  `strike/initiatives/<initiative-id>/phases/<phase-id>/`.
+- Read phase/slice/build/fix artifacts only when completed phase evidence is
+  missing, thin, contradictory, skipped, risky, or needed to judge final
+  initiative behavior.
 - Read the bundled `references/verification-evidence.md` from the Strike plugin
   root.
-- Read `strike/user-guidance/implementation-discipline/global.md` and
-  `strike/user-guidance/implementation-discipline/verify-main-spec.md` if
-  they exist.
-- Read `strike/user-guidance/review-lenses/global.md` and
-  `strike/user-guidance/review-lenses/verify-main-spec.md` if they exist.
+- Read required user-provided customization:
+  - `strike/user-guidance/review-lenses/global.md`
+  - `strike/user-guidance/review-lenses/verify-main-spec.md`
+  - `strike/user-guidance/implementation-discipline/global.md`
+  - `strike/user-guidance/implementation-discipline/verify-main-spec.md`
 - Confirm every required phase has `verification.md` with `Ready: yes`.
 - Compare completed phase evidence against the main spec.
 - Confirm material initiative research constraints were carried into decisions,
@@ -121,54 +140,56 @@ Use read-only review subagents to verify the completed initiative as assembled
 work. Do not rerun full phase or slice audits unless earlier evidence is thin,
 contradictory, skipped, or risky.
 
-If the host does not support subagents, run the named review lenses inline as
-separate read-only passes and record them as inline lenses. Do not skip required
-lenses just because a host lacks subagent tooling.
 Each subagent returns findings only. It does not edit files, fix issues, update
 state, or decide whether the initiative is ready. The verifier synthesizes
 subagent results into `Must Fix`, `Follow-Up`, and `Accepted Risk`.
 
-Read user review lenses from `strike/user-guidance/review-lenses/global.md`
-and `strike/user-guidance/review-lenses/verify-main-spec.md`. Treat them as
+Required user review lenses live at
+`strike/user-guidance/review-lenses/global.md` and
+`strike/user-guidance/review-lenses/verify-main-spec.md`. Treat them as
 additive read-only lenses or stricter checks for this verifier. They cannot
-disable built-in Strike lenses or final readiness gates. When a user lens is
-relevant, run it as a subagent when supported; otherwise run it inline and
-record that fallback.
+disable built-in Strike lenses or final readiness gates. Apply each relevant
+user lens as a subagent in the same review batch.
 
-Always run these subagents:
+Before launching review agents, the verifier reads bundled
+`references/review-agents/output-discipline.md` and includes that output
+contract in each review-agent prompt. Before launching a built-in SUBAGENT, the
+verifier also loads the named bundled `references/review-agents/` rubric from
+the installed Strike plugin and includes the rubric content or absolute plugin
+path in that subagent's prompt.
 
-- `main-spec-coverage`: checks whether completed phases satisfy the main spec,
-  accepted scope, non-goals, and final success criteria.
-- `cross-phase-integration`: checks whether phases compose into one coherent
+Run these required review agents in parallel:
+
+- SUBAGENT: `main-spec-coverage`: checks whether completed phases satisfy the main spec,
+  accepted scope, non-goals, and final success criteria. Launch this SUBAGENT
+  with `references/review-agents/main-spec-coverage.md` as its required rubric.
+- SUBAGENT: `cross-phase-integration`: checks whether phases compose into one coherent
   feature without missing handoffs, duplicated assumptions, broken sequencing,
-  or gaps between phase outputs.
-- `readiness-risk`: checks final evidence, skipped checks, residual risks,
+  or gaps between phase outputs. Use
+  `references/review-agents/cross-phase-integration.md` as its required rubric.
+- SUBAGENT: `readiness-risk`: checks final evidence, skipped checks, residual risks,
   blockers, and whether accepted-scope defects are being hidden as follow-up.
+  Launch this SUBAGENT with `references/review-agents/readiness-risk.md` as its
+  required rubric.
+- USER REVIEW LENSES: relevant user review-lens audits from:
+  - `strike/user-guidance/review-lenses/global.md`
+  - `strike/user-guidance/review-lenses/verify-main-spec.md`
 
-Add these subagents when the completed initiative justifies them:
+Add these conditional review agents to the same parallel batch when the
+completed initiative justifies them:
 
-- `final-user-flows`: when user, operator, command, integration, or system flows
-  span phases.
-- `final-state-data-integrity`: when state, storage, schema, persistence,
-  migrations, models, serialization, or data boundaries span phases.
-- `final-security-privacy`: when auth, permissions, ownership, privacy,
+- SUBAGENT: `user-flows`: when user, operator, command, integration, or system flows
+  span phases. Rubric: `references/review-agents/user-flows.md`.
+- SUBAGENT: `state-data-integrity`: when state, storage, schema, persistence,
+  migrations, models, serialization, or data boundaries span phases. Rubric:
+  `references/review-agents/state-data-integrity.md`.
+- SUBAGENT: `security-privacy`: when auth, permissions, ownership, privacy,
   payments, tokens, secrets, PII, destructive behavior, or
-  compliance-sensitive surfaces span phases.
-- `final-integration-risk`: when APIs, providers, SDKs, webhooks, queues,
+  compliance-sensitive surfaces span phases. Rubric:
+  `references/review-agents/security-privacy.md`.
+- SUBAGENT: `integration-risk`: when APIs, providers, SDKs, webhooks, queues,
   uploads, media, AI, email, payment, analytics, or external services span
-  phases.
-
-Ask each subagent to return:
-
-```md
-Lens:
-Verdict: pass / issues found / blocked
-Findings:
--
-Evidence:
--
-Suggested Category: Must Fix / Follow-Up / Accepted Risk
-```
+  phases. Rubric: `references/review-agents/integration-risk.md`.
 
 ## Output
 
@@ -215,6 +236,7 @@ Findings:
 -
 
 ## Read-Only Review
+Review results returned: yes / no
 - Required subagents:
 - Conditional subagents:
 - User review lenses:
@@ -246,7 +268,7 @@ Needed: yes / no
 Command: None / reopen-check / reopen-phase-check / reopen-slice-check
 Phase: None / <phase-id>
 Slice: None / <slice-id>
-Check: None / ideaRefined / initiativeResearchComplete / decisionsResolved / specCreated / phasesCreated / phaseSpecCreated / slicesCreated / researchComplete / planCreated / planVerified / implemented / buildVerified / allSlicesVerified
+Check: None / ideaRefined / initiativeResearchComplete / decisionsResolved / specCreated / phasesCreated / phaseSpecCreated / phaseResearchComplete / slicesCreated / planCreated / planVerified / implemented / buildVerified / allSlicesVerified
 Reason:
 
 ## Final Receipt
@@ -281,6 +303,10 @@ Next:
   ignored across the completed initiative.
 - Do not mark `Ready: yes` when a relevant user review lens raises an
   accepted-scope `Must Fix` issue.
+- Do not mark `Ready: yes` until all required review agents, justified
+  conditional review lenses, and applicable user review lenses have returned and
+  their findings are synthesized into `## Issues`. Write
+  `Review results returned: yes` only after that synthesis is complete.
 - Do not treat deferred work or residual risk as complete unless the main spec
   explicitly excludes it from the accepted scope.
 - For non-UI work, write `Status: Not applicable` in
@@ -298,7 +324,7 @@ Next:
   artifact cannot honestly be repaired by `fix`.
 - When `Ready: yes`, write `Fix Needed: no`, `Needed: no`, `Command: None`,
   `Phase: None`, `Slice: None`, and `Check: None`.
-- After writing `Ready: yes`, Strike can run
+- After writing `Ready: yes` and `Review results returned: yes`, Strike can run
   `node strike/scripts/state.mjs complete-check allPhasesVerified`.
 - Do not hide accepted-scope defects in follow-up work.
 - Keep automated evidence, E2E tests, Browser Clickthrough, and Visual Evidence

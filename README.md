@@ -18,7 +18,7 @@ Strike forces early refinement and decision grilling so the agent does not rush 
 Large features are broken into phases and small cohesive vertical slices that help achieve quality results.
 
 ✅ **Research before planning:**<br>
-Each slice has an explicit research step so the agent checks docs, standards, examples, and known patterns before guessing.
+Strike runs audited initiative and phase research before slicing and planning, then lets slice plans add only narrow deltas when needed.
 
 ✅ **Durable artifacts, not disposable chat:**<br>
 Strike writes the idea, decisions, specs, plans, research, and verification notes into files so progress survives context loss.
@@ -95,8 +95,9 @@ The workflow moves through the following steps:
 - create the main spec - defines the durable target for the whole feature.
 - create development phases - breaks the feature into safe build phases.
 - create one phase spec at a time
-- create slices for a phase
-- research, plan, verify, build, and verify each slice
+- research the phase before slicing
+- create slices for the researched phase
+- plan, verify, build, and verify each slice
 - fix failed verification issues and run the same verifier again when needed
 - verify the completed phase
 - verify the completed main spec
@@ -129,8 +130,9 @@ strike/initiatives/<initiative-id>/main-spec.md
 strike/initiatives/<initiative-id>/development-plan.md
 strike/initiatives/<initiative-id>/phases/phase-01/phase.md
 strike/initiatives/<initiative-id>/phases/phase-01/phase-spec.md
+strike/initiatives/<initiative-id>/phases/phase-01/research.md
+strike/initiatives/<initiative-id>/phases/phase-01/research-audit.md
 strike/initiatives/<initiative-id>/phases/phase-01/slices/slice-01/slice.md
-strike/initiatives/<initiative-id>/phases/phase-01/slices/slice-01/research.md
 strike/initiatives/<initiative-id>/phases/phase-01/slices/slice-01/plan.md
 ```
 
@@ -224,9 +226,10 @@ stays modular; in normal use, let Strike call them with the right context
 and output paths.
 
 - `create-phase-spec`: define one phase clearly enough to slice.
+- `research-phase`: research and audit granular phase-level implementation facts before slicing.
 - `create-phase-slices`: split one phase into implementation slices.
-- `research-slice`: research one implementation slice before planning.
-- `plan-slice`: create one concrete implementation plan.
+- `plan-slice`: create one concrete implementation plan, adding only narrow
+  slice-specific research deltas when needed.
 - `verify-slice-plan`: check that a slice plan is ready to build.
 - `build-slice`: implement one planned slice.
 - `verify-slice-build`: verify one built slice.

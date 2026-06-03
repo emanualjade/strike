@@ -13,6 +13,8 @@ Split one phase spec into small focused buildable slices.
 ## Inputs
 
 - phase spec
+- phase research from the current phase's `research.md`
+- phase research audit from the current phase's `research-audit.md`
 - optional main spec, development plan, decisions, initiative research, or
   supporting artifacts
 - optional context files or repo paths
@@ -90,8 +92,8 @@ vertical slice is worse first and name the next vertical slice they unblock.
 
 ## Quality Bar
 
-The slice set is ready when each slice can move into research, planning, build,
-and verification without re-slicing the phase.
+The slice set is ready when each slice can move into planning, build, and
+verification without re-slicing the phase.
 
 A fresh context should be able to open any `slice.md` and understand:
 
@@ -106,9 +108,19 @@ One slice is correct when splitting would create fake work.
 ## Process
 
 - Read the phase spec and relevant context.
+- Read the current phase's `research.md`. If it says `Ready for slicing: no`,
+  do not create slices; surface the blocker or route back.
+- Read the current phase's `research-audit.md` and preserve any accepted risks,
+  follow-ups, or source-backed constraints that affect slice boundaries.
+- If `research-audit.md` does not say `Verdict: pass` or
+  `Verdict: accepted-risk` with `Must Fix count: 0`, do not create slices;
+  route back to `phaseResearchComplete`.
 - Read relevant initiative research constraints when they affect slice
   boundaries, provider/model capabilities, data/schema work, file/blob flows,
   queues/jobs, auth/payment behavior, or repo-pattern risk.
+- Use phase research and its audit as the inherited implementation research
+  baseline for this phase. Do not make every slice rediscover the same
+  official/provider/repo facts.
 - If `supporting-artifacts/` exists, scan it and read only files relevant to
   this phase before setting slice boundaries.
 - Identify the smallest set of slices that can complete the phase coherently.
@@ -140,6 +152,22 @@ dependency-map file.
 
 If no slice output root is provided, ask the user where they would like to save
 the slice stubs.
+
+If phase research or phase research audit is missing, failing, or too weak to
+slice safely, do not create slice stubs. Write a concise route-back note instead
+and run the exact helper command named in it before continuing:
+
+```md
+# Slice Boundary Blocker
+
+## Route Back
+Needed: yes
+Command: reopen-phase-check
+Phase: <phase-id>
+Slice: None
+Check: phaseResearchComplete
+Reason:
+```
 
 When running inside Strike, writing slice stubs is not enough to finish this
 step. Register every planned slice in workflow state:
@@ -192,6 +220,7 @@ One sentence describing the observable behavior that works after this slice.
 - Keep implementation planning, execution tasks, research notes, build steps,
   and verification evidence out of the slice stub.
 - Preserve the phase spec's scope, rules, constraints, and open questions.
+- Preserve phase research constraints and slice-boundary implications.
 - Split or justify any L/XL, batched, low-cohesion, or non-vertical slice.
 - Add `## Why Not Split` for L slices or broad-stack slices that cannot be made
   smaller.

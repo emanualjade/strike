@@ -49,6 +49,8 @@ Browser clickthrough must record:
 - route or page opened
 - representative data created, seeded, uploaded, or used
 - controls clicked or user actions taken
+- keyboard, focus, accessibility, or alternate-input actions attempted when
+  they are part of accepted scope
 - expected states or results observed
 - issues found or residual risk
 
@@ -71,6 +73,13 @@ surface blocks the URL or cannot complete navigation, try another available
 browser surface before failing verification. Record each attempted URL/tool and
 the observed failure. Do not use curl, server reachability, DOM inspection, or
 static review as the fallback substitute for clicking the feature.
+
+When keyboard or alternate-input behavior is part of accepted scope, prove it in
+the browser when the automation surface can synthesize the relevant native
+events. If the browser surface focuses the control but cannot synthesize native
+activation or focus traversal, record the exact keys/tools attempted, the
+observed limitation, and the residual risk separately. Do not add custom app key
+handlers solely to satisfy an automation quirk for native controls.
 
 ## Visual Evidence
 

@@ -197,12 +197,12 @@ export const INITIATIVE_WORKFLOW = [
 
 export const PHASE_WORKFLOW = [
   ["create-phase-spec", ["phaseSpecCreated"]],
+  ["research-phase", ["phaseResearchComplete"]],
   ["create-phase-slices", ["slicesCreated"]],
   ["verify-phase", ["allSlicesVerified"]],
 ];
 
 export const SLICE_WORKFLOW = [
-  ["research-slice", ["researchComplete"]],
   ["plan-slice", ["planCreated"]],
   ["verify-slice-plan", ["planVerified"]],
   ["build-slice", ["implemented"]],
@@ -218,7 +218,7 @@ const INITIATIVE_UPSTREAM_CHECKS = new Set([
   "specCreated",
   "phasesCreated",
 ]);
-const PHASE_UPSTREAM_CHECKS = new Set(["phaseSpecCreated", "slicesCreated"]);
+const PHASE_UPSTREAM_CHECKS = new Set(["phaseSpecCreated", "phaseResearchComplete", "slicesCreated"]);
 
 export function workflowFromTemplate(template) {
   return template.map(([skill, checks]) => ({
@@ -540,6 +540,100 @@ function validateCompletionPreconditions(state, current, verificationKey, option
     requireDecisionReview("decisionsResolved", decisionsPath);
   }
 
+  if (verificationKey === "planCreated") {
+    requireSlicePlanReady(
+      "planCreated",
+      artifactFilePath(
+        options.statePath,
+        current.initiativeId,
+        "phases",
+        current.phaseId,
+        "slices",
+        current.sliceId,
+        "plan.md",
+      ),
+    );
+  }
+
+  if (verificationKey === "planVerified") {
+    requireReviewedVerificationArtifact(
+      "planVerified",
+      artifactFilePath(
+        options.statePath,
+        current.initiativeId,
+        "phases",
+        current.phaseId,
+        "slices",
+        current.sliceId,
+        "plan-verification.md",
+      ),
+      "Ready",
+    );
+  }
+
+  if (verificationKey === "buildVerified") {
+    requireReviewedVerificationArtifact(
+      "buildVerified",
+      artifactFilePath(
+        options.statePath,
+        current.initiativeId,
+        "phases",
+        current.phaseId,
+        "slices",
+        current.sliceId,
+        "build-verification.md",
+      ),
+      "Verified",
+    );
+  }
+
+  if (verificationKey === "phaseResearchComplete") {
+    const researchPath = artifactFilePath(options.statePath, current.initiativeId, "phases", current.phaseId, "research.md");
+    const auditPath = artifactFilePath(options.statePath, current.initiativeId, "phases", current.phaseId, "research-audit.md");
+    requireReadyForSlicing(
+      "phaseResearchComplete",
+      researchPath,
+    );
+    requirePhaseResearchAudit("phaseResearchComplete", researchPath, auditPath);
+  }
+
+  if (verificationKey === "implemented") {
+    requireSliceBuildReady(
+      "implemented",
+      artifactFilePath(
+        options.statePath,
+        current.initiativeId,
+        "phases",
+        current.phaseId,
+        "slices",
+        current.sliceId,
+        "build.md",
+      ),
+    );
+  }
+
+  if (verificationKey === "allSlicesVerified") {
+    requireReviewedVerificationArtifact(
+      "allSlicesVerified",
+      artifactFilePath(
+        options.statePath,
+        current.initiativeId,
+        "phases",
+        current.phaseId,
+        "verification.md",
+      ),
+      "Ready",
+    );
+  }
+
+  if (verificationKey === "allPhasesVerified") {
+    requireReviewedVerificationArtifact(
+      "allPhasesVerified",
+      artifactFilePath(options.statePath, current.initiativeId, "verification.md"),
+      "Ready",
+    );
+  }
+
   if (verificationKey === "phasesCreated") {
     const initiative = (state.initiatives ?? []).find((item) => item.id === current.initiativeId);
     if (!initiative || (initiative.phases ?? []).length === 0) {
@@ -643,12 +737,98 @@ function requireDecisionReview(verificationKey, artifactPath) {
   const verdict = text.match(/^Verdict:[^\S\r\n]*(pass|accepted-risk|needs-fix)\b/mi)?.[1].toLowerCase();
   const mustFixCountText = text.match(/^Must Fix count:[^\S\r\n]*(\d+)\s*$/mi)?.[1];
   const mustFixCount = Number.parseInt(mustFixCountText ?? "", 10);
+  const reviewReturned = /^Review results returned:[^\S\r\n]*yes\b/mi.test(text);
 
-  if (!hasReview || (verdict !== "pass" && verdict !== "accepted-risk") || mustFixCount !== 0) {
+  if (
+    !hasReview ||
+    !reviewReturned ||
+    (verdict !== "pass" && verdict !== "accepted-risk") ||
+    mustFixCount !== 0
+  ) {
     throw new Error(
-      `Cannot complete ${verificationKey} until ${artifactPath} has ## Decision Review with Verdict: pass or accepted-risk and Must Fix count: 0.`,
+      `Cannot complete ${verificationKey} until ${artifactPath} has ## Decision Review with Review results returned: yes, Verdict: pass or accepted-risk, and Must Fix count: 0.`,
     );
   }
+}
+
+function requireSlicePlanReady(verificationKey, artifactPath) {
+  if (!hasFileContent(artifactPath)) {
+    throw new Error(
+      `Cannot complete ${verificationKey} until ${artifactPath} exists and contains a slice plan.`,
+    );
+  }
+
+  const text = fs.readFileSync(artifactPath, "utf8");
+  if (!/^Needed:[^\S\r\n]*no\b/mi.test(text) || /^Needed:[^\S\r\n]*yes\b/mi.test(text)) {
+    throw new Error(
+      `Cannot complete ${verificationKey} until ${artifactPath} has Split Recommendation with Needed: no.`,
+    );
+  }
+}
+
+function requireSliceBuildReady(verificationKey, artifactPath) {
+  if (!hasFileContent(artifactPath)) {
+    throw new Error(
+      `Cannot complete ${verificationKey} until ${artifactPath} exists and contains build evidence.`,
+    );
+  }
+
+  const text = fs.readFileSync(artifactPath, "utf8");
+  const builtYes = /^Built:[^\S\r\n]*yes\b/mi.test(text);
+  if (!builtYes || hasRouteBackNeededYes(text) || /^Fix Needed:[^\S\r\n]*yes\b/mi.test(text)) {
+    throw new Error(
+      `Cannot complete ${verificationKey} until ${artifactPath} says Built: yes and has no route-back or fix needed.`,
+    );
+  }
+}
+
+function requireReviewedVerificationArtifact(verificationKey, artifactPath, resultField) {
+  if (!hasFileContent(artifactPath)) {
+    throw new Error(
+      `Cannot complete ${verificationKey} until ${artifactPath} exists and contains verification evidence.`,
+    );
+  }
+
+  const text = fs.readFileSync(artifactPath, "utf8");
+  const reviewReturned = /^Review results returned:[^\S\r\n]*yes\b/mi.test(text);
+  const resultYes = new RegExp(`^${escapeRegExp(resultField)}:[^\\S\\r\\n]*yes\\b`, "im").test(text);
+  const fixNeededNo = /^Fix Needed:[^\S\r\n]*no\b/mi.test(text);
+
+  if (
+    !reviewReturned ||
+    !resultYes ||
+    !fixNeededNo ||
+    hasRouteBackNeededYes(text) ||
+    hasStaleMarker(text) ||
+    hasBlockingReviewText(text)
+  ) {
+    throw new Error(
+      `Cannot complete ${verificationKey} until ${artifactPath} says Review results returned: yes, ${resultField}: yes, Fix Needed: no, has no route-back needed, and has no stale or blocking review findings.`,
+    );
+  }
+}
+
+function hasRouteBackNeededYes(text) {
+  return /^Needed:[^\S\r\n]*yes\b/mi.test(text);
+}
+
+function hasStaleMarker(text) {
+  return /^Stale:[^\S\r\n]*yes\b/mi.test(text);
+}
+
+function hasBlockingReviewText(text) {
+  return (
+    /^Verdict:[^\S\r\n]*blocked\b/mi.test(text) ||
+    /^Automated checks:[^\S\r\n]*(issues|blocked|failed)\b/mi.test(text) ||
+    /^Ready for browser:[^\S\r\n]*no\b/mi.test(text) ||
+    /^Must Fix count:[^\S\r\n]*[1-9]\d*\b/mi.test(text) ||
+    /^Suggested Category:[^\S\r\n]*Must Fix\b/mi.test(text) ||
+    /^Severity:[^\S\r\n]*Must Fix\b/mi.test(text)
+  );
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function requireResearchScopeCheckpoint(verificationKey, artifactPath) {
@@ -681,6 +861,54 @@ function requireReadyForGrill(verificationKey, artifactPath) {
   if (!/^Ready for grill:[^\S\r\n]*yes\b/mi.test(text)) {
     throw new Error(
       `Cannot complete ${verificationKey} until ${artifactPath} says Ready for grill: yes.`,
+    );
+  }
+}
+
+function requireReadyForSlicing(verificationKey, artifactPath) {
+  if (!hasFileContent(artifactPath)) {
+    throw new Error(
+      `Cannot complete ${verificationKey} until ${artifactPath} exists and contains phase research.`,
+    );
+  }
+
+  const text = fs.readFileSync(artifactPath, "utf8");
+  if (!/^Ready for slicing:[^\S\r\n]*yes\b/mi.test(text)) {
+    throw new Error(
+      `Cannot complete ${verificationKey} until ${artifactPath} says Ready for slicing: yes.`,
+    );
+  }
+}
+
+function requirePhaseResearchAudit(verificationKey, researchPath, auditPath) {
+  if (!hasFileContent(auditPath)) {
+    throw new Error(
+      `Cannot complete ${verificationKey} until ${auditPath} exists and contains a phase research audit.`,
+    );
+  }
+
+  const researchText = fs.readFileSync(researchPath, "utf8");
+  const auditText = fs.readFileSync(auditPath, "utf8");
+  const researchHasAuditRollup = /^## Research Audit\b/mi.test(researchText);
+  const researchVerdict = researchText.match(/^Verdict:[^\S\r\n]*(pass|needs-fix|accepted-risk)\b/mi)?.[1].toLowerCase();
+  const researchMustFixCountText = researchText.match(/^Must Fix count:[^\S\r\n]*(\d+)\s*$/mi)?.[1];
+  const researchMustFixCount = Number.parseInt(researchMustFixCountText ?? "", 10);
+  const auditVerdict = auditText.match(/^Verdict:[^\S\r\n]*(pass|needs-fix|accepted-risk)\b/mi)?.[1].toLowerCase();
+  const auditMustFixCountText = auditText.match(/^Must Fix count:[^\S\r\n]*(\d+)\s*$/mi)?.[1];
+  const auditMustFixCount = Number.parseInt(auditMustFixCountText ?? "", 10);
+  const auditReviewReturned = /^Review results returned:[^\S\r\n]*yes\b/mi.test(auditText);
+  const hasPassingResearchRollup =
+    researchHasAuditRollup &&
+    (researchVerdict === "pass" || researchVerdict === "accepted-risk") &&
+    researchMustFixCount === 0;
+  const hasPassingAudit =
+    auditReviewReturned &&
+    (auditVerdict === "pass" || auditVerdict === "accepted-risk") &&
+    auditMustFixCount === 0;
+
+  if (!hasPassingResearchRollup || !hasPassingAudit) {
+    throw new Error(
+      `Cannot complete ${verificationKey} until ${researchPath} and ${auditPath} show Review results returned: yes, Verdict: pass or accepted-risk, and Must Fix count: 0.`,
     );
   }
 }
@@ -908,7 +1136,7 @@ function childIds(root, prefix) {
     .sort((left, right) => compareNumberedIds(left, right, prefix.slice(0, -1)));
 }
 
-export function reopenCheck(state, verificationKey) {
+export function reopenCheck(state, verificationKey, options = {}) {
   const current = getNextStep(state);
   if (current.status !== "active") {
     throw new Error(`Cannot reopen verification: current status is ${current.status}.`);
@@ -917,10 +1145,11 @@ export function reopenCheck(state, verificationKey) {
   const workflow = workflowForCurrentScope(state, current);
   reopenWorkflowCheck(workflow, verificationKey, "current scope");
   reopenCurrentScopeDependents(state, current, verificationKey);
+  markStaleArtifactsAfterReopen(state, current, verificationKey, options.statePath);
   return getNextStep(state);
 }
 
-export function reopenPhaseCheck(state, phaseId, verificationKey) {
+export function reopenPhaseCheck(state, phaseId, verificationKey, options = {}) {
   const normalizedPhaseId = normalizePhaseId(phaseId);
 
   const initiative = getActiveInitiative(state);
@@ -934,16 +1163,26 @@ export function reopenPhaseCheck(state, phaseId, verificationKey) {
   }
 
   reopenWorkflowCheck(phase.phaseWorkflow, verificationKey, normalizedPhaseId);
-  if (verificationKey === "phaseSpecCreated" || verificationKey === "slicesCreated") {
+  if (
+    verificationKey === "phaseSpecCreated" ||
+    verificationKey === "phaseResearchComplete" ||
+    verificationKey === "slicesCreated"
+  ) {
     for (const slice of phase.slices ?? []) {
       resetWorkflow(slice.sliceWorkflow);
     }
   }
   reopenWorkflowKey(initiative.initiativeWorkflow, "allPhasesVerified");
+  markStaleArtifactsAfterReopen(
+    state,
+    { initiativeId: initiative.id, phaseId: normalizedPhaseId },
+    verificationKey,
+    options.statePath,
+  );
   return getNextStep(state);
 }
 
-export function reopenSliceCheck(state, phaseId, sliceId, verificationKey) {
+export function reopenSliceCheck(state, phaseId, sliceId, verificationKey, options = {}) {
   const normalizedPhaseId = normalizePhaseId(phaseId);
   const normalizedSliceId = normalizeSliceId(sliceId);
 
@@ -965,7 +1204,121 @@ export function reopenSliceCheck(state, phaseId, sliceId, verificationKey) {
   reopenWorkflowCheck(slice.sliceWorkflow, verificationKey, `${normalizedPhaseId}/${normalizedSliceId}`);
   reopenWorkflowKey(phase.phaseWorkflow, "allSlicesVerified");
   reopenWorkflowKey(initiative.initiativeWorkflow, "allPhasesVerified");
+  markStaleArtifactsAfterReopen(
+    state,
+    { initiativeId: initiative.id, phaseId: normalizedPhaseId, sliceId: normalizedSliceId },
+    verificationKey,
+    options.statePath,
+  );
   return getNextStep(state);
+}
+
+function markStaleArtifactsAfterReopen(state, current, verificationKey, statePath = DEFAULT_STATE_PATH) {
+  const artifactPaths = reviewedArtifactPathsAffectedByReopen(state, current, verificationKey, statePath);
+  for (const artifactPath of artifactPaths) {
+    markArtifactStale(artifactPath, verificationKey);
+  }
+}
+
+function reviewedArtifactPathsAffectedByReopen(state, current, verificationKey, statePath) {
+  const paths = [];
+  const initiative = (state.initiatives ?? []).find((item) => item.id === current.initiativeId);
+  if (!initiative) return paths;
+
+  const addInitiativeVerification = () => {
+    paths.push(artifactFilePath(statePath, current.initiativeId, "verification.md"));
+  };
+  const addPhaseVerification = (phaseId) => {
+    paths.push(artifactFilePath(statePath, current.initiativeId, "phases", phaseId, "verification.md"));
+  };
+  const addSliceVerifications = (phaseId, sliceId) => {
+    paths.push(
+      artifactFilePath(
+        statePath,
+        current.initiativeId,
+        "phases",
+        phaseId,
+        "slices",
+        sliceId,
+        "plan-verification.md",
+      ),
+      artifactFilePath(
+        statePath,
+        current.initiativeId,
+        "phases",
+        phaseId,
+        "slices",
+        sliceId,
+        "build-verification.md",
+      ),
+    );
+  };
+
+  if (current.sliceId) {
+    if (verificationKey === "planVerified") {
+      paths.push(
+        artifactFilePath(
+          statePath,
+          current.initiativeId,
+          "phases",
+          current.phaseId,
+          "slices",
+          current.sliceId,
+          "plan-verification.md",
+        ),
+      );
+    } else if (verificationKey === "buildVerified") {
+      paths.push(
+        artifactFilePath(
+          statePath,
+          current.initiativeId,
+          "phases",
+          current.phaseId,
+          "slices",
+          current.sliceId,
+          "build-verification.md",
+        ),
+      );
+    } else {
+      addSliceVerifications(current.phaseId, current.sliceId);
+    }
+    addPhaseVerification(current.phaseId);
+    addInitiativeVerification();
+    return paths;
+  }
+
+  if (current.phaseId) {
+    const phase = (initiative.phases ?? []).find((item) => item.id === current.phaseId);
+    if (verificationKey !== "allSlicesVerified") {
+      for (const slice of phase?.slices ?? []) {
+        addSliceVerifications(current.phaseId, slice.id);
+      }
+    }
+    addPhaseVerification(current.phaseId);
+    addInitiativeVerification();
+    return paths;
+  }
+
+  if (verificationKey !== "allPhasesVerified") {
+    for (const phase of initiative.phases ?? []) {
+      for (const slice of phase.slices ?? []) {
+        addSliceVerifications(phase.id, slice.id);
+      }
+      addPhaseVerification(phase.id);
+    }
+  }
+  addInitiativeVerification();
+  return paths;
+}
+
+function markArtifactStale(artifactPath, verificationKey) {
+  if (!hasFileContent(artifactPath)) return;
+  const text = fs.readFileSync(artifactPath, "utf8");
+  if (hasStaleMarker(text)) return;
+  fs.appendFileSync(
+    artifactPath,
+    `\n\n## Strike Stale Marker\nStale: yes\nReason: invalidated by reopening ${verificationKey}; rerun the owning verifier.\n`,
+  );
 }
 
 function reopenWorkflowCheck(workflow, verificationKey, label) {
@@ -1156,10 +1509,10 @@ export function artifactPathsForCurrent(current) {
       return [`${initiativeRoot}/development-plan.md`, `${initiativeRoot}/phases/<phase-id>/phase.md`];
     case "create-phase-spec":
       return phaseRoot ? [`${phaseRoot}/phase-spec.md`] : [];
+    case "research-phase":
+      return phaseRoot ? [`${phaseRoot}/research.md`, `${phaseRoot}/research-audit.md`] : [];
     case "create-phase-slices":
       return phaseRoot ? [`${phaseRoot}/slices/<slice-id>/slice.md`] : [];
-    case "research-slice":
-      return sliceRoot ? [`${sliceRoot}/research.md`] : [];
     case "plan-slice":
       return sliceRoot ? [`${sliceRoot}/plan.md`] : [];
     case "verify-slice-plan":
@@ -1499,6 +1852,10 @@ function createGuidanceFiles(rootPath, templates) {
 function syncHelper(helperPath) {
   fs.mkdirSync(path.dirname(helperPath), { recursive: true });
   const source = fs.readFileSync(SCRIPT_FILE, "utf8");
+  const paths = workspacePaths(path.join(path.dirname(path.dirname(helperPath)), "state.json"));
+  createLanguageFile(paths.languagePath);
+  createGuidanceFiles(paths.implementationDisciplinePath, IMPLEMENTATION_DISCIPLINE_TEMPLATES);
+  createReviewLensFiles(paths.reviewLensesPath);
 
   if (fs.existsSync(helperPath)) {
     const existing = fs.readFileSync(helperPath, "utf8");
@@ -1507,13 +1864,28 @@ function syncHelper(helperPath) {
         throw new Error(`Refusing to overwrite unrecognized existing helper: ${helperPath}`);
       }
       fs.writeFileSync(helperPath, source);
-      return { helperPath, refreshed: true };
+      return {
+        helperPath,
+        refreshed: true,
+        guidancePath: paths.implementationDisciplinePath,
+        reviewLensesPath: paths.reviewLensesPath,
+      };
     }
-    return { helperPath, refreshed: false };
+    return {
+      helperPath,
+      refreshed: false,
+      guidancePath: paths.implementationDisciplinePath,
+      reviewLensesPath: paths.reviewLensesPath,
+    };
   }
 
   fs.copyFileSync(SCRIPT_FILE, helperPath);
-  return { helperPath, refreshed: true };
+  return {
+    helperPath,
+    refreshed: true,
+    guidancePath: paths.implementationDisciplinePath,
+    reviewLensesPath: paths.reviewLensesPath,
+  };
 }
 
 function isStrikeStateHelper(text) {
@@ -1633,7 +2005,7 @@ export function main() {
       throw new Error("Usage: state.mjs reopen-check <check-name> [--state path]");
     }
     const state = readState(statePath);
-    const current = reopenCheck(state, verificationKey);
+    const current = reopenCheck(state, verificationKey, { statePath });
     writeState(statePath, state);
     printJson(current);
     return;
@@ -1646,7 +2018,7 @@ export function main() {
       throw new Error("Usage: state.mjs reopen-phase-check <phase-id> <check-name> [--state path]");
     }
     const state = readState(statePath);
-    const current = reopenPhaseCheck(state, phaseId, verificationKey);
+    const current = reopenPhaseCheck(state, phaseId, verificationKey, { statePath });
     writeState(statePath, state);
     printJson(current);
     return;
@@ -1660,7 +2032,7 @@ export function main() {
       throw new Error("Usage: state.mjs reopen-slice-check <phase-id> <slice-id> <check-name> [--state path]");
     }
     const state = readState(statePath);
-    const current = reopenSliceCheck(state, phaseId, sliceId, verificationKey);
+    const current = reopenSliceCheck(state, phaseId, sliceId, verificationKey, { statePath });
     writeState(statePath, state);
     printJson(current);
     return;

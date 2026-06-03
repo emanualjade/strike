@@ -15,17 +15,20 @@ Fix issues from a failed Strike verification pass.
 - failed verification artifact
 - current initiative, phase, or slice artifacts named by the verifier
 - prior fix reports for the same verifier, when present
-- user implementation guidance from
-  `strike/user-guidance/implementation-discipline/global.md` and
-  `strike/user-guidance/implementation-discipline/fix.md`
+- Required user-provided customization from the consuming repo's Strike
+  workspace:
+  - user implementation-discipline guidance:
+    - `strike/user-guidance/implementation-discipline/global.md`
+    - `strike/user-guidance/implementation-discipline/fix.md`
 - repo files, commands, or paths needed to understand and repair the issue
 
 ## Process
 
 - Read the failed verification artifact first.
-- Read `strike/user-guidance/implementation-discipline/global.md` and
-  `strike/user-guidance/implementation-discipline/fix.md` if they exist,
-  and apply relevant guidance to the repair.
+- Read required user-provided customization and apply relevant guidance to the
+  repair:
+  - `strike/user-guidance/implementation-discipline/global.md`
+  - `strike/user-guidance/implementation-discipline/fix.md`
 - Fix the verifier's `Must Fix` items. They may be broken behavior,
   incomplete accepted scope, missing evidence, weak artifacts, or regressions.
 - Treat `P0` and `P1` `Must Fix` items as required before the verifier can

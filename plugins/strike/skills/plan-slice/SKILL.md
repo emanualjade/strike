@@ -1,6 +1,6 @@
 ---
 name: plan-slice
-description: Create a clear, complete implementation plan for one slice from its slice stub, phase spec, research, and relevant repo context.
+description: Create a clear, complete implementation plan for one slice from its slice stub, phase spec, audited phase research, and relevant repo context.
 argument-hint: "[slice/context]"
 disable-model-invocation: true
 allowed-tools: Read Write Edit Grep Glob WebFetch WebSearch
@@ -13,16 +13,19 @@ Create a solid, accurate, complete development plan for one slice.
 ## Inputs
 
 - slice stub or slice context
-- slice research from the current slice's `research.md`
 - phase spec
+- phase research from the current phase's `research.md`
+- phase research audit from the current phase's `research-audit.md`
 - initiative research index, relevant reports, and relevant audits when they
   affect this slice
 - supporting artifacts relevant to this slice, when present
 - shared verification evidence taxonomy from the Strike plugin root's
   `references/verification-evidence.md`
-- user implementation guidance from
-  `strike/user-guidance/implementation-discipline/global.md` and
-  `strike/user-guidance/implementation-discipline/plan-slice.md`
+- Required user-provided customization from the consuming repo's Strike
+  workspace:
+  - user implementation-discipline guidance:
+    - `strike/user-guidance/implementation-discipline/global.md`
+    - `strike/user-guidance/implementation-discipline/plan-slice.md`
 - optional main spec, decisions, or repo context
 
 ## Planning Dialogue
@@ -59,19 +62,27 @@ and how it will be verified.
 
 ## Planning Work
 
-- Read the slice stub, phase spec, slice research, relevant initiative research
-  reports and audits, relevant supporting artifacts, and relevant spec context.
+- Read the slice stub, phase spec, phase research, phase research audit,
+  relevant initiative research reports and audits, relevant supporting artifacts,
+  and relevant spec context.
 - Read the bundled `references/verification-evidence.md` from the Strike plugin
   root.
-- Read `strike/user-guidance/implementation-discipline/global.md` and
-  `strike/user-guidance/implementation-discipline/plan-slice.md` if they exist.
-- If slice research says `Ready for planning: no`, do not plan; surface the
-  blocker or unresolved decision.
+- Read required user-provided customization:
+  - `strike/user-guidance/implementation-discipline/global.md`
+  - `strike/user-guidance/implementation-discipline/plan-slice.md`
+- If phase research says `Ready for slicing: no`, do not plan; surface the
+  blocker or route back to `phaseResearchComplete`.
+- If phase `research-audit.md` does not say `Verdict: pass` or
+  `Verdict: accepted-risk` with `Must Fix count: 0`, do not plan; route back to
+  `phaseResearchComplete`.
 - Use initiative research as inherited constraints. Do not plan behavior that
   contradicts provider/model/API/database/file/queue constraints recorded before
   Grill. Treat passing or accepted-risk initiative research as baseline evidence,
   and read the relevant per-item report and audit before adding new tactical
   research.
+- Use phase research and its audit as the inherited implementation baseline for
+  this slice. Do not redo official/provider/repo research covered by audited
+  phase research.
 - If `supporting-artifacts/` exists, scan it and read only files relevant to this
   slice. Use them to understand schema reasoning, architecture tradeoffs,
   provider routing, data lifecycle, permissions, or operational constraints.
@@ -86,17 +97,20 @@ and how it will be verified.
   files, types, routes, or schema shape. If adjective-noun siblings appear, ask
   whether the qualifier belongs as a field, enum, state, permission,
   relationship, ownership, placement, or usage context.
-- Do tactical research as needed when planning reveals a detail that affects
-  implementation, verification, or risk. Prefer official or primary sources when
-  the fact is external, current, or high-stakes. Do not paste raw notes, long
-  excerpts, search trails, or link dumps.
+- Do narrow tactical research as needed when planning reveals a slice-specific
+  detail that initiative and phase research do not cover. Prefer official or
+  primary sources when the fact is external, current, or high-stakes. Record the
+  delta in the plan; do not paste raw notes, long excerpts, search trails, or
+  link dumps.
+- If the missing fact affects multiple slices, phase boundaries, provider/model
+  viability, repo architecture, data modeling, file/blob/job flow, auth,
+  permissions, or verification strategy, do not bury it as a slice-specific
+  research delta. Write a route-back to `phaseResearchComplete`.
 - Ask one consequential question if a missing decision changes behavior, risk, or
   implementation shape.
-- Before writing the plan, check whether the slice is cohesive and verifiable in
-  one focused build loop. If the likely plan has independent behaviors, unclear
-  verification, weak cohesion, or broad-stack work that can be separated without
-  creating fake work, do not write a bloated plan. Write a split recommendation
-  instead of a build-ready plan.
+- Work from the accepted slice boundary. If planning reveals that a clean,
+  complete implementation needs a different boundary, write a split
+  recommendation with the specific evidence and route back.
 
 ## Output
 
@@ -118,9 +132,10 @@ likely files, surfaces, important sequencing, and any small code-shaped details
 that clarify the plan.
 
 ## Research And Artifacts Used
-Name the slice research, relevant initiative research, audits, supporting
-artifacts, and user guidance that shaped this plan. If no new research was
-needed, say why.
+Name the phase research, phase research audit, relevant initiative research,
+audits, supporting artifacts, user guidance, and any slice-specific research
+delta that shaped this plan. If no new slice-specific research was needed, say
+why.
 
 ## Codebase Patterns
 Name the existing files, flows, helpers, utilities, data shapes, routes,
@@ -151,6 +166,14 @@ accurate, secure, and not over-engineered.
 ## Open Questions
 - None.
 
+## Route Back
+Needed: yes / no
+Command: None / reopen-phase-check / reopen-check
+Phase: None / <phase-id>
+Slice: None / <slice-id>
+Check: None / phaseResearchComplete / slicesCreated / planCreated
+Reason:
+
 ## Split Recommendation
 Needed: yes / no
 Reason:
@@ -166,8 +189,11 @@ Replacement slices:
 - It is fine to include small code snippets, schema shapes, type sketches, route
   examples, or pseudocode when they clarify the implementation plan. Do not write
   a full implementation in the plan or let code snippets replace explanation.
-- Read and use the slice research artifact when provided.
-- Do not plan around unresolved research blockers.
+- Read and use phase research and its audit.
+- Do not plan around unresolved phase research blockers.
+- Use initiative research and audited phase research as inherited baseline
+  evidence. Add only narrow slice-specific research deltas when the slice needs a
+  fact that those artifacts do not cover.
 - Prefer the smallest complete implementation path.
 - Use existing repo conventions before inventing new structure.
 - Do not paste raw notes, long excerpts, search trails, or link dumps into the
@@ -185,6 +211,8 @@ Replacement slices:
   restating earlier artifacts.
 - If the plan cannot name likely surfaces, verification checks, important edge
   cases, blast radius, and unresolved assumptions, tighten it before calling it build-ready.
+- If a material research gap belongs to the phase rather than this slice, route
+  back to `phaseResearchComplete` instead of guessing.
 - Use verification categories from `references/verification-evidence.md`; do not
   collapse them into one generic "test" bucket.
 - Do not default to a full test suite. Name focused tests and commands for the
@@ -209,6 +237,11 @@ Replacement slices:
   changes an important user workflow, auth or permission boundary, persistence
   path, cross-page flow, regression-prone interaction, or business-critical path.
   Otherwise record a concrete skip or not-applicable reason.
-- If `Split Recommendation` says `Needed: yes`, do not present the plan as
-  build-ready. Name the replacement slices clearly enough that Strike can edit the current slice into the first smaller slice, create any extra slice stubs,
-  and register them with `add-slice`.
+- If `Split Recommendation` says `Needed: yes`, write the artifact as a boundary
+  update instead of a build-ready plan. Name the replacement slices clearly
+  enough that Strike can edit the current slice into the first replacement
+  slice, create any extra slice stubs, and register them with `add-slice`. Set
+  `Route Back` to the exact helper command Strike should run, usually
+  `reopen-phase-check <phase-id> slicesCreated` when slice stubs need to be
+  remade or `reopen-phase-check <phase-id> phaseResearchComplete` when phase
+  research must be repaired.

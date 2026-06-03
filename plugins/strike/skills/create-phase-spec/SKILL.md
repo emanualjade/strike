@@ -35,16 +35,21 @@ into implementation slices.
   constraints, and success checks when relevant.
 - Name likely surfaces, blast radius, and watchouts only when they clarify later
   slicing. Do not invent architecture.
-- Record phase-specific research needs or weak evidence without turning the
-  spec into a research transcript.
+- Use light official/source/repo checks only when needed to avoid guessing in
+  the phase spec. Do not create a full research report here; record
+  phase-specific research needs or weak evidence for `research-phase`.
 - If initiative research says a provider/API/model/database/file/queue behavior
   is unsupported, unknown, or constrained, preserve the phase-specific impact in
   boundaries, rules, risks, or open questions.
+- If initiative research is not specific enough for this phase, name the gap in
+  `## Phase Research Needs` so the official phase research gate can resolve it
+  before slices are created.
 - Surface if the phase boundary is wrong: too broad, too small, stale,
   horizontal, or inconsistent with the main spec or development plan.
 - Ask one consequential question if the phase cannot be specified without
   changing scope, behavior, or risk.
-- Do focused research only when it can change the phase spec.
+- Do focused research only when it can change the phase spec. Deeper
+  implementation research belongs in `research-phase`.
 
 ## Quality Bar
 
@@ -134,6 +139,8 @@ Phase ID:
 
 ## Research / Watchouts
 
+## Phase Research Needs
+
 ## Open Questions
 ### Blocking
 ### Later Detail Choices
@@ -153,6 +160,8 @@ Reason:
 - Preserve relevant initiative research constraints.
 - Preserve relevant supporting-artifact context only when it is represented by
   main-spec decisions or needed to explain phase-specific boundaries.
+- Use light research only to make the phase spec accurate. Leave proper
+  implementation research to `research-phase`.
 - Surface if the phase is too broad or too small to specify coherently.
 - Do not create slices, slice acceptance criteria, slice plans, implementation
   tasks, or implementation files.

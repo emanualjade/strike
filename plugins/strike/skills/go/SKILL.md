@@ -19,9 +19,9 @@ new initiative in this skill.
 - `create-main-spec/SKILL.md` - define the whole feature or MVP at a durable level.
 - `create-development-phases/SKILL.md` - split the main spec into buildable phases.
 - `create-phase-spec/SKILL.md` - define one phase clearly enough to slice.
+- `research-phase/SKILL.md` - research and audit phase-level implementation facts before slicing.
 - `create-phase-slices/SKILL.md` - split one phase into small focused buildable slices.
-- `research-slice/SKILL.md` - research one slice before planning.
-- `plan-slice/SKILL.md` - plan one researched slice before coding.
+- `plan-slice/SKILL.md` - plan one slice before coding, adding only narrow research deltas.
 - `verify-slice-plan/SKILL.md` - check that one slice plan is ready to build.
 - `build-slice/SKILL.md` - implement one verified slice plan.
 - `verify-slice-build/SKILL.md` - test, review, and close one built slice.
@@ -150,6 +150,7 @@ Initiative state example:
       "name": "Upload and display",
       "phaseWorkflow": [
         { "skill": "create-phase-spec", "verified": { "phaseSpecCreated": true } },
+        { "skill": "research-phase", "verified": { "phaseResearchComplete": true } },
         { "skill": "create-phase-slices", "verified": { "slicesCreated": true } },
         { "skill": "verify-phase", "verified": { "allSlicesVerified": false } }
       ],
@@ -158,7 +159,6 @@ Initiative state example:
           "id": "slice-01",
           "name": "Upload image",
           "sliceWorkflow": [
-            { "skill": "research-slice", "verified": { "researchComplete": true } },
             { "skill": "plan-slice", "verified": { "planCreated": true } },
             { "skill": "verify-slice-plan", "verified": { "planVerified": true } },
             { "skill": "build-slice", "verified": { "implemented": true } },
@@ -169,7 +169,6 @@ Initiative state example:
           "id": "slice-02",
           "name": "Display gallery",
           "sliceWorkflow": [
-            { "skill": "research-slice", "verified": { "researchComplete": false } },
             { "skill": "plan-slice", "verified": { "planCreated": false } },
             { "skill": "verify-slice-plan", "verified": { "planVerified": false } },
             { "skill": "build-slice", "verified": { "implemented": false } },
@@ -201,6 +200,29 @@ checks complete just because their artifacts already exist. If you created more
 than one artifact while working, still re-enter through `next-step` after each
 completed check and let the helper decide the next step.
 
+Before launching a required review batch, close completed review agents from
+earlier gates. If a required parallel review batch cannot launch because prior
+agents are still open, close those completed agents and retry the batch. Do not
+skip required reviews because agent slots are full.
+
+For each review batch, record the input snapshot in the verification artifact:
+artifact paths, changed files or commands reviewed, and any relevant accepted
+risks. Wait for every required review agent and applicable user review lens in
+that batch to return. Synthesize those returned findings once into the artifact.
+If artifacts, code, checks, or route-back state change after the batch returns,
+mark the old review result stale and rerun the affected review batch before
+completion.
+
+For reviewed gates, wait until all required review agents and applicable user
+review lenses have returned. Synthesize their returned findings into the
+artifact, write `Review results returned: yes`, and only then run the matching
+`complete-check`. Do not mark a reviewed gate complete while a required review
+or re-review is still running, even if the artifact already contains stale
+passing text.
+
+After a reviewed gate completes, close completed review agents for that gate
+before moving to the next workflow step.
+
 The JSON returned by `complete-check` is only a receipt. It intentionally does
 not return the next workflow skill, missing checks, or artifact paths. Always
 run `next-step` again before doing or completing another workflow step.
@@ -211,8 +233,8 @@ pause or the workflow is blocked.
 
 Slice boundaries are normal workflow handoffs too. After `buildVerified`
 completes and the slice git checkpoint is done, run `next-step`. If it returns
-the next slice's `research-slice`, continue with that returned step unless the
-user asked to pause or the workflow is blocked. Stage-local verifier instructions
+the next slice's `plan-slice`, continue with that returned step unless the user
+asked to pause or the workflow is blocked. Stage-local verifier instructions
 such as not starting another slice mean that verifier does not own next-slice
 work; they are not a stop condition for `go`.
 
@@ -266,8 +288,8 @@ node <new-initiative skill dir>/scripts/state.mjs init <initiative-id> [name]
 This creates starter state, copies the helper to
 `strike/scripts/state.mjs`, and initializes `strike/user-guidance/`
 as user-owned workflow guidance. Strike stages that plan, build, fix, or
-verify code should read implementation discipline `global.md` plus their own
-stage file. Verifiers should also read review-lenses `global.md` plus their own
+verify code must read implementation discipline `global.md` plus their own
+stage file. Verifiers must also read review-lenses `global.md` plus their own
 stage file.
 
 At the start of a Strike resume, refresh the copied workspace helper from the
@@ -335,8 +357,8 @@ Default outputs:
 - `create-main-spec` -> `main-spec.md`
 - `create-development-phases` -> `development-plan.md`, `phases/<phase-id>/phase.md`, and initiative state phase entries
 - `create-phase-spec` -> `phases/<phase-id>/phase-spec.md`
+- `research-phase` -> `phases/<phase-id>/research.md` and `phases/<phase-id>/research-audit.md`
 - `create-phase-slices` -> `phases/<phase-id>/slices/<slice-id>/slice.md` and initiative state slice entries
-- `research-slice` -> `phases/<phase-id>/slices/<slice-id>/research.md`
 - `plan-slice` -> `phases/<phase-id>/slices/<slice-id>/plan.md`
 - `verify-slice-plan` -> `phases/<phase-id>/slices/<slice-id>/plan-verification.md`
 - `build-slice` -> implementation files and `phases/<phase-id>/slices/<slice-id>/build.md`
@@ -348,8 +370,14 @@ Default outputs:
 Initiative research is a required pre-grill workflow artifact. It may conclude
 that no material research is needed, but only after a user-approved scope
 checkpoint. When material research is approved, each per-item report must be
-audited before Grill can run. Slice research is also required for every
-implementation slice.
+audited before Grill can run. Phase research is the official implementation
+research gate after each phase spec and before slice creation. It may conclude
+that initiative research already covers the phase, but `research.md` must still
+say `Ready for slicing: yes` and `research-audit.md` must show a passing or
+accepted-risk audit with `Must Fix count: 0` before slices are created.
+Slice-specific research is no longer a separate workflow gate; `plan-slice` adds
+only narrow source-backed research deltas when initiative and phase research do
+not cover a slice detail.
 
 `supporting-artifacts/` is optional initiative context created during Grill
 when schema, architecture, provider routing, data lifecycle, permissions, or
@@ -419,14 +447,16 @@ position; run `node strike/scripts/state.mjs next-step` again to learn the next
 allowed step. Do not chain multiple `complete-check` commands in one shell
 command.
 
-Do not complete `researchComplete` unless `research.md` says
-`Ready for planning: yes`. If it says `Ready for planning: no`, follow the
-research output: split the slice, route back, or surface the unresolved
+Do not complete `phaseResearchComplete` unless the phase `research.md` says
+`Ready for slicing: yes`, contains a `## Research Audit` rollup, and
+`research-audit.md` says `Verdict: pass` or `Verdict: accepted-risk` with
+`Must Fix count: 0`. If `research.md` says `Ready for slicing: no`, follow the
+research output: route back, repair missing research, or surface the unresolved
 decision from `Reason` and `## Questions Or Blockers`.
 
 Do not complete `planCreated` if `plan.md` says `Split Recommendation` is
 `Needed: yes`. Split the active slice, add any replacement slice stubs with
-`add-slice`, run `reopen-check researchComplete`, then continue from `next-step`.
+`add-slice`, run `reopen-check planCreated`, then continue from `next-step`.
 
 Do not complete `ideaRefined` unless `idea.md` contains `## User Checkpoint`,
 records a non-empty `User response:`, and says `Ready to continue: yes`.
@@ -443,7 +473,8 @@ say `No material research needed: yes`.
 Do not complete `decisionsResolved` unless `decisions.md` contains
 `## User Checkpoint`, records a non-empty `User response:`, and says
 `Ready to continue: yes`, and contains `## Decision Review` with
-`Verdict: pass` or `Verdict: accepted-risk` and `Must Fix count: 0`.
+`Review results returned: yes`, `Verdict: pass` or `Verdict: accepted-risk`,
+and `Must Fix count: 0`.
 
 Do not complete `phasesCreated` until `development-plan.md` exists, each
 planned phase has a phase stub, and each planned phase has been added with
@@ -456,24 +487,25 @@ Do not complete `implemented` unless `build.md` says `Built: yes`. If it says
 `Built: no` and `Route Back` says `Needed: yes`, run the named route-back
 `Command` with its `Phase`, `Slice`, and `Check`.
 
-Do not complete `planVerified` unless `plan-verification.md` says `Ready: yes`.
+Do not complete `planVerified` unless `plan-verification.md` says
+`Review results returned: yes` and `Ready: yes`.
 If it says `Ready: no` and `Fix Needed: yes`, run `fix`, then run
 `verify-slice-plan` again.
 
 Do not complete `buildVerified` unless `build-verification.md` says
-`Verified: yes`. If it says `Verified: no` and `Fix Needed: yes`, run `fix`,
-then run `verify-slice-build` again.
+`Review results returned: yes` and `Verified: yes`. If it says `Verified: no`
+and `Fix Needed: yes`, run `fix`, then run `verify-slice-build` again.
 
 After completing `buildVerified`, complete the slice git checkpoint before
 moving to the next slice.
 
-Do not complete `allSlicesVerified` unless `verification.md` says
-`Ready: yes`. If it says `Ready: no` and `Fix Needed: yes`, run `fix`, then
-run `verify-phase` again.
+Do not complete `allSlicesVerified` unless the phase `verification.md` says
+`Review results returned: yes` and `Ready: yes`. If it says `Ready: no` and
+`Fix Needed: yes`, run `fix`, then run `verify-phase` again.
 
 Do not complete `allPhasesVerified` unless the initiative `verification.md`
-says `Ready: yes`. If it says `Ready: no` and `Fix Needed: yes`, run `fix`,
-then run `verify-main-spec` again.
+says `Review results returned: yes` and `Ready: yes`. If it says `Ready: no`
+and `Fix Needed: yes`, run `fix`, then run `verify-main-spec` again.
 
 Completing `allPhasesVerified` marks the initiative complete. Run `next-step`
 after the completion receipt; it should report `status: "idle"` unless another
@@ -569,14 +601,13 @@ the reopened item could make downstream work stale. `reopen-phase-check` and
 
 Common route backs:
 
-- missing or weak slice research -> `reopen-check researchComplete`
+- missing or weak phase research -> `reopen-phase-check <phase-id> phaseResearchComplete`
 - missing or weak initiative research -> `reopen-check initiativeResearchComplete`
 - weak slice plan -> `reopen-check planCreated`
-- oversized slice discovered before build -> edit the current slice into the
-  first smaller replacement slice, create additional replacement slice stubs,
-  run `add-slice <phase-id> <slice-id> [name]` for each added slice, then rerun
-  `reopen-check researchComplete`. Do not force the oversized slice through
-  build.
+- accepted slice boundary changes before build -> edit the current slice into
+  the first replacement slice, create additional replacement slice stubs, run
+  `add-slice <phase-id> <slice-id> [name]` for each added slice, then rerun
+  `reopen-check planCreated`.
 - weak slice build -> `reopen-check implemented`
 - phase verification finds weak slice build verification -> `reopen-slice-check <phase-id> <slice-id> buildVerified`
 - main verification finds weak phase verification -> `reopen-phase-check <phase-id> allSlicesVerified`
@@ -629,26 +660,31 @@ Phase setup:
 - `create-phase-spec`: pass `main-spec.md`, initiative research, relevant
   `supporting-artifacts/`, `development-plan.md`, and the phase stub; write the
   phase's `phase-spec.md`; complete `phaseSpecCreated`.
-- `create-phase-slices`: pass the phase spec plus relevant initiative research
-  and `supporting-artifacts/`; write one `slice.md` per slice. Run
-  `add-slice <phase-id> <slice-id> [name]` for every slice, then complete
-  `slicesCreated`.
+- `research-phase`: pass `main-spec.md`, `research/index.md`, relevant
+  initiative research reports and audits, relevant `supporting-artifacts/`,
+  `development-plan.md`, and `phase-spec.md`; write the phase's `research.md`
+  and `research-audit.md`; complete `phaseResearchComplete` only when research
+  says `Ready for slicing: yes` and the audit has no unresolved Must Fix
+  findings.
+- `create-phase-slices`: pass the phase spec plus relevant initiative research,
+  phase research, phase research audit, and `supporting-artifacts/`; write one
+  `slice.md` per slice. Run `add-slice <phase-id> <slice-id> [name]` for every
+  slice, then complete `slicesCreated`.
 
 Slice loop:
 
-- `research-slice`: pass `main-spec.md`, `research/index.md`, relevant
-  initiative research reports and audits, relevant `supporting-artifacts/`,
-  `phase-spec.md`, and `slice.md`; write `research.md`; complete
-  `researchComplete` only when it says `Ready for planning: yes`.
 - `plan-slice`: pass `main-spec.md`, `research/index.md`, relevant initiative
-  research reports and audits, relevant `supporting-artifacts/`, `phase-spec.md`,
-  `slice.md`, and `research.md`; write `plan.md` with a focused
-  `Verification Plan`; complete
+  research reports and audits, phase `research.md`, phase `research-audit.md`, relevant
+  `supporting-artifacts/`, `phase-spec.md`, and `slice.md`; write `plan.md`
+  with a focused `Verification Plan` and any narrow slice-specific research
+  delta; complete
   `planCreated` only when `Split Recommendation` is `Needed: no`.
 - `verify-slice-plan`: pass the slice artifacts plus `research/index.md`,
-  relevant initiative research reports and audits, and `supporting-artifacts/`;
-  write `plan-verification.md`; complete
-  `planVerified` only when it says `Ready: yes`.
+  relevant initiative research reports and audits, phase `research.md`, phase
+  `research-audit.md`, and `supporting-artifacts/`; write
+  `plan-verification.md`; complete
+  `planVerified` only when it says `Review results returned: yes` and
+  `Ready: yes`.
 - `build-slice`: pass `plan.md`, `plan-verification.md`, relevant
   `supporting-artifacts/` named in the plan, and repo files named by the plan;
   implement the work, add/update planned automated tests, run focused
@@ -659,19 +695,21 @@ Slice loop:
   `supporting-artifacts/`, and changed files; write `build-verification.md`;
   confirm grouped verification evidence, including Browser Clickthrough for
   browser-visible work; complete `buildVerified` only when it says
-  `Verified: yes`, then commit and push that completed slice before moving on.
+  `Review results returned: yes` and `Verified: yes`, then commit and push that
+  completed slice before moving on.
 
 Verification gates:
 
-- `verify-phase`: pass the phase spec, relevant initiative research,
-  relevant `supporting-artifacts/`, and all slice artifacts for the phase; write
-  the phase's `verification.md`; complete `allSlicesVerified` only when it says
+- `verify-phase`: pass the phase spec, phase research, phase research audit,
+  relevant initiative research, relevant `supporting-artifacts/`, and completed
+  slice evidence for the phase; write the phase's `verification.md`; complete
+  `allSlicesVerified` only when it says `Review results returned: yes` and
   `Ready: yes`.
 - `verify-main-spec`: pass the main spec, initiative research,
   `supporting-artifacts/`, development plan, and every phase verification; write
   the initiative `verification.md`; complete
-  `allPhasesVerified` only when it says `Ready: yes`. The helper marks the
-  initiative complete.
+  `allPhasesVerified` only when it says `Review results returned: yes` and
+  `Ready: yes`. The helper marks the initiative complete.
 
 ## Basic Rule
 

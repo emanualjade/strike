@@ -66,10 +66,15 @@ Agents may inspect state when needed, but should read root state for initiative
 selection and only the relevant initiative-local state file for detailed
 progress. This is Strike workflow policy, not a host schema requirement.
 
-2026-06-01 update: Slice research is now a first-class Strike workflow
-step. `research-slice` runs before `plan-slice`, writes compact research to the
-slice's `research.md`, and the slice plan verification step checks that research
-was either used or explicitly unnecessary.
+2026-06-03 update: Phase research is now the official implementation research
+gate after `create-phase-spec` and before `create-phase-slices`.
+`research-phase` writes the phase's `research.md` and `research-audit.md`,
+inherits audited initiative research, and fills granular phase-specific
+implementation gaps before slicing. It should research the official, canonical,
+idiomatic way to use the exact APIs, packages, plugins, SDKs, models, provider
+features, and domain mechanics the phase will touch, then audit those findings
+before `phaseResearchComplete` can pass. Slice planning may add narrow
+source-backed deltas, but `research-slice` is no longer a workflow gate.
 
 2026-06-02 update: slice sizing is cohesion-based rather than strict
 file-count slicing. `create-phase-slices`, `plan-slice`, and
@@ -78,6 +83,98 @@ small cohesive vertical slice or focused buildable slice, while still requiring
 split or justification for independent outcomes, weak cohesion, unclear
 verification, and L/XL slice signals. This is Strike workflow policy, not a host
 schema requirement.
+
+2026-06-02 update: `create-phase-slices` owns primary slice sizing. Later slice
+stages work from the accepted slice boundary and route back only when phase
+research, planning, or implementation evidence changes that boundary. This keeps
+`plan-slice`, `verify-slice-plan`, and `build-slice` from repeating the same
+size rubric while preserving boundary-change safety. This is
+Strike workflow policy, not a host schema requirement.
+
+2026-06-02 update: `verify-slice-build` now starts with a compact verification
+packet: `build.md`, `plan.md`, and `slice.md`. It checks
+workflow state or `plan-verification.md` for plan readiness and reads deeper
+context such as full plan verification, phase `research.md`,
+`research-audit.md`, or `phase-spec.md` only when evidence, scope, risk,
+contradiction, or route-back questions require it.
+This is Strike workflow policy, not a host schema requirement.
+
+2026-06-03 update: `verify-slice-plan` now starts with a compact verification
+packet: `slice.md`, phase `research.md`, phase `research-audit.md`, `plan.md`,
+and `phase-spec.md`. It reads `supporting-artifacts/` and focused repo paths
+only when plan readiness, artifact references, or local precedent evidence
+require them. Phase spec stays required at plan verification because this gate
+checks the slice plan against phase intent before build. This keeps plan
+verification centered on the slice handoff without front-loading every upstream
+context file. This is Strike workflow policy, not a host schema requirement.
+
+2026-06-03 update: `verify-slice-plan` embeds the verification categories inside
+the `plan-implementation-readiness-audit`: Static / Build Checks, Unit /
+Component / Integration Tests, E2E Tests, Browser Clickthrough, Visual Evidence,
+and Skipped / Not Applicable. This avoids a per-run shared taxonomy reference
+read for this verifier while keeping the evidence language in the audit that
+uses it. This is Strike workflow policy, not a host schema requirement.
+
+2026-06-03 update: `verify-slice-plan` now separates verifier orchestration from
+read-only review-agent work. The Process section loads the packet, confirms the
+research gate, runs reviews, synthesizes findings, and decides readiness. The
+detailed build-readiness checklist lives in the required
+`plan-implementation-readiness-audit` review agent. This keeps the verifier
+prompt easier to scan and makes review responsibility explicit. Its final rules
+are grouped into verifier conduct, `Ready: yes` requirements,
+research/boundary blockers, fix/route-back, and completion so readiness
+conditions are easier to scan. This is Strike workflow policy, not a host schema
+requirement.
+
+2026-06-03 update: Slice verification prompts now label review entries with
+explicit `SUBAGENT:` and `USER REVIEW LENSES:` prefixes. This keeps built-in
+read-only review agents, conditional subagents, and user-provided review
+customization visually distinct while preserving the same parallel verification
+batch behavior. Required and conditional slice verification subagents now load
+their longer rubrics and shared output discipline from bundled
+`references/review-agents/` files so the hot verifier prompt stays focused on
+orchestration. This is Strike workflow policy, not a host schema requirement.
+
+2026-06-02 update: `verify-slice-build` no longer reads the shared
+`references/verification-evidence.md` file on each run. Its own output shape and
+rules embed the evidence categories it needs for build verification. This is
+Strike workflow policy, not a host schema requirement.
+
+2026-06-02 update: `verify-slice-build` now uses a parallel pre-browser
+verification batch for automated slice checks, `built-slice-acceptance-audit`,
+`built-slice-code-audit`, and `built-slice-common-issues-audit`, then runs final
+Browser Clickthrough in the dev/local environment. This replaces five mandatory
+per-slice review lenses with three focused audits while keeping specialized risk
+lenses conditional and leaving broader cross-slice review to phase verification.
+Relevant user review-lens audits from `strike/user-guidance/review-lenses/` join
+the same parallel pre-browser batch. The batch now synthesizes into a compact
+`Ready for browser` gate with blocking issue IDs and stops before browser work
+when accepted-scope blockers remain. Browser Checks are condensed around actual
+execution: use the accepted feature in the browser, and fail verification when
+the feature cannot be used successfully. The final rules are grouped into
+verifier conduct, `Verified: yes` requirements, browser blockers,
+fix/route-back, and completion so pass conditions are easier to scan. This is
+Strike workflow policy, not a host schema requirement.
+
+2026-06-03 update: `verify-phase` now starts from the assembled phase evidence:
+the phase spec, each slice stub, and each slice build-verification result.
+Passed slice verification is treated as the normal source of slice-local
+confidence; phase verification reads deeper phase research, phase research
+audit, slice plans, build evidence, supporting artifacts, or repo paths only
+when evidence is missing, thin, contradictory, skipped, risky, or needed to
+judge cross-slice phase behavior. This keeps phase verification focused on phase
+coverage and cross-slice integration instead of replaying every slice-local
+gate. This is Strike workflow policy, not a host schema requirement.
+
+2026-06-03 update: `verify-phase` now uses the same parallel read-only review
+shape as the slice verifiers. Required phase review agents
+`phase-spec-coverage` and `cross-slice-integration` load bundled rubrics from
+`plugins/strike/references/review-agents/`, user review lenses join the same
+parallel batch, and conditional phase-level lenses reuse shared rubrics for user
+flows, state/data integrity, security/privacy, and integration risk. This keeps
+phase verification broad enough to catch assembled-work gaps without replaying
+full slice-local audits. This is Strike workflow policy, not a host schema
+requirement.
 
 2026-06-02 update: `plan-slice` uses planning dialogue plus a compact
 plain-English development plan shape instead of a large category matrix. The
@@ -114,14 +211,14 @@ repo code, then the research stage fixes the reports and records the audit
 rollup in `research/index.md`. This is Strike workflow policy, not a host schema
 requirement.
 
-2026-06-02 update: slice-specific and planning-time research must inherit
-audited initiative research before adding narrower findings. `research-slice`,
-`plan-slice`, and `verify-slice-plan` now receive `research/index.md`, relevant
+2026-06-03 update: phase and planning-time research must inherit audited
+initiative research before adding narrower findings. `research-phase`,
+`plan-slice`, and `verify-slice-plan` receive `research/index.md`, relevant
 per-item reports, and relevant audit files so agents do not redo or contradict
-the global provider/model/API, repo-pattern, schema, queue, file/blob, or
-auth/payment research without a narrower question, freshness concern,
-contradiction, missing fact, or accepted-risk audit caveat. This is Strike
-workflow policy, not a host schema requirement.
+global provider/model/API, repo-pattern, schema, queue, file/blob, or
+auth/payment research. `research-phase` owns broader phase-level deltas; slice
+planning adds only narrow deltas when the phase research still lacks a
+slice-local fact. This is Strike workflow policy, not a host schema requirement.
 
 2026-06-02 update: Grill now requires a read-only `Decision Review` section in
 `decisions.md` before `decisionsResolved` can complete. The review checks for
@@ -151,6 +248,14 @@ editable project memory, not bundled package documentation or a host-discovered
 component. User review lenses are additive and do not replace built-in Strike
 verification gates.
 
+2026-06-02 update: Planning, build, fix, and verification skills now name
+`strike/user-guidance/` files as required user-provided customization from the
+consuming repo's Strike workspace. Planning/build/fix stages read
+implementation discipline `global.md` plus their stage file. Verifiers read
+review lenses `global.md` plus their stage file and implementation discipline
+`global.md` plus their stage file. This makes user-owned guidance part of the
+workflow contract instead of optional local context.
+
 2026-05-31 update: Strike `0.9.0` removes the retired board/card workflow
 skills and keeps the Strike workflow plus standalone utility skills. Root references
 are now limited to shared language, demo slug policy, and the slug helper.
@@ -171,6 +276,14 @@ checks, unit/component/integration tests, E2E tests, browser clickthrough, visua
 evidence, and skipped/not-applicable evidence separate across planning, build,
 and verification skills. This is Strike workflow policy and package support
 material, not a host-discovered component path.
+
+2026-06-03 update: `plugins/strike/references/review-agents/` stores bundled
+Markdown rubrics for required and conditional Strike review subagents that are
+shared by slice, phase, and final initiative verification skills. The skills
+still own orchestration, subagent names, input loading, parallelism, and output
+shape; the reference files hold longer audit checklists and the shared
+review-agent output discipline. These are portable package references, not
+host-discovered custom agent definitions.
 
 ### Host Invocation Documentation
 
@@ -255,6 +368,25 @@ Plugin hosts discover known component directories inside the plugin root. Templa
 - Idiomatic: Acceptable repo tooling.
 
 The hosts provide some validation, but not one command that checks the combined Codex, Claude, and Agent Skills layout. `pnpm run validate` is repo-local quality control, not a host-schema validator or proof of publishability. It intentionally enforces some stricter repo policies, such as version alignment, Codex skill metadata presence, space-separated `allowed-tools`, explicit host invocation guidance in skills, known next-skill handoff targets, balanced Markdown fences, and host-neutral Strike handoffs in skills, even when a host schema marks equivalent fields optional. Use `pnpm run validate:publish` and host-native validators before release.
+
+## 2026-06-03 Reviewed Gate Integrity
+
+- Grounded in research: Grounded in local source workflow-check evidence.
+- Made up or over-structured: No. The marker is a small durable artifact fact,
+  not a new workflow stage.
+- Idiomatic: Yes for Strike's existing state-helper pattern.
+
+Reviewed gates now require artifacts to say `Review results returned: yes`
+before the helper allows their `complete-check` to pass. This applies to Grill
+decision review plus slice-plan, slice-build, phase, and final verification
+artifacts. The prompt layer already told agents to synthesize review findings;
+the helper now enforces a durable marker so an agent cannot complete a reviewed
+gate while a required review or re-review is still running.
+
+Dogfood documentation now separates installed-plugin dogfood from local source
+workflow checks. Local source checks are useful for testing unreleased prompt or
+state-machine changes without upgrading the maintainer's installed Strike
+plugin, but they are not pure installed-plugin dogfood evidence.
 
 ## Things We Should Not Add By Default
 
