@@ -56,17 +56,22 @@ Verify one slice plan is ready to build.
 - Check that the plan uses relevant supporting artifacts, narrows them to the
   slice, or explains why a decision note does not apply.
 - Check that planning-time research additions are source-backed when present.
-- Check that the plan's `Slice Boundary` preserves the slice outcome,
+- Check that the plan's `Development Plan` preserves the slice outcome,
   acceptance criteria, dependencies, in-scope work, out-of-scope boundaries,
   and verification intent.
 - Check that likely files, surfaces, sequencing, edge cases, and verification
   are specific enough to build from.
-- Check that `Repo Context / Impact Scan` shows enough surrounding-code,
-  upstream, downstream, shared-utility, and similar-precedent awareness for the
-  slice's risk.
-- Check that `Repo Pattern Scan` classifies the kind of work being planned and
-  reviews existing repo examples for the relevant categories before the approach
-  is accepted.
+- Check that `Codebase Patterns` names enough surrounding-code, upstream,
+  downstream, shared-utility, and similar-precedent awareness for the slice's
+  risk.
+- Check that `System Touchpoints` considers the relevant UI, API, state/data,
+  schema, jobs/queues, files/storage, auth/permissions, integrations, tests,
+  browser flows, shared utilities, and adjacent features without filling
+  irrelevant surfaces.
+- Check that `Blast Radius` explains what could be affected outside the
+  immediate slice and how the plan protects those areas.
+- Check that `Codebase Patterns` reviews existing repo examples for the relevant
+  work before the approach is accepted.
 - Check that the plan applies relevant implementation discipline guidance.
 - Check that new utilities, helpers, adapters, or shared modules have a
   repo-pattern-based home, and that modifications to existing shared utilities
@@ -76,7 +81,7 @@ Verify one slice plan is ready to build.
   separate, but flag adjective-noun siblings when a field, enum, state,
   permission, relationship, ownership, placement, or usage context may be the
   better model.
-- Check that the plan has a concrete `Verification Evidence Plan` using the
+- Check that the plan has a concrete `Verification Plan` using the
   standard categories: Static / Build Checks, Unit / Component / Integration
   Tests, E2E Tests, Browser Clickthrough, Visual Evidence, and Skipped / Not
   Applicable.
@@ -140,13 +145,13 @@ record that fallback.
 Always run this subagent:
 
 - `implementation-plan`: checks slice size, verticality, sequencing, exact
-  files/surfaces, research usage, implementation discipline guidance, local
-  repo precedent, surrounding and related code, upstream/downstream impact,
-  shared utility placement, repo pattern scan classification, supporting artifact usage,
-  existing examples reviewed for relevant work categories, edge cases, grouped verification
-  evidence plan, focused automated tests, E2E decision, browser clickthrough
-  plan, visual evidence plan, rollback or recovery notes, and whether the plan
-  can be built without guessing.
+  files/surfaces, research usage, implementation discipline guidance, local repo
+  precedent, surrounding and related code, upstream/downstream impact, shared
+  utility placement, codebase pattern evidence, supporting artifact usage,
+  existing examples reviewed for relevant work, edge cases, grouped verification
+  plan, focused automated tests, E2E decision, browser clickthrough plan, visual
+  evidence plan, rollback or recovery notes, blast radius, completeness, and
+  whether the plan can be built without guessing.
 
 Always consider `canonical-implementation`, and run it when the plan touches
 third-party APIs, packages, framework-specific behavior, accounting, money,
@@ -269,16 +274,19 @@ Reason:
 - Do not mark `Ready: yes` when research says `Too broad: yes`.
 - Do not mark `Ready: yes` when relevant implementation discipline guidance is
   ignored or the plan would scatter duplicate utilities/shared code.
-- Do not mark `Ready: yes` when `Repo Pattern Scan` is missing, fails to
-  classify the work, or does not inspect matching repo examples for the relevant
-  categories.
+- Do not mark `Ready: yes` when `Codebase Patterns` is missing, does not name
+  relevant repo examples or credible no-precedent findings, or fails to explain
+  which patterns the plan will reuse.
+- Do not mark `Ready: yes` when `System Touchpoints` or `Blast Radius` is
+  missing, lazy, or ignores relevant adjacent features, shared code, data flow,
+  user workflows, tests, integrations, or existing assumptions.
 - Do not mark `Ready: yes` when relevant `supporting-artifacts/` notes are
   ignored by the plan, unless the plan explains why they do not apply to this
   slice.
 - Do not mark `Ready: yes` when integration, provider, workflow, upload, asset,
   storage, queue, job, callback, webhook, or dataflow work lacks a repo-precedent
   scan.
-- Do not mark `Ready: yes` when `Verification Evidence Plan` is missing,
+- Do not mark `Ready: yes` when `Verification Plan` is missing,
   collapsed into a generic "test" bucket, or vague about required evidence.
 - Do not mark `Ready: yes` when verification environments are missing, swapped,
   or chosen merely to make checks easier. Browser Clickthrough belongs in the

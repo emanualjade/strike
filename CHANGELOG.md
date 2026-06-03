@@ -21,6 +21,9 @@ All notable changes to Strike will be recorded here.
 - Clarified that completed slice verification returns control to `go`; after the
   slice git checkpoint, `go` should continue to the next slice's `research-slice`
   when `next-step` says it is ready.
+- Reworked `plan-slice` around planning dialogue and a smaller plain-English
+  development plan shape while keeping codebase patterns, system touchpoints,
+  blast radius, completeness, and verification mandatory.
 - Updated Strike instructions, README, tests, and validation to keep state reads
   focused on the active initiative instead of every historical initiative.
 

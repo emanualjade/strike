@@ -34,8 +34,9 @@ Implement one planned slice.
   exist, and apply the relevant guidance while editing.
 - If `plan-verification.md` does not say `Ready: yes`, write `Built: no` with
   route back to `verify-slice-plan` and do not edit implementation files.
-- Skim the plan's `Repo Pattern Scan`, `Slice Boundary`, `Surfaces`, `Approach`,
-  `Verification Evidence Plan`, and `Verification` before editing.
+- Skim the plan's `Development Plan`, `Research And Artifacts Used`,
+  `Codebase Patterns`, `System Touchpoints`, `Blast Radius`, `Verification Plan`,
+  and `Why This Plan` before editing.
 - If the plan names relevant `supporting-artifacts/`, read them before editing.
   Use them only as context for decisions already reflected in the plan/specs.
 - Inspect the current repo files and surfaces named by the plan, plus nearby
@@ -50,7 +51,7 @@ Implement one planned slice.
   shared module, inspect likely callers and downstream consumers.
 - Implement only the planned slice scope, using the smallest complete path.
 - Follow the repo structures and precedents selected in the plan's
-  `Repo Pattern Scan`. If the selected precedent no longer fits after inspecting
+  `Codebase Patterns`. If the selected precedent no longer fits after inspecting
   the code, write `Built: no` and route back instead of inventing a replacement
   pattern inside the build step.
 - Follow repo conventions and the repo's package manager, test, security, and

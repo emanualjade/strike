@@ -643,7 +643,7 @@ Slice loop:
 - `plan-slice`: pass `main-spec.md`, `research/index.md`, relevant initiative
   research reports and audits, relevant `supporting-artifacts/`, `phase-spec.md`,
   `slice.md`, and `research.md`; write `plan.md` with a focused
-  `Verification Evidence Plan`; complete
+  `Verification Plan`; complete
   `planCreated` only when `Split Recommendation` is `Needed: no`.
 - `verify-slice-plan`: pass the slice artifacts plus `research/index.md`,
   relevant initiative research reports and audits, and `supporting-artifacts/`;

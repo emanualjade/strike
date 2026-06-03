@@ -79,6 +79,13 @@ split or justification for independent outcomes, weak cohesion, unclear
 verification, and L/XL slice signals. This is Strike workflow policy, not a host
 schema requirement.
 
+2026-06-02 update: `plan-slice` uses planning dialogue plus a compact
+plain-English development plan shape instead of a large category matrix. The
+planning obligations still require existing repo patterns, complete-system
+touchpoints, blast-radius reasoning, completeness, and verification, while
+`verify-slice-plan` audits those obligations before build. This is Strike
+workflow policy, not a host schema requirement.
+
 2026-06-02 update: Initiative research is now a first-class pre-grill Strike
 workflow step. `research-initiative` runs after `refine-idea` and before
 `grill-idea`, writes a user-approved research scope plus per-topic reports under
