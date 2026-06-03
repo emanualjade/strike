@@ -989,9 +989,9 @@ function validateStrikeContract() {
   requireText(createSlicesText, "Good vertical slice examples", createSlicesPath);
   requireText(createSlicesText, "Usually bad slice shapes", createSlicesPath);
   requireText(createSlicesText, "| XS | 1 file; tiny config, function, copy, or style change. |", createSlicesPath);
-  requireText(createSlicesText, "| M | 3-7 files; one complete vertical behavior path or tightly coupled behavior cluster. |", createSlicesPath);
-  requireText(createSlicesText, "| XL | 12+ files; usually too large for one slice. |", createSlicesPath);
-  requireText(createSlicesText, "more than 7 likely files", createSlicesPath);
+  requireText(createSlicesText, "| M | 5-10 files; one complete vertical behavior path or tightly coupled behavior cluster. |", createSlicesPath);
+  requireText(createSlicesText, "| XL | 16+ files; usually too large for one slice. |", createSlicesPath);
+  requireText(createSlicesText, "more than 10 likely files", createSlicesPath);
   requireText(createSlicesText, "more than 4 acceptance criteria", createSlicesPath);
   requireText(createSlicesText, "UI plus route/API plus state/data plus tests", createSlicesPath);
   requireText(createSlicesText, "Do not label a slice `M` while accepting `L/XL` signals from independent", createSlicesPath);

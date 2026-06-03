@@ -71,12 +71,13 @@ step. `research-slice` runs before `plan-slice`, writes compact research to the
 slice's `research.md`, and the slice plan verification step checks that research
 was either used or explicitly unnecessary.
 
-2026-06-02 update: slice sizing is cohesion-based rather than strictly
-thin-slice-by-file-count. `create-phase-slices`, `plan-slice`, and
+2026-06-02 update: slice sizing is cohesion-based rather than strict
+file-count slicing. `create-phase-slices`, `plan-slice`, and
 `verify-slice-plan` allow broader UI/API/data/test work when it belongs to one
-verifiable behavior flow, while still requiring split or justification for
-independent outcomes, weak cohesion, unclear verification, and L/XL slice
-signals. This is Strike workflow policy, not a host schema requirement.
+small cohesive vertical slice or focused buildable slice, while still requiring
+split or justification for independent outcomes, weak cohesion, unclear
+verification, and L/XL slice signals. This is Strike workflow policy, not a host
+schema requirement.
 
 2026-06-02 update: Initiative research is now a first-class pre-grill Strike
 workflow step. `research-initiative` runs after `refine-idea` and before

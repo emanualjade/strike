@@ -49,7 +49,7 @@ into implementation slices.
 ## Quality Bar
 
 The phase spec is ready when `create-phase-slices` can split this one phase into
-small vertical slices without rediscovering the main spec or guessing about
+small cohesive vertical slices without rediscovering the main spec or guessing about
 phase intent, boundaries, rules, risks, or verification.
 
 Complete does not mean long. Include only phase-specific information.

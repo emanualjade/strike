@@ -15,6 +15,9 @@ All notable changes to Strike will be recorded here.
 - Made root initiative status authoritative, removed lifecycle status from new
   initiative detail files, and validated split-state IDs and detail paths before
   hydrating or writing initiative state.
+- Tuned slice sizing language toward small cohesive vertical slices and small
+  focused buildable slices, with medium slices now sized around 5-10 likely
+  files when the work is cohesive.
 - Updated Strike instructions, README, tests, and validation to keep state reads
   focused on the active initiative instead of every historical initiative.
 

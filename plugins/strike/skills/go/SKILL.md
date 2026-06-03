@@ -19,7 +19,7 @@ new initiative in this skill.
 - `create-main-spec/SKILL.md` - define the whole feature or MVP at a durable level.
 - `create-development-phases/SKILL.md` - split the main spec into buildable phases.
 - `create-phase-spec/SKILL.md` - define one phase clearly enough to slice.
-- `create-phase-slices/SKILL.md` - split one phase into small implementation slices.
+- `create-phase-slices/SKILL.md` - split one phase into small focused buildable slices.
 - `research-slice/SKILL.md` - research one slice before planning.
 - `plan-slice/SKILL.md` - plan one researched slice before coding.
 - `verify-slice-plan/SKILL.md` - check that one slice plan is ready to build.

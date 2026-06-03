@@ -1,6 +1,6 @@
 ---
 name: create-phase-slices
-description: Split one phase spec into small buildable implementation slices with clear outcomes and acceptance criteria.
+description: Split one phase spec into small focused buildable slices with clear outcomes and acceptance criteria.
 argument-hint: "[phase spec/context] [--slice-root path]"
 disable-model-invocation: true
 allowed-tools: Read Write Edit MultiEdit Grep Glob WebFetch WebSearch
@@ -8,7 +8,7 @@ allowed-tools: Read Write Edit MultiEdit Grep Glob WebFetch WebSearch
 
 # Create Phase Slices
 
-Split one phase spec into small buildable implementation slices.
+Split one phase spec into small focused buildable slices.
 
 ## Inputs
 
@@ -63,14 +63,14 @@ Use this sizing guide:
 | Size | Shape |
 | --- | --- |
 | XS | 1 file; tiny config, function, copy, or style change. |
-| S | 1-2 files; one component, endpoint, helper, or adapter. |
-| M | 3-7 files; one complete vertical behavior path or tightly coupled behavior cluster. |
-| L | 8-12 files; justify or split. |
-| XL | 12+ files; usually too large for one slice. |
+| S | 2-4 files; one component, endpoint, helper, or adapter. |
+| M | 5-10 files; one complete vertical behavior path or tightly coupled behavior cluster. |
+| L | 11-15 files; justify or split. |
+| XL | 16+ files; usually too large for one slice. |
 
 Break or challenge a slice when it has:
 
-- more than 7 likely files, unless the touched files are tightly coupled around
+- more than 10 likely files, unless the touched files are tightly coupled around
   one behavior flow
 - more than 4 acceptance criteria, or criteria that describe independent outcomes
 - a broad title such as `and`, `full`, `complete`, `MVP`, or
