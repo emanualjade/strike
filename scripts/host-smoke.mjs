@@ -598,7 +598,9 @@ Reason: Research is complete enough for grilling.
       path.join(consumerRepo, "strike/initiatives/gallery/research/audits/repo-patterns.md"),
       `# Research Audit: Existing Repo Patterns
 
+Review results returned: yes
 Verdict: pass
+Must Fix count: 0
 
 ## Must Fix
 - None.

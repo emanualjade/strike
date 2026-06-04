@@ -636,6 +636,7 @@ function validateStrikeContract() {
   const pluginReadmePath = "plugins/strike/README.md";
   const dogfoodPath = "docs/dogfood.md";
   const releasePath = "docs/release.md";
+  const hostSmokePath = "scripts/host-smoke.mjs";
 
   const contractPaths = [
     strikePath,
@@ -678,6 +679,7 @@ function validateStrikeContract() {
     pluginReadmePath,
     dogfoodPath,
     releasePath,
+    hostSmokePath,
   ];
   const missingContractPaths = contractPaths.filter((contractPath) => !exists(contractPath));
   if (missingContractPaths.length > 0) {
@@ -725,6 +727,7 @@ function validateStrikeContract() {
   const pluginReadmeText = fs.readFileSync(path.join(root, pluginReadmePath), "utf8");
   const dogfoodText = fs.readFileSync(path.join(root, dogfoodPath), "utf8");
   const releaseText = fs.readFileSync(path.join(root, releasePath), "utf8");
+  const hostSmokeText = fs.readFileSync(path.join(root, hostSmokePath), "utf8");
 
   const strikeWorkflowSkillTexts = {
     [strikePath]: strikeText,
@@ -959,6 +962,7 @@ function validateStrikeContract() {
   requireText(helperText, "Review results returned: yes", helperPath);
   requireText(helperText, "Ready to continue: yes", helperPath);
   requireText(helperText, "non-empty User response", helperPath);
+  requireText(hostSmokeText, "Review results returned: yes\nVerdict: pass\nMust Fix count: 0", hostSmokePath);
 
   requireText(verificationEvidenceText, "Environment:", verificationEvidencePath);
   requireText(verificationEvidenceText, "E2E tests and Browser Clickthrough must stay in their proper environments", verificationEvidencePath);
