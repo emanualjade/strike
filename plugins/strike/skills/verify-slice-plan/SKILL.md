@@ -21,6 +21,8 @@ Verify one slice plan is ready to build.
 - optional context when needed:
   - `strike/initiatives/<initiative-id>/supporting-artifacts/`
   - focused repo paths
+- shared slice-boundary standard from the Strike plugin root's
+  `references/slice-boundaries.md`
 - Required user-provided customization from the consuming repo's Strike
   workspace:
   - user review lenses:
@@ -43,19 +45,21 @@ Verify one slice plan is ready to build.
    - `strike/initiatives/<initiative-id>/phases/<phase-id>/phase-spec.md`
    - `strike/initiatives/<initiative-id>/phases/<phase-id>/research.md`
    - `strike/initiatives/<initiative-id>/phases/<phase-id>/research-audit.md`
-2. Read required user-provided customization:
+2. Read bundled `references/slice-boundaries.md` and use it as the canonical
+   standard for slice boundary findings.
+3. Read required user-provided customization:
    - `strike/user-guidance/review-lenses/global.md`
    - `strike/user-guidance/review-lenses/verify-slice-plan.md`
    - `strike/user-guidance/implementation-discipline/global.md`
    - `strike/user-guidance/implementation-discipline/verify-slice-plan.md`
-3. Load optional context only when needed:
+4. Load optional context only when needed:
    - read `strike/initiatives/<initiative-id>/supporting-artifacts/` when the
      slice, phase research, or plan references supporting artifacts, or when
      schema, architecture, provider-routing, data-lifecycle, permission, or
      operational notes may affect plan readiness
    - inspect focused repo paths when local pattern claims, file/surface names,
      blast radius, or precedent evidence need verification
-4. Confirm the research basis:
+5. Confirm the research basis:
    - `strike/initiatives/<initiative-id>/phases/<phase-id>/research.md` is
      present and says `Ready for slicing: yes`
    - `strike/initiatives/<initiative-id>/phases/<phase-id>/research-audit.md`
@@ -69,14 +73,14 @@ Verify one slice plan is ready to build.
    - no material provider/model/API, repo-pattern, data/schema, file/blob,
      queue/job, auth/permission, or verification fact is left for the builder to
      guess
-5. Run the three required plan review agents described below in parallel, plus
+6. Run the three required plan review agents described below in parallel, plus
    any applicable user review-lens agents in the same parallel batch. When
    launching a built-in SUBAGENT, include the named bundled
    `references/review-agents/` file in that subagent's prompt as its required
    audit rubric.
-6. Synthesize packet evidence, optional context, and review-agent findings into
+7. Synthesize packet evidence, optional context, and review-agent findings into
    `Must Fix`, `Follow-Up`, and `Accepted Risk`.
-7. Decide build readiness:
+8. Decide build readiness:
    - set `Ready: yes` only when the plan is complete, cohesive, buildable, and
      contained within the accepted slice
    - set `Fix Needed` and `Route Back` according to the rules below
@@ -90,7 +94,10 @@ Before launching review agents, the verifier reads bundled
 contract in each review-agent prompt. Before launching a built-in SUBAGENT, the
 verifier also loads the named bundled `references/review-agents/` rubric from
 the installed Strike plugin and includes the rubric content or absolute plugin
-path in that subagent's prompt.
+path in that subagent's prompt. When launching
+`plan-implementation-readiness-audit`, also include the loaded
+`references/slice-boundaries.md` content or absolute plugin-root path so the
+reviewer applies the canonical Strike slice-boundary standard.
 
 ### 1. Run Required Plan Audits In Parallel
 
@@ -101,7 +108,8 @@ Run these three required read-only plan audits in parallel:
   phase spec, grounded in research and repo patterns, and ready for an agent to
   build without guessing. Use
   `references/review-agents/plan-implementation-readiness-audit.md` as the
-  required rubric.
+  required rubric and `references/slice-boundaries.md` as the canonical
+  slice-boundary standard.
 - SUBAGENT: `canonical-readiness-audit`: checks whether the plan uses the
   official, idiomatic, recommended way to solve this class of problem according
   to official docs, audited research, generated/package types, framework
@@ -218,6 +226,8 @@ Reason:
   not duplicate initiative or phase research.
 - The plan is complete, cohesive, buildable, and contained within the accepted
   slice.
+- The accepted slice boundary follows `references/slice-boundaries.md`, or the
+  plan records the required boundary concern and route-back.
 - Relevant implementation discipline guidance is applied, and the plan does not
   scatter duplicate utilities or shared code.
 - `Codebase Patterns` names relevant repo examples or credible no-precedent
@@ -238,10 +248,11 @@ Reason:
 - Browser-visible work has a Browser Clickthrough plan naming the actual feature
   route/page, dev/local environment and DB/runtime, representative data,
   controls/actions, expected states/results, and Visual Evidence screenshots.
-- A plan is not ready when it defers all Browser Clickthrough to a later slice
-  even though the current accepted slice creates or changes browser-visible
-  behavior. Broader later browser proof can supplement this slice's evidence; it
-  cannot replace this slice's own clickthrough plan.
+- Browser-visible work has a proportionate Browser Clickthrough or Visual
+  Evidence plan for the behavior the current slice makes usable. When the
+  current slice only prepares UI that becomes usable in a near-term later slice,
+  the plan records the limited evidence this slice can provide and names the
+  later integrated clickthrough that must cover it.
 - E2E Tests name specs to add/update when repo infrastructure and workflow risk
   require E2E coverage.
 - No accepted-scope `Must Fix` issue remains from required plan audits or user
@@ -261,7 +272,7 @@ Reason:
   hides a material research gap, or leaves the builder to guess.
 - Route broad missing research back to `phaseResearchComplete`.
 - Mark `Ready: no` when plan evidence shows the accepted boundary contains
-  independent outcomes, cannot be verified in one focused loop, or would force
+  independent outcomes, lacks one clear verification story, or would force
   unrelated changes into the same build. Write the boundary finding in
   `Must Fix`, set `Fix Needed: no`, and route back to `slicesCreated` or
   `phaseResearchComplete` so Strike can revise phase research or slice

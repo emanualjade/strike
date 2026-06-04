@@ -2,6 +2,22 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.10.19 - 2026-06-04
+
+- Moved the canonical slice-sizing and boundary guidance into shared
+  `references/slice-boundaries.md` so slicing, planning, and plan verification
+  use one coherent standard.
+- Relaxed slice guidance away from smallest-possible slices toward cohesive
+  buildable units with clear verification stories, while requiring concrete
+  `Why Not Split` evidence for broader or riskier boundaries.
+- Added guidance for complex interaction fields so advanced search,
+  autocomplete, tag, multi-select, and similar fields get their own slice only
+  when they behave like small features with meaningful state, data, or
+  interaction contracts.
+- Wired the slice-boundary standard into `create-phase-slices`, `plan-slice`,
+  `verify-slice-plan`, and the plan implementation readiness audit, and added
+  host-smoke coverage for the installed runtime reference.
+
 ## 0.10.18 - 2026-06-03
 
 - Required explicit `Route Back` status across slice plans, builds, and reviewed

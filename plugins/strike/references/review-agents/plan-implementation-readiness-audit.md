@@ -5,13 +5,17 @@ Use this read-only audit when `verify-slice-plan` runs SUBAGENT:
 
 Check whether the plan is complete, cohesive, buildable, inside the accepted
 slice boundary, aligned with the phase spec, grounded in research and repo
-patterns, and ready for an agent to build without guessing.
+patterns, and ready for an agent to build without guessing. Apply
+`references/slice-boundaries.md` as the canonical Strike slice-boundary standard
+when reviewing boundary fit, split recommendations, `Why Not Split`, and
+non-vertical slices.
 
 ## Checks
 
 - slice and phase fit: compare the plan's `Development Plan` against the slice
   outcome, acceptance criteria, phase spec, dependencies, in-scope work,
-  out-of-scope boundaries, and verification intent.
+  out-of-scope boundaries, verification intent, and
+  `references/slice-boundaries.md`.
 - research usage: check that the plan uses initiative research and phase
   research as inherited baseline evidence, records any narrow slice-specific
   research delta, and explains why no new slice-specific research was needed

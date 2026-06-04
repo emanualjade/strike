@@ -423,6 +423,7 @@ function assertInstalledRuntime(pluginRoot, ctx, label) {
   const installedFiles = [
     "skills/go/scripts/state.mjs",
     "references/language.md",
+    "references/slice-boundaries.md",
     "references/scripts/slugify.mjs",
     "references/slug-policy.md",
   ];

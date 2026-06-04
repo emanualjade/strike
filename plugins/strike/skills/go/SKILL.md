@@ -20,7 +20,7 @@ new initiative in this skill.
 - `create-development-phases/SKILL.md` - split the main spec into buildable phases.
 - `create-phase-spec/SKILL.md` - define one phase clearly enough to slice.
 - `research-phase/SKILL.md` - research and audit phase-level implementation facts before slicing.
-- `create-phase-slices/SKILL.md` - split one phase into small focused buildable slices.
+- `create-phase-slices/SKILL.md` - split one phase into cohesive buildable slices.
 - `plan-slice/SKILL.md` - plan one slice before coding, adding only narrow research deltas.
 - `verify-slice-plan/SKILL.md` - check that one slice plan is ready to build.
 - `build-slice/SKILL.md` - implement one verified slice plan.

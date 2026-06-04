@@ -505,6 +505,7 @@ function validateRuntimeReferenceBoundary() {
   const allowedRuntimeReferences = [
     /^plugins\/strike\/references\/language\.md$/,
     /^plugins\/strike\/references\/slug-policy\.md$/,
+    /^plugins\/strike\/references\/slice-boundaries\.md$/,
     /^plugins\/strike\/references\/verification-evidence\.md$/,
     /^plugins\/strike\/references\/review-agents\/[a-z0-9-]+\.md$/,
     /^plugins\/strike\/references\/scripts\/[a-z0-9-]+\.mjs$/,
@@ -613,6 +614,7 @@ function validateStrikeContract() {
   const fixPath = "plugins/strike/skills/fix/SKILL.md";
   const verifyPhasePath = "plugins/strike/skills/verify-phase/SKILL.md";
   const verifyMainPath = "plugins/strike/skills/verify-main-spec/SKILL.md";
+  const sliceBoundariesPath = "plugins/strike/references/slice-boundaries.md";
   const verificationEvidencePath = "plugins/strike/references/verification-evidence.md";
   const reviewOutputDisciplinePath = "plugins/strike/references/review-agents/output-discipline.md";
   const planReadinessAuditPath = "plugins/strike/references/review-agents/plan-implementation-readiness-audit.md";
@@ -656,6 +658,7 @@ function validateStrikeContract() {
     fixPath,
     verifyPhasePath,
     verifyMainPath,
+    sliceBoundariesPath,
     verificationEvidencePath,
     reviewOutputDisciplinePath,
     planReadinessAuditPath,
@@ -704,6 +707,7 @@ function validateStrikeContract() {
   const fixText = fs.readFileSync(path.join(root, fixPath), "utf8");
   const verifyPhaseText = fs.readFileSync(path.join(root, verifyPhasePath), "utf8");
   const verifyMainText = fs.readFileSync(path.join(root, verifyMainPath), "utf8");
+  const sliceBoundariesText = fs.readFileSync(path.join(root, sliceBoundariesPath), "utf8");
   const verificationEvidenceText = fs.readFileSync(path.join(root, verificationEvidencePath), "utf8");
   const reviewOutputDisciplineText = fs.readFileSync(path.join(root, reviewOutputDisciplinePath), "utf8");
   const planReadinessAuditText = fs.readFileSync(path.join(root, planReadinessAuditPath), "utf8");
@@ -963,6 +967,7 @@ function validateStrikeContract() {
   requireText(helperText, "Ready to continue: yes", helperPath);
   requireText(helperText, "non-empty User response", helperPath);
   requireText(hostSmokeText, "Review results returned: yes\nVerdict: pass\nMust Fix count: 0", hostSmokePath);
+  requireText(hostSmokeText, "references/slice-boundaries.md", hostSmokePath);
 
   requireText(verificationEvidenceText, "Environment:", verificationEvidencePath);
   requireText(verificationEvidenceText, "E2E tests and Browser Clickthrough must stay in their proper environments", verificationEvidencePath);
@@ -1186,23 +1191,31 @@ function validateStrikeContract() {
   requireText(createSlicesText, "Use phase research and its audit as the inherited implementation research", createSlicesPath);
   requireText(createSlicesText, "Read relevant initiative research constraints", createSlicesPath);
   requireText(createSlicesText, "supporting-artifacts/", createSlicesPath);
-  requireText(createSlicesText, "A vertical slice is one observable behavior path", createSlicesPath);
+  requireText(createSlicesText, "references/slice-boundaries.md", createSlicesPath);
+  requireText(createSlicesText, "canonical Strike standard", createSlicesPath);
+  requireText(sliceBoundariesText, "A vertical slice proves one user or system capability", sliceBoundariesPath);
   requireText(createSlicesText, "Work on one phase at a time", createSlicesPath);
   requireText(createSlicesText, "route back to the\nowning phase step", createSlicesPath);
-  requireText(createSlicesText, "Good vertical slice examples", createSlicesPath);
-  requireText(createSlicesText, "Usually bad slice shapes", createSlicesPath);
-  requireText(createSlicesText, "| XS | 1 file; tiny config, function, copy, or style change. |", createSlicesPath);
-  requireText(createSlicesText, "| M | 5-10 files; one complete vertical behavior path or tightly coupled behavior cluster. |", createSlicesPath);
-  requireText(createSlicesText, "| XL | 16+ files; usually too large for one slice. |", createSlicesPath);
-  requireText(createSlicesText, "more than 10 likely files", createSlicesPath);
-  requireText(createSlicesText, "more than 4 acceptance criteria", createSlicesPath);
-  requireText(createSlicesText, "UI plus route/API plus state/data plus tests", createSlicesPath);
-  requireText(createSlicesText, "Do not label a slice `M` while accepting `L/XL` signals from independent", createSlicesPath);
-  requireText(createSlicesText, "Non-vertical slices are allowed only when they reduce risk", createSlicesPath);
-  requireText(createSlicesText, "## Quality Bar", createSlicesPath);
+  requireText(sliceBoundariesText, "Good vertical slice examples", sliceBoundariesPath);
+  requireText(sliceBoundariesText, "Usually bad slice shapes", sliceBoundariesPath);
+  requireText(sliceBoundariesText, "## Complex Interaction Fields", sliceBoundariesPath);
+  requireText(sliceBoundariesText, "small feature with its own meaningful\nstate, data, or interaction contract", sliceBoundariesPath);
+  requireText(sliceBoundariesText, "Do not split merely because a field has a small interaction detail", sliceBoundariesPath);
+  requireText(sliceBoundariesText, "| XS | Tiny local change, such as config, copy, style, or one small function. |", sliceBoundariesPath);
+  requireText(sliceBoundariesText, "| M | One cohesive capability or behavior path across the needed surfaces; often a handful of files. |", sliceBoundariesPath);
+  requireText(sliceBoundariesText, "| XL | Multiple capabilities, independent flows, or a change too broad to verify as one coherent unit. Split or route back", sliceBoundariesPath);
+  requireText(sliceBoundariesText, "## Why Not Split", sliceBoundariesPath);
+  requireText(sliceBoundariesText, "split options considered", sliceBoundariesPath);
+  requireText(sliceBoundariesText, "scope guardrails", sliceBoundariesPath);
+  requireText(sliceBoundariesText, "one clear\n  capability boundary, risk center, and verification story", sliceBoundariesPath);
+  requireText(sliceBoundariesText, "separate verification stories", sliceBoundariesPath);
+  requireText(sliceBoundariesText, "UI plus route/API plus state/data plus tests", sliceBoundariesPath);
+  requireText(sliceBoundariesText, "When a slice looks overly broad", sliceBoundariesPath);
+  requireText(sliceBoundariesText, "Keep them tightly scoped to the risk or enabling capability", sliceBoundariesPath);
+  requireText(sliceBoundariesText, "## Ready Slice Stubs", sliceBoundariesPath);
   requireText(createSlicesText, "without re-slicing the phase", createSlicesPath);
-  requireText(createSlicesText, "A fresh context should be able to open any `slice.md`", createSlicesPath);
-  requireText(createSlicesText, "One slice is correct when splitting would create fake work", createSlicesPath);
+  requireText(sliceBoundariesText, "A fresh context should be able to open any `slice.md`", sliceBoundariesPath);
+  requireText(sliceBoundariesText, "One slice is correct when splitting would create fake work", sliceBoundariesPath);
   requireText(createSlicesText, "edge/flow notes", createSlicesPath);
   requireText(createSlicesText, "state, permissions, data\n  integrity, integrations, UI/device, operations, and recovery", createSlicesPath);
   requireText(createSlicesText, "create one directory per slice and write\n`slice.md` inside it", createSlicesPath);
@@ -1212,8 +1225,8 @@ function validateStrikeContract() {
   requireText(createSlicesText, "## Edge / Flow Notes", createSlicesPath);
   requireText(createSlicesText, "## Risks / Watchouts", createSlicesPath);
   requireText(createSlicesText, "Keep implementation planning, execution tasks", createSlicesPath);
-  requireText(createSlicesText, "## Why Not Split", createSlicesPath);
-  requireText(createSlicesText, "## Non-Vertical Justification", createSlicesPath);
+  requireText(sliceBoundariesText, "## Why Not Split", sliceBoundariesPath);
+  requireText(sliceBoundariesText, "## Non-Vertical Justification", sliceBoundariesPath);
   requireText(createSlicesText, "Do not create shared slice indexes", createSlicesPath);
 
   requireText(planText, "## Planning Dialogue", planPath);
@@ -1258,12 +1271,13 @@ function validateStrikeContract() {
   requireText(planText, "Do not list irrelevant surfaces just to fill", planPath);
   requireText(planText, "what could be affected outside the immediate slice", planPath);
   requireText(planText, "references/verification-evidence.md", planPath);
+  requireText(planText, "references/slice-boundaries.md", planPath);
   requireText(planText, "static/build checks, focused unit/component/integration tests", planPath);
   requireText(planText, "Browser Clickthrough, Visual Evidence", planPath);
   requireText(planText, "repo's test/E2E environment", planPath);
   requireText(planText, "dev/local app environment", planPath);
-  requireText(planText, "Do not defer all Browser Clickthrough to a later slice", planPath);
-  requireText(planText, "browser-visible slice still needs clickthrough for its own accepted controls", planPath);
+  requireText(planText, "plan proportionate Browser Clickthrough or Visual", planPath);
+  requireText(planText, "name the later integrated\n  clickthrough that must cover it", planPath);
   requireText(planText, "complete, clean, simple, maintainable, robust", planPath);
   requireText(planText, "Do not edit implementation files during this step", planPath);
   requireText(planText, "small code snippets, schema shapes, type sketches", planPath);
@@ -1274,7 +1288,7 @@ function validateStrikeContract() {
   requireText(planText, "## Split Recommendation", planPath);
   requireText(planText, "Needed: yes / no", planPath);
   requireText(planText, "Work from the accepted slice boundary", planPath);
-  requireText(planText, "a clean,\n  complete implementation needs a different boundary", planPath);
+  requireText(planText, "planning reveals that a clean, complete", planPath);
   requireText(planText, "edit the current slice into the first replacement\n  slice", planPath);
   requireText(planText, "stable repo paths, commands, constraints", planPath);
   requireText(planText, "tighten it before calling it build-ready", planPath);
@@ -1331,6 +1345,7 @@ function validateStrikeContract() {
   requireText(verifyText, "Verification environments are correct", verifyPath);
   requireText(planReadinessAuditText, "vague default full-suite commands", planReadinessAuditPath);
   requireText(verifyText, "plan-verification.md", verifyPath);
+  requireText(verifyText, "references/slice-boundaries.md", verifyPath);
   requireText(verifyText, "Review agents are read-only", verifyPath);
   requireText(verifyText, "references/review-agents/output-discipline.md", verifyPath);
   requireText(verifyText, "includes that output\ncontract in each review-agent prompt", verifyPath);
@@ -1405,6 +1420,7 @@ function validateStrikeContract() {
   requireText(verifyText, "The plan's `Research And Artifacts Used` identifies relevant initiative", verifyPath);
   requireText(verifyText, "Slice-specific research deltas are narrow", verifyPath);
   requireText(verifyText, "The plan is complete, cohesive, buildable, and contained within the accepted\n  slice", verifyPath);
+  requireText(verifyText, "accepted slice boundary follows `references/slice-boundaries.md`", verifyPath);
   requireText(verifyText, "Relevant implementation discipline guidance is applied", verifyPath);
   requireText(verifyText, "`Codebase Patterns` names relevant repo examples", verifyPath);
   requireText(verifyText, "`System Touchpoints` and `Blast Radius` cover", verifyPath);
@@ -1412,9 +1428,8 @@ function validateStrikeContract() {
   requireText(verifyText, "includes a repo-precedent scan", verifyPath);
   requireText(verifyText, "`Verification Plan` is concrete", verifyPath);
   requireText(verifyText, "Verification environments are correct", verifyPath);
-  requireText(verifyText, "Browser-visible work has a Browser Clickthrough plan", verifyPath);
-  requireText(verifyText, "A plan is not ready when it defers all Browser Clickthrough to a later slice", verifyPath);
-  requireText(verifyText, "cannot replace this slice's own clickthrough plan", verifyPath);
+  requireText(verifyText, "Browser-visible work has a proportionate Browser Clickthrough or Visual", verifyPath);
+  requireText(verifyText, "names the\n  later integrated clickthrough that must cover it", verifyPath);
   requireText(verifyText, "E2E Tests name specs to add/update", verifyPath);
   requireText(verifyText, "No accepted-scope `Must Fix` issue remains", verifyPath);
   requireText(verifyText, "All required review agents and applicable user review lenses have returned", verifyPath);
@@ -1422,7 +1437,7 @@ function validateStrikeContract() {
   requireText(verifyText, "complete-check planVerified", verifyPath);
   requireText(verifyText, "phaseResearchComplete", verifyPath);
   requireText(verifyText, "planCreated", verifyPath);
-  requireText(verifyText, "independent outcomes, cannot be verified in one focused loop", verifyPath);
+  requireText(verifyText, "independent outcomes, lacks one clear verification story", verifyPath);
   requireText(verifyText, "Give every `Must Fix` item a stable short issue ID", verifyPath);
   requireText(verifyText, "set `Fix Needed: no`", verifyPath);
   requireText(verifyText, "Route broad missing research back to `phaseResearchComplete`", verifyPath);

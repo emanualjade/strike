@@ -21,6 +21,8 @@ Create a solid, accurate, complete development plan for one slice.
 - supporting artifacts relevant to this slice, when present
 - shared verification evidence taxonomy from the Strike plugin root's
   `references/verification-evidence.md`
+- shared slice-boundary standard from the Strike plugin root's
+  `references/slice-boundaries.md`
 - Required user-provided customization from the consuming repo's Strike
   workspace:
   - user implementation-discipline guidance:
@@ -67,6 +69,7 @@ and how it will be verified.
   and relevant spec context.
 - Read the bundled `references/verification-evidence.md` from the Strike plugin
   root.
+- Read the bundled `references/slice-boundaries.md` from the Strike plugin root.
 - Read required user-provided customization:
   - `strike/user-guidance/implementation-discipline/global.md`
   - `strike/user-guidance/implementation-discipline/plan-slice.md`
@@ -109,9 +112,10 @@ and how it will be verified.
   research delta. Write a route-back to `phaseResearchComplete`.
 - Ask one consequential question if a missing decision changes behavior, risk, or
   implementation shape.
-- Work from the accepted slice boundary. If planning reveals that a clean,
-  complete implementation needs a different boundary, write a split
-  recommendation with the specific evidence and route back.
+- Work from the accepted slice boundary and the standard in
+  `references/slice-boundaries.md`. If planning reveals that a clean, complete
+  implementation needs a different boundary, write a split recommendation with
+  the specific evidence and route back.
 
 ## Output
 
@@ -195,7 +199,9 @@ Replacement slices:
 - Use initiative research and audited phase research as inherited baseline
   evidence. Add only narrow slice-specific research deltas when the slice needs a
   fact that those artifacts do not cover.
-- Prefer the smallest complete implementation path.
+- Prefer the most direct complete implementation path that satisfies the slice's
+  accepted capability, follows existing repo patterns, and avoids unnecessary
+  scope.
 - Use existing repo conventions before inventing new structure.
 - Do not paste raw notes, long excerpts, search trails, or link dumps into the
   plan.
@@ -223,11 +229,11 @@ Replacement slices:
   the actual route, representative data, controls/actions, expected states, and
   screenshots. Logging in, navigating to a route shell, or inspecting DOM is not
   enough.
-- Do not defer all Browser Clickthrough to a later slice when the current
-  accepted slice creates or changes browser-visible behavior. A later slice or
-  phase may run broader end-to-end browser proof, but the current
-  browser-visible slice still needs clickthrough for its own accepted controls,
-  states, and screenshots.
+- For browser-visible work, plan proportionate Browser Clickthrough or Visual
+  Evidence for the behavior the current slice makes usable. When the current
+  slice only prepares UI that becomes usable in a near-term later slice, record
+  the limited evidence this slice can provide and name the later integrated
+  clickthrough that must cover it.
 - Browser Clickthrough does not replace relevant automated tests, and automated
   tests do not replace Browser Clickthrough.
 - Do not plan to switch environments to make verification easier. Unit,

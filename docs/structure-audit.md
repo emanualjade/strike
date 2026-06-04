@@ -79,10 +79,10 @@ source-backed deltas, but `research-slice` is no longer a workflow gate.
 2026-06-02 update: slice sizing is cohesion-based rather than strict
 file-count slicing. `create-phase-slices`, `plan-slice`, and
 `verify-slice-plan` allow broader UI/API/data/test work when it belongs to one
-small cohesive vertical slice or focused buildable slice, while still requiring
-split or justification for independent outcomes, weak cohesion, unclear
-verification, and L/XL slice signals. This is Strike workflow policy, not a host
-schema requirement.
+cohesive buildable unit with a clear verification story, while still requiring
+split, route-back, or concrete justification for independent outcomes, weak
+cohesion, unclear verification, and overly broad slice boundaries. This is
+Strike workflow policy, not a host schema requirement.
 
 2026-06-02 update: `create-phase-slices` owns primary slice sizing. Later slice
 stages work from the accepted slice boundary and route back only when phase
@@ -90,6 +90,15 @@ research, planning, or implementation evidence changes that boundary. This keeps
 `plan-slice`, `verify-slice-plan`, and `build-slice` from repeating the same
 size rubric while preserving boundary-change safety. This is
 Strike workflow policy, not a host schema requirement.
+
+2026-06-04 update: The canonical slice boundary standard now lives in
+`plugins/strike/references/slice-boundaries.md`. `create-phase-slices`,
+`plan-slice`, and `verify-slice-plan` point to that shared reference instead of
+carrying separate versions of the good-slice, split, justify, cross-stack, and
+non-vertical slice guidance. This uses the already researched
+`plugins/strike/references/` package-support pattern above; hosts should not be
+expected to discover the file automatically. This is Strike workflow policy and
+package support material, not a host schema requirement.
 
 2026-06-02 update: `verify-slice-build` now starts with a compact verification
 packet: `build.md`, `plan.md`, and `slice.md`. It checks
