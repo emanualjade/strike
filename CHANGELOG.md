@@ -2,6 +2,16 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.10.20 - 2026-06-08
+
+- Simplified `grill-idea` around a relentless one-question-at-a-time interview
+  loop so agents keep walking the decision tree instead of satisfying the gate
+  after one shallow question.
+- Reframed Grill as a conversation first and artifact second, while preserving
+  the required decision review and final user checkpoint gates.
+- Updated validation to protect the new Grill behavior contract without
+  requiring the older long prompt sections.
+
 ## 0.10.19 - 2026-06-04
 
 - Moved the canonical slice-sizing and boundary guidance into shared
