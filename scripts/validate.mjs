@@ -948,7 +948,9 @@ function validateStrikeContract() {
   requireText(strikeText, "After `buildVerified` is complete for a slice, commit and push that slice", strikePath);
   requireText(strikeText, "After completing `buildVerified`, complete the slice git checkpoint", strikePath);
   requireText(strikeText, "Slice boundaries are normal workflow handoffs too", strikePath);
-  requireText(strikeText, "they are not a stop condition for `go`", strikePath);
+  requireText(strikeText, "they hand control back to this `go` orchestrator inside the same run", strikePath);
+  requireText(strikeText, "Do\nnot report back to the user merely because one slice completed", strikePath);
+  requireText(strikeText, "A completed slice checkpoint is a waypoint, not a pause", strikePath);
   requireText(strikeText, "Do not prescribe extra git inspection commands", strikePath);
   requireText(strikeText, "`Review results returned: yes`, `Verified: yes`, `Fix Needed: no`,", strikePath);
   requireText(strikeText, "post-browser visual/browser lenses are\n  `pass` or `not run`, then commit and push that completed slice before moving", strikePath);
@@ -1043,6 +1045,7 @@ function validateStrikeContract() {
   requireText(grillText, "## Core Loop", grillPath);
   requireText(grillText, "Interview the user relentlessly", grillPath);
   requireText(grillText, "This is a conversation first and an artifact second", grillPath);
+  requireText(grillText, "it does not mean waiting until the end to write\ndown decisions", grillPath);
   requireText(grillText, "Ask one question at a time", grillPath);
   requireText(grillText, "stay in this loop until the decision tree is exhausted", grillPath);
   requireText(grillText, "With every user question, explain why it matters", grillPath);
@@ -1067,8 +1070,11 @@ function validateStrikeContract() {
   requireText(grillText, "before qualifiers", grillPath);
   requireText(grillText, "concrete scenarios for abstract decisions", grillPath);
   requireText(grillText, "current truth", grillPath);
+  requireText(grillText, "update that file before asking the next question", grillPath);
+  requireText(grillText, "Do not rely on chat\nmemory for decisions that belong in the output file", grillPath);
   requireText(grillText, "Spec-Owned Details", grillPath);
   requireText(grillText, "Do not infer user answers from silence", grillPath);
+  requireText(grillText, "do not defer decision recording until the\n  final review or checkpoint", grillPath);
   requireText(grillText, "Do not silently draft around a consequential fork", grillPath);
   requireText(grillText, "Do not move to the final checkpoint while consequential decision nodes remain", grillPath);
   requireText(grillText, "run a read-only decision review", grillPath);
@@ -1729,7 +1735,8 @@ function validateStrikeContract() {
   requireText(verifyBuildText, "### Completion", verifyBuildPath);
   requireText(verifyBuildText, "complete-check buildVerified", verifyBuildPath);
   requireText(verifyBuildText, "Do not start another slice from inside `verify-slice-build`", verifyBuildPath);
-  requireText(verifyBuildText, "return control to\n  `go` so the orchestrator can run `next-step`", verifyBuildPath);
+  requireText(verifyBuildText, "hand control back to `go` inside the same run", verifyBuildPath);
+  requireText(verifyBuildText, "This is not an instruction to report back to\n  the user and wait", verifyBuildPath);
   requireText(strikeText, "build-verification.md", strikePath);
   requireText(strikeText, "Verified: yes", strikePath);
   requireText(strikeText, "finish-initiative", strikePath);

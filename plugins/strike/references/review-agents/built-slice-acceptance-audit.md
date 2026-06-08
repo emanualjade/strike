@@ -21,6 +21,10 @@ and any browser concerns the final pass must prove.
   expanding into whole-phase review.
 - scope fit: flag work that escaped accepted slice scope or omitted required
   local slice behavior.
+- unplanned enabling work: if `build.md` records extra enabling work, confirm it
+  directly unblocked the planned slice, stayed small, and created no new product
+  outcome. Flag broader, uncertain, risky, or unrelated work that should have
+  been planned and verified as its own slice.
 - non-browser evidence: confirm static/build checks, focused automated tests,
   E2E evidence, and skipped/not-applicable reasons are present or credibly
   accounted for before final browser proof. Do not fail the pre-browser audit

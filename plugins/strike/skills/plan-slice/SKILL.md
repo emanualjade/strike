@@ -116,6 +116,14 @@ and how it will be verified.
   `references/slice-boundaries.md`. If planning reveals that a clean, complete
   implementation needs a different boundary, write a split recommendation with
   the specific evidence and route back.
+- If planning finds unplanned enabling work that directly blocks this slice,
+  keep the workflow moving at the smallest appropriate level. Plan a small,
+  local, low-risk enabling repair inside the current slice when it only makes
+  the planned slice possible and creates no new product outcome. If the enabling
+  work is larger, uncertain, security-sensitive, a meaningful dependency or
+  toolchain change, or deserves its own planning and verification, use `Split
+  Recommendation` to make the enabling work its own slice before the original
+  slice.
 
 ## Output
 

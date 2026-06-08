@@ -83,6 +83,9 @@ Verify one slice build and record build verification.
      repo convention, or risk justifies a broader run
    - summarize automated checks, required audits, conditional lenses, user
      lenses, and the acceptance audit's `Browser Proof Needed`
+   - if `build.md` records unplanned enabling work, confirm it directly
+     unblocked the planned slice, stayed small, and created no new product
+     outcome
    - list only blocking issue IDs in the gate summary; keep details in
      `## Issues`
    - set `Ready for browser: yes` only when no accepted-scope `Must Fix`,
@@ -385,6 +388,8 @@ Reason:
 - Integration, provider, workflow, upload, asset, storage, queue, job, callback,
   webhook, or dataflow work checked existing repo precedent for the same class
   of problem.
+- Any unplanned enabling work recorded in `build.md` directly unblocked the
+  planned slice, stayed narrow, and did not create an unrelated product outcome.
 - No accepted-scope `Must Fix` issue remains from built-in audits, conditional
   risk lenses, user review lenses, required checks, or Browser Clickthrough.
 - The pre-browser gate is clean: no accepted-scope `Must Fix`, failed required
@@ -426,8 +431,11 @@ Reason:
   `Command: None`, `Phase: None`, `Slice: None`, and `Check: None`.
 - After writing `Verified: yes` and `Review results returned: yes`, Strike can run
   `node strike/scripts/state.mjs complete-check buildVerified`.
-- Do not start another slice from inside `verify-slice-build`; return control to
-  `go` so the orchestrator can run `next-step` and continue if another slice is
-  ready.
+- Do not start another slice from inside `verify-slice-build`; this verifier
+  only completes the current slice's build verification. After this verifier
+  completes, hand control back to `go` inside the same run, so `go` can run
+  `next-step`, perform the slice checkpoint, and continue with the next returned
+  workflow skill when one is ready. This is not an instruction to report back to
+  the user and wait.
 - Keep Browser Clickthrough and automated tests separate. Passing one does not
   satisfy the other.

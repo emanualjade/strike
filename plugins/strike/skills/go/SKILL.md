@@ -236,7 +236,8 @@ completes and the slice git checkpoint is done, run `next-step`. If it returns
 the next slice's `plan-slice`, continue with that returned step unless the user
 asked to pause or the workflow is blocked. Stage-local verifier instructions
 such as not starting another slice mean that verifier does not own next-slice
-work; they are not a stop condition for `go`.
+work; they hand control back to this `go` orchestrator inside the same run. Do
+not report back to the user merely because one slice completed.
 
 Treat the `next-step` result as an exclusive gate. Do not create or edit artifacts
 owned by later workflow skills until `next-step` points to that skill. In
@@ -574,6 +575,10 @@ is available.
 - If commit or push is unavailable because the workspace is not a git
   repository, no remote exists, auth is blocked, or user/project rules forbid
   it, record the reason and continue according to user/project rules.
+- A completed slice checkpoint is a waypoint, not a pause. After the checkpoint
+  succeeds or is recorded as unavailable, run `next-step` and continue with the
+  returned workflow skill unless the user asked to pause or a real blocker
+  remains.
 - Do not prescribe extra git inspection commands; let the agent use normal
   judgment.
 
@@ -624,6 +629,11 @@ Common route backs:
   the first replacement slice, create additional replacement slice stubs, run
   `add-slice <phase-id> <slice-id> [name]` for each added slice, then rerun
   `reopen-check planCreated`.
+- larger unplanned enabling work discovered during planning, build, or fix ->
+  turn the active slice into the enabling slice when possible, create a
+  follow-up slice for the original planned outcome, register added slice stubs
+  with `add-slice <phase-id> <slice-id> [name]`, then rerun
+  `reopen-check planCreated`.
 - weak slice build -> `reopen-check implemented`
 - phase verification finds weak slice build verification -> `reopen-slice-check <phase-id> <slice-id> buildVerified`
 - main verification finds weak phase verification -> `reopen-phase-check <phase-id> allSlicesVerified`
@@ -657,7 +667,8 @@ Initiative setup:
   `Review results returned: yes`, `Verdict: pass` or
   `Verdict: accepted-risk`, and `Must Fix count: 0`.
 - `grill-idea`: pass `idea.md` plus `research/scope.md`,
-  `research/index.md`, and relevant research reports; write `decisions.md`; complete
+  `research/index.md`, and relevant research reports; write and update
+  `decisions.md` as the conversation progresses; complete
   `decisionsResolved` only after the final decision review says
   `Review results returned: yes`, `Verdict: pass` or
   `Verdict: accepted-risk`, and `Must Fix count: 0`, followed by a post-review

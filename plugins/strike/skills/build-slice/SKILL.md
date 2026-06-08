@@ -53,6 +53,16 @@ Implement one planned slice.
 - Before modifying an existing shared utility, helper, adapter, schema, or
   shared module, inspect likely callers and downstream consumers.
 - Implement only the planned slice scope, using the smallest complete path.
+- If unplanned work directly blocks the slice, keep the workflow moving at the
+  smallest appropriate level. If the repair is small, local, low-risk, and only
+  enables the planned slice, do the minimal repair inside this build and record
+  a short `Unplanned enabling work:` note in `build.md`. If the repair is
+  larger, uncertain, security-sensitive, a meaningful dependency or toolchain
+  change, or deserves its own planning and verification, write `Built: no` and
+  route back to `plan-slice` so Strike can create an enabling slice and then
+  return to this slice. Ask the user only when the repair needs a product,
+  architecture, security, dependency-risk, or scope decision that Strike cannot
+  safely make.
 - Follow the repo structures and precedents selected in the plan's
   `Codebase Patterns`. If the selected precedent no longer fits after inspecting
   the code, write `Built: no` and route back instead of inventing a replacement
@@ -164,6 +174,7 @@ Reason:
 - Repo pattern or utility placement notes:
 - Similar repo precedent used:
 - Upstream/downstream impact notes:
+- Unplanned enabling work: None / <short note>
 
 ## Route Back
 Needed: yes / no
@@ -183,6 +194,10 @@ Reason:
 - Keep unrelated cleanup and future work outside this build.
 - Do not improvise around a bad plan; write `Built: no` and route back to the
   owning workflow step so Strike can continue.
+- Small unplanned enabling work is allowed only when it directly unblocks the
+  planned slice, stays narrow, and creates no new product outcome. Larger
+  enabling work should become an enabling slice through route-back instead of
+  being hidden inside the current build.
 - Use the accepted slice boundary from upstream artifacts; route back only when
   implementation findings change the plan or boundary.
 - Do not route back for ordinary implementation choices that fit the verified

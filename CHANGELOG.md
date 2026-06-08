@@ -2,6 +2,18 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.10.21 - 2026-06-08
+
+- Allowed small, local unplanned enabling work inside slice builds and fixes
+  when it directly unblocks the planned slice, while routing larger enabling
+  work back through normal slice planning and verification.
+- Clarified that completed slice verification and git checkpoints are workflow
+  handoffs, not pause points; `go` should run `next-step` and continue when
+  another workflow step is ready.
+- Clarified that Grill should update `decisions.md` as decisions are made during
+  the conversation, so "artifact second" does not defer decision recording until
+  the end.
+
 ## 0.10.20 - 2026-06-08
 
 - Simplified `grill-idea` around a relentless one-question-at-a-time interview

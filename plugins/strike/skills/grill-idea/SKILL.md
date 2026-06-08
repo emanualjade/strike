@@ -17,7 +17,9 @@ Ask one question at a time. If a question can be answered from the codebase,
 provided docs, initiative research, or official sources, answer it yourself
 instead of asking the user.
 
-This is a conversation first and an artifact second.
+This is a conversation first and an artifact second. Artifact second means the
+record follows the conversation; it does not mean waiting until the end to write
+down decisions.
 
 ## Inputs
 
@@ -41,7 +43,8 @@ Then stay in this loop until the decision tree is exhausted:
 4. With every user question, explain why it matters, give your recommended
    answer, and name the tradeoff if there is one.
 5. After the user answers, record the current truth and follow any new
-   consequential branches that answer created.
+   consequential branches that answer created. When an output path is provided,
+   update that file before asking the next question.
 
 If the answer opens another meaningful branch, ask the next question. If dozens
 of questions are needed, ask dozens across turns. Do not treat one answer, a
@@ -102,7 +105,10 @@ context.
 ## Output
 
 If an output path is provided, write the decision record there and keep it as
-current truth while the conversation progresses.
+current truth while the conversation progresses. Update it after each answered
+consequential decision node, accepted assumption, deferral, blocker, or
+supporting artifact link before asking the next question. Do not rely on chat
+memory for decisions that belong in the output file.
 
 If no output path is provided, keep the decision record in chat unless the user
 asks to save it.
@@ -187,6 +193,8 @@ Do not complete Grill without `## Decision Review` showing
 ## Guardrails
 
 - Do not create durable project state unless an output path is provided.
+- When an output path is provided, do not defer decision recording until the
+  final review or checkpoint.
 - Do not turn the idea into a spec.
 - Do not ask the user factual questions you can answer yourself.
 - Do not silently decide product, scope, risk, priority, business-rule, or
