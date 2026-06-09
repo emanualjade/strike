@@ -2,6 +2,15 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.10.22 - 2026-06-08
+
+- Reworked `refine-idea` to open with a shared-understanding reflection before
+  writing the artifact, including support for both fuzzy ideas and already
+  planned ideas with provided docs.
+- Added `Shared Understanding`, `Success Signal`, and explicit shared
+  confirmation fields to the refined idea artifact so `idea.md` shows that the
+  user corrected or accepted Strike's framing before `ideaRefined` completes.
+
 ## 0.10.21 - 2026-06-08
 
 - Allowed small, local unplanned enabling work inside slice builds and fixes
