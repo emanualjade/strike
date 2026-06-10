@@ -3,12 +3,15 @@
 Use this read-only audit when `verify-slice-plan` runs SUBAGENT:
 `plan-implementation-readiness-audit`.
 
-Check whether the plan is complete, cohesive, buildable, inside the accepted
-slice boundary, aligned with the phase spec, grounded in research and repo
-patterns, and ready for an agent to build without guessing. Apply
+This is the single required base audit for a slice plan. Run a
+senior-engineer review across the whole plan: check whether it is complete,
+cohesive, buildable, inside the accepted slice boundary, aligned with the
+phase spec, grounded in research and repo patterns, safe for the systems it
+touches, and ready for an agent to build without guessing. This is a plan
+audit, not a code audit. Apply
 `references/slice-boundaries.md` as the canonical Strike slice-boundary standard
-when reviewing boundary fit, split recommendations, `Why Not Split`, and
-non-vertical slices.
+when reviewing boundary fit, boundary recommendations (split or merge),
+`Why Not Split`, and non-vertical slices.
 
 ## Checks
 
@@ -32,10 +35,32 @@ non-vertical slices.
   without filling irrelevant surfaces.
 - blast radius: check that `Blast Radius` explains what could be affected
   outside the immediate slice and how the plan protects those areas.
+- completeness: check that the plan covers the accepted slice outcome,
+  acceptance criteria, edge cases, failure/recovery paths, and required
+  user/system states without leaving hidden work for the builder.
+- solved-problem surfaces: enumerate every third-party API, package, SDK,
+  framework feature, provider/model, and mature solved domain (payments,
+  refunds, discounts, billing, accounting, taxes, auth, sessions, permissions)
+  the plan touches. Confirm each is grounded in official docs, audited
+  research, or repo precedent; flag any surface where the approach is invented
+  or ungrounded. This enumeration also tells the verifier whether the
+  dedicated `canonical-readiness-audit` must run.
+- security and privacy: when the plan touches auth, permissions, ownership,
+  secrets, PII, destructive actions, payments, or compliance-sensitive
+  surfaces, check that the plan names the needed protections and verification
+  evidence.
+- state and data: when the plan touches local state, server state, cache,
+  schema, persistence, serialization, generated models, migrations, or durable
+  artifacts, check that the plan states the intended data lifecycle and cache
+  or consistency strategy.
+- UI and accessibility: when browser-visible work is planned, check that the
+  plan names the affected route/page, components, states, form behavior,
+  keyboard/focus or accessibility concerns, and visual/browser evidence.
 - implementation discipline: check that the plan applies relevant
   implementation discipline guidance, places new utilities/helpers/adapters in a
-  repo-pattern-based home, and accounts for likely callers or downstream
-  consumers when shared code changes.
+  repo-pattern-based home, accounts for likely callers or downstream
+  consumers when shared code changes, and stays clean, simple, and likely
+  maintainable without over-engineering or scattering duplicate helpers.
 - naming and data shape: check planned names, files, types, routes, and schema
   concepts with the core noun before qualifiers lens. Do not fail separate
   concepts just for being separate, but flag adjective-noun siblings when a

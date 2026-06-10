@@ -35,7 +35,6 @@ Verify one slice plan is ready to build.
   - `references/review-agents/output-discipline.md`
   - `references/review-agents/plan-implementation-readiness-audit.md`
   - `references/review-agents/canonical-readiness-audit.md`
-  - `references/review-agents/full-plan-audit.md`
 
 ## Process
 
@@ -73,7 +72,8 @@ Verify one slice plan is ready to build.
    - no material provider/model/API, repo-pattern, data/schema, file/blob,
      queue/job, auth/permission, or verification fact is left for the builder to
      guess
-6. Run the three required plan review agents described below in parallel, plus
+6. Run the required plan review batch described below in parallel: the base
+   plan audit, the canonical readiness audit when its trigger applies, plus
    any applicable user review-lens agents in the same parallel batch. When
    launching a built-in SUBAGENT, include the named bundled
    `references/review-agents/` file in that subagent's prompt as its required
@@ -101,16 +101,27 @@ reviewer applies the canonical Strike slice-boundary standard.
 
 ### 1. Run Required Plan Audits In Parallel
 
-Run these three required read-only plan audits in parallel:
+Run the required read-only base audit, plus the canonical audit when its
+trigger applies, in one parallel batch:
 
-- SUBAGENT: `plan-implementation-readiness-audit`: checks whether the plan is complete,
+- SUBAGENT: `plan-implementation-readiness-audit`: always required. This is the
+  single base audit: a senior-engineer review of whether the plan makes sense
+  as a whole and is ready to build. It checks that the plan is complete,
   cohesive, buildable, inside the accepted slice boundary, aligned with the
-  phase spec, grounded in research and repo patterns, and ready for an agent to
-  build without guessing. Use
+  phase spec, grounded in research and repo patterns, sound across blast
+  radius, security/privacy, state/data, UI/browser behavior, tests, and edge
+  cases, and ready for an agent to build without guessing. This is still a
+  plan audit, not a code audit; it verifies that the builder has enough context
+  and proof requirements to implement safely. Use
   `references/review-agents/plan-implementation-readiness-audit.md` as the
   required rubric and `references/slice-boundaries.md` as the canonical
   slice-boundary standard.
-- SUBAGENT: `canonical-readiness-audit`: checks whether the plan uses the
+- SUBAGENT: `canonical-readiness-audit`: required whenever the slice or plan
+  touches any third-party API, package, SDK, framework feature, provider/model,
+  or mature solved domain such as payments, refunds, discounts, billing,
+  accounting, taxes, auth, sessions, or permissions. Skip it only when no such
+  surface is touched, and record the skip and its reason in the artifact. It
+  checks whether the plan uses the
   official, idiomatic, recommended way to solve this class of problem according
   to official docs, audited research, generated/package types, framework
   conventions, and existing repo precedent. This audit should catch plausible
@@ -118,12 +129,6 @@ Run these three required read-only plan audits in parallel:
   missed package/plugin primitives before build begins. Use
   `references/review-agents/canonical-readiness-audit.md` as the required
   rubric.
-- SUBAGENT: `full-plan-audit`: checks whether the plan makes sense as a whole
-  across codebase fit, blast radius, security/privacy, data/state, user flows,
-  UI/browser behavior, tests, edge cases, and maintainability. This is still a
-  plan audit, not a code audit; it verifies that the builder has enough context
-  and proof requirements to implement safely. Use
-  `references/review-agents/full-plan-audit.md` as the required rubric.
 
 ### 2. Add User Review Lenses To The Same Parallel Batch
 
@@ -168,6 +173,8 @@ Use this shape:
 ## Read-Only Review
 Review results returned: yes / no
 - Required plan audits:
+- Canonical audit: run / skipped
+- Canonical skip reason: None / <no solved-problem surfaces touched>
 - User review lenses:
 - Summary:
 
@@ -257,6 +264,10 @@ Reason:
   require E2E coverage.
 - No accepted-scope `Must Fix` issue remains from required plan audits or user
   review lenses.
+- The `canonical-readiness-audit` ran whenever the plan touches a
+  solved-problem surface: any third-party API, package, SDK, framework
+  feature, provider/model, or mature domain such as payments or auth. A
+  recorded skip is valid only when no such surface is touched.
 - All required review agents and applicable user review lenses have returned.
   The artifact says `Review results returned: yes` only after their returned
   findings have been synthesized into `## Issues`.

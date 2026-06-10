@@ -842,12 +842,16 @@ function requireSlicePlanReady(verificationKey, artifactPath) {
   }
 
   const text = fs.readFileSync(artifactPath, "utf8");
-  const splitRecommendation = markdownSection(text, "Split Recommendation");
-  const splitNeeded = splitRecommendation ? latestFieldValue(splitRecommendation, "Needed", "yes|no") : null;
+  const boundaryRecommendation =
+    markdownSection(text, "Boundary Recommendation") ??
+    markdownSection(text, "Split Recommendation");
+  const boundaryNeeded = boundaryRecommendation
+    ? latestFieldValue(boundaryRecommendation, "Needed", "yes|no")
+    : null;
   const routeBack = routeBackField(text);
-  if (splitNeeded !== "no") {
+  if (boundaryNeeded !== "no") {
     throw new Error(
-      `Cannot complete ${verificationKey} until ${artifactPath} has Split Recommendation with Needed: no.`,
+      `Cannot complete ${verificationKey} until ${artifactPath} has Boundary Recommendation (or legacy Split Recommendation) with Needed: no.`,
     );
   }
   if (routeBack !== "no") {
@@ -1627,6 +1631,40 @@ export function addSlice(state, phaseId, sliceId, name = null) {
   return { initiative, phase, slice };
 }
 
+export function removeSlice(state, phaseId, sliceId) {
+  const normalizedPhaseId = normalizePhaseId(phaseId);
+  const normalizedSliceId = normalizeSliceId(sliceId);
+
+  const initiative = getActiveInitiative(state);
+  if (!initiative) {
+    throw new Error("Cannot remove slice: no active initiative.");
+  }
+
+  const phase = (initiative.phases ?? []).find((item) => item.id === normalizedPhaseId);
+  if (!phase) {
+    throw new Error(`Phase not found: ${normalizedPhaseId}`);
+  }
+
+  const index = (phase.slices ?? []).findIndex((slice) => slice.id === normalizedSliceId);
+  if (index === -1) {
+    throw new Error(`Slice not found in ${normalizedPhaseId}: ${normalizedSliceId}`);
+  }
+
+  const slice = phase.slices[index];
+  const completedChecks = (slice.sliceWorkflow ?? [])
+    .flatMap((item) => Object.entries(item?.verified ?? {}))
+    .filter(([, value]) => value === true)
+    .map(([key]) => key);
+  if (completedChecks.length > 0) {
+    throw new Error(
+      `Cannot remove slice ${normalizedSliceId}: completed checks exist (${completedChecks.join(", ")}). Only unstarted slices can be removed.`,
+    );
+  }
+
+  phase.slices.splice(index, 1);
+  return { initiative, phase, slice };
+}
+
 function firstIncomplete(workflow, skipSkills, scope, onlySkills = null) {
   for (const item of workflow ?? []) {
     if (skipSkills?.has(item.skill)) continue;
@@ -2281,8 +2319,35 @@ export function main() {
     return;
   }
 
+  if (command === "remove-slice") {
+    const phaseId = args[0];
+    const sliceId = args[1];
+    if (!phaseId || !sliceId) {
+      throw new Error("Usage: state.mjs remove-slice <phase-id> <slice-id> [--state path]");
+    }
+    const state = readState(statePath);
+    const { initiative, phase, slice } = removeSlice(state, phaseId, sliceId);
+    const slicePath = path.join(
+      path.dirname(statePath),
+      "initiatives",
+      initiative.id,
+      "phases",
+      phase.id,
+      "slices",
+      slice.id,
+    );
+    writeState(statePath, state);
+    printJson({
+      removedSlice: slice,
+      slicePath,
+      note: "Slice removed from workflow state only. Fold any needed slice.md content into the surviving slice, then delete this slice directory so future slicesCreated checks stay consistent.",
+      nextStep: getNextStep(state),
+    });
+    return;
+  }
+
   throw new Error(
-    "Usage: state.mjs <template|init|sync-helper|next-step|list-initiatives|add-initiative|set-active|finish-initiative|complete-check|reopen-check|reopen-phase-check|reopen-slice-check|add-phase|add-slice> ...",
+    "Usage: state.mjs <template|init|sync-helper|next-step|list-initiatives|add-initiative|set-active|finish-initiative|complete-check|reopen-check|reopen-phase-check|reopen-slice-check|add-phase|add-slice|remove-slice> ...",
   );
 }
 

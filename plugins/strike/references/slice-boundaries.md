@@ -28,6 +28,23 @@ different risk centers, or cannot be verified as one coherent capability.
 
 One slice is correct when splitting would create fake work.
 
+## Slice Economics
+
+Every slice pays the same fixed workflow overhead regardless of size: a plan,
+a plan verification with parallel review agents, a build, a build verification
+with parallel review agents and browser evidence, and a git checkpoint. Slice
+count, not slice size, is the main cost multiplier for a phase.
+
+Size slices for the fewest verification loops that each remain one honest
+verification story. Do not pre-split work to make individual slices look
+safer; the verification gates own safety, and they run at full strength on
+every slice. The honest cap on slice size is verifiability, not file count: a
+slice is too big only when it can no longer be planned, built, reviewed, and
+verified as one coherent unit.
+
+Default to M or L slices. Use XS or S only when a tiny outcome is genuinely
+standalone or a narrow non-vertical enabler is justified.
+
 ## Size Guide
 
 Use size as a rough shape signal, not a file-count rule.
@@ -36,8 +53,8 @@ Use size as a rough shape signal, not a file-count rule.
 | --- | --- |
 | XS | Tiny local change, such as config, copy, style, or one small function. |
 | S | Small single-surface outcome when other needed layers already exist, or a justified non-vertical enabler. Do not use `S` for a horizontal task unless that task is the complete accepted outcome. |
-| M | One cohesive capability or behavior path across the needed surfaces; often a handful of files. |
-| L | One broader cross-stack capability with a shared data/API/auth/UI/test story. Allow it only when splitting would create fake work and `Why Not Split` gives concrete evidence. |
+| M | The default shape: one cohesive capability or behavior path across the needed surfaces; often a handful of files. |
+| L | One broader cross-stack capability with a shared data/API/auth/UI/test story. A normal shape when one capability genuinely spans the stack; add a short `Why Not Split` note naming the splits considered. |
 | XL | Multiple capabilities, independent flows, or a change too broad to verify as one coherent unit. Split or route back unless the phase explicitly accepts the larger boundary and `Why Not Split` proves it. |
 
 ## Examples
@@ -99,23 +116,38 @@ Usually bad slice shapes:
 
 ## Challenge Signals
 
+Crossing layers is not a challenge signal. A vertical slice is supposed to
+cross UI, API, state/data, and tests when its capability needs them.
+
 Break or challenge a slice when it has:
 
-- enough likely surfaces or files that the slice no longer has one clear
-  capability boundary, risk center, and verification story
 - acceptance criteria that describe multiple independent outcomes, unrelated
   state changes, or separate verification stories
+- more outcomes than one coherent verification story can honestly cover
+- multiple independent subsystems, behavior paths, or risk centers
 - a title that signals broad or bundled scope, such as `full`, `complete`,
   `MVP`, or `X and Y` when the joined pieces are independent capabilities
-- multiple independent subsystems or behavior paths
 - repo setup plus package decisions plus frontend/backend behavior
-- UI plus route/API plus state/data plus tests, when those surfaces do not share
-  one capability or behavior flow
 
 When a slice looks overly broad, decide whether it is broad because one cohesive
 capability crosses several surfaces or because it bundles independent work. Split
 bundled work, or record why the broader slice is still the most coherent
 buildable unit.
+
+## Merge Signals
+
+Merge signals point the other way. Treat adjacent slices as one slice when
+they:
+
+- share one capability boundary, risk center, and verification story
+- cannot be honestly verified alone, such as a data layer with no consumer or
+  UI whose accepted behavior only works after the next slice
+- exist mainly to keep individual slices small, splitting one user-visible
+  outcome into setup-shaped fragments
+
+During slicing, merge them before registering slices. During planning, use a
+`merge` boundary recommendation so Strike can absorb the later slice before
+build.
 
 ## Non-Vertical Slices
 
@@ -135,7 +167,13 @@ explicitly accepts that larger enabling boundary.
 small enabling change, or any slice that looks overly broad but remains one
 coherent buildable unit.
 
-When required, `Why Not Split` must explain:
+For L slices and grown non-vertical slices, a short note is enough: name the
+split options considered and why each would create fake, throwaway, or
+unverifiable work. A few sentences carry the judgment; do not pad them into a
+form.
+
+Use the full form only for XL slices whose larger boundary the phase explicitly
+accepts. The full form must explain:
 
 - split options considered
 - why each split would create fake, throwaway, or unverifiable work
@@ -143,7 +181,7 @@ When required, `Why Not Split` must explain:
 - the concrete verification story for the broader slice
 - scope guardrails that keep the slice from becoming bundled work
 
-Good `Why Not Split` example:
+Good full-form example:
 
 ```md
 ## Why Not Split

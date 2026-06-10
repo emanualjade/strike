@@ -70,10 +70,12 @@ Verify one slice build and record build verification.
    - SUBAGENT: `built-slice-acceptance-audit`
    - SUBAGENT: `built-slice-code-audit`
    - SUBAGENT: `built-slice-common-issues-audit`
+   - SUBAGENT: `canonical-implementation` when its solved-problem trigger
+     applies
    - USER REVIEW LENSES: relevant user review-lens audits from required user
      guidance
-   - justified conditional review lenses that do not require final browser
-     evidence
+   - risk-based additional audits selected by the verifier that do not require
+     final browser evidence
    Before launching a built-in SUBAGENT, the verifier loads the named bundled
    `references/review-agents/` rubric from the installed Strike plugin and
    includes the rubric content or absolute plugin path in that subagent's prompt.
@@ -81,11 +83,13 @@ Verify one slice build and record build verification.
    - use the verification evidence categories shown in this skill
    - use focused commands instead of defaulting to a full suite unless the plan,
      repo convention, or risk justifies a broader run
-   - summarize automated checks, required audits, conditional lenses, user
-     lenses, and the acceptance audit's `Browser Proof Needed`
-   - if `build.md` records unplanned enabling work, confirm it directly
-     unblocked the planned slice, stayed small, and created no new product
-     outcome
+   - summarize automated checks, required audits, the canonical audit
+     decision, risk-based audits and their selection reasons, user lenses, and
+     the acceptance audit's `Browser Proof Needed`
+   - if `build.md` records plan amendments, judge each against the slice
+     contract: inside the accepted boundary, serving the same acceptance
+     criteria, no new product outcome, and no user-class decision made on the
+     user's behalf
    - list only blocking issue IDs in the gate summary; keep details in
      `## Issues`
    - set `Ready for browser: yes` only when no accepted-scope `Must Fix`,
@@ -101,7 +105,7 @@ Verify one slice build and record build verification.
    - actually use the feature: open the real route/page, create or use
      representative data, click feature controls/actions, observe expected
      states/results, and capture screenshots
-   - after Browser Checks, run any justified visual/browser review lens whose
+   - after Browser Checks, run any selected visual/browser review lens whose
      rubric requires completed browser evidence, then summarize that status in
      `Read-Only Review` as `Post-browser visual/browser lenses: pass` or
      `not run`
@@ -144,6 +148,15 @@ Run these required review agents in the same pre-browser batch:
   architecture, post-submit data consistency, and design-system component reuse.
   Use `references/review-agents/built-slice-common-issues-audit.md` as the
   required rubric.
+- SUBAGENT: `canonical-implementation`: required whenever the changed code
+  touches any third-party API, package, SDK, framework feature, provider/model,
+  or mature solved domain such as payments, refunds, discounts, billing,
+  accounting, taxes, auth, sessions, or permissions. Skip it only when no such
+  surface is touched, and record the skip and its reason in the artifact. It
+  checks the built code against the official, idiomatic, documented way to
+  solve this class of problem, reading official docs and package/generated
+  types rather than trusting the plan's claims. Rubric:
+  `references/review-agents/canonical-implementation.md`.
 - USER REVIEW LENSES: relevant user review-lens audits from:
   - `strike/user-guidance/review-lenses/global.md`
   - `strike/user-guidance/review-lenses/verify-slice-build.md`
@@ -156,35 +169,46 @@ to this slice, add it to the same parallel pre-browser batch unless it requires
 completed Browser Check evidence. Run browser-evidence-dependent user lenses
 after Browser Checks with the captured route/action/screenshot evidence.
 
-### 2. Add Conditional Review Lenses To The Same Parallel Batch
+### 2. Add Risk-Based Audits To The Same Parallel Batch
 
-Only add these review lenses when the changed files, slice plan, build evidence,
-or risk justify them. Use the named bundled `references/review-agents/` file as
-the conditional SUBAGENT's required audit rubric.
+Beyond the required audits, decide which additional audits this specific diff
+needs. Judge from what was actually built: the changed files, the slice plan,
+the build evidence, and where the real risk centers are. Record the selection
+and its reasons in the artifact, including a `base audits only` decision with
+its reason.
 
-- SUBAGENT: `canonical-implementation`: when the slice touches third-party APIs, packages,
-  framework-specific behavior, auth, security, privacy, permissions, payments,
-  accounting, provider/model behavior, queues, uploads, media, AI, email,
-  external services, or a solved domain where inventing is risky. Rubric:
-  `references/review-agents/canonical-implementation.md`.
-- SUBAGENT: `user-flows`: when a user, operator, command, or system workflow changed.
-  Rubric: `references/review-agents/user-flows.md`.
-- SUBAGENT: `state-data-integrity`: when state, storage, schema, persistence, migrations,
-  models, serialization, or data boundaries changed. Rubric:
+Use these bundled lenses as a library. Add a lens when its risk area is a
+primary risk center of this slice, not merely touched. Use the named bundled
+`references/review-agents/` file as that SUBAGENT's required audit rubric.
+
+- SUBAGENT: `user-flows`: when a changed user, operator, command, or system
+  workflow is a primary risk center. Rubric:
+  `references/review-agents/user-flows.md`.
+- SUBAGENT: `state-data-integrity`: when state, storage, schema, persistence,
+  migrations, models, serialization, or data boundaries carry primary risk in
+  this change. Rubric:
   `references/review-agents/state-data-integrity.md`.
 - SUBAGENT: `security-privacy`: when auth, permissions, ownership, privacy, payments,
   tokens, secrets, PII, destructive behavior, or compliance-sensitive surfaces
-  changed. Rubric: `references/review-agents/security-privacy.md`.
-- SUBAGENT: `integration-risk`: when APIs, providers, SDKs, webhooks, queues, uploads,
-  media, AI, email, payment, analytics, or external services changed. Rubric:
+  carry primary risk in this change. Rubric:
+  `references/review-agents/security-privacy.md`.
+- SUBAGENT: `integration-risk`: when API, provider, SDK, webhook, queue, upload,
+  media, AI, email, payment, analytics, or external-service contracts carry
+  primary risk in this change. Rubric:
   `references/review-agents/integration-risk.md`.
 
-Run these visual/browser conditional lenses after Browser Checks when their
-conditions apply, so they can inspect completed route/action/screenshot evidence
-instead of treating pending browser proof as a pre-browser failure.
+When a real risk center has no matching library rubric, compose a custom
+read-only audit with a focused mandate naming the specific behavior or risk to
+verify. Custom audits follow
+`references/review-agents/output-discipline.md` and return findings only.
 
-- SUBAGENT: `ui-regression`: when UI, HTML, CSS, component, or frontend behavior changed.
-  Rubric: `references/review-agents/ui-regression.md`.
+Run these visual/browser lenses after Browser Checks when you select them, so
+they can inspect completed route/action/screenshot evidence instead of treating
+pending browser proof as a pre-browser failure.
+
+- SUBAGENT: `ui-regression`: when changed UI, HTML, CSS, component, or frontend
+  behavior is a primary risk center. Rubric:
+  `references/review-agents/ui-regression.md`.
 - SUBAGENT: `accessibility`: when UI risk is meaningful or browser evidence is available.
   Rubric: `references/review-agents/accessibility.md`.
 
@@ -198,7 +222,8 @@ and avoid restating the rubric. The
 `built-slice-acceptance-audit` also returns `Browser Proof Needed`.
 
 Write a compact `Pre-Browser Verification Batch` gate before any browser work:
-automated checks, required audits, conditional risk lenses, user review lenses,
+automated checks, required audits, the canonical audit decision, risk-based
+audits with their selection reasons, user review lenses,
 browser proof needed, blocking issue IDs, `Ready for browser`, and reason. If
 the gate says `Ready for browser: no`, stop before Browser Checks and write
 `Verified: no` with the fix path.
@@ -256,7 +281,9 @@ Use this shape:
 ## Pre-Browser Verification Batch
 Automated checks: pass / issues / blocked
 Required audits: pass / issues / blocked
-Conditional risk lenses: pass / issues / blocked / not run
+Canonical audit: pass / issues / blocked / skipped
+Risk-based audits: pass / issues / blocked / not run
+Risk-based audit selection:
 User review lenses: pass / issues / blocked / not run
 Browser proof needed:
 Blocking issue IDs:
@@ -321,7 +348,8 @@ Reason:
 ## Read-Only Review
 Review results returned: yes / no
 Required audits: pass / issues / blocked
-Conditional risk lenses: pass / issues / blocked / not run
+Canonical audit: pass / issues / blocked / skipped
+Risk-based audits: pass / issues / blocked / not run
 User review lenses: pass / issues / blocked / not run
 Post-browser visual/browser lenses: pass / issues / blocked / not run
 Summary:
@@ -388,13 +416,24 @@ Reason:
 - Integration, provider, workflow, upload, asset, storage, queue, job, callback,
   webhook, or dataflow work checked existing repo precedent for the same class
   of problem.
-- Any unplanned enabling work recorded in `build.md` directly unblocked the
-  planned slice, stayed narrow, and did not create an unrelated product outcome.
-- No accepted-scope `Must Fix` issue remains from built-in audits, conditional
-  risk lenses, user review lenses, required checks, or Browser Clickthrough.
+- Every plan amendment recorded in `build.md` stays inside the accepted
+  boundary and acceptance criteria, creates no new product outcome, makes no
+  user-class decision, and is sound on review. A build whose amendments
+  replace the plan rather than repair the route fails with route back to
+  `planCreated`.
+- No accepted-scope `Must Fix` issue remains from built-in audits, the
+  canonical audit, risk-based audits, user review lenses, required checks, or
+  Browser Clickthrough.
 - The pre-browser gate is clean: no accepted-scope `Must Fix`, failed required
   check, or blocked required audit remains.
-- All required review agents, justified conditional risk lenses, post-browser
+- The `canonical-implementation` audit ran whenever the changed code touches a
+  solved-problem surface: any third-party API, package, SDK, framework
+  feature, provider/model, or mature domain such as payments or auth. A
+  recorded skip is valid only when no such surface is touched.
+- The risk-based audit selection is recorded, including a `base audits only`
+  decision with its reason.
+- All required review agents, the canonical audit when triggered, selected
+  risk-based audits, post-browser
   visual/browser lenses, and applicable user review lenses have returned. The
   artifact says `Review results returned: yes` only after their returned
   findings have been synthesized into `## Issues`.

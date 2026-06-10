@@ -102,10 +102,12 @@ and how it will be verified.
   whether the qualifier belongs as a field, enum, state, permission,
   relationship, ownership, placement, or usage context.
 - Do narrow tactical research as needed when planning reveals a slice-specific
-  detail that initiative and phase research do not cover. Prefer official or
+  detail that the research library at `strike/research/`, initiative research,
+  and phase research do not cover. Prefer official or
   primary sources when the fact is external, current, or high-stakes. Record the
-  delta in the plan; do not paste raw notes, long excerpts, search trails, or
-  link dumps.
+  delta in the plan, and write durable findings back to the library per the
+  plugin root's `references/research-library.md`; do not paste raw notes, long
+  excerpts, search trails, or link dumps.
 - If the missing fact affects multiple slices, phase boundaries, provider/model
   viability, repo architecture, data modeling, file/blob/job flow, auth,
   permissions, or verification strategy, do not bury it as a slice-specific
@@ -114,16 +116,20 @@ and how it will be verified.
   implementation shape.
 - Work from the accepted slice boundary and the standard in
   `references/slice-boundaries.md`. If planning reveals that a clean, complete
-  implementation needs a different boundary, write a split recommendation with
-  the specific evidence and route back.
+  implementation needs a different boundary, write a boundary recommendation
+  with the specific evidence: `split` when the slice bundles independent
+  outcomes or verification stories, `merge` when this slice and a later
+  unstarted slice are one capability with one verification story. Merge only
+  absorbs later slices with no completed checks; never merge into completed
+  work.
 - If planning finds unplanned enabling work that directly blocks this slice,
   keep the workflow moving at the smallest appropriate level. Plan a small,
   local, low-risk enabling repair inside the current slice when it only makes
   the planned slice possible and creates no new product outcome. If the enabling
   work is larger, uncertain, security-sensitive, a meaningful dependency or
-  toolchain change, or deserves its own planning and verification, use `Split
-  Recommendation` to make the enabling work its own slice before the original
-  slice.
+  toolchain change, or deserves its own planning and verification, use a
+  `split` boundary recommendation to make the enabling work its own slice
+  before the original slice.
 
 ## Output
 
@@ -187,10 +193,13 @@ Slice: None / <slice-id>
 Check: None / phaseResearchComplete / slicesCreated / planCreated
 Reason:
 
-## Split Recommendation
+## Boundary Recommendation
 Needed: yes / no
+Type: None / split / merge
 Reason:
 Replacement slices:
+- None.
+Absorbed slices:
 - None.
 ```
 
@@ -257,13 +266,17 @@ Replacement slices:
   changes an important user workflow, auth or permission boundary, persistence
   path, cross-page flow, regression-prone interaction, or business-critical path.
   Otherwise record a concrete skip or not-applicable reason.
-- If `Split Recommendation` says `Needed: yes`, write the artifact as a boundary
-  update instead of a build-ready plan. Name the replacement slices clearly
-  enough that Strike can edit the current slice into the first replacement
-  slice, create any extra slice stubs, and register them with `add-slice`. Set
-  `Route Back` to the exact helper command Strike should run after applying the
-  local split, usually `reopen-check planCreated`. Use
+- If `Boundary Recommendation` says `Needed: yes`, write the artifact as a
+  boundary update instead of a build-ready plan. For `Type: split`, name the
+  replacement slices clearly enough that Strike can edit the current slice into
+  the first replacement slice, create any extra slice stubs, and register them
+  with `add-slice`. For `Type: merge`, name the absorbed later slices clearly
+  enough that Strike can fold their stubs into the current slice's `slice.md`,
+  unregister them with `remove-slice`, and delete their slice directories;
+  absorb only later slices with no completed checks. Set `Route Back` to the
+  exact helper command Strike should run after applying the local boundary
+  change, usually `reopen-check planCreated`. Use
   `reopen-phase-check <phase-id> slicesCreated` only when the phase's whole
-  slice list must be regenerated instead of replacing the active slice from this
+  slice list must be regenerated instead of adjusting the active slice from this
   plan. Use `reopen-phase-check <phase-id> phaseResearchComplete` when phase
   research must be repaired.

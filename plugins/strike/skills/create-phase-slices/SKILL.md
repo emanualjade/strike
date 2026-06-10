@@ -58,9 +58,14 @@ verification without re-slicing the phase.
   official/provider/repo facts.
 - If `supporting-artifacts/` exists, scan it and read only files relevant to
   this phase before setting slice boundaries.
-- Identify a coherent slice set that completes the phase with the fewest
-  practical verification loops while keeping each slice understandable,
-  buildable, and independently verifiable.
+- Identify the slice set that completes the phase with the fewest verification
+  loops while keeping each slice one honest verification story. Slice count is
+  the main workflow cost multiplier; apply the Slice Economics standard in
+  `references/slice-boundaries.md`. Default to M or L slices and reserve XS or
+  S for genuinely standalone tiny outcomes or justified non-vertical enablers.
+- Before registering slices, check adjacent slices for merge signals from
+  `references/slice-boundaries.md`. Merge slices that share one capability
+  boundary, risk center, and verification story.
 - Name each slice by outcome, not task category.
 - Use canonical slice IDs: `slice-01`, `slice-02`, `slice-03-b`.
 - Order slices so dependencies are satisfied, high-risk assumptions appear
@@ -162,6 +167,8 @@ When required by `references/slice-boundaries.md`, add these sections after
 ## Rules
 
 - Create slices around outcomes.
+- Prefer fewer cohesive slices over many thin ones. Do not pre-split work to
+  reduce per-slice risk; verification gates own that risk.
 - Keep slice IDs canonical and put human names in slice titles or display names.
 - Keep implementation planning, execution tasks, research notes, build steps,
   and verification evidence out of the slice stub.

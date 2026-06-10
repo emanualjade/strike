@@ -2,6 +2,41 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.11.0 - 2026-06-09
+
+- Recalibrated slice sizing around slice economics: every slice carries a full
+  plan/verify/build/verify cycle, so slicing now optimizes for the fewest
+  verification loops that each remain one honest verification story, defaults
+  to M or L slices, and reserves XS/S for genuinely standalone outcomes or
+  justified non-vertical enablers.
+- Added merge as a first-class boundary correction: merge signals in the
+  slice-boundary standard, a `Boundary Recommendation` (split or merge) in
+  slice plans replacing `Split Recommendation` (the state helper still accepts
+  the legacy section name), and a guarded `remove-slice` helper command so an
+  accepted merge can absorb later unstarted slices.
+- Right-sized review fan-out: `verify-slice-plan` runs one merged base plan
+  audit (absorbing the removed `full-plan-audit`) plus `canonical-readiness-audit`
+  whenever the slice touches third-party APIs, packages, SDKs, frameworks,
+  providers, or mature solved domains such as payments or auth.
+  `verify-slice-build` keeps its three base audits, requires
+  `canonical-implementation` on the same solved-problem trigger, and replaces
+  trigger-mandated conditional lenses with verifier-selected risk-based audits
+  (bundled lenses or custom read-only audits) recorded with selection reasons.
+- Replaced plan-as-contract build rules with an adaptive build contract: the
+  slice's accepted boundary and acceptance criteria are binding, the verified
+  plan is the route, and `build-slice`/`fix` adapt in-flight with recorded
+  `Plan Amendments` (including narrow mid-build research deltas), routing back
+  only when the contract itself must change, upstream artifacts cannot be
+  trusted, or amendments would replace the plan. The separate "unplanned
+  enabling work" category was removed.
+- Added the durable cross-initiative research library at `strike/research/`
+  with a new `references/research-library.md` standard: research stages read
+  the library first, verify only the claims the current work leans on, research
+  the delta, and write durable source-backed findings (with package/API
+  versions, never dates) back. Initiative reports for library-covered items
+  become concise projections, and their audits scope to the delta and the
+  leaned-on claims.
+
 ## 0.10.22 - 2026-06-08
 
 - Reworked `refine-idea` to open with a shared-understanding reflection before

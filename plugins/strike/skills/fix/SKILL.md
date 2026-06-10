@@ -48,15 +48,13 @@ Fix issues from a failed Strike verification pass.
   or record that none was found before making code changes.
 - Keep the repair focused on passing the failed verification, not expanding the
   feature.
-- If unplanned work directly blocks the repair, keep the workflow moving at the
-  smallest appropriate level. If the repair is small, local, low-risk, and only
-  enables the failed verifier to be addressed, do the minimal repair here and
-  record a short `Unplanned enabling work:` note in the fix report. If it is
-  larger, uncertain, security-sensitive, a meaningful dependency or toolchain
-  change, or deserves its own planning and verification, write `Fixed: no` with
-  route-back so Strike can create an enabling slice and then return to this
-  verifier. Ask the user only when the repair needs a product, architecture,
-  security, dependency-risk, or scope decision that Strike cannot safely make.
+- Repairs may deviate from the planned route under the same contract as
+  `build-slice`: stay inside the accepted boundary and acceptance criteria,
+  create no new product outcome, make no user-class decision, and record the
+  deviation in the fix report. When the repair cannot stay inside that
+  contract, write `Fixed: no` with route-back so Strike can adjust the
+  boundary and return to this verifier. Ask the user only when the repair
+  needs a decision Strike cannot safely make.
 - Treat `Follow-Up` and `Accepted Risk` items as context. Do not fix them unless
   they are necessary to resolve a `Must Fix` item.
 - Review prior fix reports for the same verifier. If the same issue repeats
@@ -106,7 +104,7 @@ Reason:
 
 ## Changes Made
 -
-- Unplanned enabling work: None / <short note>
+- Plan deviations: None / <short note>
 
 ## Repo Precedent
 Searched:
@@ -148,10 +146,6 @@ Reason:
 - Do not decide that the work is verified. The same verifier must run again.
 - Do not complete workflow state checks.
 - Do not chase open-ended improvements.
-- Small unplanned enabling work is allowed only when it directly unblocks the
-  failed verifier, stays narrow, and creates no new product outcome. Larger
-  enabling work should become an enabling slice through route-back instead of
-  being hidden inside the repair.
 - Do not treat a failed check, provider response, workflow error, payload limit,
   upload/storage issue, or dataflow mismatch as novel until you have searched
   the repo for existing handling of that class of problem.

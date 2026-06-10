@@ -3,10 +3,25 @@
 Use this read-only audit when `verify-slice-plan` runs SUBAGENT:
 `canonical-readiness-audit`.
 
+## Trigger
+
+This audit is required, not optional, whenever the slice or plan touches any
+third-party API, package, SDK, framework feature, provider/model, or mature
+solved domain such as payments, refunds, discounts, billing, accounting,
+taxes, auth, sessions, or permissions. Inventing in these areas is the most
+common and expensive failure this workflow guards against, and the agent that
+invented a solution cannot be trusted to notice it should have checked the
+docs. When none of these surfaces are touched, the verifier skips this audit
+and records the skip with its reason.
+
+## Mandate
+
 Check whether the plan uses the official, idiomatic, recommended way to solve
 this class of problem. This is a plan-time audit: verify that the plan is
 grounded in official docs, audited research, generated/package types, framework
-conventions, and existing repo precedent before build begins.
+conventions, and existing repo precedent before build begins. Actually fetch
+and read the official docs and package/generated types for each touched
+surface; do not judge canonicality from the plan's own claims.
 
 ## Checks
 

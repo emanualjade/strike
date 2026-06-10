@@ -308,10 +308,13 @@ Reason: Fixture phase research audit passed.
 ## Development Plan
 Fixture plan.
 
-## Split Recommendation
+## Boundary Recommendation
 Needed: no
+Type: None
 Reason: Fixture slice is buildable.
 Replacement slices:
+- None.
+Absorbed slices:
 - None.
 
 ## Route Back
@@ -2598,6 +2601,77 @@ Replacement slices:
     bootstrapTwoSliceWorkflow(repo);
     const localHelper = workspaceHelper(repo);
 
+    writeArtifact(
+      repo,
+      "strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan.md",
+      `# Slice Plan
+
+## Boundary Recommendation
+Needed: yes
+Type: merge
+Reason: Fixture merge required; slice-02 shares this verification story.
+Replacement slices:
+- None.
+Absorbed slices:
+- slice-02
+
+## Route Back
+Needed: no
+Command: None
+Phase: None
+Slice: None
+Check: None
+Reason: None.
+`,
+    );
+
+    runFail(repo, localHelper, ["complete-check", "planCreated"], /Needed: no/);
+  }
+
+  {
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    writeArtifact(
+      repo,
+      "strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan.md",
+      `# Slice Plan
+
+## Boundary Recommendation
+Needed: no
+Type: None
+Reason: Fixture slice is buildable as accepted.
+Replacement slices:
+- None.
+Absorbed slices:
+- None.
+
+## Route Back
+Needed: no
+Command: None
+Phase: None
+Slice: None
+Check: None
+Reason: None.
+`,
+    );
+
+    const receipt = run(repo, localHelper, ["complete-check", "planCreated"]);
+    assertNextStep(receipt, {
+      status: "recorded",
+      phaseId: "phase-01",
+      sliceId: "slice-01",
+      skill: "plan-slice",
+      completedCheck: "planCreated",
+    });
+  }
+
+  {
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
     complete(repo, "planCreated", { skill: "verify-slice-plan" });
     complete(repo, "planVerified", { skill: "build-slice" });
 
@@ -2716,6 +2790,52 @@ Reason: This note is unrelated and must not count as route-back.
       skill: "build-slice",
       completedCheck: "implemented",
     });
+  }
+}
+
+function testRemoveSliceForMerge() {
+  {
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    const removal = run(repo, localHelper, ["remove-slice", "phase-01", "2"]);
+    assert.equal(removal.removedSlice.id, "slice-02");
+    assert.ok(
+      removal.slicePath.endsWith(path.join("phases", "phase-01", "slices", "slice-02")),
+      "remove-slice should report the absorbed slice directory",
+    );
+    assertNextStep(removal.nextStep, {
+      status: "active",
+      phaseId: "phase-01",
+      sliceId: "slice-01",
+      skill: "plan-slice",
+      missing: ["planCreated"],
+    });
+
+    const detail = readInitiativeState(repo, "gallery");
+    assert.deepEqual(
+      detail.phases[0].slices.map((slice) => slice.id),
+      ["slice-01"],
+    );
+
+    completeSlice(repo, {
+      phaseId: "phase-01",
+      skill: "verify-phase",
+      missing: ["allSlicesVerified"],
+    });
+  }
+
+  {
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    complete(repo, "planCreated", { skill: "verify-slice-plan" });
+    runFail(repo, localHelper, ["remove-slice", "phase-01", "slice-01"], /completed checks/);
+    runFail(repo, localHelper, ["remove-slice", "phase-01", "slice-03"], /Slice not found/);
+    runFail(repo, localHelper, ["remove-slice", "phase-01"], /Usage: state.mjs remove-slice/);
+    runFail(repo, localHelper, ["remove-slice", "phase-02", "slice-01"], /Phase not found/);
   }
 }
 
@@ -3069,6 +3189,7 @@ testOldPhaseAndSliceWorkflowNormalizesPhaseResearchGate();
 testRouteBackCommandContract();
 testReviewedVerifierRequiresReturnedReviewResults();
 testPlanAndBuildCompletionPreconditions();
+testRemoveSliceForMerge();
 testReopenMarksReviewedArtifactsStale();
 testRouteBackInvalidatesDownstreamScopes();
 testDeterministicRegistrationOrder();

@@ -318,6 +318,7 @@ node strike/scripts/state.mjs reopen-phase-check <phase-id> <check-name>
 node strike/scripts/state.mjs reopen-slice-check <phase-id> <slice-id> <check-name>
 node strike/scripts/state.mjs add-phase <phase-id> [name]
 node strike/scripts/state.mjs add-slice <phase-id> <slice-id> [name]
+node strike/scripts/state.mjs remove-slice <phase-id> <slice-id>
 ```
 
 ## IDs
@@ -381,6 +382,11 @@ Slice-specific research is no longer a separate workflow gate; `plan-slice` adds
 only narrow source-backed research deltas when initiative and phase research do
 not cover a slice detail.
 
+`strike/research/` is the durable cross-initiative research library. Research
+stages read it before researching, verify only the claims the current work
+leans on, and write durable findings back, following the plugin's
+`references/research-library.md`.
+
 `supporting-artifacts/` is optional initiative context created during Grill
 when schema, architecture, provider routing, data lifecycle, permissions, or
 other decision reasoning needs a concise note outside `decisions.md`. It is not
@@ -407,6 +413,7 @@ The helper should own:
 - calculating the next workflow step
 - resolving artifact paths for the next workflow skill
 - adding phases and slices
+- removing unstarted slices when an accepted merge absorbs them
 - marking verification items complete
 - reopening verification items when a later verification routes back
 - reopening a specific phase check from main-spec verification
@@ -457,14 +464,17 @@ Do not complete `phaseResearchComplete` unless the phase `research.md` says
 research, or surface the unresolved decision from `Reason` and
 `## Questions Or Blockers`.
 
-Do not complete `planCreated` unless `plan.md` says `Split Recommendation` is
-`Needed: no` and `Route Back` says `Needed: no`. Read `Route Back` before
-acting. When the route back is the normal local split path, split the active
-slice, add any replacement slice stubs with `add-slice`, run
-`reopen-check planCreated`, then continue from `next-step`. If the route back
-says to reopen `slicesCreated` or `phaseResearchComplete`, follow that command
-instead because the plan is saying the phase slice list or phase research must
-be repaired before local slice planning can continue.
+Do not complete `planCreated` unless `plan.md` says `Boundary Recommendation`
+is `Needed: no` and `Route Back` says `Needed: no`. Read `Route Back` before
+acting. When the route back is the normal local boundary path, apply the
+recommendation first. For `Type: split`, edit the current slice into the first
+replacement slice and add replacement slice stubs with `add-slice`. For
+`Type: merge`, fold each absorbed slice's stub into the current slice's
+`slice.md`, unregister it with `remove-slice`, and delete its slice directory.
+Then run `reopen-check planCreated` and continue from `next-step`. If the
+route back says to reopen `slicesCreated` or `phaseResearchComplete`, follow
+that command instead because the plan is saying the phase slice list or phase
+research must be repaired before local slice planning can continue.
 
 Do not complete `ideaRefined` unless `idea.md` contains `## User Checkpoint`,
 records a non-empty `User response:`, and says `Ready to continue: yes`.
@@ -625,9 +635,13 @@ Common route backs:
 - missing or weak phase research -> `reopen-phase-check <phase-id> phaseResearchComplete`
 - missing or weak initiative research -> `reopen-check initiativeResearchComplete`
 - weak slice plan -> `reopen-check planCreated`
-- accepted slice boundary changes before build -> edit the current slice into
-  the first replacement slice, create additional replacement slice stubs, run
+- accepted slice split before build -> edit the current slice into the first
+  replacement slice, create additional replacement slice stubs, run
   `add-slice <phase-id> <slice-id> [name]` for each added slice, then rerun
+  `reopen-check planCreated`.
+- accepted slice merge before build -> fold each absorbed later slice's stub
+  into the current slice's `slice.md`, run `remove-slice <phase-id> <slice-id>`
+  for each absorbed slice, delete the absorbed slice directories, then rerun
   `reopen-check planCreated`.
 - larger unplanned enabling work discovered during planning, build, or fix ->
   turn the active slice into the enabling slice when possible, create a
@@ -645,6 +659,10 @@ When splitting an active slice, preserve the original slice ID as the first
 smaller slice whenever possible. Use canonical suffix IDs such as `slice-03-b`
 and `slice-03-c` for the additional slices so workflow state can keep moving in
 order.
+
+When merging, keep the active slice's ID as the surviving slice and absorb only
+later slices with no completed checks. `remove-slice` refuses to remove a slice
+that has completed checks.
 
 If the owning earlier check is already open, `next-step` should already point at
 the owning skill; run that skill instead of editing state by hand.
@@ -708,7 +726,7 @@ Slice loop:
   `supporting-artifacts/`, `phase-spec.md`, and `slice.md`; write `plan.md`
   with a focused `Verification Plan` and any narrow slice-specific research
   delta; complete
-  `planCreated` only when `Split Recommendation` is `Needed: no` and
+  `planCreated` only when `Boundary Recommendation` is `Needed: no` and
   `Route Back` is `Needed: no`.
 - `verify-slice-plan`: pass the slice artifacts plus `research/index.md`,
   relevant initiative research reports and audits, phase `research.md`, phase

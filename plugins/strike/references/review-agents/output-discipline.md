@@ -1,6 +1,7 @@
 # Review Agent Output Discipline
 
-Use this output discipline for every Strike read-only review subagent.
+Use this output discipline for every Strike read-only review subagent,
+including custom verifier-authored audits that have no bundled rubric.
 
 ## Return Shape
 

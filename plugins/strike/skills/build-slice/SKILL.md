@@ -52,21 +52,24 @@ Implement one planned slice.
   existing one and place any new shared code where repo patterns say it belongs.
 - Before modifying an existing shared utility, helper, adapter, schema, or
   shared module, inspect likely callers and downstream consumers.
-- Implement only the planned slice scope, using the smallest complete path.
-- If unplanned work directly blocks the slice, keep the workflow moving at the
-  smallest appropriate level. If the repair is small, local, low-risk, and only
-  enables the planned slice, do the minimal repair inside this build and record
-  a short `Unplanned enabling work:` note in `build.md`. If the repair is
-  larger, uncertain, security-sensitive, a meaningful dependency or toolchain
-  change, or deserves its own planning and verification, write `Built: no` and
-  route back to `plan-slice` so Strike can create an enabling slice and then
-  return to this slice. Ask the user only when the repair needs a product,
-  architecture, security, dependency-risk, or scope decision that Strike cannot
-  safely make.
-- Follow the repo structures and precedents selected in the plan's
-  `Codebase Patterns`. If the selected precedent no longer fits after inspecting
-  the code, write `Built: no` and route back instead of inventing a replacement
-  pattern inside the build step.
+- Implement the slice with the smallest complete path.
+- Treat the slice's accepted boundary and acceptance criteria as the contract,
+  and the verified plan as the route. When the repo disagrees with the plan,
+  adapt and keep building as long as the work stays inside the accepted
+  boundary, serves the same acceptance criteria, creates no new product
+  outcome, and needs no user-class decision about security posture,
+  destructive data, product behavior, architecture, or new dependencies.
+  Small repairs the planned work needs to function are inside the boundary;
+  new capabilities are not.
+- Record every deviation from the plan as a plan amendment in `build.md`: what
+  the plan said, what was built instead, why, and which acceptance criterion
+  it serves. If a deviation needs a missing tactical fact, do the narrow
+  source-backed research now and record the delta with the amendment. Amend
+  when a competent reviewer reading the note would say "obviously, yes"; stop
+  and route back when they would want a conversation first.
+- Start from the repo structures and precedents selected in the plan's
+  `Codebase Patterns`. When a selected precedent no longer fits the actual
+  code, use the closest repo-proven pattern instead and record the amendment.
 - Follow repo conventions and the repo's package manager, test, security, and
   editing rules.
 - Add or update the focused Unit / Component / Integration Tests and E2E Tests
@@ -90,17 +93,12 @@ Implement one planned slice.
   `verify-slice-build` instead of claiming final browser proof.
 - Record changed files, verification evidence by category, and important
   implementation notes in `build.md`.
-- Use engineering judgment for ordinary implementation details inside the
-  verified plan, and record meaningful assumptions in `build.md`.
-- If the plan is missing, too vague, no longer matches the repo, or needs
-  upstream context to understand, write `Built: no` with route back to
-  `plan-slice` or `verify-slice-plan`.
-- If the build discovers a relevant schema/architecture/provider/data note in
-  `supporting-artifacts/` that the plan did not account for, write `Built: no`
-  with route back to `plan-slice` instead of silently expanding scope.
-- If implementation findings change the accepted slice boundary or make the
-  verified plan stale, incomplete, unsafe, or outside the accepted slice, write
-  `Built: no` with route back to `plan-slice`.
+- Write `Built: no` and route back only when adaptation cannot honestly stay
+  inside the contract: implementation findings change the accepted slice
+  boundary or acceptance criteria, a new product outcome or user-class
+  decision appears, upstream artifacts are too untrustworthy or stale to
+  build from, or amendments would replace the plan rather than repair the
+  route.
 
 ## Output
 
@@ -169,12 +167,19 @@ Reason:
 ### Skipped / Not Applicable
 -
 
+## Plan Amendments
+- Planned:
+  Built instead:
+  Why:
+  Serves acceptance criterion:
+  Research delta:
+- None. Use this when the build followed the plan without deviation.
+
 ## Implementation Notes
 - Implementation discipline guidance used:
 - Repo pattern or utility placement notes:
 - Similar repo precedent used:
 - Upstream/downstream impact notes:
-- Unplanned enabling work: None / <short note>
 
 ## Route Back
 Needed: yes / no
@@ -190,18 +195,11 @@ Reason:
 
 ## Rules
 
-- Build within the accepted slice and verified plan.
+- The accepted boundary and acceptance criteria are the contract; the verified
+  plan is the route. Adapt inside the contract with recorded plan amendments;
+  route back only when the contract itself must change or upstream artifacts
+  cannot be trusted.
 - Keep unrelated cleanup and future work outside this build.
-- Do not improvise around a bad plan; write `Built: no` and route back to the
-  owning workflow step so Strike can continue.
-- Small unplanned enabling work is allowed only when it directly unblocks the
-  planned slice, stays narrow, and creates no new product outcome. Larger
-  enabling work should become an enabling slice through route-back instead of
-  being hidden inside the current build.
-- Use the accepted slice boundary from upstream artifacts; route back only when
-  implementation findings change the plan or boundary.
-- Do not route back for ordinary implementation choices that fit the verified
-  plan.
 - Read upstream artifacts only when they are needed to clarify or challenge the
   verified plan.
 - Do not treat a failing command, provider response, workflow error, payload

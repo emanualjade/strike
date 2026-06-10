@@ -17,6 +17,8 @@ gate, the phase spec, slice creation, or slice planning.
 
 - current phase's `phase-spec.md`
 - main spec and development plan when relevant
+- research library at `strike/research/` when it exists, with the Strike
+  plugin root's `references/research-library.md` as the reuse standard
 - initiative research index, relevant reports, and relevant audits
 - supporting artifacts relevant to this phase, when present
 - legacy slice research files from
@@ -26,13 +28,16 @@ gate, the phase spec, slice creation, or slice planning.
 
 ## What Matters
 
-- Start from initiative research. Read `research/index.md` and any relevant
-  per-item reports and audit files it references before doing new research.
+- Start from the research library and initiative research. Read
+  `strike/research/index.md`, relevant library entries, `research/index.md`,
+  and any relevant per-item reports and audit files before doing new research.
+  Follow the plugin root's `references/research-library.md` when verifying or
+  updating library entries.
 - When an upgraded workspace contains legacy slice `research.md` files, inspect
   them before writing phase research. Fold still-valid slice facts into the
   phase research or explicitly supersede them with current phase research.
-- Do not duplicate research already covered by passing or accepted-risk
-  initiative research.
+- Do not duplicate research already covered by current library entries or by
+  passing or accepted-risk initiative research.
 - Use this step to fill phase-specific implementation gaps that affect slicing:
   granular API/model/provider capabilities, repo architecture patterns, schema
   or migration concerns, file/blob/job/queue/persistence flows, auth or
@@ -98,7 +103,8 @@ and source links or repo paths used as evidence. Do not edit files.
 1. Read the phase spec and relevant initiative research.
 2. Identify phase-specific unknowns that would change slice boundaries,
    implementation direction, verification, or risk.
-3. For each unknown, first check whether initiative research already covers it.
+3. For each unknown, first check whether a library entry or initiative
+   research already covers it.
 4. Research only the remaining phase-specific gaps, with emphasis on granular
    API/package/plugin/model behavior, canonical usage patterns, and relevant
    domain rules.
@@ -112,6 +118,9 @@ and source links or repo paths used as evidence. Do not edit files.
    and write `research-audit.md`. If `research.md` changes after audit findings
    are returned, rerun the phase research audit and use the fresh audit result
    before writing `Ready for slicing: yes`.
+9. Write durable phase findings, especially granular canonical usage patterns,
+   back into library entries under `strike/research/`, following
+   `references/research-library.md`.
 
 ## Output
 
@@ -208,8 +217,10 @@ Reason:
 - Research one phase.
 - Do not create slices, slice plans, implementation files, tests, or
   verification artifacts.
-- Do not silently redo initiative-level research. Inherit it, then add only
-  phase-specific deltas.
+- Do not silently redo initiative-level research. Inherit the library and
+  initiative research, then add only phase-specific deltas.
+- Write durable findings back to `strike/research/`. Keep phase-specific
+  reasoning in `research.md`.
 - Do not treat supporting artifacts as hidden source of truth. Use them to
   understand reasoning and constraints already represented upstream.
 - Prefer official or primary sources for external, current, or high-stakes

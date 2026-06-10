@@ -3,11 +3,23 @@
 Use this read-only audit when a verifier launches SUBAGENT:
 `canonical-implementation`.
 
-Use this lens when the slice touches third-party APIs, packages,
-framework-specific behavior, auth, security, privacy, permissions, payments,
-accounting, provider/model behavior, queues, uploads, media, AI, email,
-external services, compliance-sensitive flows, or a solved domain where
-inventing is risky.
+## Trigger
+
+At `verify-slice-build`, this audit is required, not optional, whenever the
+changed code touches any third-party API, package, SDK, framework feature,
+provider/model, or mature solved domain such as payments, refunds, discounts,
+billing, accounting, taxes, auth, sessions, or permissions. The built code is
+checked against the documented way, not against the plan's claims. When none
+of these surfaces are touched, the verifier skips this audit and records the
+skip with its reason.
+
+## Mandate
+
+Check whether the implementation uses the official, idiomatic, recommended way
+to solve this class of problem. Actually fetch and read
+the official docs or primary sources and the package/generated types for each
+touched surface; do not accept a reasonable-sounding implementation as
+canonical.
 
 ## Checks
 

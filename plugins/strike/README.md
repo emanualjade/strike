@@ -174,6 +174,8 @@ PROJECT_LANGUAGE.md
 initiative lifecycle status. Detailed workflow progress lives in
 `strike/initiatives/<initiative-id>/state.json`. Markdown files under
 `strike/initiatives/<initiative-id>/` store the artifacts for each staged skill.
+`strike/research/` is the durable cross-initiative research library that
+research stages read first and write durable findings back to.
 `PROJECT_LANGUAGE.md` is the project language file that Strike and the
 `language` utility keep current as durable language crystallizes.
 `strike/user-guidance/implementation-discipline/` is the

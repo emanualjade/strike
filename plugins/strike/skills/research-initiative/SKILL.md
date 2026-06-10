@@ -16,36 +16,51 @@ not the grill, spec, phase research, phase plan, or slice planning.
 ## Inputs
 
 - refined idea, usually `idea.md`
+- research library at `strike/research/` when it exists
+- bundled Strike research-library standard from the Strike plugin root:
+  `references/research-library.md`
 - optional repo paths or product context
 - optional output directory, usually `strike/initiatives/<initiative-id>/research/`
 
 ## Process
 
 1. Read the refined idea and `PROJECT_LANGUAGE.md`.
-2. Do light reconnaissance to identify research topics. Inspect enough repo
+2. Read `strike/research/index.md` and relevant library entries when they
+   exist. The library is the durable cross-initiative research memory. Follow
+   the Strike plugin root's `references/research-library.md` for reading,
+   verifying, and updating entries.
+3. Do light reconnaissance to identify research topics. Inspect enough repo
    context to recognize external APIs, models, database/schema concerns, queues,
    files/uploads, auth, payments, provider integrations, platform constraints,
    and existing architecture surfaces.
-3. Propose a concrete research scope in `research/scope.md`. Use one item per
+4. Propose a concrete research scope in `research/scope.md`. Use one item per
    dependency, model, API, provider, repo pattern, schema/data concern, or other
    material unknown. Do not combine distinct provider/model capabilities into
-   one vague item.
-4. Initiate a user checkpoint before running the full research. Tell the user
+   one vague item. Say which items the library already covers and which need
+   fresh research.
+5. Initiate a user checkpoint before running the full research. Tell the user
    what you think should be researched, why, and ask what to add, remove, or
    refocus.
-5. Wait for the user's answer. Update `research/scope.md` with their response
+6. Wait for the user's answer. Update `research/scope.md` with their response
    and the approved scope.
-6. Research each approved item independently and write one final-quality report
+7. Research each approved item independently and write one final-quality report
    per item under `research/`. Use a separate research pass for each approved
-   item and keep findings isolated by item.
-7. Audit each report independently before writing the final index. Use a
-   separate read-only audit reviewer per approved item.
-8. Assess audit findings, fix the reports, and update each report's audit
+   item and keep findings isolated by item. For an item the library covers,
+   verify the claims this initiative will lean on against their named sources,
+   research only the remaining delta, and write the report as a concise
+   projection naming the entry, the claims verified, and the delta.
+8. Audit each report independently before writing the final index. Use a
+   separate read-only audit reviewer per approved item. For a library-covered
+   item, scope the audit to the delta and the leaned-on claims; use a full
+   audit when a topic first enters the library.
+9. Assess audit findings, fix the reports, and update each report's audit
    status. If a report changes after its audit, rerun that report's read-only
    audit and use the fresh audit result. Do not delegate the final acceptance
    decision to the audit reviewer.
-9. Write `research/index.md` as the rollup used by Grill, Main Spec, phase
-   specs, and slice planning.
+10. Write durable findings back into library entries under `strike/research/`,
+    following `references/research-library.md`.
+11. Write `research/index.md` as the rollup used by Grill, Main Spec, phase
+    specs, and slice planning.
 
 ## Research Scope
 
@@ -306,6 +321,10 @@ and say `No material research needed: yes`. `index.md` should say
 - Do not create `decisions.md`, `main-spec.md`, phases, slices, code, tests, or
   verification artifacts.
 - Do not compress multiple material dependencies into one report.
+- Do not re-research what a current library entry already covers. Verify the
+  claims this initiative leans on and research the delta.
+- Write durable, reusable findings back to `strike/research/`. Keep
+  initiative-specific reasoning in the initiative's own research artifacts.
 - Do not let a provided plan, schema, previous decision file, or repo doc skip
   the user checkpoint.
 - Do not complete this gate until `scope.md` records a user response and
