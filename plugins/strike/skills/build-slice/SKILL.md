@@ -13,7 +13,9 @@ Implement one planned slice.
 ## Inputs
 
 - verified slice plan from the current slice's `plan.md`
-- plan verification from the current slice's `plan-verification.md`
+- plan verification from the current slice's `plan-verification.md` when it
+  exists (standard-tier plans complete `planVerified` from the plan's tier
+  declaration and have no `plan-verification.md`)
 - repo files named by the plan
 - shared verification evidence taxonomy from the Strike plugin root's
   `references/verification-evidence.md`
@@ -35,8 +37,11 @@ Implement one planned slice.
   while editing:
   - `strike/user-guidance/implementation-discipline/global.md`
   - `strike/user-guidance/implementation-discipline/build-slice.md`
-- If `plan-verification.md` does not say `Ready: yes`, write `Built: no` with
-  route back to `verify-slice-plan` and do not edit implementation files.
+- Confirm the plan is verified. For a standard-tier plan, workflow state
+  showing `planVerified` complete is enough and no `plan-verification.md`
+  exists. Otherwise, if `plan-verification.md` does not say `Ready: yes`,
+  write `Built: no` with route back to `verify-slice-plan` and do not edit
+  implementation files.
 - Skim the plan's `Development Plan`, `Research And Artifacts Used`,
   `Codebase Patterns`, `System Touchpoints`, `Blast Radius`, `Verification Plan`,
   and `Why This Plan` before editing.

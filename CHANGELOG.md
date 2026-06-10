@@ -2,6 +2,22 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.13.0 - 2026-06-10
+
+- Made slice plan verification risk-proportional with a `Plan Verification
+  Tier` declared in each slice plan. Plans answer five triggers (third-party
+  surface, solved domain, schema or data risk, novel pattern, planner
+  uncertainty); any yes requires `Tier: deep` and the full `verify-slice-plan`
+  pass, while `Tier: standard` (every trigger no) completes `planVerified`
+  directly from the declaration and proceeds to build. The state helper
+  enforces tier consistency at `planCreated`, accepts the standard-tier
+  declaration at `planVerified` only when no `plan-verification.md` exists,
+  and treats an existing `plan-verification.md` as authoritative. Plans
+  without a tier section keep today's behavior (full plan verification).
+  `verify-slice-build` is unchanged and now records misdeclared tiers,
+  routing back to `planCreated` when verification failures trace to skipped
+  plan verification.
+
 ## 0.12.0 - 2026-06-09
 
 - Made the state helper the single source of workflow law: `next-step` now

@@ -224,9 +224,9 @@ export const GATE_HINTS = {
   slicesCreated:
     "each planned slice needs a slice.md stub and must be registered with add-slice.",
   planCreated:
-    "plan.md must say Boundary Recommendation Needed: no (legacy Split Recommendation accepted) and Route Back Needed: no.",
+    "plan.md must say Boundary Recommendation Needed: no (legacy Split Recommendation accepted) and Route Back Needed: no. Its Plan Verification Tier must be consistent: Tier: standard requires every trigger answered no; any yes trigger requires Tier: deep.",
   planVerified:
-    "plan-verification.md must say Review results returned: yes, Ready: yes, Fix Needed: no, and Route Back Needed: no.",
+    "plan-verification.md must say Review results returned: yes, Ready: yes, Fix Needed: no, and Route Back Needed: no. Exception: when plan.md declares Plan Verification Tier: standard with every trigger answered no and no plan-verification.md exists, this check completes from the plan's declaration without running verify-slice-plan.",
   implemented:
     "build.md must say Built: yes, must not say Fix Needed: yes, and Route Back must say Needed: no.",
   buildVerified:
@@ -659,8 +659,17 @@ function validateCompletionPreconditions(state, current, verificationKey, option
   }
 
   if (verificationKey === "planVerified") {
-    requireReviewedVerificationArtifact(
+    requireSlicePlanVerified(
       "planVerified",
+      artifactFilePath(
+        options.statePath,
+        current.initiativeId,
+        "phases",
+        current.phaseId,
+        "slices",
+        current.sliceId,
+        "plan.md",
+      ),
       artifactFilePath(
         options.statePath,
         current.initiativeId,
@@ -670,7 +679,6 @@ function validateCompletionPreconditions(state, current, verificationKey, option
         current.sliceId,
         "plan-verification.md",
       ),
-      "Ready",
     );
   }
 
@@ -888,6 +896,71 @@ function requireSlicePlanReady(verificationKey, artifactPath) {
       `Cannot complete ${verificationKey} until ${artifactPath} has Route Back with Needed: no.`,
     );
   }
+  requireConsistentPlanVerificationTier(verificationKey, artifactPath, text);
+}
+
+const PLAN_TIER_TRIGGER_FIELDS = [
+  "Third-party surface",
+  "Solved domain",
+  "Schema or data risk",
+  "Novel pattern",
+  "Planner uncertainty",
+];
+
+function planVerificationTier(text) {
+  const section = markdownSection(text, "Plan Verification Tier");
+  if (!section) {
+    return { declared: false, tier: null, triggers: {} };
+  }
+  const tier = latestFieldValue(section, "Tier", "standard|deep") ?? null;
+  const triggers = Object.fromEntries(
+    PLAN_TIER_TRIGGER_FIELDS.map((field) => [field, latestFieldValue(section, field, "yes|no") ?? null]),
+  );
+  return { declared: true, tier, triggers };
+}
+
+function requireConsistentPlanVerificationTier(verificationKey, artifactPath, text) {
+  const { declared, tier, triggers } = planVerificationTier(text);
+  if (!declared) {
+    return;
+  }
+  if (tier !== "standard" && tier !== "deep") {
+    throw new Error(
+      `Cannot complete ${verificationKey} until ${artifactPath} has Plan Verification Tier with Tier: standard or deep.`,
+    );
+  }
+  if (tier === "standard") {
+    const unanswered = PLAN_TIER_TRIGGER_FIELDS.filter((field) => triggers[field] === null);
+    const triggered = PLAN_TIER_TRIGGER_FIELDS.filter((field) => triggers[field] === "yes");
+    if (unanswered.length > 0) {
+      throw new Error(
+        `Cannot complete ${verificationKey} until ${artifactPath} answers every Plan Verification Tier trigger (yes/no). Missing: ${unanswered.join(", ")}.`,
+      );
+    }
+    if (triggered.length > 0) {
+      throw new Error(
+        `Cannot complete ${verificationKey}: ${artifactPath} declares Tier: standard but answers yes to: ${triggered.join(", ")}. A triggered plan requires Tier: deep.`,
+      );
+    }
+  }
+}
+
+function requireSlicePlanVerified(verificationKey, planPath, verificationPath) {
+  if (hasFileContent(verificationPath)) {
+    requireReviewedVerificationArtifact(verificationKey, verificationPath, "Ready");
+    return;
+  }
+
+  const planText = hasFileContent(planPath) ? fs.readFileSync(planPath, "utf8") : "";
+  const { declared, tier } = planVerificationTier(planText);
+  if (declared && tier === "standard") {
+    requireSlicePlanReady(verificationKey, planPath);
+    return;
+  }
+
+  throw new Error(
+    `Cannot complete ${verificationKey} until ${verificationPath} exists and contains verification evidence, or ${planPath} declares Plan Verification Tier: standard with every trigger answered no.`,
+  );
 }
 
 function requireSliceBuildReady(verificationKey, artifactPath) {

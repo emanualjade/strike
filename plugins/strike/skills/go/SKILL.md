@@ -22,7 +22,9 @@ new initiative in this skill.
 - `research-phase/SKILL.md` - research and audit phase-level implementation facts before slicing.
 - `create-phase-slices/SKILL.md` - split one phase into cohesive buildable slices.
 - `plan-slice/SKILL.md` - plan one slice before coding, adding only narrow research deltas.
-- `verify-slice-plan/SKILL.md` - check that one slice plan is ready to build.
+- `verify-slice-plan/SKILL.md` - check that one slice plan is ready to build
+  (deep-tier plans; standard-tier plans complete `planVerified` from the
+  plan's tier declaration).
 - `build-slice/SKILL.md` - implement one verified slice plan.
 - `verify-slice-build/SKILL.md` - test, review, and close one built slice.
 - `verify-phase/SKILL.md` - confirm all slices satisfy the phase spec.
@@ -158,6 +160,22 @@ It is not hidden source of truth: decisions and constraints required for
 planning must be summarized in `decisions.md` and carried into
 `main-spec.md`. Later stages should scan this directory when it exists and
 read only files relevant to their current step.
+
+## Plan Verification Tier
+
+When `next-step` returns `verify-slice-plan`, read the current slice's
+`plan.md` tier declaration first. If it says `Tier: standard` with every
+trigger answered `no`, run `complete-check planVerified` directly; the helper
+validates the declaration and the build proceeds without a plan verification
+pass. Run the `verify-slice-plan` skill when the tier is `deep`, the tier
+section is missing, the helper refuses the declaration, or the user asks for
+plan verification. A `plan-verification.md` that already exists is
+authoritative: the gate validates it instead of the declaration.
+
+If `planVerified` was reopened to contest a standard-tier declaration, run
+`verify-slice-plan` in full instead of completing from the declaration again;
+the `plan-verification.md` it writes then becomes authoritative for this
+slice.
 
 ## Boundary Changes
 

@@ -20,7 +20,8 @@ Verify one phase and record phase verification.
   - each slice's `build-verification.md`
 - optional context when needed:
   - each slice's `plan.md`
-  - each slice's `plan-verification.md`
+  - each slice's `plan-verification.md` when it exists (standard-tier plans
+    have none; their tier declaration is in `plan.md`)
   - each slice's `build.md`
   - supporting artifacts relevant to this phase, when present
   - optional main spec, decisions, or repo context

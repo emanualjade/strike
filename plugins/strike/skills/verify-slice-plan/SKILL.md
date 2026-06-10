@@ -10,6 +10,14 @@ allowed-tools: Read Write Edit MultiEdit Bash Grep Glob WebFetch WebSearch Agent
 
 Verify one slice plan is ready to build.
 
+Standard-tier plans normally skip this verifier: when `plan.md` declares
+`Plan Verification Tier: standard` with every trigger answered `no`, `go`
+completes `planVerified` from that declaration and this skill does not run.
+Run the full verification below when the tier is `deep`, the declaration is
+missing or contested, or the user asks for it. Once this verifier writes
+`plan-verification.md`, that artifact becomes the gate's source of truth for
+the slice.
+
 ## Inputs
 
 - Required verification packet:

@@ -1,6 +1,6 @@
 {
   "name": "strike",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "Strike workflow plus focused planning utilities for agent-assisted delivery.",
   "author": {
     "name": "Emanual Jade"

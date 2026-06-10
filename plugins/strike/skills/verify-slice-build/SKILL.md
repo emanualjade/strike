@@ -48,6 +48,8 @@ Verify one slice build and record build verification.
    `slice.md`.
 2. Confirm the slice is eligible for build verification:
    - workflow state or `plan-verification.md` shows the plan was ready
+     (standard-tier plans have no `plan-verification.md`; their `plan.md`
+     tier declaration completed `planVerified`)
    - `build.md` says `Built: yes`
 3. Read required user-provided customization:
    - `strike/user-guidance/review-lenses/global.md`
@@ -455,6 +457,13 @@ Reason:
 
 - When verification fails because the implementation, tests, evidence, or local
   artifacts can be repaired inside accepted scope, write `Fix Needed: yes`.
+- When the changed code touches a plan-tier trigger surface (third-party
+  surface, solved domain, schema or data risk, novel pattern) but `plan.md`
+  declared `Plan Verification Tier: standard`, record the misdeclared tier.
+  If the build otherwise verifies, record it as `Follow-Up`; this verifier's
+  own audits cover the touched surface. If verification fails with issues
+  that plan verification would have caught, route back to `planCreated` so
+  the plan is re-tiered and verified before rebuilding.
 - If the fix would edit phase `research.md` or `research-audit.md`, route back
   to `phaseResearchComplete` instead so the phase research audit can be rerun.
 - When verification fails because phase research is missing, weak, contradicted,

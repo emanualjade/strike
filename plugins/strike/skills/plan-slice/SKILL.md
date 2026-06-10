@@ -122,6 +122,22 @@ and how it will be verified.
   unstarted slice are one capability with one verification story. Merge only
   absorbs later slices with no completed checks; never merge into completed
   work.
+- Declare the plan verification tier from what this plan actually touches.
+  Answer each trigger honestly:
+  - `Third-party surface`: any third-party API, package, SDK, framework
+    feature, or provider/model.
+  - `Solved domain`: a mature solved domain such as payments, refunds,
+    discounts, billing, accounting, taxes, auth, sessions, or permissions.
+  - `Schema or data risk`: schema, migrations, persistence shape, or
+    destructive data operations.
+  - `Novel pattern`: an implementation pattern with no close repo precedent.
+  - `Planner uncertainty`: open questions, boundary concerns, or material
+    uncertainty about the approach.
+  Any `yes` requires `Tier: deep`, and `verify-slice-plan` runs in full.
+  `Tier: standard` is valid only when every trigger is honestly `no`; Strike
+  then completes `planVerified` from this declaration and building starts
+  directly, while `verify-slice-build` still verifies everything against the
+  real code. When unsure about any trigger, answer `yes`.
 - If planning finds unplanned enabling work that directly blocks this slice,
   keep the workflow moving at the smallest appropriate level. Plan a small,
   local, low-risk enabling repair inside the current slice when it only makes
@@ -185,6 +201,15 @@ accurate, secure, and not over-engineered.
 ## Open Questions
 - None.
 
+## Plan Verification Tier
+Tier: standard / deep
+Third-party surface: yes / no
+Solved domain: yes / no
+Schema or data risk: yes / no
+Novel pattern: yes / no
+Planner uncertainty: yes / no
+Reason:
+
 ## Route Back
 Needed: yes / no
 Command: None / reopen-phase-check / reopen-check
@@ -237,6 +262,10 @@ Absorbed slices:
   cases, blast radius, and unresolved assumptions, tighten it before calling it build-ready.
 - If a material research gap belongs to the phase rather than this slice, route
   back to `phaseResearchComplete` instead of guessing.
+- Declare the verification tier honestly; it decides whether
+  `verify-slice-plan` runs. A misdeclared `standard` tier surfaces at build
+  verification and routes the slice back here. Open questions or a boundary
+  recommendation always mean `Planner uncertainty: yes` and `Tier: deep`.
 - Use verification categories from `references/verification-evidence.md`; do not
   collapse them into one generic "test" bucket.
 - Do not default to a full test suite. Name focused tests and commands for the

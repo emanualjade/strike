@@ -1279,6 +1279,16 @@ function validateStrikeContract() {
   requireText(planText, "unregister them with `remove-slice`", planPath);
   requireText(planText, "stable repo paths, commands, constraints", planPath);
   requireText(planText, "tighten it before calling it build-ready", planPath);
+  requireText(planText, "Declare the plan verification tier from what this plan actually touches", planPath);
+  requireText(planText, "When unsure about any trigger, answer `yes`", planPath);
+  requireText(planText, "## Plan Verification Tier", planPath);
+  requireText(planText, "Tier: standard / deep", planPath);
+  requireText(planText, "Third-party surface: yes / no", planPath);
+  requireText(planText, "Solved domain: yes / no", planPath);
+  requireText(planText, "Schema or data risk: yes / no", planPath);
+  requireText(planText, "Novel pattern: yes / no", planPath);
+  requireText(planText, "Planner uncertainty: yes / no", planPath);
+  requireText(planText, "Declare the verification tier honestly", planPath);
 
   requireText(verifyText, "## Research Basis", verifyPath);
   requireText(verifyText, "## Issues", verifyPath);
@@ -1308,6 +1318,7 @@ function validateStrikeContract() {
   requireText(verifyText, "read `strike/initiatives/<initiative-id>/supporting-artifacts/` when the", verifyPath);
   requireText(verifyText, "inspect focused repo paths when local pattern claims", verifyPath);
   requireText(verifyText, "Confirm the research basis", verifyPath);
+  requireText(verifyText, "Standard-tier plans normally skip this verifier", verifyPath);
   requireText(verifyText, "Run the required plan review batch described below in parallel", verifyPath);
   requireText(verifyText, "Synthesize packet evidence, optional context, and review-agent findings", verifyPath);
   requireText(verifyText, "Review results returned: yes / no", verifyPath);
@@ -1453,8 +1464,9 @@ function validateStrikeContract() {
   requireText(buildText, "strike/user-guidance/implementation-discipline/build-slice.md", buildPath);
   requireText(buildText, "Treat `plan.md` as the primary build handoff", buildPath);
   requireText(buildText, "Read required user-provided customization and apply the relevant guidance", buildPath);
-  requireText(buildText, "If `plan-verification.md` does not say `Ready: yes`, write `Built: no`", buildPath);
-  requireText(buildText, "route back to `verify-slice-plan` and do not edit implementation files", buildPath);
+  requireText(buildText, "Confirm the plan is verified. For a standard-tier plan, workflow state", buildPath);
+  requireText(buildText, "if `plan-verification.md` does not say `Ready: yes`,\n  write `Built: no`", buildPath);
+  requireText(buildText, "route back to `verify-slice-plan` and do not edit\n  implementation files", buildPath);
   requireText(buildText, "plan's `Development Plan`, `Research And Artifacts Used`,\n  `Codebase Patterns`, `System Touchpoints`, `Blast Radius`, `Verification Plan`", buildPath);
   requireText(buildText, "smallest complete path", buildPath);
   requireText(buildText, "Start from the repo structures and precedents selected in the plan's\n  `Codebase Patterns`", buildPath);
@@ -1724,6 +1736,8 @@ function validateStrikeContract() {
   requireText(verifyBuildText, "Do not run Browser Checks when the pre-browser gate has accepted-scope", verifyBuildPath);
   requireText(verifyBuildText, "keep browser evidence not run because the pre-browser\n  gate failed", verifyBuildPath);
   requireText(verifyBuildText, "### Fix Or Route Back", verifyBuildPath);
+  requireText(verifyBuildText, "When the changed code touches a plan-tier trigger surface", verifyBuildPath);
+  requireText(verifyBuildText, "record the misdeclared tier", verifyBuildPath);
   requireText(verifyBuildText, "If the fix would edit phase `research.md` or `research-audit.md`, route back", verifyBuildPath);
   requireText(verifyBuildText, "route with `Command: reopen-phase-check`", verifyBuildPath);
   requireText(verifyBuildText, "`Check: phaseResearchComplete`", verifyBuildPath);
@@ -1921,6 +1935,8 @@ function validateStrikeContract() {
   requireText(goText, "The completion receipt is not a\nworkflow position", goPath);
   requireText(goText, "read implementation discipline `global.md` plus\ntheir own stage file", goPath);
   requireText(goText, "Verifiers also read review-lenses `global.md` plus their own stage file", goPath);
+  requireText(goText, "## Plan Verification Tier", goPath);
+  requireText(goText, "run `complete-check planVerified` directly", goPath);
 
   const newInitiativePath = "plugins/strike/skills/new-initiative/SKILL.md";
   const newInitiativeText = fs.readFileSync(path.join(root, newInitiativePath), "utf8");

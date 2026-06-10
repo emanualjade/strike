@@ -97,7 +97,9 @@ and output paths.
 - `create-phase-slices`: split one phase into implementation slices.
 - `plan-slice`: create one concrete implementation plan, adding only narrow
   slice-specific research deltas when needed.
-- `verify-slice-plan`: check that a slice plan is ready to build.
+- `verify-slice-plan`: check that a slice plan is ready to build. Runs for
+  deep-tier plans; a plan that declares the standard verification tier (no
+  risk triggers) completes this stage from its declaration.
 - `build-slice`: implement one planned slice.
 - `verify-slice-build`: verify one built slice.
 - `fix`: fix issues from a failed verification pass, then return to the same verifier.

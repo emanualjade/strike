@@ -2793,6 +2793,247 @@ Reason: This note is unrelated and must not count as route-back.
   }
 }
 
+function tierPlanFixture(tierSection) {
+  return `# Slice Plan
+
+## Development Plan
+Fixture plan.
+
+## Boundary Recommendation
+Needed: no
+Type: None
+Reason: Fixture slice is buildable.
+Replacement slices:
+- None.
+Absorbed slices:
+- None.
+
+${tierSection}
+
+## Route Back
+Needed: no
+Command: None
+Phase: None
+Slice: None
+Check: None
+Reason: None.
+`;
+}
+
+function testPlanVerificationTierGates() {
+  const planPath = "strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan.md";
+  const verificationPath =
+    "strike/initiatives/gallery/phases/phase-01/slices/slice-01/plan-verification.md";
+
+  {
+    // Standard tier with every trigger no completes planVerified from the
+    // declaration, without a plan-verification.md.
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    writeArtifact(
+      repo,
+      planPath,
+      tierPlanFixture(`## Plan Verification Tier
+Tier: standard
+Third-party surface: no
+Solved domain: no
+Schema or data risk: no
+Novel pattern: no
+Planner uncertainty: no
+Reason: Repo-local fixture change with close precedent.`),
+    );
+
+    complete(repo, "planCreated", { skill: "verify-slice-plan" });
+    const receipt = run(repo, localHelper, ["complete-check", "planVerified"]);
+    assertNextStep(receipt, {
+      status: "recorded",
+      phaseId: "phase-01",
+      sliceId: "slice-01",
+      skill: "verify-slice-plan",
+      completedCheck: "planVerified",
+    });
+    assert.ok(!fs.existsSync(path.join(repo, verificationPath)));
+    const nextStep = run(repo, localHelper, ["next-step"]);
+    assertNextStep(nextStep, {
+      phaseId: "phase-01",
+      sliceId: "slice-01",
+      skill: "build-slice",
+      missing: ["implemented"],
+    });
+  }
+
+  {
+    // Standard tier with a yes trigger is refused at planCreated.
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    writeArtifact(
+      repo,
+      planPath,
+      tierPlanFixture(`## Plan Verification Tier
+Tier: standard
+Third-party surface: no
+Solved domain: yes
+Schema or data risk: no
+Novel pattern: no
+Planner uncertainty: no
+Reason: Fixture misdeclared standard tier.`),
+    );
+
+    runFail(repo, localHelper, ["complete-check", "planCreated"], /Tier: deep/);
+  }
+
+  {
+    // Standard tier with an unanswered trigger is refused at planCreated.
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    writeArtifact(
+      repo,
+      planPath,
+      tierPlanFixture(`## Plan Verification Tier
+Tier: standard
+Third-party surface: no
+Solved domain: no
+Novel pattern: no
+Planner uncertainty: no
+Reason: Fixture missing a trigger answer.`),
+    );
+
+    runFail(
+      repo,
+      localHelper,
+      ["complete-check", "planCreated"],
+      /Schema or data risk/,
+    );
+  }
+
+  {
+    // An invalid tier value is refused at planCreated.
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    writeArtifact(
+      repo,
+      planPath,
+      tierPlanFixture(`## Plan Verification Tier
+Tier: bogus
+Reason: Fixture invalid tier.`),
+    );
+
+    runFail(
+      repo,
+      localHelper,
+      ["complete-check", "planCreated"],
+      /Tier: standard or deep/,
+    );
+  }
+
+  {
+    // Deep tier still requires plan-verification.md.
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    writeArtifact(
+      repo,
+      planPath,
+      tierPlanFixture(`## Plan Verification Tier
+Tier: deep
+Third-party surface: yes
+Solved domain: no
+Schema or data risk: no
+Novel pattern: no
+Planner uncertainty: no
+Reason: Fixture touches a provider SDK.`),
+    );
+
+    complete(repo, "planCreated", { skill: "verify-slice-plan" });
+    runFail(
+      repo,
+      localHelper,
+      ["complete-check", "planVerified"],
+      /plan-verification\.md/,
+    );
+  }
+
+  {
+    // A legacy plan without a tier section still requires plan-verification.md.
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    writeArtifact(repo, planPath, tierPlanFixture("## Why This Plan\nFixture."));
+
+    complete(repo, "planCreated", { skill: "verify-slice-plan" });
+    runFail(
+      repo,
+      localHelper,
+      ["complete-check", "planVerified"],
+      /plan-verification\.md/,
+    );
+  }
+
+  {
+    // An existing plan-verification.md is authoritative over a standard-tier
+    // declaration: a failing verification blocks planVerified.
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    writeArtifact(
+      repo,
+      planPath,
+      tierPlanFixture(`## Plan Verification Tier
+Tier: standard
+Third-party surface: no
+Solved domain: no
+Schema or data risk: no
+Novel pattern: no
+Planner uncertainty: no
+Reason: Fixture standard tier with a contested verification.`),
+    );
+
+    complete(repo, "planCreated", { skill: "verify-slice-plan" });
+
+    writeArtifact(
+      repo,
+      verificationPath,
+      `# Slice Plan Verification
+
+## Read-Only Review
+Review results returned: yes
+Summary: Fixture review found blocking issues.
+
+## Build Readiness
+Ready: no
+Reason: Fixture verification failed.
+Fix Needed: yes
+
+## Route Back
+Needed: no
+Command: None
+Phase: None
+Slice: None
+Check: None
+Reason: None.
+`,
+    );
+
+    runFail(
+      repo,
+      localHelper,
+      ["complete-check", "planVerified"],
+      /plan-verification\.md/,
+    );
+  }
+}
+
 function testGateHintsReturnedByNextStep() {
   const repo = tempRepo();
   run(repo, helper, ["init", "gallery", "Gallery"]);
@@ -3211,6 +3452,7 @@ testOldPhaseAndSliceWorkflowNormalizesPhaseResearchGate();
 testRouteBackCommandContract();
 testReviewedVerifierRequiresReturnedReviewResults();
 testPlanAndBuildCompletionPreconditions();
+testPlanVerificationTierGates();
 testGateHintsReturnedByNextStep();
 testRemoveSliceForMerge();
 testReopenMarksReviewedArtifactsStale();
