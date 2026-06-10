@@ -2793,6 +2793,28 @@ Reason: This note is unrelated and must not count as route-back.
   }
 }
 
+function testGateHintsReturnedByNextStep() {
+  const repo = tempRepo();
+  run(repo, helper, ["init", "gallery", "Gallery"]);
+  const localHelper = workspaceHelper(repo);
+
+  const fresh = run(repo, localHelper, ["next-step"]);
+  assert.deepEqual(Object.keys(fresh.gateHints), fresh.missing);
+  assert.match(fresh.gateHints.ideaRefined, /User Checkpoint/);
+
+  const planRepo = tempRepo();
+  bootstrapTwoSliceWorkflow(planRepo);
+  const planStep = run(planRepo, workspaceHelper(planRepo), ["next-step"]);
+  assert.deepEqual(Object.keys(planStep.gateHints), planStep.missing);
+  assert.match(planStep.gateHints.planCreated, /Boundary Recommendation/);
+
+  complete(planRepo, "planCreated", { skill: "verify-slice-plan" });
+  complete(planRepo, "planVerified", { skill: "build-slice" });
+  complete(planRepo, "implemented", { skill: "verify-slice-build" });
+  const buildStep = run(planRepo, workspaceHelper(planRepo), ["next-step"]);
+  assert.match(buildStep.gateHints.buildVerified, /Post-browser visual\/browser lenses/);
+}
+
 function testRemoveSliceForMerge() {
   {
     const repo = tempRepo();
@@ -3189,6 +3211,7 @@ testOldPhaseAndSliceWorkflowNormalizesPhaseResearchGate();
 testRouteBackCommandContract();
 testReviewedVerifierRequiresReturnedReviewResults();
 testPlanAndBuildCompletionPreconditions();
+testGateHintsReturnedByNextStep();
 testRemoveSliceForMerge();
 testReopenMarksReviewedArtifactsStale();
 testRouteBackInvalidatesDownstreamScopes();

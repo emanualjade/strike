@@ -2,6 +2,24 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.12.0 - 2026-06-09
+
+- Made the state helper the single source of workflow law: `next-step` now
+  returns a `gateHints` entry describing what each missing check's artifact
+  must say, and `complete-check` remains the enforcement point with specific
+  refusal reasons.
+- Rewrote the `go` orchestrator from gate recitals to judgment guidance,
+  removing the prose duplicates of helper-enforced gates, the per-skill
+  handoff catalog, and the common route-back list, while keeping the
+  orchestration spine: step discipline, the exclusive gate, split/merge
+  application, the failed-verification loop, the slice git checkpoint, and
+  continuation behavior.
+- Trimmed completion recitals from `build-slice`, `verify-slice-plan`,
+  `verify-slice-build`, `verify-phase`, and `verify-main-spec` down to
+  one-line `complete-check` pointers; all judgment content is unchanged.
+- Realigned repo validation so gate law is protected by the state helper's
+  behavioral tests and validator pins protect judgment prose.
+
 ## 0.11.0 - 2026-06-09
 
 - Recalibrated slice sizing around slice economics: every slice carries a full

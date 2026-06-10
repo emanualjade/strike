@@ -206,10 +206,8 @@ Reason:
   limit, upload/storage issue, or dataflow mismatch as a novel failure until you
   have searched the repo for similar errors, patterns, adapters, and examples.
   Record the precedent used, or record that none was found.
-- When `Built: yes`, write `Needed: no`, `Command: None`, `Phase: None`,
-  `Slice: None`, and `Check: None`.
-- After writing `Built: yes`, Strike can run
-  `node strike/scripts/state.mjs complete-check implemented`.
+- `complete-check implemented` validates `build.md`; trust its gate error if
+  it refuses.
 - Do not claim verification.
 - Preserve unrelated user work.
 - Follow the repo's package manager, test, security, and editing rules.

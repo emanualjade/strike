@@ -322,10 +322,8 @@ Next:
   write `Fix Needed: yes`.
 - Route back only when a real decision, scope change, or untrustworthy earlier
   artifact cannot honestly be repaired by `fix`.
-- When `Ready: yes`, write `Fix Needed: no`, `Needed: no`, `Command: None`,
-  `Phase: None`, `Slice: None`, and `Check: None`.
-- After writing `Ready: yes` and `Review results returned: yes`, Strike can run
-  `node strike/scripts/state.mjs complete-check allPhasesVerified`.
+- `complete-check allPhasesVerified` validates this artifact and marks the
+  initiative complete; trust its gate error if it refuses.
 - Do not hide accepted-scope defects in follow-up work.
 - Keep automated evidence, E2E tests, Browser Clickthrough, and Visual Evidence
   separate when summarizing final readiness.

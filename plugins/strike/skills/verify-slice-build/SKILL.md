@@ -466,10 +466,8 @@ Reason:
 
 ### Completion
 
-- When `Verified: yes`, write `Fix Needed: no`, `Needed: no`,
-  `Command: None`, `Phase: None`, `Slice: None`, and `Check: None`.
-- After writing `Verified: yes` and `Review results returned: yes`, Strike can run
-  `node strike/scripts/state.mjs complete-check buildVerified`.
+- `complete-check buildVerified` validates this artifact; trust its gate error
+  if it refuses.
 - Do not start another slice from inside `verify-slice-build`; this verifier
   only completes the current slice's build verification. After this verifier
   completes, hand control back to `go` inside the same run, so `go` can run

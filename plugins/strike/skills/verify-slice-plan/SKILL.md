@@ -300,7 +300,5 @@ Reason:
 
 ### Completion
 
-- When `Ready: yes`, write `Fix Needed: no`, `Needed: no`, `Command: None`,
-  `Phase: None`, `Slice: None`, and `Check: None`.
-- After writing `Ready: yes` and `Review results returned: yes`, Strike can run
-  `node strike/scripts/state.mjs complete-check planVerified`.
+- `complete-check planVerified` validates this artifact; trust its gate error
+  if it refuses.

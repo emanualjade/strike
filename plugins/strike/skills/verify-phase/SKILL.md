@@ -294,10 +294,8 @@ Reason:
   `Fix Needed: yes`.
 - Route back only when a real decision, scope change, or untrustworthy earlier
   artifact cannot honestly be repaired by `fix`.
-- When `Ready: yes`, write `Fix Needed: no`, `Needed: no`, `Command: None`,
-  `Slice: None`, and `Check: None`.
-- After writing `Ready: yes` and `Review results returned: yes`, Strike can run
-  `node strike/scripts/state.mjs complete-check allSlicesVerified`.
+- `complete-check allSlicesVerified` validates this artifact; trust its gate
+  error if it refuses.
 - Do not start another phase from inside `verify-phase`; return control to `go`
   so the orchestrator can run `next-step` and continue if another phase is ready.
 - Do not verify the whole main spec.

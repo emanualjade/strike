@@ -208,6 +208,35 @@ export const SLICE_WORKFLOW = [
   ["verify-slice-build", ["buildVerified"]],
 ];
 
+export const GATE_HINTS = {
+  ideaRefined:
+    "idea.md must have ## User Checkpoint with a non-empty User response and Ready to continue: yes.",
+  initiativeResearchComplete:
+    "research/scope.md needs a user checkpoint with Ready to research: yes; research/index.md needs Ready for grill: yes; every approved item needs a non-empty report and an audit with Review results returned: yes, Verdict pass or accepted-risk, and Must Fix count: 0.",
+  decisionsResolved:
+    "decisions.md needs ## Decision Review with Review results returned: yes, Verdict pass or accepted-risk, and Must Fix count: 0, followed by a later ## User Checkpoint with a non-empty User response and Ready to continue: yes.",
+  specCreated: "main-spec.md must exist with content.",
+  phasesCreated:
+    "development-plan.md and each phase stub must exist, and every planned phase must be registered with add-phase.",
+  phaseSpecCreated: "the phase's phase-spec.md must exist with content.",
+  phaseResearchComplete:
+    "the phase's research.md must say Ready for slicing: yes and research-audit.md must say Review results returned: yes, Verdict pass or accepted-risk, and Must Fix count: 0.",
+  slicesCreated:
+    "each planned slice needs a slice.md stub and must be registered with add-slice.",
+  planCreated:
+    "plan.md must say Boundary Recommendation Needed: no (legacy Split Recommendation accepted) and Route Back Needed: no.",
+  planVerified:
+    "plan-verification.md must say Review results returned: yes, Ready: yes, Fix Needed: no, and Route Back Needed: no.",
+  implemented:
+    "build.md must say Built: yes, must not say Fix Needed: yes, and Route Back must say Needed: no.",
+  buildVerified:
+    "build-verification.md must say Review results returned: yes, Verified: yes, Fix Needed: no, Route Back Needed: no, and Post-browser visual/browser lenses: pass or not run.",
+  allSlicesVerified:
+    "the phase verification.md must say Review results returned: yes, Ready: yes, Fix Needed: no, and Route Back Needed: no.",
+  allPhasesVerified:
+    "the initiative verification.md must say Review results returned: yes, Ready: yes, Fix Needed: no, and Route Back Needed: no.",
+};
+
 const INITIATIVE_FINAL_SKILLS = new Set(["verify-main-spec"]);
 const PHASE_FINAL_SKILLS = new Set(["verify-phase"]);
 const INITIATIVE_UPSTREAM_CHECKS = new Set([
@@ -1677,6 +1706,13 @@ function firstIncomplete(workflow, skipSkills, scope, onlySkills = null) {
         ...scope,
         skill: item.skill,
         missing,
+        gateHints: Object.fromEntries(
+          missing.map((checkName) => [
+            checkName,
+            GATE_HINTS[checkName] ??
+              "complete-check validates this step's artifact and explains any refusal.",
+          ]),
+        ),
       };
     }
   }
