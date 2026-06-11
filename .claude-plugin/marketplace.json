@@ -4,13 +4,13 @@
     "name": "Emanual Jade"
   },
   "description": "A Claude Code marketplace for the Strike workflow and planning utilities plugin.",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "plugins": [
     {
       "name": "strike",
       "source": "./plugins/strike",
       "description": "Strike workflow plus focused planning utilities for agent-assisted delivery.",
-      "version": "0.14.0",
+      "version": "0.15.0",
       "author": {
         "name": "Emanual Jade"
       },

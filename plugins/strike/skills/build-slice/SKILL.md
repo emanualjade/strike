@@ -98,6 +98,11 @@ Implement one planned slice.
   `verify-slice-build` instead of claiming final browser proof.
 - Record changed files, verification evidence by category, and important
   implementation notes in `build.md`.
+- When the build teaches a durable lesson about a package, framework,
+  provider, or tooling surface — behavior that was expensive to discover and
+  likely to recur across initiatives — write it back to `strike/research/`
+  following the plugin's `references/research-library.md`. Keep slice-specific
+  reasoning in `build.md`.
 - Declare the build verification tier in `build.md` from the actually-changed
   code. Answer each trigger honestly:
   - `Third-party surface`: the change uses a third-party API, package, SDK,

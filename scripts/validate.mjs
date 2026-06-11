@@ -1376,7 +1376,8 @@ function validateStrikeContract() {
   requireText(canonicalReadinessAuditText, "mark it `Must Fix`", canonicalReadinessAuditPath);
   requireText(canonicalReadinessAuditText, "## Trigger", canonicalReadinessAuditPath);
   requireText(canonicalReadinessAuditText, "required, not optional", canonicalReadinessAuditPath);
-  requireText(canonicalReadinessAuditText, "Actually fetch\nand read the official docs and package/generated types", canonicalReadinessAuditPath);
+  requireText(canonicalReadinessAuditText, "Treat audited\ninitiative/phase research and audited library entries as trusted baseline", canonicalReadinessAuditPath);
+  requireText(canonicalReadinessAuditText, "Actually fetch and read the official docs and\npackage/generated types for the claims the plan adds beyond that baseline", canonicalReadinessAuditPath);
   requireText(planReadinessAuditText, "Static / Build Checks, Unit / Component / Integration\n  Tests, E2E Tests, Browser Clickthrough, Visual Evidence", planReadinessAuditPath);
   requireText(planReadinessAuditText, "similar-precedent evidence", planReadinessAuditPath);
   requireText(planReadinessAuditText, "repo-pattern-based home", planReadinessAuditPath);
@@ -1511,6 +1512,9 @@ function validateStrikeContract() {
   requireText(buildText, "Plan amendments: yes / no", buildPath);
   requireText(buildText, "Builder uncertainty: yes / no", buildPath);
   requireText(buildText, "When unsure about any trigger, answer `yes`", buildPath);
+  requireText(buildText, "write it back to `strike/research/`", buildPath);
+  requireText(fixText, "write it back to\n  `strike/research/`", fixPath);
+  requireText(verifyBuildText, "When browser proof teaches a durable automation or tooling lesson", verifyBuildPath);
 
   requireText(verifyBuildText, "Required verification packet:", verifyBuildPath);
   requireText(verifyBuildText, "- `build.md`", verifyBuildPath);
@@ -1636,6 +1640,7 @@ function validateStrikeContract() {
   requireText(readinessRiskAuditText, "Follow `references/review-agents/output-discipline.md`", readinessRiskAuditPath);
   requireText(canonicalImplementationAuditText, "Canonical Implementation Review", canonicalImplementationAuditPath);
   requireText(canonicalImplementationAuditText, "official docs or primary sources", canonicalImplementationAuditPath);
+  requireText(canonicalImplementationAuditText, "Treat audited initiative/phase research and\naudited library entries as trusted baseline", canonicalImplementationAuditPath);
   requireText(canonicalImplementationAuditText, "## Trigger", canonicalImplementationAuditPath);
   requireText(canonicalImplementationAuditText, "required, not optional", canonicalImplementationAuditPath);
   requireText(canonicalImplementationAuditText, "Stripe, Shopify, or Amazon", canonicalImplementationAuditPath);

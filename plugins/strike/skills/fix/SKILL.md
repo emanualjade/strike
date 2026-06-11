@@ -62,6 +62,9 @@ Fix issues from a failed Strike verification pass.
   instead of broadening the work.
 - Run focused checks that prove the repair, plus any repo-level check that is
   appropriate for the changed surface.
+- When diagnosing or repairing the failure teaches a durable lesson about a
+  package, framework, provider, or tooling surface, write it back to
+  `strike/research/` following the plugin's `references/research-library.md`.
 - When the repair requires a real user, product, data, security, accounting,
   scope, or architecture decision, write `Fixed: no`, explain the needed
   decision, and return to the verifier or route-back flow without inventing the

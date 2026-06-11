@@ -285,6 +285,11 @@ near the feature, inspecting DOM, running curl, reading code, or taking
 screenshots without using the feature does not satisfy Browser Clickthrough.
 Automated tests and Browser Clickthrough are separate gates.
 
+When browser proof teaches a durable automation or tooling lesson, such as a
+library that only responds to specific input methods under automation, write
+it back to `strike/research/` following the plugin's
+`references/research-library.md`.
+
 If the feature cannot be used successfully, write `Verified: no`, record the
 blocker and evidence, and route to `fix` unless the blocker requires upstream
 research/planning. Treat the browser as available: if one local URL form or

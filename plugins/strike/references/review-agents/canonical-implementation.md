@@ -19,10 +19,13 @@ precedent, and records the skip with its reason and the precedent file(s).
 ## Mandate
 
 Check whether the implementation uses the official, idiomatic, recommended way
-to solve this class of problem. Actually fetch and read
-the official docs or primary sources and the package/generated types for each
-touched surface; do not accept a reasonable-sounding implementation as
-canonical.
+to solve this class of problem. Treat audited initiative/phase research and
+audited library entries as trusted baseline: check the built code against
+those claims and the package/generated types, and actually fetch and read the
+official docs or primary sources for surfaces and claims the baseline does not
+cover or that could plausibly have changed. Do not accept a
+reasonable-sounding implementation as canonical on the plan's or build's own
+claims.
 
 ## Checks
 

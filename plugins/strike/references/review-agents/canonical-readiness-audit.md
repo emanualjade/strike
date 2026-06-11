@@ -23,9 +23,12 @@ file(s).
 Check whether the plan uses the official, idiomatic, recommended way to solve
 this class of problem. This is a plan-time audit: verify that the plan is
 grounded in official docs, audited research, generated/package types, framework
-conventions, and existing repo precedent before build begins. Actually fetch
-and read the official docs and package/generated types for each touched
-surface; do not judge canonicality from the plan's own claims.
+conventions, and existing repo precedent before build begins. Treat audited
+initiative/phase research and audited library entries as trusted baseline; do
+not re-verify claims they already verified unless a claim the plan leans on
+could plausibly have changed. Actually fetch and read the official docs and
+package/generated types for the claims the plan adds beyond that baseline;
+never judge canonicality from the plan's own unaudited claims.
 
 ## Checks
 

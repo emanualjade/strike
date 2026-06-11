@@ -2,6 +2,21 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.15.0 - 2026-06-11
+
+- Closed the build-discoveries gap in the research library loop: `build-slice`,
+  `fix`, and `verify-slice-build` (browser proof) now write durable
+  package/framework/provider/tooling lessons back to `strike/research/`
+  following `references/research-library.md`, so facts learned from real code
+  and real browsers are findable by future initiatives instead of dying in
+  slice artifacts.
+- Scoped the canonical audits to stop triple-verifying audited research:
+  `canonical-readiness-audit` and `canonical-implementation` now treat audited
+  initiative/phase research and audited library entries as trusted baseline,
+  fetching official docs and package/generated types for the claims the
+  plan/build adds beyond that baseline or that could plausibly have changed —
+  never trusting the plan's or build's own unaudited claims.
+
 ## 0.14.0 - 2026-06-11
 
 - Made slice build verification risk-proportional with a `Build Verification
