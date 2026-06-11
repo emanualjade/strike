@@ -2,6 +2,31 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.16.0 - 2026-06-11
+
+- Codified the adjudication protocol: rejecting a review-agent `Must Fix` now
+  requires a written evidence block in the verification artifact's
+  `### Rejected Findings` — the finding's claim, concrete counter-evidence
+  (repo file paths, official sources, or audited research), the disposition,
+  and residual risk. An unevidenced rejection is invalid and the finding stays
+  open.
+- Added `references/review-agents/prompt-template.md`, a slot-based skeleton
+  for launching review agents uniformly, and `next-step` now returns
+  `packetPaths` — the current step's verification-packet file list — ready to
+  paste into agent prompts.
+- Scoped re-verification after `fix`: the fix report's `## Return` names the
+  re-verification scope (failed evidence categories plus the repair's changed
+  surfaces), and `verify-slice-build` re-runs that scope while trusting prior
+  recorded evidence for untouched categories, escalating to a full re-pass
+  when the fix reached beyond the failed scope.
+- Made browser evidence durable: the Visual Evidence template is now a
+  per-screenshot manifest (file, viewport, one line naming what it proved)
+  with screenshot paths explicitly marked ephemeral; the manifest line is the
+  durable record.
+- Full-suite runs now record their named justification in the evidence, in
+  both `build-slice` and `verify-slice-build`, closing the free "caution
+  justifies everything" escape hatch.
+
 ## 0.15.0 - 2026-06-11
 
 - Closed the build-discoveries gap in the research library loop: `build-slice`,

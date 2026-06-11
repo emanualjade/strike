@@ -40,6 +40,7 @@ the slice.
     - `strike/user-guidance/implementation-discipline/global.md`
     - `strike/user-guidance/implementation-discipline/verify-slice-plan.md`
 - Bundled Strike review-agent instructions. Load only for launched subagents:
+  - `references/review-agents/prompt-template.md`
   - `references/review-agents/output-discipline.md`
   - `references/review-agents/plan-implementation-readiness-audit.md`
   - `references/review-agents/canonical-readiness-audit.md`
@@ -99,7 +100,9 @@ Review agents are read-only. They return findings only; they do not edit files,
 fix issues, update state, build the slice, or decide whether the plan is ready.
 Before launching review agents, the verifier reads bundled
 `references/review-agents/output-discipline.md` and includes that output
-contract in each review-agent prompt. Before launching a built-in SUBAGENT, the
+contract in each review-agent prompt. Compose each review-agent prompt from
+the bundled `references/review-agents/prompt-template.md`, filling every slot;
+`next-step` returns the current slice's packet paths ready to paste. Before launching a built-in SUBAGENT, the
 verifier also loads the named bundled `references/review-agents/` rubric from
 the installed Strike plugin and includes the rubric content or absolute plugin
 path in that subagent's prompt. When launching
@@ -161,6 +164,12 @@ review agent to follow the bundled output discipline: return every `Must Fix`, r
 only material `Follow-Up` findings, group repeated examples, avoid low-value
 nits, and avoid restating the rubric.
 
+Rejecting a review-agent `Must Fix` finding requires written adjudication
+evidence in the artifact's `### Rejected Findings`: the finding's claim, the
+concrete counter-evidence (repo file paths, official sources, or audited
+research), the disposition, and any residual risk. An unevidenced rejection is
+invalid; treat the finding as open.
+
 ## Output
 
 Write the slice plan verification to the current slice's
@@ -201,6 +210,13 @@ Review results returned: yes / no
 
 ### Accepted Risk
 - None.
+
+### Rejected Findings
+- Finding:
+  Counter-evidence:
+  Disposition:
+  Residual risk:
+- None. Rejecting a review-agent `Must Fix` requires this evidence block.
 
 ## Build Readiness
 Ready: yes / no

@@ -1859,6 +1859,7 @@ function withArtifacts(current) {
   return {
     ...current,
     artifacts: artifactPathsForCurrent(current),
+    packetPaths: packetPathsForCurrent(current),
   };
 }
 
@@ -1904,6 +1905,45 @@ export function artifactPathsForCurrent(current) {
       return phaseRoot ? [`${phaseRoot}/verification.md`] : [];
     case "verify-main-spec":
       return [`${initiativeRoot}/verification.md`];
+    default:
+      return [];
+  }
+}
+
+export function packetPathsForCurrent(current) {
+  if (current.status !== "active") return [];
+
+  const initiativeRoot = `${WORKSPACE_ROOT}/initiatives/${current.initiativeId}`;
+  const phaseRoot = current.phaseId ? `${initiativeRoot}/phases/${current.phaseId}` : null;
+  const sliceRoot =
+    phaseRoot && current.sliceId ? `${phaseRoot}/slices/${current.sliceId}` : null;
+
+  switch (current.skill) {
+    case "plan-slice":
+      return sliceRoot
+        ? [
+            `${sliceRoot}/slice.md`,
+            `${phaseRoot}/phase-spec.md`,
+            `${phaseRoot}/research.md`,
+            `${phaseRoot}/research-audit.md`,
+          ]
+        : [];
+    case "verify-slice-plan":
+      return sliceRoot
+        ? [
+            `${sliceRoot}/slice.md`,
+            `${sliceRoot}/plan.md`,
+            `${phaseRoot}/phase-spec.md`,
+            `${phaseRoot}/research.md`,
+            `${phaseRoot}/research-audit.md`,
+          ]
+        : [];
+    case "build-slice":
+      return sliceRoot ? [`${sliceRoot}/plan.md`] : [];
+    case "verify-slice-build":
+      return sliceRoot
+        ? [`${sliceRoot}/build.md`, `${sliceRoot}/plan.md`, `${sliceRoot}/slice.md`]
+        : [];
     default:
       return [];
   }

@@ -38,6 +38,7 @@ in either tier.
     - `strike/user-guidance/implementation-discipline/global.md`
     - `strike/user-guidance/implementation-discipline/verify-slice-build.md`
 - Bundled Strike review-agent instructions. Load only for launched subagents:
+  - `references/review-agents/prompt-template.md`
   - `references/review-agents/output-discipline.md`
   - `references/review-agents/built-slice-acceptance-audit.md`
   - `references/review-agents/built-slice-code-audit.md`
@@ -100,7 +101,8 @@ in either tier.
 7. Synthesize the pre-browser batch into a compact gate:
    - use the verification evidence categories shown in this skill
    - use focused commands instead of defaulting to a full suite unless the plan,
-     repo convention, or risk justifies a broader run
+     repo convention, or risk justifies a broader run; when a broader run is
+     used, record the named justification with the evidence
    - summarize automated checks, required audits, the canonical audit
      decision, risk-based audits and their selection reasons, user lenses, and
      the acceptance audit's `Browser Proof Needed`
@@ -136,7 +138,9 @@ Review agents are read-only. They return findings only; they do not edit files,
 fix issues, update state, or decide whether the build passes.
 Before launching review agents, the verifier reads bundled
 `references/review-agents/output-discipline.md` and includes that output
-contract in each review-agent prompt.
+contract in each review-agent prompt. Compose each review-agent prompt from
+the bundled `references/review-agents/prompt-template.md`, filling every slot;
+`next-step` returns the current slice's packet paths ready to paste.
 
 ### 1. Run Required Review Agents In Parallel
 
@@ -251,6 +255,12 @@ material `Follow-Up` findings, group repeated examples, avoid low-value nits,
 and avoid restating the rubric. The
 `built-slice-acceptance-audit` also returns `Browser Proof Needed`.
 
+Rejecting a review-agent `Must Fix` finding requires written adjudication
+evidence in the artifact's `### Rejected Findings`: the finding's claim, the
+concrete counter-evidence (repo file paths, official sources, or audited
+research), the disposition, and any residual risk. An unevidenced rejection is
+invalid; treat the finding as open.
+
 Write a compact `Pre-Browser Verification Batch` gate before any browser work:
 automated checks, required audits, the canonical audit decision, risk-based
 audits with their selection reasons, user review lenses,
@@ -284,6 +294,11 @@ This is an execution check. Merely opening the route, logging in, navigating
 near the feature, inspecting DOM, running curl, reading code, or taking
 screenshots without using the feature does not satisfy Browser Clickthrough.
 Automated tests and Browser Clickthrough are separate gates.
+
+Record each captured screenshot in the Visual Evidence manifest: file,
+viewport, and one line naming what it proved. Screenshot files are ephemeral
+and session-scoped; the manifest line is the durable record a future reader
+relies on.
 
 When browser proof teaches a durable automation or tooling lesson, such as a
 library that only responds to specific input methods under automation, write
@@ -373,8 +388,8 @@ Reason:
 ### Visual Evidence
 Required: yes / no
 Environment:
-Screenshots:
-Viewports:
+Screenshots (paths are ephemeral; the manifest line is the durable record):
+- File: <path> — Viewport: <size> — Proved: <one line>
 Result: passed / failed / skipped / not applicable
 Reason:
 
@@ -404,6 +419,13 @@ Summary:
 
 ### Accepted Risk
 - None.
+
+### Rejected Findings
+- Finding:
+  Counter-evidence:
+  Disposition:
+  Residual risk:
+- None. Rejecting a review-agent `Must Fix` requires this evidence block.
 
 ## Build Verification Result
 Verified: yes / no
@@ -519,6 +541,16 @@ Reason:
   and `Check: phaseResearchComplete`.
 - Route back only when the accepted plan, research, or scope is untrustworthy
   enough that `fix` cannot honestly repair the issue.
+
+### Re-Verification After Fix
+
+- When re-entering this verifier after `fix`, scope the re-run: re-run the
+  failed evidence categories and audits plus checks covering the fix's changed
+  surface, trust prior recorded evidence for untouched categories, and record
+  the scope and the trusted prior evidence in the artifact.
+- Escalate to a full re-pass when the fix changed surfaces beyond the failed
+  scope, prior evidence is stale or contradicted, or repeated fixes for the
+  same issue signal a broader problem.
 
 ### Completion
 

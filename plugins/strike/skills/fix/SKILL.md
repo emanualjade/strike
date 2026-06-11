@@ -65,6 +65,10 @@ Fix issues from a failed Strike verification pass.
 - When diagnosing or repairing the failure teaches a durable lesson about a
   package, framework, provider, or tooling surface, write it back to
   `strike/research/` following the plugin's `references/research-library.md`.
+- Name the re-verification scope in `## Return`: the failed evidence
+  categories plus the repair's changed surfaces, so the verifier can re-run
+  only what the failure and the fix touched. Write `full` when the repair
+  reached beyond the failed scope.
 - When the repair requires a real user, product, data, security, accounting,
   scope, or architecture decision, write `Fixed: no`, explain the needed
   decision, and return to the verifier or route-back flow without inventing the
@@ -126,6 +130,7 @@ How the repair follows or intentionally differs:
 ## Return
 Verifier:
 Artifact:
+Re-verification scope: full / <failed evidence categories and the repair's changed surfaces>
 Ready for re-verification: yes / no
 
 ## Route Back

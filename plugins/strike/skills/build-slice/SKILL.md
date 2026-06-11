@@ -82,7 +82,8 @@ Implement one planned slice.
   automated coverage obvious, add it or record why it was not appropriate.
 - Run the planned Static / Build Checks and focused test commands for the
   changed surface. Do not default to a full suite unless the plan justifies it,
-  the repo makes it cheap, or the risk clearly warrants it.
+  the repo makes it cheap, or the risk clearly warrants it. When a full suite
+  runs, record the named justification in the evidence.
 - Run automated tests in the planned test/E2E environment. Do not point tests at
   the dev environment or mutate env files just to avoid writing fixtures or test
   setup.

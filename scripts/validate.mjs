@@ -618,6 +618,7 @@ function validateStrikeContract() {
   const sliceBoundariesPath = "plugins/strike/references/slice-boundaries.md";
   const verificationEvidencePath = "plugins/strike/references/verification-evidence.md";
   const researchLibraryPath = "plugins/strike/references/research-library.md";
+  const reviewPromptTemplatePath = "plugins/strike/references/review-agents/prompt-template.md";
   const reviewOutputDisciplinePath = "plugins/strike/references/review-agents/output-discipline.md";
   const planReadinessAuditPath = "plugins/strike/references/review-agents/plan-implementation-readiness-audit.md";
   const canonicalReadinessAuditPath = "plugins/strike/references/review-agents/canonical-readiness-audit.md";
@@ -711,6 +712,7 @@ function validateStrikeContract() {
   const sliceBoundariesText = fs.readFileSync(path.join(root, sliceBoundariesPath), "utf8");
   const verificationEvidenceText = fs.readFileSync(path.join(root, verificationEvidencePath), "utf8");
   const researchLibraryText = fs.readFileSync(path.join(root, researchLibraryPath), "utf8");
+  const reviewPromptTemplateText = fs.readFileSync(path.join(root, reviewPromptTemplatePath), "utf8");
   const reviewOutputDisciplineText = fs.readFileSync(path.join(root, reviewOutputDisciplinePath), "utf8");
   const planReadinessAuditText = fs.readFileSync(path.join(root, planReadinessAuditPath), "utf8");
   const canonicalReadinessAuditText = fs.readFileSync(path.join(root, canonicalReadinessAuditPath), "utf8");
@@ -1515,6 +1517,20 @@ function validateStrikeContract() {
   requireText(buildText, "write it back to `strike/research/`", buildPath);
   requireText(fixText, "write it back to\n  `strike/research/`", fixPath);
   requireText(verifyBuildText, "When browser proof teaches a durable automation or tooling lesson", verifyBuildPath);
+  requireText(reviewPromptTemplateText, "Review-Agent Prompt Template", reviewPromptTemplatePath);
+  requireText(reviewPromptTemplateText, "Required output contract", reviewPromptTemplatePath);
+  requireText(reviewPromptTemplateText, "return findings only, per the output contract", reviewPromptTemplatePath);
+  requireText(verifyText, "references/review-agents/prompt-template.md", verifyPath);
+  requireText(verifyBuildText, "references/review-agents/prompt-template.md", verifyBuildPath);
+  requireText(verifyText, "### Rejected Findings", verifyPath);
+  requireText(verifyBuildText, "### Rejected Findings", verifyBuildPath);
+  requireText(verifyText, "requires written adjudication\nevidence", verifyPath);
+  requireText(verifyBuildText, "requires written adjudication\nevidence", verifyBuildPath);
+  requireText(verifyBuildText, "File: <path> — Viewport: <size> — Proved: <one line>", verifyBuildPath);
+  requireText(verifyBuildText, "### Re-Verification After Fix", verifyBuildPath);
+  requireText(verifyBuildText, "record the named justification with the evidence", verifyBuildPath);
+  requireText(buildText, "When a full suite\n  runs, record the named justification in the evidence", buildPath);
+  requireText(fixText, "Re-verification scope: full /", fixPath);
 
   requireText(verifyBuildText, "Required verification packet:", verifyBuildPath);
   requireText(verifyBuildText, "- `build.md`", verifyBuildPath);

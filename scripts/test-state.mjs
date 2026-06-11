@@ -3213,6 +3213,30 @@ function testGateHintsReturnedByNextStep() {
   assert.match(buildStep.gateHints.buildVerified, /Post-browser visual\/browser lenses/);
 }
 
+function testPacketPathsReturnedByNextStep() {
+  const repo = tempRepo();
+  bootstrapTwoSliceWorkflow(repo);
+  const localHelper = workspaceHelper(repo);
+
+  const planStep = run(repo, localHelper, ["next-step"]);
+  assert.equal(planStep.skill, "plan-slice");
+  assert.ok(planStep.packetPaths.some((p) => p.endsWith("slices/slice-01/slice.md")));
+  assert.ok(planStep.packetPaths.some((p) => p.endsWith("phases/phase-01/research.md")));
+
+  complete(repo, "planCreated", { skill: "verify-slice-plan" });
+  const verifyPlanStep = run(repo, localHelper, ["next-step"]);
+  assert.equal(verifyPlanStep.skill, "verify-slice-plan");
+  assert.ok(verifyPlanStep.packetPaths.some((p) => p.endsWith("slices/slice-01/plan.md")));
+  assert.ok(verifyPlanStep.packetPaths.some((p) => p.endsWith("phases/phase-01/research-audit.md")));
+
+  complete(repo, "planVerified", { skill: "build-slice" });
+  complete(repo, "implemented", { skill: "verify-slice-build" });
+  const verifyBuildStep = run(repo, localHelper, ["next-step"]);
+  assert.equal(verifyBuildStep.skill, "verify-slice-build");
+  assert.ok(verifyBuildStep.packetPaths.some((p) => p.endsWith("slices/slice-01/build.md")));
+  assert.ok(verifyBuildStep.packetPaths.some((p) => p.endsWith("slices/slice-01/slice.md")));
+}
+
 function testRemoveSliceForMerge() {
   {
     const repo = tempRepo();
@@ -3612,6 +3636,7 @@ testPlanAndBuildCompletionPreconditions();
 testPlanVerificationTierGates();
 testBuildVerificationTierGates();
 testGateHintsReturnedByNextStep();
+testPacketPathsReturnedByNextStep();
 testRemoveSliceForMerge();
 testReopenMarksReviewedArtifactsStale();
 testRouteBackInvalidatesDownstreamScopes();
