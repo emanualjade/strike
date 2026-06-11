@@ -228,7 +228,7 @@ export const GATE_HINTS = {
   planVerified:
     "plan-verification.md must say Review results returned: yes, Ready: yes, Fix Needed: no, and Route Back Needed: no. Exception: when plan.md declares Plan Verification Tier: standard with every trigger answered no and no plan-verification.md exists, this check completes from the plan's declaration without running verify-slice-plan.",
   implemented:
-    "build.md must say Built: yes, must not say Fix Needed: yes, and Route Back must say Needed: no.",
+    "build.md must say Built: yes, must not say Fix Needed: yes, and Route Back must say Needed: no. Its Build Verification Tier must be consistent: Tier: standard requires every trigger answered no; any yes trigger requires Tier: deep.",
   buildVerified:
     "build-verification.md must say Review results returned: yes, Verified: yes, Fix Needed: no, Route Back Needed: no, and Post-browser visual/browser lenses: pass or not run.",
   allSlicesVerified:
@@ -978,6 +978,54 @@ function requireSliceBuildReady(verificationKey, artifactPath) {
     throw new Error(
       `Cannot complete ${verificationKey} until ${artifactPath} says Built: yes, has Route Back with Needed: no, and has no fix needed.`,
     );
+  }
+  requireConsistentBuildVerificationTier(verificationKey, artifactPath, text);
+}
+
+const BUILD_TIER_TRIGGER_FIELDS = [
+  "Third-party surface",
+  "Solved domain",
+  "Schema or data risk",
+  "Novel pattern",
+  "Plan amendments",
+  "Builder uncertainty",
+];
+
+function buildVerificationTier(text) {
+  const section = markdownSection(text, "Build Verification Tier");
+  if (!section) {
+    return { declared: false, tier: null, triggers: {} };
+  }
+  const tier = latestFieldValue(section, "Tier", "standard|deep") ?? null;
+  const triggers = Object.fromEntries(
+    BUILD_TIER_TRIGGER_FIELDS.map((field) => [field, latestFieldValue(section, field, "yes|no") ?? null]),
+  );
+  return { declared: true, tier, triggers };
+}
+
+function requireConsistentBuildVerificationTier(verificationKey, artifactPath, text) {
+  const { declared, tier, triggers } = buildVerificationTier(text);
+  if (!declared) {
+    return;
+  }
+  if (tier !== "standard" && tier !== "deep") {
+    throw new Error(
+      `Cannot complete ${verificationKey} until ${artifactPath} has Build Verification Tier with Tier: standard or deep.`,
+    );
+  }
+  if (tier === "standard") {
+    const unanswered = BUILD_TIER_TRIGGER_FIELDS.filter((field) => triggers[field] === null);
+    const triggered = BUILD_TIER_TRIGGER_FIELDS.filter((field) => triggers[field] === "yes");
+    if (unanswered.length > 0) {
+      throw new Error(
+        `Cannot complete ${verificationKey} until ${artifactPath} answers every Build Verification Tier trigger (yes/no). Missing: ${unanswered.join(", ")}.`,
+      );
+    }
+    if (triggered.length > 0) {
+      throw new Error(
+        `Cannot complete ${verificationKey}: ${artifactPath} declares Tier: standard but answers yes to: ${triggered.join(", ")}. A triggered build requires Tier: deep.`,
+      );
+    }
   }
 }
 

@@ -10,6 +10,14 @@ allowed-tools: Read Write Edit MultiEdit Bash Grep Glob WebFetch WebSearch Agent
 
 Verify one slice build and record build verification.
 
+This verifier always runs, but its pre-browser audit batch is tiered: when
+`build.md` declares `Build Verification Tier: standard` with every trigger
+answered `no` and the changed files confirm it, the batch is the acceptance
+audit plus the verifier's own automated checks and applicable user review
+lenses. A `deep` tier, a missing or inconsistent declaration, or changed files
+that contradict the declaration run the full audit batch. Browser Checks run
+in either tier.
+
 ## Inputs
 
 - Required verification packet:
@@ -66,22 +74,30 @@ Verify one slice build and record build verification.
      constraints or accepted research risks
    - read `phase-spec.md` when phase scope, boundaries, acceptance intent, or
      phase-level integration risk is unclear
-5. Run the pre-browser verification batch in parallel:
+5. Read the `Build Verification Tier` declaration in `build.md` and confirm it
+   against the actually-changed files. Treat the tier as `deep` when the
+   declaration is missing, declares `standard` with any trigger answered `yes`
+   or unanswered, or the changed files touch a trigger surface answered `no`.
+   Record a missing or contradicted declaration as a `Follow-Up` misdeclaration
+   finding; it does not block verification by itself.
+6. Run the pre-browser verification batch in parallel. On a confirmed standard
+   tier:
    - automated slice checks in the repo's test runtime/server with test
      DB/fixtures only
    - SUBAGENT: `built-slice-acceptance-audit`
+   - USER REVIEW LENSES: relevant user review-lens audits from required user
+     guidance
+   The deep tier adds:
    - SUBAGENT: `built-slice-code-audit`
    - SUBAGENT: `built-slice-common-issues-audit`
    - SUBAGENT: `canonical-implementation` when its solved-problem trigger
      applies
-   - USER REVIEW LENSES: relevant user review-lens audits from required user
-     guidance
    - risk-based additional audits selected by the verifier that do not require
      final browser evidence
    Before launching a built-in SUBAGENT, the verifier loads the named bundled
    `references/review-agents/` rubric from the installed Strike plugin and
    includes the rubric content or absolute plugin path in that subagent's prompt.
-6. Synthesize the pre-browser batch into a compact gate:
+7. Synthesize the pre-browser batch into a compact gate:
    - use the verification evidence categories shown in this skill
    - use focused commands instead of defaulting to a full suite unless the plan,
      repo convention, or risk justifies a broader run
@@ -100,7 +116,7 @@ Verify one slice build and record build verification.
      next step, not a pre-browser blocker.
    - when `Ready for browser: no`, stop before Browser Checks and write
      `Verified: no` with the fix path
-7. Run Browser Checks for browser-visible work:
+8. Run Browser Checks for browser-visible work:
    - use the dev/local app environment and dev/local DB only
    - use the `built-slice-acceptance-audit` browser proof checklist plus the
      plan/build evidence
@@ -111,7 +127,7 @@ Verify one slice build and record build verification.
      rubric requires completed browser evidence, then summarize that status in
      `Read-Only Review` as `Post-browser visual/browser lenses: pass` or
      `not run`
-8. Write `build-verification.md`: categorize issues, set `Verified`, set
+9. Write `build-verification.md`: categorize issues, set `Verified`, set
    `Fix Needed`, and write route-back instructions when needed.
 
 ## Review
@@ -124,7 +140,11 @@ contract in each review-agent prompt.
 
 ### 1. Run Required Review Agents In Parallel
 
-Run these required review agents in the same pre-browser batch:
+Run these required review agents in the same pre-browser batch. On a confirmed
+standard tier, the required batch is `built-slice-acceptance-audit` plus
+applicable user review lenses; `built-slice-code-audit`,
+`built-slice-common-issues-audit`, and `canonical-implementation` are
+deep-tier audits:
 
 - SUBAGENT: `built-slice-acceptance-audit`: reviews the completed slice as local
   acceptance work, not as the whole phase. Check whether the build satisfies the
@@ -151,13 +171,16 @@ Run these required review agents in the same pre-browser batch:
   Use `references/review-agents/built-slice-common-issues-audit.md` as the
   required rubric.
 - SUBAGENT: `canonical-implementation`: required whenever the changed code
-  touches any third-party API, package, SDK, framework feature, provider/model,
-  or mature solved domain such as payments, refunds, discounts, billing,
-  accounting, taxes, auth, sessions, or permissions. Skip it only when no such
-  surface is touched, and record the skip and its reason in the artifact. It
-  checks the built code against the official, idiomatic, documented way to
-  solve this class of problem, reading official docs and package/generated
-  types rather than trusting the plan's claims. Rubric:
+  touches a mature solved domain such as payments, refunds, discounts, billing,
+  accounting, taxes, auth, sessions, or permissions, or uses a third-party API,
+  package, SDK, framework feature, or provider/model in a way that has no
+  existing repo precedent. A newly added dependency is always a no-precedent
+  surface. Skip it only when no solved domain is touched and every touched
+  third-party surface follows existing repo precedent; record the skip and its
+  reason in the artifact, naming the precedent file(s) when precedent is the
+  reason. It checks the built code against the official, idiomatic, documented
+  way to solve this class of problem, reading official docs and
+  package/generated types rather than trusting the plan's claims. Rubric:
   `references/review-agents/canonical-implementation.md`.
 - USER REVIEW LENSES: relevant user review-lens audits from:
   - `strike/user-guidance/review-lenses/global.md`
@@ -172,6 +195,11 @@ completed Browser Check evidence. Run browser-evidence-dependent user lenses
 after Browser Checks with the captured route/action/screenshot evidence.
 
 ### 2. Add Risk-Based Audits To The Same Parallel Batch
+
+Risk-based audits are deep-tier work. On a confirmed standard tier, record
+`Risk-based audits: not run` with `standard tier` as the reason — but if
+judging the diff reveals a real primary risk center, the standard declaration
+is contradicted: escalate to the deep batch and record the misdeclaration.
 
 Beyond the required audits, decide which additional audits this specific diff
 needs. Judge from what was actually built: the changed files, the slice plan,
@@ -281,9 +309,12 @@ Use this shape:
 ## Acceptance Review
 
 ## Pre-Browser Verification Batch
+Build verification tier: standard / deep
+Tier declaration: consistent / missing / contradicted (escalated to deep)
 Automated checks: pass / issues / blocked
 Required audits: pass / issues / blocked
 Canonical audit: pass / issues / blocked / skipped
+Canonical skip reason: None / no solved-problem surface touched / precedented: <repo file paths> / standard tier
 Risk-based audits: pass / issues / blocked / not run
 Risk-based audit selection:
 User review lenses: pass / issues / blocked / not run
@@ -428,12 +459,19 @@ Reason:
   Browser Clickthrough.
 - The pre-browser gate is clean: no accepted-scope `Must Fix`, failed required
   check, or blocked required audit remains.
+- The recorded build verification tier matches the changed files: `standard`
+  only when `build.md` declares it with every trigger answered `no` and the
+  diff confirms no trigger surface was touched. Deep-tier audits that did not
+  run under a confirmed standard tier do not block verification.
 - The `canonical-implementation` audit ran whenever the changed code touches a
-  solved-problem surface: any third-party API, package, SDK, framework
-  feature, provider/model, or mature domain such as payments or auth. A
-  recorded skip is valid only when no such surface is touched.
+  mature solved domain such as payments or auth, or uses a third-party API,
+  package, SDK, framework feature, or provider/model with no existing repo
+  precedent. A recorded skip is valid only when no solved domain is touched
+  and every touched third-party surface follows repo precedent named in the
+  skip reason, or the standard tier was confirmed against the changed files.
 - The risk-based audit selection is recorded, including a `base audits only`
-  decision with its reason.
+  decision with its reason. On a confirmed standard tier, `standard tier` is a
+  valid recorded reason.
 - All required review agents, the canonical audit when triggered, selected
   risk-based audits, post-browser
   visual/browser lenses, and applicable user review lenses have returned. The
@@ -464,6 +502,10 @@ Reason:
   own audits cover the touched surface. If verification fails with issues
   that plan verification would have caught, route back to `planCreated` so
   the plan is re-tiered and verified before rebuilding.
+- When `build.md` declares `Build Verification Tier: standard` but the changed
+  files touch a trigger surface, do not route back for the tier alone:
+  escalate this verification to the deep batch, record the misdeclaration as
+  `Follow-Up`, and verify normally.
 - If the fix would edit phase `research.md` or `research-audit.md`, route back
   to `phaseResearchComplete` instead so the phase research audit can be rerun.
 - When verification fails because phase research is missing, weak, contradicted,

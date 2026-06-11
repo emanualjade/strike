@@ -144,6 +144,11 @@ they:
   UI whose accepted behavior only works after the next slice
 - exist mainly to keep individual slices small, splitting one user-visible
   outcome into setup-shaped fragments
+- share most of their planning and verification context — the same models,
+  screens, fixtures, and test setup — so splitting re-establishes identical
+  context twice for pure fixed overhead. Merge these even when each could
+  stand alone, as long as the merged slice still forms one honest
+  verification story
 
 During slicing, merge them before registering slices. During planning, use a
 `merge` boundary recommendation so Strike can absorb the later slice before

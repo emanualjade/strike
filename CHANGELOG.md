@@ -2,6 +2,36 @@
 
 All notable changes to Strike will be recorded here.
 
+## 0.14.0 - 2026-06-11
+
+- Made slice build verification risk-proportional with a `Build Verification
+  Tier` declared in each `build.md` from the actually-changed code. Builds
+  answer six triggers (third-party surface, solved domain, schema or data
+  risk, novel pattern, plan amendments, builder uncertainty); any yes requires
+  `Tier: deep` and the full pre-browser audit batch, while a confirmed
+  `Tier: standard` (every trigger no, checked by the verifier against the
+  changed files) runs the acceptance audit plus the verifier's own automated
+  checks and user review lenses. `verify-slice-build` always runs and Browser
+  Checks run in either tier. The verifier escalates a missing or contradicted
+  declaration to deep and records the misdeclaration as `Follow-Up`; the
+  state helper enforces tier consistency at `implemented`, and builds without
+  a tier section keep today's behavior (full audit batch).
+- Sharpened the canonical-audit trigger from "touches any third-party
+  surface" to precedent-aware: `canonical-readiness-audit` and
+  `canonical-implementation` are required when the work touches a mature
+  solved domain or uses a third-party API, package, SDK, framework feature,
+  or provider/model in a way with no existing repo precedent. A newly added
+  dependency always counts as no-precedent. A skip is valid only when no
+  solved domain is touched and every touched third-party surface follows
+  repo precedent named in the skip reason. The plan tier's
+  `Third-party surface` trigger uses the same precedent-aware definition,
+  with the precedent named in `Codebase Patterns`.
+- Added a shared-context merge signal to the slice-boundary standard: adjacent
+  slices that share most of their planning and verification context (the same
+  models, screens, fixtures, and test setup) merge even when each could stand
+  alone, as long as the merged slice still forms one honest verification
+  story.
+
 ## 0.13.0 - 2026-06-10
 
 - Made slice plan verification risk-proportional with a `Plan Verification

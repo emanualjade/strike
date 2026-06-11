@@ -1357,8 +1357,10 @@ function validateStrikeContract() {
   requireText(verifyText, "references/review-agents/canonical-readiness-audit.md", verifyPath);
   requireText(verifyText, "official, idiomatic, recommended way", verifyPath);
   requireText(verifyText, "plausible\n  invented APIs, custom systems, handmade types", verifyPath);
-  requireText(verifyText, "required whenever the slice or plan\n  touches any third-party API, package, SDK, framework feature, provider/model", verifyPath);
-  requireText(verifyText, "record the skip and its reason in the artifact", verifyPath);
+  requireText(verifyText, "required whenever the slice or plan\n  touches a mature solved domain", verifyPath);
+  requireText(verifyText, "in a way that has no\n  existing repo precedent", verifyPath);
+  requireText(verifyText, "A newly added dependency is always a no-precedent\n  surface", verifyPath);
+  requireText(verifyText, "record the skip and its\n  reason in the artifact, naming the precedent file(s)", verifyPath);
   requireText(verifyText, "Canonical audit: run / skipped", verifyPath);
   requireText(verifyText, "The `canonical-readiness-audit` ran whenever the plan touches a", verifyPath);
   requireText(verifyText, "This is still a\n  plan audit, not a code audit", verifyPath);
@@ -1503,6 +1505,12 @@ function validateStrikeContract() {
   requireText(buildText, "Read upstream artifacts only when they are needed", buildPath);
   requireText(buildText, "Keep environments separate too", buildPath);
   requireText(buildText, "Do not treat a failing command, provider response, workflow error, payload\n  limit", buildPath);
+  requireText(buildText, "Declare the build verification tier in `build.md` from the actually-changed\n  code", buildPath);
+  requireText(buildText, "## Build Verification Tier", buildPath);
+  requireText(buildText, "Tier: standard / deep", buildPath);
+  requireText(buildText, "Plan amendments: yes / no", buildPath);
+  requireText(buildText, "Builder uncertainty: yes / no", buildPath);
+  requireText(buildText, "When unsure about any trigger, answer `yes`", buildPath);
 
   requireText(verifyBuildText, "Required verification packet:", verifyBuildPath);
   requireText(verifyBuildText, "- `build.md`", verifyBuildPath);
@@ -1666,6 +1674,14 @@ function validateStrikeContract() {
   requireText(verifyBuildText, "risk-based additional audits selected by the verifier", verifyBuildPath);
   requireText(verifyBuildText, "SUBAGENT: `canonical-implementation`: required whenever the changed code", verifyBuildPath);
   requireText(verifyBuildText, "The `canonical-implementation` audit ran whenever the changed code touches a", verifyBuildPath);
+  requireText(verifyBuildText, "Read the `Build Verification Tier` declaration in `build.md`", verifyBuildPath);
+  requireText(verifyBuildText, "Treat the tier as `deep` when the\n   declaration is missing", verifyBuildPath);
+  requireText(verifyBuildText, "Build verification tier: standard / deep", verifyBuildPath);
+  requireText(verifyBuildText, "Tier declaration: consistent / missing / contradicted (escalated to deep)", verifyBuildPath);
+  requireText(verifyBuildText, "Risk-based audits are deep-tier work", verifyBuildPath);
+  requireText(verifyBuildText, "escalate to the deep batch and record the misdeclaration", verifyBuildPath);
+  requireText(verifyBuildText, "Canonical skip reason: None / no solved-problem surface touched / precedented: <repo file paths> / standard tier", verifyBuildPath);
+  requireText(verifyBuildText, "Browser Checks run\nin either tier", verifyBuildPath);
   requireText(verifyBuildText, "canonical-implementation", verifyBuildPath);
   requireText(verifyBuildText, "ui-regression", verifyBuildPath);
   requireText(verifyBuildText, "user-flows", verifyBuildPath);

@@ -6,12 +6,15 @@ Use this read-only audit when a verifier launches SUBAGENT:
 ## Trigger
 
 At `verify-slice-build`, this audit is required, not optional, whenever the
-changed code touches any third-party API, package, SDK, framework feature,
-provider/model, or mature solved domain such as payments, refunds, discounts,
-billing, accounting, taxes, auth, sessions, or permissions. The built code is
-checked against the documented way, not against the plan's claims. When none
-of these surfaces are touched, the verifier skips this audit and records the
-skip with its reason.
+changed code touches a mature solved domain such as payments, refunds,
+discounts, billing, accounting, taxes, auth, sessions, or permissions, or uses
+a third-party API, package, SDK, framework feature, or provider/model in a way
+that has no existing repo precedent. A newly added dependency is always a
+no-precedent surface. The built code is checked against the documented way,
+not against the plan's claims. Reusing an established repo pattern for the
+same surface is not a trigger; the verifier skips this audit when no solved
+domain is touched and every touched third-party surface follows named repo
+precedent, and records the skip with its reason and the precedent file(s).
 
 ## Mandate
 

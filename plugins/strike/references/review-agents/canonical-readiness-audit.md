@@ -5,14 +5,18 @@ Use this read-only audit when `verify-slice-plan` runs SUBAGENT:
 
 ## Trigger
 
-This audit is required, not optional, whenever the slice or plan touches any
-third-party API, package, SDK, framework feature, provider/model, or mature
-solved domain such as payments, refunds, discounts, billing, accounting,
-taxes, auth, sessions, or permissions. Inventing in these areas is the most
-common and expensive failure this workflow guards against, and the agent that
-invented a solution cannot be trusted to notice it should have checked the
-docs. When none of these surfaces are touched, the verifier skips this audit
-and records the skip with its reason.
+This audit is required, not optional, whenever the slice or plan touches a
+mature solved domain such as payments, refunds, discounts, billing,
+accounting, taxes, auth, sessions, or permissions, or uses a third-party API,
+package, SDK, framework feature, or provider/model in a way that has no
+existing repo precedent. A newly added dependency is always a no-precedent
+surface. Inventing in these areas is the most common and expensive failure
+this workflow guards against, and the agent that invented a solution cannot be
+trusted to notice it should have checked the docs. Reusing an established repo
+pattern for the same surface is not invention; the verifier skips this audit
+when no solved domain is touched and every touched third-party surface follows
+named repo precedent, and records the skip with its reason and the precedent
+file(s).
 
 ## Mandate
 

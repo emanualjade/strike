@@ -101,7 +101,11 @@ and output paths.
   deep-tier plans; a plan that declares the standard verification tier (no
   risk triggers) completes this stage from its declaration.
 - `build-slice`: implement one planned slice.
-- `verify-slice-build`: verify one built slice.
+- `verify-slice-build`: verify one built slice. Always runs, with a tiered
+  audit batch: a build that declares the standard verification tier (no risk
+  triggers, confirmed against the changed files) gets the acceptance audit
+  plus the verifier's own checks; deep-tier builds get the full audit batch.
+  Browser proof runs in either tier.
 - `fix`: fix issues from a failed verification pass, then return to the same verifier.
 - `verify-phase`: verify one completed phase.
 - `verify-main-spec`: verify the completed main spec.

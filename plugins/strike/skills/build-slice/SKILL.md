@@ -98,6 +98,27 @@ Implement one planned slice.
   `verify-slice-build` instead of claiming final browser proof.
 - Record changed files, verification evidence by category, and important
   implementation notes in `build.md`.
+- Declare the build verification tier in `build.md` from the actually-changed
+  code. Answer each trigger honestly:
+  - `Third-party surface`: the change uses a third-party API, package, SDK,
+    framework feature, or provider/model in a way that has no existing repo
+    precedent. A newly added dependency is always `yes`. Following an
+    established repo pattern for the same surface is `no`; name the precedent
+    under `Implementation Notes`.
+  - `Solved domain`: the change touches a mature solved domain such as
+    payments, refunds, discounts, billing, accounting, taxes, auth, sessions,
+    or permissions.
+  - `Schema or data risk`: schema, migrations, persistence shape, or
+    destructive data operations.
+  - `Novel pattern`: an implementation pattern with no close repo precedent.
+  - `Plan amendments`: `build.md` records any plan amendment.
+  - `Builder uncertainty`: open questions, surprises, or material uncertainty
+    about the implementation.
+  Any `yes` requires `Tier: deep`, and `verify-slice-build` runs its full
+  audit batch. `Tier: standard` is valid only when every trigger is honestly
+  `no`; `verify-slice-build` then runs the acceptance audit plus its own
+  automated checks and user review lenses, and still owns final Browser
+  Clickthrough. When unsure about any trigger, answer `yes`.
 - Write `Built: no` and route back only when adaptation cannot honestly stay
   inside the contract: implementation findings change the accepted slice
   boundary or acceptance criteria, a new product outcome or user-class
@@ -186,6 +207,16 @@ Reason:
 - Similar repo precedent used:
 - Upstream/downstream impact notes:
 
+## Build Verification Tier
+Tier: standard / deep
+Third-party surface: yes / no
+Solved domain: yes / no
+Schema or data risk: yes / no
+Novel pattern: yes / no
+Plan amendments: yes / no
+Builder uncertainty: yes / no
+Reason:
+
 ## Route Back
 Needed: yes / no
 Command: None / reopen-check
@@ -211,6 +242,10 @@ Reason:
   limit, upload/storage issue, or dataflow mismatch as a novel failure until you
   have searched the repo for similar errors, patterns, adapters, and examples.
   Record the precedent used, or record that none was found.
+- Declare the build verification tier honestly from the actual diff; it sizes
+  the `verify-slice-build` audit batch. The verifier confirms the declaration
+  against the changed files and escalates a contradicted `standard` to deep.
+  When unsure, declare `Tier: deep`.
 - `complete-check implemented` validates `build.md`; trust its gate error if
   it refuses.
 - Do not claim verification.

@@ -3034,6 +3034,163 @@ Reason: None.
   }
 }
 
+function tierBuildFixture(tierSection) {
+  return `# Slice Build
+
+Built: yes
+Fix Needed: no
+
+${tierSection}
+
+## Route Back
+Needed: no
+Command: None
+Phase: None
+Slice: None
+Check: None
+Reason: None.
+`;
+}
+
+function testBuildVerificationTierGates() {
+  const buildPath = "strike/initiatives/gallery/phases/phase-01/slices/slice-01/build.md";
+
+  {
+    // Standard tier with every trigger no completes implemented.
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    complete(repo, "planCreated", { skill: "verify-slice-plan" });
+    complete(repo, "planVerified", { skill: "build-slice" });
+
+    writeArtifact(
+      repo,
+      buildPath,
+      tierBuildFixture(`## Build Verification Tier
+Tier: standard
+Third-party surface: no
+Solved domain: no
+Schema or data risk: no
+Novel pattern: no
+Plan amendments: no
+Builder uncertainty: no
+Reason: Repo-local fixture change with close precedent.`),
+    );
+
+    const receipt = run(repo, localHelper, ["complete-check", "implemented"]);
+    assertNextStep(receipt, {
+      status: "recorded",
+      phaseId: "phase-01",
+      sliceId: "slice-01",
+      skill: "build-slice",
+      completedCheck: "implemented",
+    });
+  }
+
+  {
+    // Standard tier with a yes trigger is refused at implemented.
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    complete(repo, "planCreated", { skill: "verify-slice-plan" });
+    complete(repo, "planVerified", { skill: "build-slice" });
+
+    writeArtifact(
+      repo,
+      buildPath,
+      tierBuildFixture(`## Build Verification Tier
+Tier: standard
+Third-party surface: no
+Solved domain: no
+Schema or data risk: yes
+Novel pattern: no
+Plan amendments: no
+Builder uncertainty: no
+Reason: Fixture misdeclared standard tier.`),
+    );
+
+    runFail(repo, localHelper, ["complete-check", "implemented"], /Tier: deep/);
+  }
+
+  {
+    // Standard tier with an unanswered trigger is refused at implemented.
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    complete(repo, "planCreated", { skill: "verify-slice-plan" });
+    complete(repo, "planVerified", { skill: "build-slice" });
+
+    writeArtifact(
+      repo,
+      buildPath,
+      tierBuildFixture(`## Build Verification Tier
+Tier: standard
+Third-party surface: no
+Solved domain: no
+Schema or data risk: no
+Novel pattern: no
+Builder uncertainty: no
+Reason: Fixture missing a trigger answer.`),
+    );
+
+    runFail(
+      repo,
+      localHelper,
+      ["complete-check", "implemented"],
+      /Plan amendments/,
+    );
+  }
+
+  {
+    // An invalid tier value is refused at implemented.
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    complete(repo, "planCreated", { skill: "verify-slice-plan" });
+    complete(repo, "planVerified", { skill: "build-slice" });
+
+    writeArtifact(
+      repo,
+      buildPath,
+      tierBuildFixture(`## Build Verification Tier
+Tier: bogus
+Reason: Fixture invalid tier.`),
+    );
+
+    runFail(
+      repo,
+      localHelper,
+      ["complete-check", "implemented"],
+      /Tier: standard or deep/,
+    );
+  }
+
+  {
+    // A legacy build.md without a tier section still completes implemented.
+    const repo = tempRepo();
+    bootstrapTwoSliceWorkflow(repo);
+    const localHelper = workspaceHelper(repo);
+
+    complete(repo, "planCreated", { skill: "verify-slice-plan" });
+    complete(repo, "planVerified", { skill: "build-slice" });
+
+    writeArtifact(repo, buildPath, tierBuildFixture("## Implementation Notes\n- Fixture."));
+
+    const receipt = run(repo, localHelper, ["complete-check", "implemented"]);
+    assertNextStep(receipt, {
+      status: "recorded",
+      phaseId: "phase-01",
+      sliceId: "slice-01",
+      skill: "build-slice",
+      completedCheck: "implemented",
+    });
+  }
+}
+
 function testGateHintsReturnedByNextStep() {
   const repo = tempRepo();
   run(repo, helper, ["init", "gallery", "Gallery"]);
@@ -3453,6 +3610,7 @@ testRouteBackCommandContract();
 testReviewedVerifierRequiresReturnedReviewResults();
 testPlanAndBuildCompletionPreconditions();
 testPlanVerificationTierGates();
+testBuildVerificationTierGates();
 testGateHintsReturnedByNextStep();
 testRemoveSliceForMerge();
 testReopenMarksReviewedArtifactsStale();

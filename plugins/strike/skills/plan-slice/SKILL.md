@@ -124,8 +124,11 @@ and how it will be verified.
   work.
 - Declare the plan verification tier from what this plan actually touches.
   Answer each trigger honestly:
-  - `Third-party surface`: any third-party API, package, SDK, framework
-    feature, or provider/model.
+  - `Third-party surface`: a third-party API, package, SDK, framework
+    feature, or provider/model used in a way that has no existing repo
+    precedent. A newly added dependency is always `yes`. Following an
+    established repo pattern for the same surface is `no`; name the
+    precedent file in `Codebase Patterns`.
   - `Solved domain`: a mature solved domain such as payments, refunds,
     discounts, billing, accounting, taxes, auth, sessions, or permissions.
   - `Schema or data risk`: schema, migrations, persistence shape, or

@@ -125,11 +125,14 @@ trigger applies, in one parallel batch:
   required rubric and `references/slice-boundaries.md` as the canonical
   slice-boundary standard.
 - SUBAGENT: `canonical-readiness-audit`: required whenever the slice or plan
-  touches any third-party API, package, SDK, framework feature, provider/model,
-  or mature solved domain such as payments, refunds, discounts, billing,
-  accounting, taxes, auth, sessions, or permissions. Skip it only when no such
-  surface is touched, and record the skip and its reason in the artifact. It
-  checks whether the plan uses the
+  touches a mature solved domain such as payments, refunds, discounts, billing,
+  accounting, taxes, auth, sessions, or permissions, or uses a third-party API,
+  package, SDK, framework feature, or provider/model in a way that has no
+  existing repo precedent. A newly added dependency is always a no-precedent
+  surface. Skip it only when no solved domain is touched and every touched
+  third-party surface follows existing repo precedent; record the skip and its
+  reason in the artifact, naming the precedent file(s) when precedent is the
+  reason. It checks whether the plan uses the
   official, idiomatic, recommended way to solve this class of problem according
   to official docs, audited research, generated/package types, framework
   conventions, and existing repo precedent. This audit should catch plausible
@@ -182,7 +185,7 @@ Use this shape:
 Review results returned: yes / no
 - Required plan audits:
 - Canonical audit: run / skipped
-- Canonical skip reason: None / <no solved-problem surfaces touched>
+- Canonical skip reason: None / no solved-problem surface touched / precedented: <repo file paths>
 - User review lenses:
 - Summary:
 
@@ -272,10 +275,12 @@ Reason:
   require E2E coverage.
 - No accepted-scope `Must Fix` issue remains from required plan audits or user
   review lenses.
-- The `canonical-readiness-audit` ran whenever the plan touches a
-  solved-problem surface: any third-party API, package, SDK, framework
-  feature, provider/model, or mature domain such as payments or auth. A
-  recorded skip is valid only when no such surface is touched.
+- The `canonical-readiness-audit` ran whenever the plan touches a mature
+  solved domain such as payments or auth, or uses a third-party API, package,
+  SDK, framework feature, or provider/model with no existing repo precedent.
+  A recorded skip is valid only when no solved domain is touched and every
+  touched third-party surface follows repo precedent named in the skip
+  reason.
 - All required review agents and applicable user review lenses have returned.
   The artifact says `Review results returned: yes` only after their returned
   findings have been synthesized into `## Issues`.
